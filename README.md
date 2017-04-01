@@ -1,2 +1,7 @@
 # gsf
-Python module for processings geological surface/fault data with Python
+Python module for processing geological surface/fault data with Python.
+
+Current state: alpha
+
+Changes
+[2017-04-01] created repository 
