@@ -1,2 +1,2 @@
 # gsf
-Processings of geological surface and fault data with Python
+Python module for processings geological surface/fault data with Python
