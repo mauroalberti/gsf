@@ -6,4 +6,5 @@ Current state: alpha
 Changes
 
 [2017-04-01] created repository 
+
 [2017-04-02] transfer of selected code from geosurf; no real use of apsg
