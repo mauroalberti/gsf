@@ -5,16 +5,19 @@ from __future__ import division
 from math import sqrt, sin, cos, tan, radians, asin, acos, atan, atan2, degrees
 import numpy as np
 
-from apsg import Vec3
-
-from .array_utils import point_solution
+from array_utils import point_solution
+from geosurf_utils import rhrstrk2dd
 
 
 MINIMUM_SEPARATION_THRESHOLD = 1e-10
 MINIMUM_VECTOR_MAGNITUDE = 1e-10
 
 
-class CartesianPoint3DT(object):
+class CPoint(object):
+    """
+    Cartesian point.
+    Dimensions: 3D + time
+    """
 
     def __init__(self, x=np.nan, y=np.nan, z=np.nan, t=None):
 
@@ -24,48 +27,61 @@ class CartesianPoint3DT(object):
         self._t = t
 
     @property
-    def p_x(self):
+    def x(self):
+        """
+        Return x value
+        """
 
         return self._x
 
     @property
-    def p_y(self):
-
+    def y(self):
+        """
+        Return y value
+        """
         return self._y
 
     @property
-    def p_z(self):
-
+    def z(self):
+        """
+        Return z value
+        """
         return self._z
 
     @property
-    def p_t(self):
-
+    def t(self):
+        """
+        Return time value
+        """
         return self._t
 
     def clone(self):
+        """
+        Clone the point
+        """
 
-        return CartesianPoint3DT(self.p_x, self.p_y, self.p_z, self.p_t)
+        return CPoint(self.x, self.y, self.z, self.t)
 
-    def spat_distance(self, another):
+    def dist_3d(self, another):
         """
         Calculate Euclidean spatial distance between two points.
-
-        @param  another:  the CartesianPoint3DT instance for which the spatial distance should be calculated
-        @type  another:  CartesianPoint3DT.
-
-        @return:  spatial distance between the two points - float.
         """
 
-        return sqrt((self.p_x - another.p_x) ** 2 + (self.p_y - another.p_y) ** 2 + (self.p_z - another.p_z) ** 2)
+        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
-    def distance_2d(self, another):
+    def dist_2d(self, another):
+        """
+        Calculate horizontal (2D) distance between two points.
+        """
 
-        return sqrt((self.p_x - another.p_x) ** 2 + (self.p_y - another.p_y) ** 2)
+        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
-    def spat_coincident_with(self, another, tolerance=MINIMUM_SEPARATION_THRESHOLD):
+    def coincident(self, another, tolerance=MINIMUM_SEPARATION_THRESHOLD):
+        """
+        Check spatial coincidence of two points
+        """
 
-        if self.spat_distance(another) > tolerance:
+        if self.dist_3d(another) > tolerance:
             return False
         else:
             return True
@@ -73,98 +89,144 @@ class CartesianPoint3DT(object):
     def translate(self, sx=0.0, sy=0.0, sz=0.0):
         """
         Create a new point shifted by given amount from the self instance.
+       """
 
-        @param  sx:  the shift to be applied along the x axis.
-        @type  sx:  float.
-        @param  sy:  the shift to be applied along the y axis.
-        @type  sy:  float.
-        @param  sz:  the shift to be applied along the z axis.
-        @type  sz:  float.
+        return CPoint(self.x + sx, self.y + sy, self.z + sz, self.t)
 
-        @return:  a new CartesianPoint3DT instance shifted by the given amounts with respect to the original one.
+    def translate_with_vector(self, displ_vect):
+        """
+        Create a new point from the self, with offsets defined by a vector
         """
 
-        return CartesianPoint3DT(self.p_x + sx, self.p_y + sy, self.p_z + sz, self.p_t)
+        return CPoint(self.x + displ_vect.x, self.y + displ_vect.y,
+                      self.z + displ_vect.z, self.t)
 
-    def translate_with_vector(self, displacement_vector):
+    @property
+    def vector(self):
+        """
+        Create a vector based on the point coordinates
+        """
 
-        return CartesianPoint3DT(self.p_x + displacement_vector.x, self.p_y + displacement_vector.y,
-                                 self.p_z + displacement_vector.z, self.p_t)
-
-    def as_vector3d(self):
-
-        return CartesianVector3D(self.p_x, self.p_y, self.p_z)
+        return CVect(self.x, self.y, self.z)
 
     def delta_time(self, another):
+        """
+        Calculate the time difference between two points
+        """
 
-        return another.p_t - self.p_t
+        return another.t - self.t
 
     def speed(self, another):
-
+        """
+        Calculate the speed required to displace self to another
+        """
         try:
-            return self.spat_distance(another) / self.delta_time(another)
+            return self.dist_3d(another) / self.delta_time(another)
         except:
-            return np.nan
+            return np.Infinity
 
 
-class CartesianVector3D(object):
+class CVect(object):
+    """
+    Cartesian vector, 3D
+    """
+
     def __init__(self, x=np.nan, y=np.nan, z=np.nan):
-
+        """
+        Constructor
+        """
         self._x = x
         self._y = y
         self._z = z
 
+    def __repr__(self):
+
+        return "CVect({:.3f}, {:.3f}, {:.3f})".format(self._x, self._y, self._z)
+
     @property
     def x(self):
+        """
+        Return x value of vector
+        """
 
         return self._x
 
     @property
     def y(self):
+        """
+        Return y value of vector
+        """
 
         return self._y
 
     @property
     def z(self):
+        """
+        Return z value of vector
+        """
 
         return self._z
 
+    def __add__(self, another):
+        """
+        Sum of two vectors
+        """
+
+        return CVect(self.x + another.x,
+                     self.y + another.y,
+                     self.z + another.z)
+
     def clone(self):
+        """
+        Clone the vector
+        """
+        return CVect(self.x, self.y, self.z)
 
-        return CartesianVector3D(self.x, self.y, self.z)
-
-    @property
-    def length(self):
+    def __abs__(self):
+        """
+        Vector magnitude
+        """
 
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     @property
     def length_horiz(self):
-
+        """
+        Vector length on the horizontal (xy) plane
+        """
         return sqrt(self.x * self.x + self.y * self.y)
 
     def scale(self, scale_factor):
+        """
+        Create a scaled vector
+        """
 
-        return CartesianVector3D(self.x * scale_factor,
-                                 self.y * scale_factor,
-                                 self.z * scale_factor)
+        return CVect(self.x * scale_factor,
+                     self.y * scale_factor,
+                     self.z * scale_factor)
 
-    def as_versor3d(self):
+    @property
+    def versor(self):
+        """
+        Calculate versor
 
-        return self.scale(1.0 / self.length)
+        Example:
+          >>> print CVect(5, 0, 0).versor
+          CVect(1.000, 0.000, 0.000)
+        """
 
-    def as_downvector3d(self):
+        return self.scale(1.0 / abs(self))
+
+    @property
+    def downvector(self):
+        """
+        Calculate new vector pointing downwards
+        """
 
         if self.z > 0.0:
             return self.scale(-1.0)
         else:
             return self.clone()
-
-    def add(self, another):
-
-        return CartesianVector3D(self.x + another.x,
-                                 self.y + another.y,
-                                 self.z + another.z)
 
     def slope_radians(self):
 
@@ -172,10 +234,10 @@ class CartesianVector3D(object):
 
     def as_geolaxis(self):
 
-        if self.length < MINIMUM_VECTOR_MAGNITUDE:
+        if abs(self) < MINIMUM_VECTOR_MAGNITUDE:
             return None
 
-        unit_vect = self.as_versor3d()
+        unit_vect = self.versor
 
         plunge = - degrees(asin(unit_vect.z))  # upward negative, downward positive
 
@@ -188,7 +250,7 @@ class CartesianVector3D(object):
         assert 0.0 <= trend < 360.0
         assert -90.0 <= plunge <= 90.0
 
-        return GeolAxis(trend, plunge)
+        return GDirect(trend, plunge)
 
     def scalar_product(self, another):
 
@@ -197,7 +259,7 @@ class CartesianVector3D(object):
     def vectors_cos_angle(self, another):
 
         try:
-            val = self.scalar_product(another) / (self.length * another.length)
+            val = self.scalar_product(another) / (abs(self) * abs(another))
             if val > 1.0:
                 return 1.0
             elif val < -1.0:
@@ -207,7 +269,7 @@ class CartesianVector3D(object):
         except ZeroDivisionError:
             return np.nan
 
-    def angle_degr(self, another):
+    def angle(self, another):
         """
         angle between two vectors,
         in 0 - pi range
@@ -221,7 +283,7 @@ class CartesianVector3D(object):
         y = self.z * another.x - self.x * another.z
         z = self.x * another.y - self.y * another.x
 
-        return CartesianVector3D(x, y, z)
+        return CVect(x, y, z)
 
     def by_matrix(self, matrix3x3):
 
@@ -229,47 +291,92 @@ class CartesianVector3D(object):
         vy = matrix3x3[1, 0] * self.x + matrix3x3[1, 1] * self.y + matrix3x3[1, 2] * self.z
         vz = matrix3x3[2, 0] * self.x + matrix3x3[2, 1] * self.y + matrix3x3[2, 2] * self.z
 
-        return CartesianVector3D(vx, vy, vz)
+        return CVect(vx, vy, vz)
 
 
-class GeolAxis(object):
+class GDirect(object):
     """
-    Structural axis,
-    defined by trend and plunge (both in degrees)
-    Trend range: [0.0, 360.0[ clockwise, from 0 (North) 
-    Plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
+    Geological direction.
+    Defined by trend and plunge (both in degrees)
+     - trend: [0.0, 360.0[ clockwise, from 0 (North)
+     - plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
     """
 
     def __init__(self, srcTrend, srcPlunge):
+        """
 
-        assert 0.0 <= srcTrend < 360.0
-        assert -90.0 <= srcPlunge <= 90.0
+        :param srcTrend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
+        :param srcPlunge: Plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
 
-        self._trend = srcTrend
-        self._plunge = srcPlunge
+        Example:
+          >>> a = GDirect(120, -27)
+          >>> b = GDirect(54, -320)
+          Traceback (most recent call last):
+          ...
+          AssertionError: plunge must be between -90° and +90° (comprised)
+        """
 
-    @property
-    def vals(self):
-        
-        return self._trend, self._plunge
-    
+        assert -90.0 <= srcPlunge <= 90.0, "plunge must be between -90° and +90° (comprised)"
+        self._trend = srcTrend % 360.0
+        self._plunge = float(srcPlunge)
+
     @property
     def trend(self):
+        """
+        Returns trend of the geological direction.
+        Range is [0, 360[
+
+        Example:
+          >>> GDirect(420, -17).trend
+          60.0
+          >>> GDirect(-20, 49).trend
+          340.0
+        """
 
         return self._trend
 
     @property
     def plunge(self):
+        """
+        Returns plugne of the geological direction.
+        Range is [-90, 90]
+
+        Example:
+          >>> GDirect(420, -17).plunge
+          -17.0
+        """
 
         return self._plunge
 
-    def versor_3d(self):
+    @property
+    def tp(self):
+        """
+        Returns trend and plunge of the geological direction
+
+        Example:
+          >>> GDirect(-90, -45).tp
+          (270.0, -45.0)
+        """
+        
+        return self.trend, self.plunge
+
+    @property
+    def versor(self):
+        """
+        Returns the CVect corresponding to the direction
+
+        Examples:
+          >>> print GDirect(0, 90).versor
+          CVect(0.000, 0.000, -1.000)
+          >>> print GDirect(0, -90).versor
+          CVect(0.000, 0.000, 1.000)
+        """
 
         north_coord = cos(radians(self.plunge)) * cos(radians(self.trend))
         east_coord = cos(radians(self.plunge)) * sin(radians(self.trend))
         down_coord = sin(radians(self.plunge))
 
-        return CartesianVector3D(east_coord, north_coord, -down_coord)
+        return CVect(east_coord, north_coord, -down_coord)
 
     def as_downgeolaxis(self):
 
@@ -278,7 +385,7 @@ class GeolAxis(object):
             trend = (trend + 180.0) % 360.0
             plunge = - plunge
 
-        return GeolAxis(trend, plunge)
+        return GDirect(trend, plunge)
 
     def as_normalgeolplane(self):
 
@@ -286,12 +393,13 @@ class GeolAxis(object):
         dipdir = (down_axis.trend + 180.0) % 360.0
         dipangle = 90.0 - down_axis.plunge
 
-        return GeolPlane(dipdir, dipangle)
+        return GPlane(dipdir, dipangle)
 
 
-class CartesianPlane(object):
+class CPlane(object):
     """
-    Cartesian plane, expressed by equation:
+    Cartesian plane.
+    Expressed by equation:
     ax + by + cz + d = 0
 
     """
@@ -320,33 +428,34 @@ class CartesianPlane(object):
 
     @classmethod
     def from_points(cls, pt1, pt2, pt3):
-        matr_a = np.array([[pt1.p_y, pt1.p_z, 1],
-                           [pt2.p_y, pt2.p_z, 1],
-                           [pt3.p_y, pt3.p_z, 1]])
+        matr_a = np.array([[pt1.y, pt1.z, 1],
+                           [pt2.y, pt2.z, 1],
+                           [pt3.y, pt3.z, 1]])
 
-        matr_b = - np.array([[pt1.p_x, pt1.p_z, 1],
-                             [pt2.p_x, pt2.p_z, 1],
-                             [pt3.p_x, pt3.p_z, 1]])
+        matr_b = - np.array([[pt1.x, pt1.z, 1],
+                             [pt2.x, pt2.z, 1],
+                             [pt3.x, pt3.z, 1]])
 
-        matr_c = np.array([[pt1.p_x, pt1.p_y, 1],
-                           [pt2.p_x, pt2.p_y, 1],
-                           [pt3.p_x, pt3.p_y, 1]])
+        matr_c = np.array([[pt1.x, pt1.y, 1],
+                           [pt2.x, pt2.y, 1],
+                           [pt3.x, pt3.y, 1]])
 
-        matr_d = - np.array([[pt1.p_x, pt1.p_y, pt1.p_z],
-                             [pt2.p_x, pt2.p_y, pt2.p_z],
-                             [pt3.p_x, pt3.p_y, pt3.p_z]])
+        matr_d = - np.array([[pt1.x, pt1.y, pt1.z],
+                             [pt2.x, pt2.y, pt2.z],
+                             [pt3.x, pt3.y, pt3.z]])
 
         return cls(np.linalg.det(matr_a),
                    np.linalg.det(matr_b),
                    np.linalg.det(matr_c),
                    np.linalg.det(matr_d))
 
+    @property
     def normal_versor3d(self):
         """
         return the normal versor to the cartesian plane
         """
 
-        return CartesianVector3D(self.a, self.b, self.c).as_versor3d()
+        return CVect(self.a, self.b, self.c).versor
 
     def as_geolplane_and_point_3d(self):
         """
@@ -354,9 +463,9 @@ class CartesianPlane(object):
         and a point lying in the plane (non-unique solution)
         """
 
-        geol_plane = self.normal_versor3d().as_geolaxis().as_normalgeolplane()
-        point = CartesianPoint3DT(point_solution(np.array([[self.a, self.b, self.c]]),
-                                                 np.array([-self.d])))
+        geol_plane = self.normal_versor3d.as_geolaxis().as_normalgeolplane()
+        point = CPoint(point_solution(np.array([[self.a, self.b, self.c]]),
+                                      np.array([-self.d])))
         return geol_plane, point
 
     def intersection_versor3d(self, another):
@@ -364,7 +473,7 @@ class CartesianPlane(object):
         return intersection versor for two intersecting planes
         """
 
-        return self.normal_versor3d().vector_product(another.normal_versor3d()).as_versor3d()
+        return self.normal_versor3d.vector_product(another.normal_versor3d).versor
 
     def intersection_point3dt(self, another):
         """
@@ -377,13 +486,13 @@ class CartesianPlane(object):
         b = np.array([-self.d, -another.d])
         x, y, z = point_solution(a, b)
 
-        return CartesianPoint3DT(x, y, z)
+        return CPoint(x, y, z)
 
     def set_point_inside(self, pt):
-        return self.a * pt.p_x + self.b * pt.p_y + self.c * pt.p_z + self.d
+        return self.a * pt.x + self.b * pt.y + self.c * pt.z + self.d
 
     def angle_degr(self, another):
-        angle_degr = self.normal_versor3d().angle_degr(another.normal_versor3d())
+        angle_degr = self.normal_versor3d.angle(another.normal_versor3d)
 
         assert angle_degr > 0.0
 
@@ -393,16 +502,11 @@ class CartesianPlane(object):
         return angle_degr
 
 
-def rhrstrike2dipdir(rhr_strk):
 
-    return (rhr_strk + 90.0) % 360.0
-
-
-class GeolPlane(object):
+class GPlane(object):
     """
-    Structural plane, following geological conventions:
-    dip direction and dip angle.
-    
+    Geological plane.
+    Defined by dip direction and dip angle.
     """
 
     def __init__(self, srcAzimuth, srcDipAngle, isRHRStrike=False):
@@ -411,40 +515,80 @@ class GeolPlane(object):
 
         @param  srcAzimuth:  Azimuth of the plane (RHR strike or dip direction).
         @type  srcAzimuth:  number or string convertible to float.
-        @param  srcDipAngle:  Dip angle of the plane (0-90�).
+        @param  srcDipAngle:  Dip angle of the plane (0-90°).
         @type  srcDipAngle:  number or string convertible to float.
            
         @return:  GeolPlane.
+
+        Example:
+          >>> gp = GPlane(0, 90)
     
         """
 
         if isRHRStrike:
-            self._dipdir = rhrstrike2dipdir(srcAzimuth)
+            self._dipdir = rhrstrk2dd(srcAzimuth)
         else:
             self._dipdir = srcAzimuth % 360.0
         self._dipangle = srcDipAngle
 
     @property
-    def vals(self):
-        
-        return self._dipdir, self._dipangle
-    
-    @property
-    def dipdir(self):
-        
+    def dd(self):
+        """
+
+        Returns the dip direction of the geological plane.
+
+        Example:
+          >>> GPlane(34.2, 89.7).dd
+          34.2
+
+        """
+
         return self._dipdir
 
     @property
-    def dipangle(self):
-        
+    def da(self):
+        """
+        Returns the dip angle of the geological plane.
+
+        Example:
+          >>> GPlane(183, 77).da
+          77
+
+        """
+
         return self._dipangle
 
-    def as_normalgeolaxis(self):
-        
-        trend = (self.dipdir + 180.0) % 360.0
-        plunge = 90.0 - self.dipangle
+    @property
+    def dda(self):
+        """
+        Returns a tuple storing the dip direction and dip angle values of a geological plane.
 
-        return GeolAxis(trend, plunge)
+        Example:
+          >>> gp = GPlane(89.4, 17.2)
+          >>> gp.dda
+          (89.4, 17.2)
+
+        """
+        
+        return self.dd, self.da
+
+    @property
+    def normal(self):
+        """
+        Returns the normal to the plane, as a geological (downward) axis.
+
+        Example:
+            >>> ga = GPlane(90, 55).normal
+            >>> ga.trend
+            270.0
+            >>> ga.plunge
+            35.0
+        """
+        
+        trend = (self.dd + 180.0) % 360.0
+        plunge = 90.0 - self.da
+
+        return GDirect(trend, plunge)
 
     def plane_x_coeff(self):
         """
@@ -453,7 +597,7 @@ class GeolPlane(object):
                
         @return:  slope - float.    
         """
-        return - sin(radians(self.dipdir)) * tan(radians(self.dipangle))
+        return - sin(radians(self.dd)) * tan(radians(self.da))
 
     def plane_y_coeff(self):
         """
@@ -462,7 +606,7 @@ class GeolPlane(object):
                
         @return:  slope - float.     
         """
-        return - cos(radians(self.dipdir)) * tan(radians(self.dipangle))
+        return - cos(radians(self.dd)) * tan(radians(self.da))
 
     def plane_from_geo(self, or_Pt):
         """
@@ -475,9 +619,9 @@ class GeolPlane(object):
         @return:  lambda (closure) expressing an analytical formula for deriving z given x and y values.
         """
 
-        x0 = or_Pt.p_x
-        y0 = or_Pt.p_y
-        z0 = or_Pt.p_z
+        x0 = or_Pt.x
+        y0 = or_Pt.y
+        z0 = or_Pt.z
 
         # slope of the line parallel to the x axis and contained by the plane
         a = self.plane_x_coeff()
@@ -488,31 +632,33 @@ class GeolPlane(object):
         return lambda x, y: a * (x - x0) + b * (y - y0) + z0
 
     def as_cartesplane(self, point):
-        normal_versor = self.as_normalgeolaxis().as_downgeolaxis().versor_3d()
+
+        normal_versor = self.normal.as_downgeolaxis().versor
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
-        d = - (a * point.p_x + b * point.p_y + c * point.p_z)
-        return CartesianPlane(a, b, c, d)
+        d = - (a * point.x + b * point.y + c * point.z)
+        return CPlane(a, b, c, d)
 
     def angle_degr(self, another):
         """
         calculate angle (in degrees) between two planes
 
-        >>> p1 = GeolPlane(100.0, 50.0)
+        >>> p1 = GPlane(100.0, 50.0)
         >>> p1.angle_degr(p1)
         0.0
 
-        >>> p2 = GeolPlane(0.0, 0.0)
-        >>> p3 = GeolPlane(300.0, 90.0)
+        >>> p2 = GPlane(300.0, 10.0)
+        >>> p3 = GPlane(300.0, 90.0)
         >>> p2.angle_degr(p3)
-        90.0
+        80.0
         """
 
-        vec0 = self.as_normalgeolaxis().versor_3d()
-        vec1 = another.as_normalgeolaxis().versor_3d()
+        vec0 = self.normal.versor
+        vec1 = another.normal.versor
 
-        return vec0.angle_degr(vec1)
+        return vec0.angle(vec1)
 
 
 if __name__ == "__main__":
+
     import doctest
     doctest.testmod()
