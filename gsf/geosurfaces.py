@@ -135,21 +135,27 @@ class CVect(object):
         """
         Constructor
         """
-        self._x = x
-        self._y = y
-        self._z = z
 
-    def __repr__(self):
+        self.v = np.array([x, y, z], dtype=np.float64)
 
-        return "CVect({:.3f}, {:.3f}, {:.3f})".format(self._x, self._y, self._z)
+    @classmethod
+    def from_array(cls, a):
+
+        obj = cls()
+        obj.v = a
+        return obj
 
     @property
     def x(self):
         """
         Return x value of vector
+
+        Example:
+          >>> CVect(1,2,0).x
+          1.0
         """
 
-        return self._x
+        return self.v[0]
 
     @property
     def y(self):
@@ -157,7 +163,7 @@ class CVect(object):
         Return y value of vector
         """
 
-        return self._y
+        return self.v[1]
 
     @property
     def z(self):
@@ -165,22 +171,28 @@ class CVect(object):
         Return z value of vector
         """
 
-        return self._z
+        return self.v[2]
+
+    def __repr__(self):
+
+        return "CVect({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
 
     def __add__(self, another):
         """
         Sum of two vectors
+
+        Example:
+          >>> CVect(1,0,0) + CVect(0, 1, 1)
+          CVect(1.0000, 1.0000, 1.0000)
         """
 
-        return CVect(self.x + another.x,
-                     self.y + another.y,
-                     self.z + another.z)
+        return CVect.from_array(self.v + another.v)
 
     def clone(self):
         """
         Clone the vector
         """
-        return CVect(self.x, self.y, self.z)
+        return CVect.from_array(self.v)
 
     def __abs__(self):
         """
@@ -190,7 +202,7 @@ class CVect(object):
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     @property
-    def length_horiz(self):
+    def hlen(self):
         """
         Vector length on the horizontal (xy) plane
         """
@@ -199,11 +211,13 @@ class CVect(object):
     def scale(self, scale_factor):
         """
         Create a scaled vector
+
+        Example;
+          >>> CVect(1,0,1).scale(2.5)
+          CVect(2.5000, 0.0000, 2.5000)
         """
 
-        return CVect(self.x * scale_factor,
-                     self.y * scale_factor,
-                     self.z * scale_factor)
+        return CVect.from_array(self.v * scale_factor)
 
     @property
     def versor(self):
@@ -211,8 +225,8 @@ class CVect(object):
         Calculate versor
 
         Example:
-          >>> print CVect(5, 0, 0).versor
-          CVect(1.000, 0.000, 0.000)
+          >>> CVect(5, 0, 0).versor
+          CVect(1.0000, 0.0000, 0.0000)
         """
 
         return self.scale(1.0 / abs(self))
@@ -221,6 +235,12 @@ class CVect(object):
     def downvector(self):
         """
         Calculate new vector pointing downwards
+
+        Example:
+          >>> CVect(1,1,1).downvector
+          CVect(-1.0000, -1.0000, -1.0000)
+          >>> CVect(-1,-1,-1).downvector
+          CVect(-1.0000, -1.0000, -1.0000)
         """
 
         if self.z > 0.0:
@@ -230,7 +250,7 @@ class CVect(object):
 
     def slope_radians(self):
 
-        return atan(self.z / self.length_horiz)
+        return atan(self.z / self.hlen)
 
     def as_geolaxis(self):
 
@@ -271,8 +291,14 @@ class CVect(object):
 
     def angle(self, another):
         """
-        angle between two vectors,
-        in 0 - pi range
+        angle between two vectors, as degrees
+        in 0 - 180 range
+
+        Example:
+          >>> CVect(1,0,0).angle(CVect(0,0,1))
+          90.0
+          >>> CVect(1,0,0).angle(CVect(-1,0,0))
+          180.0
         """
 
         return degrees(acos(self.vectors_cos_angle(another)))
@@ -293,107 +319,6 @@ class CVect(object):
 
         return CVect(vx, vy, vz)
 
-
-class GDirect(object):
-    """
-    Geological direction.
-    Defined by trend and plunge (both in degrees)
-     - trend: [0.0, 360.0[ clockwise, from 0 (North)
-     - plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
-    """
-
-    def __init__(self, srcTrend, srcPlunge):
-        """
-
-        :param srcTrend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
-        :param srcPlunge: Plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
-
-        Example:
-          >>> a = GDirect(120, -27)
-          >>> b = GDirect(54, -320)
-          Traceback (most recent call last):
-          ...
-          AssertionError: plunge must be between -90° and +90° (comprised)
-        """
-
-        assert -90.0 <= srcPlunge <= 90.0, "plunge must be between -90° and +90° (comprised)"
-        self._trend = srcTrend % 360.0
-        self._plunge = float(srcPlunge)
-
-    @property
-    def trend(self):
-        """
-        Returns trend of the geological direction.
-        Range is [0, 360[
-
-        Example:
-          >>> GDirect(420, -17).trend
-          60.0
-          >>> GDirect(-20, 49).trend
-          340.0
-        """
-
-        return self._trend
-
-    @property
-    def plunge(self):
-        """
-        Returns plugne of the geological direction.
-        Range is [-90, 90]
-
-        Example:
-          >>> GDirect(420, -17).plunge
-          -17.0
-        """
-
-        return self._plunge
-
-    @property
-    def tp(self):
-        """
-        Returns trend and plunge of the geological direction
-
-        Example:
-          >>> GDirect(-90, -45).tp
-          (270.0, -45.0)
-        """
-        
-        return self.trend, self.plunge
-
-    @property
-    def versor(self):
-        """
-        Returns the CVect corresponding to the direction
-
-        Examples:
-          >>> print GDirect(0, 90).versor
-          CVect(0.000, 0.000, -1.000)
-          >>> print GDirect(0, -90).versor
-          CVect(0.000, 0.000, 1.000)
-        """
-
-        north_coord = cos(radians(self.plunge)) * cos(radians(self.trend))
-        east_coord = cos(radians(self.plunge)) * sin(radians(self.trend))
-        down_coord = sin(radians(self.plunge))
-
-        return CVect(east_coord, north_coord, -down_coord)
-
-    def as_downgeolaxis(self):
-
-        trend, plunge = self.trend, self.plunge
-        if plunge < 0.0:
-            trend = (trend + 180.0) % 360.0
-            plunge = - plunge
-
-        return GDirect(trend, plunge)
-
-    def as_normalgeolplane(self):
-
-        down_axis = self.as_downgeolaxis()
-        dipdir = (down_axis.trend + 180.0) % 360.0
-        dipangle = 90.0 - down_axis.plunge
-
-        return GPlane(dipdir, dipangle)
 
 
 class CPlane(object):
@@ -481,7 +406,7 @@ class CPlane(object):
         for two planes
         """
 
-        # find a point lying on the intersection line (this is a non-unique solution)    
+        # find a point lying on the intersection line (this is a non-unique solution)
         a = np.array([[self.a, self.b, self.c], [another.a, another.b, another.c]])
         b = np.array([-self.d, -another.d])
         x, y, z = point_solution(a, b)
@@ -501,6 +426,108 @@ class CPlane(object):
 
         return angle_degr
 
+
+
+class GDirect(object):
+    """
+    Geological direction.
+    Defined by trend and plunge (both in degrees)
+     - trend: [0.0, 360.0[ clockwise, from 0 (North)
+     - plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
+    """
+
+    def __init__(self, srcTrend, srcPlunge):
+        """
+
+        :param srcTrend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
+        :param srcPlunge: Plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
+
+        Example:
+          >>> a = GDirect(120, -27)
+          >>> b = GDirect(54, -320)
+          Traceback (most recent call last):
+          ...
+          AssertionError: plunge must be between -90° and +90° (comprised)
+        """
+
+        assert -90.0 <= srcPlunge <= 90.0, "plunge must be between -90° and +90° (comprised)"
+        self._trend = srcTrend % 360.0
+        self._plunge = float(srcPlunge)
+
+    @property
+    def trend(self):
+        """
+        Returns trend of the geological direction.
+        Range is [0, 360[
+
+        Example:
+          >>> GDirect(420, -17).trend
+          60.0
+          >>> GDirect(-20, 49).trend
+          340.0
+        """
+
+        return self._trend
+
+    @property
+    def plunge(self):
+        """
+        Returns plugne of the geological direction.
+        Range is [-90, 90]
+
+        Example:
+          >>> GDirect(420, -17).plunge
+          -17.0
+        """
+
+        return self._plunge
+
+    @property
+    def tp(self):
+        """
+        Returns trend and plunge of the geological direction
+
+        Example:
+          >>> GDirect(-90, -45).tp
+          (270.0, -45.0)
+        """
+        
+        return self.trend, self.plunge
+
+    @property
+    def versor(self):
+        """
+        Returns the CVect corresponding to the direction
+
+        Examples:
+          >>> print GDirect(0, 90).versor
+          CVect(0.0000, 0.0000, -1.0000)
+          >>> print GDirect(0, -90).versor
+          CVect(0.0000, 0.0000, 1.0000)
+        """
+
+        north_coord = cos(radians(self.plunge)) * cos(radians(self.trend))
+        east_coord = cos(radians(self.plunge)) * sin(radians(self.trend))
+        down_coord = sin(radians(self.plunge))
+
+        return CVect(east_coord, north_coord, -down_coord)
+
+    def as_downgeolaxis(self):
+
+        trend, plunge = self.trend, self.plunge
+        if plunge < 0.0:
+            trend = (trend + 180.0) % 360.0
+            plunge = - plunge
+
+        return GDirect(trend, plunge)
+
+    def as_normalgeolplane(self):
+
+        down_axis = self.as_downgeolaxis()
+        dipdir = (down_axis.trend + 180.0) % 360.0
+        dipangle = 90.0 - down_axis.plunge
+
+        return GPlane(dipdir, dipangle)
 
 
 class GPlane(object):
