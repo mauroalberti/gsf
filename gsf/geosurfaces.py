@@ -11,6 +11,7 @@ from geosurf_utils import rhrstrk2dd
 
 MINIMUM_SEPARATION_THRESHOLD = 1e-10
 MINIMUM_VECTOR_MAGNITUDE = 1e-10
+MINIMUM_SCALAR_VALUE = 1e-15
 
 
 class CPoint(object):
@@ -107,7 +108,7 @@ class CPoint(object):
         Create a vector based on the point coordinates
         """
 
-        return CVect(self.x, self.y, self.z)
+        return Vect(self.x, self.y, self.z)
 
     def delta_time(self, another):
         """
@@ -126,32 +127,55 @@ class CPoint(object):
             return np.Infinity
 
 
-class CVect(object):
+class Vect(object):
     """
     Cartesian vector, 3D
+    Right-handed rectangular Cartesian coordinate system (ENU):
+    x axis -> East
+    y axis -> North
+    z axis -> Up
     """
 
     def __init__(self, x=np.nan, y=np.nan, z=np.nan):
         """
-        Constructor
+        Vect constructor
         """
 
-        self.v = np.array([x, y, z], dtype=np.float64)
+        self._v = np.array([x, y, z], dtype=np.float64)
 
     @classmethod
     def from_array(cls, a):
+        """
+        Class method to construct a vector from a numpy 1x3 array.
+
+        Example:
+          >>> Vect.from_array(np.array([1,0,1]))
+          Vect(1.0000, 0.0000, 1.0000)
+        """
 
         obj = cls()
-        obj.v = a
+        obj._v = a
         return obj
+
+    @property
+    def v(self):
+        """
+        Return the vector values as array
+
+        Example:
+          >>> Vect(1,1,0).v
+          array([ 1.,  1.,  0.])
+        """
+
+        return self._v
 
     @property
     def x(self):
         """
-        Return x value of vector
+        Return vector x value
 
         Example:
-          >>> CVect(1,2,0).x
+          >>> Vect(1, 2, 0).x
           1.0
         """
 
@@ -160,7 +184,11 @@ class CVect(object):
     @property
     def y(self):
         """
-        Return y value of vector
+        Return vector y value
+
+        Example:
+          >>> Vect(1, 2, 0).y
+          2.0
         """
 
         return self.v[1]
@@ -168,35 +196,43 @@ class CVect(object):
     @property
     def z(self):
         """
-        Return z value of vector
+        Return vector z value
+
+        Example:
+          >>> Vect(1, 2, 0).z
+          0.0
         """
 
         return self.v[2]
 
     def __repr__(self):
 
-        return "CVect({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
+        return "Vect({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
 
     def __add__(self, another):
         """
         Sum of two vectors
 
         Example:
-          >>> CVect(1,0,0) + CVect(0, 1, 1)
-          CVect(1.0000, 1.0000, 1.0000)
+          >>> Vect(1,0,0) + Vect(0, 1, 1)
+          Vect(1.0000, 1.0000, 1.0000)
         """
 
-        return CVect.from_array(self.v + another.v)
+        return Vect.from_array(self.v + another.v)
 
     def clone(self):
         """
-        Clone the vector
+        Clone the vector.
         """
-        return CVect.from_array(self.v)
+        return Vect.from_array(self.v)
 
     def __abs__(self):
         """
-        Vector magnitude
+        Vector magnitude.
+
+        Example:
+          >>> abs(Vect(3, 4, 0))
+          5.0
         """
 
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
@@ -204,43 +240,50 @@ class CVect(object):
     @property
     def hlen(self):
         """
-        Vector length on the horizontal (xy) plane
+        Vector length projected on the horizontal (xy) plane.
+
+        Example:
+          >>> Vect(3, 4, 7).hlen
+          5.0
         """
+
         return sqrt(self.x * self.x + self.y * self.y)
 
     def scale(self, scale_factor):
         """
-        Create a scaled vector
+        Create a scaled vector.
 
         Example;
-          >>> CVect(1,0,1).scale(2.5)
-          CVect(2.5000, 0.0000, 2.5000)
+          >>> Vect(1,0,1).scale(2.5)
+          Vect(2.5000, 0.0000, 2.5000)
         """
 
-        return CVect.from_array(self.v * scale_factor)
+        return Vect.from_array(self.v * scale_factor)
 
     @property
     def versor(self):
         """
-        Calculate versor
+        Calculate versor.
 
         Example:
-          >>> CVect(5, 0, 0).versor
-          CVect(1.0000, 0.0000, 0.0000)
+          >>> Vect(5, 0, 0).versor
+          Vect(1.0000, 0.0000, 0.0000)
+          >>> Vect(0, 0, -1).versor
+          Vect(0.0000, 0.0000, -1.0000)
         """
 
         return self.scale(1.0 / abs(self))
 
     @property
-    def downvector(self):
+    def downvect(self):
         """
         Calculate new vector pointing downwards
 
         Example:
-          >>> CVect(1,1,1).downvector
-          CVect(-1.0000, -1.0000, -1.0000)
-          >>> CVect(-1,-1,-1).downvector
-          CVect(-1.0000, -1.0000, -1.0000)
+          >>> Vect(1, 1, 1).downvect
+          Vect(-1.0000, -1.0000, -1.0000)
+          >>> Vect(-1, -1, -1).downvect
+          Vect(-1.0000, -1.0000, -1.0000)
         """
 
         if self.z > 0.0:
@@ -248,38 +291,109 @@ class CVect(object):
         else:
             return self.clone()
 
-    def slope_radians(self):
+    @property
+    def slope(self):
+        """
+        Slope of a vector expressed as degrees.
+        Positive when vector is downward pointing or horizontal,
+        negative when upward pointing.
 
-        return atan(self.z / self.hlen)
+        Example:
+          >>> Vect(1, 0, -1).slope
+          45.0
+          >>> Vect(1, 0, 1).slope
+          -45.0
+          >>> Vect(0, 1, 0).slope
+          0.0
+          >>> Vect(0, 0, 1).slope
+          -90.0
+          >>> Vect(0, 0, -1).slope
+          90.0
+        """
 
-    def as_geolaxis(self):
+        hlen = self.hlen
+        if hlen == 0.0:
+            if self.z > 0.:
+                return -90.
+            elif self.z < 0.:
+                return 90.
+            else:
+                raise Exception("Zero-valued vector")
+        else:
+            slope = - degrees(atan(self.z / self.hlen))
+            if abs(slope) > MINIMUM_SCALAR_VALUE:
+                return slope
+            else:
+                return 0.
+
+    @property
+    def gvect(self):
+        """
+        Calculate the geological axis parallel to the original vector.
+        Trend range: [0°, 360°[
+        Plunge range: [-90°, 90°], with negative values for geological axes
+        pointing downward and positive values for axes pointing downward.
+
+        Examples:
+          >>> Vect(0, 1, 1).gvect
+          GVect(0.00, -45.00)
+          >>> Vect(1, 0, 1).gvect
+          GVect(90.00, -45.00)
+          >>> Vect(0, 0, 1).gvect
+          GVect(0.00, -90.00)
+          >>> Vect(0, 0, -1).gvect
+          GVect(0.00, 90.00)
+          >>> Vect(-1, 0, 0).gvect
+          GVect(270.00, 0.00)
+          >>> Vect(0, -1, 0).gvect
+          GVect(180.00, 0.00)
+          >>> Vect(-1, -1, 0).gvect
+          GVect(225.00, 0.00)
+        """
 
         if abs(self) < MINIMUM_VECTOR_MAGNITUDE:
-            return None
+            raise Exception("Provided vector has near-zero magnitude")
+
+        plunge = self.slope  # upward pointing -> negative value, downward -> positive
 
         unit_vect = self.versor
+        if unit_vect.y == 0. and unit_vect.x == 0:
+            trend = 0.
+        else:
+            trend = (90. - degrees(atan2(unit_vect.y, unit_vect.x))) % 360.
 
-        plunge = - degrees(asin(unit_vect.z))  # upward negative, downward positive
+        return GVect(trend, plunge)
 
-        trend = 90.0 - degrees(atan2(unit_vect.y, unit_vect.x))
-        if trend < 0.0:
-            trend += 360.0
-        elif trend > 360.0:
-            trend -= 360.0
+    def sp(self, another):
+        """
+        Vector scalar product.
 
-        assert 0.0 <= trend < 360.0
-        assert -90.0 <= plunge <= 90.0
-
-        return GDirect(trend, plunge)
-
-    def scalar_product(self, another):
+        Examples:
+          >>> Vect(1, 0, 0).sp(Vect(1, 0, 0))
+          1.0
+          >>> Vect(1, 0, 0).sp(Vect(0, 1, 0))
+          0.0
+          >>> Vect(1, 0, 0).sp(Vect(-1, 0, 0))
+          -1.0
+        """
 
         return self.x * another.x + self.y * another.y + self.z * another.z
 
-    def vectors_cos_angle(self, another):
+    def cos_angle(self, another):
+        """
+        Return the cosine of the angle between two vectors.
+
+        Examples:
+          >>> Vect(1,0,0).cos_angle(Vect(0,0,1))
+          0.0
+          >>> Vect(1,0,0).cos_angle(Vect(-1,0,0))
+          -1.0
+          >>> Vect(1,0,0).cos_angle(Vect(1,0,0))
+          1.0
+        """
 
         try:
-            val = self.scalar_product(another) / (abs(self) * abs(another))
+            val = self.sp(another) / (abs(self) * abs(another))
             if val > 1.0:
                 return 1.0
             elif val < -1.0:
@@ -295,33 +409,175 @@ class CVect(object):
         in 0 - 180 range
 
         Example:
-          >>> CVect(1,0,0).angle(CVect(0,0,1))
+          >>> Vect(1,0,0).angle(Vect(0,0,1))
           90.0
-          >>> CVect(1,0,0).angle(CVect(-1,0,0))
+          >>> Vect(1,0,0).angle(Vect(-1,0,0))
           180.0
         """
 
-        return degrees(acos(self.vectors_cos_angle(another)))
+        return degrees(acos(self.cos_angle(another)))
 
-    def vector_product(self, another):
+    def vp(self, another):
+        """
+        Vector product
+
+        Examples:
+          >>> Vect(1, 0, 0).vp(Vect(0, 1, 0))
+          Vect(0.0000, 0.0000, 1.0000)
+        """
 
         x = self.y * another.z - self.z * another.y
         y = self.z * another.x - self.x * another.z
         z = self.x * another.y - self.y * another.x
 
-        return CVect(x, y, z)
+        return Vect(x, y, z)
 
     def by_matrix(self, matrix3x3):
+        """
+        Matrix multiplication of a vector
+
+        """
 
         vx = matrix3x3[0, 0] * self.x + matrix3x3[0, 1] * self.y + matrix3x3[0, 2] * self.z
         vy = matrix3x3[1, 0] * self.x + matrix3x3[1, 1] * self.y + matrix3x3[1, 2] * self.z
         vz = matrix3x3[2, 0] * self.x + matrix3x3[2, 1] * self.y + matrix3x3[2, 2] * self.z
 
-        return CVect(vx, vy, vz)
+        return Vect(vx, vy, vz)
 
 
+class GVect(object):
+    """
+    Geological vector.
+    Defined by trend and plunge (both in degrees)
+     - trend: [0.0, 360.0[ clockwise, from 0 (North)
+     - plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
+    """
 
-class CPlane(object):
+    def __init__(self, srcTrend, srcPlunge):
+        """
+        Geological vector constructor.
+        srcTrend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
+        srcPlunge: Plunge: [-90.0, 90.0], negative value: upward pointing axis, positive values: downward axis
+
+        Example:
+          >>> a = GVect(120, -27)
+          >>> b = GVect(54, -320)
+          Traceback (most recent call last):
+          ...
+          AssertionError: plunge must be between -90° and +90° (comprised)
+        """
+
+        assert -90.0 <= srcPlunge <= 90.0, "plunge must be between -90° and +90° (comprised)"
+        self._trend = srcTrend % 360.0
+        self._plunge = float(srcPlunge)
+
+    @property
+    def trend(self):
+        """
+        Returns trend of the geological direction.
+        Range is [0, 360[
+
+        Example:
+          >>> GVect(420, -17).trend
+          60.0
+          >>> GVect(-20, 49).trend
+          340.0
+        """
+
+        return self._trend
+
+    @property
+    def tp(self):
+        """
+        Returns trend and plunge of the geological direction
+
+        Example:
+          >>> GVect(-90, -45).tp
+          (270.0, -45.0)
+        """
+
+        return self.trend, self.plunge
+
+    @property
+    def plunge(self):
+        """
+        Returns plugne of the geological direction.
+        Range is [-90, 90]
+
+        Example:
+          >>> GVect(420, -17).plunge
+          -17.0
+        """
+
+        return self._plunge
+
+    def __repr__(self):
+
+        return "GVect({:.2f}, {:.2f})".format(*self.tp)
+
+    @property
+    def versor(self):
+        """
+        Returns the Vect corresponding to the geological vector
+
+        Examples:
+          >>> print GVect(0, 90).versor
+          Vect(0.0000, 0.0000, -1.0000)
+          >>> print GVect(0, -90).versor
+          Vect(0.0000, 0.0000, 1.0000)
+        """
+
+        north_coord = cos(radians(self.plunge)) * cos(radians(self.trend))
+        east_coord = cos(radians(self.plunge)) * sin(radians(self.trend))
+        down_coord = sin(radians(self.plunge))
+
+        return Vect(east_coord, north_coord, -down_coord)
+
+    @property
+    def dgvect(self):
+        """
+        Return downward-point geological vector
+
+        Examples:
+          >>> GVect(90, -45).dgvect
+          GVect(270.00, 45.00)
+          >>> GVect(180, 45).dgvect
+          GVect(180.00, 45.00)
+          >>> GVect(0, 0).dgvect
+          GVect(0.00, 0.00)
+          >>> GVect(0, 90).dgvect
+          GVect(0.00, 90.00)
+        """
+
+        trend, plunge = self.trend, self.plunge
+        if plunge < 0.0:
+            trend = (trend + 180.0) % 360.0
+            plunge = - plunge
+
+        return GVect(trend, plunge)
+
+    @property
+    def ngplane(self):
+        """
+        Return the geological plane that is normal to the geological vector.
+
+        Examples:
+          >>> GVect(0, 45).ngplane
+          GPlane(180.00, 45.00)
+          >>> GVect(0, -45).ngplane
+          GPlane(0.00, 45.00)
+          >>> GVect(0, 90).ngplane
+          GPlane(180.00, 0.00)
+        """
+
+        down_axis = self.dgvect
+        dipdir = (down_axis.trend + 180.0) % 360.0
+        dipangle = 90.0 - down_axis.plunge
+
+        return GPlane(dipdir, dipangle)
+
+
+class Plane(object):
     """
     Cartesian plane.
     Expressed by equation:
@@ -380,7 +636,7 @@ class CPlane(object):
         return the normal versor to the cartesian plane
         """
 
-        return CVect(self.a, self.b, self.c).versor
+        return Vect(self.a, self.b, self.c).versor
 
     def as_geolplane_and_point_3d(self):
         """
@@ -388,7 +644,7 @@ class CPlane(object):
         and a point lying in the plane (non-unique solution)
         """
 
-        geol_plane = self.normal_versor3d.as_geolaxis().as_normalgeolplane()
+        geol_plane = self.normal_versor3d.gvect.ngplane()
         point = CPoint(point_solution(np.array([[self.a, self.b, self.c]]),
                                       np.array([-self.d])))
         return geol_plane, point
@@ -398,7 +654,7 @@ class CPlane(object):
         return intersection versor for two intersecting planes
         """
 
-        return self.normal_versor3d.vector_product(another.normal_versor3d).versor
+        return self.normal_versor3d.vp(another.normal_versor3d).versor
 
     def intersection_point3dt(self, another):
         """
@@ -425,109 +681,6 @@ class CPlane(object):
             angle_degr = 180.0 - angle_degr
 
         return angle_degr
-
-
-
-class GDirect(object):
-    """
-    Geological direction.
-    Defined by trend and plunge (both in degrees)
-     - trend: [0.0, 360.0[ clockwise, from 0 (North)
-     - plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
-    """
-
-    def __init__(self, srcTrend, srcPlunge):
-        """
-
-        :param srcTrend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
-        :param srcPlunge: Plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
-
-        Example:
-          >>> a = GDirect(120, -27)
-          >>> b = GDirect(54, -320)
-          Traceback (most recent call last):
-          ...
-          AssertionError: plunge must be between -90° and +90° (comprised)
-        """
-
-        assert -90.0 <= srcPlunge <= 90.0, "plunge must be between -90° and +90° (comprised)"
-        self._trend = srcTrend % 360.0
-        self._plunge = float(srcPlunge)
-
-    @property
-    def trend(self):
-        """
-        Returns trend of the geological direction.
-        Range is [0, 360[
-
-        Example:
-          >>> GDirect(420, -17).trend
-          60.0
-          >>> GDirect(-20, 49).trend
-          340.0
-        """
-
-        return self._trend
-
-    @property
-    def plunge(self):
-        """
-        Returns plugne of the geological direction.
-        Range is [-90, 90]
-
-        Example:
-          >>> GDirect(420, -17).plunge
-          -17.0
-        """
-
-        return self._plunge
-
-    @property
-    def tp(self):
-        """
-        Returns trend and plunge of the geological direction
-
-        Example:
-          >>> GDirect(-90, -45).tp
-          (270.0, -45.0)
-        """
-        
-        return self.trend, self.plunge
-
-    @property
-    def versor(self):
-        """
-        Returns the CVect corresponding to the direction
-
-        Examples:
-          >>> print GDirect(0, 90).versor
-          CVect(0.0000, 0.0000, -1.0000)
-          >>> print GDirect(0, -90).versor
-          CVect(0.0000, 0.0000, 1.0000)
-        """
-
-        north_coord = cos(radians(self.plunge)) * cos(radians(self.trend))
-        east_coord = cos(radians(self.plunge)) * sin(radians(self.trend))
-        down_coord = sin(radians(self.plunge))
-
-        return CVect(east_coord, north_coord, -down_coord)
-
-    def as_downgeolaxis(self):
-
-        trend, plunge = self.trend, self.plunge
-        if plunge < 0.0:
-            trend = (trend + 180.0) % 360.0
-            plunge = - plunge
-
-        return GDirect(trend, plunge)
-
-    def as_normalgeolplane(self):
-
-        down_axis = self.as_downgeolaxis()
-        dipdir = (down_axis.trend + 180.0) % 360.0
-        dipangle = 90.0 - down_axis.plunge
-
-        return GPlane(dipdir, dipangle)
 
 
 class GPlane(object):
@@ -599,6 +752,10 @@ class GPlane(object):
         
         return self.dd, self.da
 
+    def __repr__(self):
+
+        return "GPlane({:.2f}, {:.2f})".format(*self.dda)
+
     @property
     def normal(self):
         """
@@ -615,7 +772,7 @@ class GPlane(object):
         trend = (self.dd + 180.0) % 360.0
         plunge = 90.0 - self.da
 
-        return GDirect(trend, plunge)
+        return GVect(trend, plunge)
 
     def plane_x_coeff(self):
         """
@@ -660,10 +817,10 @@ class GPlane(object):
 
     def as_cartesplane(self, point):
 
-        normal_versor = self.normal.as_downgeolaxis().versor
+        normal_versor = self.normal.dgvect.versor
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * point.x + b * point.y + c * point.z)
-        return CPlane(a, b, c, d)
+        return Plane(a, b, c, d)
 
     def angle_degr(self, another):
         """
