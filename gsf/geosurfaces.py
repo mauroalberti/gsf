@@ -12,67 +12,155 @@ from geosurf_utils import rhrstrk2dd
 MINIMUM_SEPARATION_THRESHOLD = 1e-10
 MINIMUM_VECTOR_MAGNITUDE = 1e-10
 MINIMUM_SCALAR_VALUE = 1e-15
+MINIMUM_VECTOR_MAGN_DIFF = MINIMUM_SCALAR_VALUE
 
 
-class CPoint(object):
+class Point(object):
     """
     Cartesian point.
     Dimensions: 3D + time
     """
 
-    def __init__(self, x=np.nan, y=np.nan, z=np.nan, t=None):
+    def __init__(self, x=np.nan, y=np.nan, z=np.nan, t=np.nan):
 
-        self._x = x
-        self._y = y
-        self._z = z
-        self._t = t
+        self._p = np.array([x, y, z, t], dtype=np.float64)
+
+    def __repr__(self):
+
+        return "Point({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z, self.t)
+
+    @classmethod
+    def from_array(cls, a):
+        """
+        Class method to construct a point from a numpy 1x4 array.
+
+        Example:
+          >>> Point.from_array(np.array([1, 0, 1]))
+          Point(1.0000, 0.0000, 1.0000, nan)
+        """
+
+        obj = cls()
+
+        assert 3 <= a.size <= 4
+        b = a.astype(np.float64)
+        if b.size == 3:
+            c = np.append(b, [np.nan])
+        else:
+            c = b
+        obj._p = c
+        return obj
+
+    @property
+    def v(self):
+        """
+        Return values as array
+
+        Example:
+          >>> Point(1, 0, 0).v
+          array([  1.,   0.,   0.,  nan])
+        """
+
+        return self._p
 
     @property
     def x(self):
         """
         Return x value
+
+        Example:
+          >>> Point(1.5, 1, 1).x
+          1.5
         """
 
-        return self._x
+        return self.v[0]
 
     @property
     def y(self):
         """
         Return y value
+
+        Example:
+          >>> Point(1.5, 3.0, 1).y
+          3.0
         """
-        return self._y
+        return self.v[1]
 
     @property
     def z(self):
         """
         Return z value
+
+        Example:
+          >>> Point(1.5, 3.2, 41.).z
+          41.0
         """
-        return self._z
+        return self.v[2]
 
     @property
     def t(self):
         """
         Return time value
+
+        Example:
+          >>> Point(1.5, 3.2, 41., 22.).t
+          22.0
         """
-        return self._t
+        return self.v[3]
 
     def clone(self):
         """
-        Clone the point
+        Clone the point.
+
+        Example:
+          >>> Point(1, 1, 1).clone()
+          Point(1.0000, 1.0000, 1.0000, nan)
         """
 
-        return CPoint(self.x, self.y, self.z, self.t)
+        return Point.from_array(self.v)
+
+    def __sub__(self, another):
+        """Return point difference
+
+        Example:
+          >>> Point(1., 1., 1.) - Point(1., 1., 1.)
+          Point(0.0000, 0.0000, 0.0000, nan)
+        """
+
+        return Point.from_array(self.v - another.v)
+
+    def __abs__(self):
+        """
+        Point distance from frame origin.
+
+        Example:
+          >>> abs(Point(3, 4, 0))
+          5.0
+          >>> abs(Point(0, 12, 5))
+          13.0
+        """
+
+        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     def dist_3d(self, another):
         """
         Calculate Euclidean spatial distance between two points.
+
+        Examples:
+          >>> Point(1., 1., 1.).dist_3d(Point(4., 5., 1,))
+          5.0
+          >>> Point(1, 1, 1, 4).dist_3d(Point(4, 5, 1, 14))
+          5.0
         """
 
-        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
+        return abs(self - another)
 
     def dist_2d(self, another):
         """
         Calculate horizontal (2D) distance between two points.
+
+        Examples:
+          >>> Point(1.,1.,1.).dist_2d(Point(4.,5.,7.))
+          5.0
         """
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
@@ -80,6 +168,12 @@ class CPoint(object):
     def coincident(self, another, tolerance=MINIMUM_SEPARATION_THRESHOLD):
         """
         Check spatial coincidence of two points
+
+        Example:
+          >>> Point(1., 0., -1.).coincident(Point(1., 1.5, -1.))
+          False
+          >>> Point(1., 0., 0.).coincident(Point(1., 0., 0.))
+          True
         """
 
         if self.dist_3d(another) > tolerance:
@@ -87,25 +181,39 @@ class CPoint(object):
         else:
             return True
 
-    def translate(self, sx=0.0, sy=0.0, sz=0.0):
+    def translate(self, sx=0.0, sy=0.0, sz=0.0, st=0.0):
         """
         Create a new point shifted by given amount from the self instance.
+
+        Example:
+          >>> Point(1, 1, 1).translate(0.5, 1., 1.5)
+          Point(1.5000, 2.0000, 2.5000, nan)
        """
 
-        return CPoint(self.x + sx, self.y + sy, self.z + sz, self.t)
+        return Point(self.x + sx, self.y + sy, self.z + sz, self.t + st)
 
-    def translate_with_vector(self, displ_vect):
+    def vect_offset(self, displ_vect):
         """
-        Create a new point from the self, with offsets defined by a vector
+        Create a new point from the self, with offsets defined by a vector.
+
+        Example:
+          >>> Point(1, 2, 0).vect_offset(Vect(10, 5, 0))
+          Point(11.0000, 7.0000, 0.0000, nan)
         """
 
-        return CPoint(self.x + displ_vect.x, self.y + displ_vect.y,
-                      self.z + displ_vect.z, self.t)
+        return Point(self.x + displ_vect.x,
+                     self.y + displ_vect.y,
+                     self.z + displ_vect.z,
+                     self.t)
 
     @property
     def vector(self):
         """
         Create a vector based on the point coordinates
+
+        Example:
+          >>> Point(1, 1, 0, 5).vector
+          Vect(1.0000, 1.0000, 0.0000)
         """
 
         return Vect(self.x, self.y, self.z)
@@ -113,14 +221,23 @@ class CPoint(object):
     def delta_time(self, another):
         """
         Calculate the time difference between two points
+
+        Example:
+          >>> Point(1,1,1,4).delta_time(Point(1,1,2,5))
+          1.0
         """
 
         return another.t - self.t
 
     def speed(self, another):
         """
-        Calculate the speed required to displace self to another
+        Calculate the speed required to displace self to another.
+
+        Example:
+          >>> Point(1, 1, 1, 4).speed(Point(4, 5, 1, 14))
+          0.5
         """
+
         try:
             return self.dist_3d(another) / self.delta_time(another)
         except:
@@ -154,7 +271,10 @@ class Vect(object):
         """
 
         obj = cls()
-        obj._v = a
+
+        assert a.size == 3
+        b = a.astype(np.float64)
+        obj._v = b
         return obj
 
     @property
@@ -163,7 +283,7 @@ class Vect(object):
         Return the vector values as array
 
         Example:
-          >>> Vect(1,1,0).v
+          >>> Vect(1, 1, 0).v
           array([ 1.,  1.,  0.])
         """
 
@@ -204,6 +324,35 @@ class Vect(object):
         """
 
         return self.v[2]
+
+    def __sub__(self, another):
+        """Return vector difference.
+
+        Example:
+          >>> Vect(1., 1., 1.) - Vect(1., 1., 1.)
+          Vect(0.0000, 0.0000, 0.0000)
+        """
+
+        return Vect.from_array(self.v - another.v)
+
+    def __eq__(self, another):
+        """Returns True if vectors are equal.
+
+        Example:
+          >>> Vect(1., 1., 1.) == Vect(1., 1., 1.)
+          True
+        """
+        return bool(abs(self - another) < MINIMUM_VECTOR_MAGN_DIFF)
+
+    def __ne__(self, another):
+        """Returns False if vectors are equal.
+
+        Example:
+          >>> Vect(1., 1., 1.) != Vect(0., 0., 0.)
+          True
+        """
+
+        return not self == another
 
     def __repr__(self):
 
@@ -480,15 +629,15 @@ class GVect(object):
         self._plunge = float(srcPlunge)
 
     @property
-    def trend(self):
+    def tr(self):
         """
         Returns trend of the geological direction.
         Range is [0, 360[
 
         Example:
-          >>> GVect(420, -17).trend
+          >>> GVect(420, -17).tr
           60.0
-          >>> GVect(-20, 49).trend
+          >>> GVect(-20, 49).tr
           340.0
         """
 
@@ -504,16 +653,16 @@ class GVect(object):
           (270.0, -45.0)
         """
 
-        return self.trend, self.plunge
+        return self.tr, self.pl
 
     @property
-    def plunge(self):
+    def pl(self):
         """
         Returns plugne of the geological direction.
         Range is [-90, 90]
 
         Example:
-          >>> GVect(420, -17).plunge
+          >>> GVect(420, -17).pl
           -17.0
         """
 
@@ -535,29 +684,29 @@ class GVect(object):
           Vect(0.0000, 0.0000, 1.0000)
         """
 
-        north_coord = cos(radians(self.plunge)) * cos(radians(self.trend))
-        east_coord = cos(radians(self.plunge)) * sin(radians(self.trend))
-        down_coord = sin(radians(self.plunge))
+        north_coord = cos(radians(self.pl)) * cos(radians(self.tr))
+        east_coord = cos(radians(self.pl)) * sin(radians(self.tr))
+        down_coord = sin(radians(self.pl))
 
         return Vect(east_coord, north_coord, -down_coord)
 
     @property
-    def dgvect(self):
+    def dwngvect(self):
         """
         Return downward-point geological vector
 
         Examples:
-          >>> GVect(90, -45).dgvect
+          >>> GVect(90, -45).dwngvect
           GVect(270.00, 45.00)
-          >>> GVect(180, 45).dgvect
+          >>> GVect(180, 45).dwngvect
           GVect(180.00, 45.00)
-          >>> GVect(0, 0).dgvect
+          >>> GVect(0, 0).dwngvect
           GVect(0.00, 0.00)
-          >>> GVect(0, 90).dgvect
+          >>> GVect(0, 90).dwngvect
           GVect(0.00, 90.00)
         """
 
-        trend, plunge = self.trend, self.plunge
+        trend, plunge = self.tr, self.pl
         if plunge < 0.0:
             trend = (trend + 180.0) % 360.0
             plunge = - plunge
@@ -578,9 +727,9 @@ class GVect(object):
           GPlane(180.00, 0.00)
         """
 
-        down_axis = self.dgvect
-        dipdir = (down_axis.trend + 180.0) % 360.0
-        dipangle = 90.0 - down_axis.plunge
+        down_axis = self.dwngvect
+        dipdir = (down_axis.tr + 180.0) % 360.0
+        dipangle = 90.0 - down_axis.pl
 
         return GPlane(dipdir, dipangle)
 
@@ -653,8 +802,8 @@ class Plane(object):
         """
 
         geol_plane = self.normal_versor3d.gvect.ngplane()
-        point = CPoint(point_solution(np.array([[self.a, self.b, self.c]]),
-                                      np.array([-self.d])))
+        point = Point(point_solution(np.array([[self.a, self.b, self.c]]),
+                                     np.array([-self.d])))
         return geol_plane, point
 
     def intersection_versor3d(self, another):
@@ -675,7 +824,7 @@ class Plane(object):
         b = np.array([-self.d, -another.d])
         x, y, z = point_solution(a, b)
 
-        return CPoint(x, y, z)
+        return Point(x, y, z)
 
     def set_point_inside(self, pt):
         return self.a * pt.x + self.b * pt.y + self.c * pt.z + self.d
@@ -771,9 +920,9 @@ class GPlane(object):
 
         Example:
             >>> ga = GPlane(90, 55).normal
-            >>> ga.trend
+            >>> ga.tr
             270.0
-            >>> ga.plunge
+            >>> ga.pl
             35.0
         """
         
@@ -825,7 +974,7 @@ class GPlane(object):
 
     def as_cartesplane(self, point):
 
-        normal_versor = self.normal.dgvect.versor
+        normal_versor = self.normal.dwngvect.versor
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * point.x + b * point.y + c * point.z)
         return Plane(a, b, c, d)
