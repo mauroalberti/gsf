@@ -172,7 +172,7 @@ class Vect(object):
     @property
     def x(self):
         """
-        Return vector x value
+        Return x value
 
         Example:
           >>> Vect(1, 2, 0).x
@@ -184,7 +184,7 @@ class Vect(object):
     @property
     def y(self):
         """
-        Return vector y value
+        Return y value
 
         Example:
           >>> Vect(1, 2, 0).y
@@ -196,7 +196,7 @@ class Vect(object):
     @property
     def z(self):
         """
-        Return vector z value
+        Return z value
 
         Example:
           >>> Vect(1, 2, 0).z
@@ -214,8 +214,10 @@ class Vect(object):
         Sum of two vectors
 
         Example:
-          >>> Vect(1,0,0) + Vect(0, 1, 1)
+          >>> Vect(1, 0, 0) + Vect(0, 1, 1)
           Vect(1.0000, 1.0000, 1.0000)
+          >>> Vect(1, 1, 1) + Vect(-1, -1, -1)
+          Vect(0.0000, 0.0000, 0.0000)
         """
 
         return Vect.from_array(self.v + another.v)
@@ -223,6 +225,10 @@ class Vect(object):
     def clone(self):
         """
         Clone the vector.
+
+        Example:
+          >>> Vect(1, 1, 1).clone()
+          Vect(1.0000, 1.0000, 1.0000)
         """
         return Vect.from_array(self.v)
 
@@ -233,6 +239,8 @@ class Vect(object):
         Example:
           >>> abs(Vect(3, 4, 0))
           5.0
+          >>> abs(Vect(0, 12, 5))
+          13.0
         """
 
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
@@ -277,7 +285,7 @@ class Vect(object):
     @property
     def downvect(self):
         """
-        Calculate new vector pointing downwards
+        Calculate a new vector downward-pointing
 
         Example:
           >>> Vect(1, 1, 1).downvect
@@ -331,8 +339,8 @@ class Vect(object):
         """
         Calculate the geological axis parallel to the original vector.
         Trend range: [0°, 360°[
-        Plunge range: [-90°, 90°], with negative values for geological axes
-        pointing downward and positive values for axes pointing downward.
+        Plunge range: [-90°, 90°], with negative values for upward-pointing
+        geological axes and positive values for downward-pointing axes.
 
         Examples:
           >>> Vect(0, 1, 1).gvect
@@ -409,10 +417,14 @@ class Vect(object):
         in 0 - 180 range
 
         Example:
-          >>> Vect(1,0,0).angle(Vect(0,0,1))
+          >>> Vect(1, 0, 0).angle(Vect(0, 0, 1))
           90.0
-          >>> Vect(1,0,0).angle(Vect(-1,0,0))
+          >>> Vect(1, 0, 0).angle(Vect(-1, 0, 0))
           180.0
+          >>> Vect(0, 0, 1).angle(Vect(0, 0, -1))
+          180.0
+          >>> Vect(1, 1, 1).angle(Vect(1, 1,1 ))
+          0.0
         """
 
         return degrees(acos(self.cos_angle(another)))
@@ -424,25 +436,21 @@ class Vect(object):
         Examples:
           >>> Vect(1, 0, 0).vp(Vect(0, 1, 0))
           Vect(0.0000, 0.0000, 1.0000)
+          >>> Vect(1, 0, 0).vp(Vect(1, 0, 0))
+          Vect(0.0000, 0.0000, 0.0000)
+          >>> Vect(1, 0, 0).vp(Vect(-1, 0, 0))
+          Vect(0.0000, 0.0000, 0.0000)
         """
 
-        x = self.y * another.z - self.z * another.y
-        y = self.z * another.x - self.x * another.z
-        z = self.x * another.y - self.y * another.x
+        return Vect.from_array(np.cross(self.v, another.v))
 
-        return Vect(x, y, z)
-
-    def by_matrix(self, matrix3x3):
+    def by_matrix(self, array3x3):
         """
         Matrix multiplication of a vector
 
         """
 
-        vx = matrix3x3[0, 0] * self.x + matrix3x3[0, 1] * self.y + matrix3x3[0, 2] * self.z
-        vy = matrix3x3[1, 0] * self.x + matrix3x3[1, 1] * self.y + matrix3x3[1, 2] * self.z
-        vz = matrix3x3[2, 0] * self.x + matrix3x3[2, 1] * self.y + matrix3x3[2, 2] * self.z
-
-        return Vect(vx, vy, vz)
+        return Vect.from_array(array3x3.dot(self.v))
 
 
 class GVect(object):
