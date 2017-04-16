@@ -12,3 +12,5 @@ Changes
 [2017-04-09] code refactoring; implemented doctests for Vect and GVect
 
 [2017-04-15] code refactoring and doctest implementation for Point
+
+[2017-04-16] reviewed GPlane implementation
