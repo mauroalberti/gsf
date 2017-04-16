@@ -605,9 +605,9 @@ class Vect(object):
 class GVect(object):
     """
     Geological vector.
-    Defined by trend and plunge (both in degrees)
-     - trend: [0.0, 360.0[ clockwise, from 0 (North)
-     - plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis
+    Defined by trend and plunge (both in degrees):
+     - trend: [0.0, 360.0[ clockwise, from 0 (North):
+     - plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis.
     """
 
     def __init__(self, srcTrend, srcPlunge):
@@ -722,9 +722,9 @@ class GVect(object):
           >>> GVect(0, 45).ngplane
           GPlane(180.00, 45.00)
           >>> GVect(0, -45).ngplane
-          GPlane(0.00, 45.00)
+          GPlane(000.00, 45.00)
           >>> GVect(0, 90).ngplane
-          GPlane(180.00, 0.00)
+          GPlane(180.00, 00.00)
         """
 
         down_axis = self.dwngvect
@@ -740,9 +740,13 @@ class Plane(object):
     Expressed by equation:
     ax + by + cz + d = 0
 
+    Note: Plane is locational - its position in space is defined.
+    This contrast with GPlane, defined just by its attitude, but with undefinee position
+
     """
 
     def __init__(self, a=None, b=None, c=None, d=None):
+
         self._a = a
         self._b = b
         self._c = c
@@ -764,8 +768,13 @@ class Plane(object):
     def d(self):
         return self._d
 
+    @property
+    def pl(self):
+        return self.a, self.b, self.c, self.d
+
     @classmethod
     def from_points(cls, pt1, pt2, pt3):
+
         matr_a = np.array([[pt1.y, pt1.z, 1],
                            [pt2.y, pt2.z, 1],
                            [pt3.y, pt3.z, 1]])
@@ -787,10 +796,14 @@ class Plane(object):
                    np.linalg.det(matr_c),
                    np.linalg.det(matr_d))
 
+    def __repr__(self):
+
+        return "Plane({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(*self.pl)
+
     @property
     def normal_versor3d(self):
         """
-        return the normal versor to the cartesian plane
+        return the versor normal to the cartesian plane
         """
 
         return Vect(self.a, self.b, self.c).versor
@@ -801,7 +814,7 @@ class Plane(object):
         and a point lying in the plane (non-unique solution)
         """
 
-        geol_plane = self.normal_versor3d.gvect.ngplane()
+        geol_plane = self.normal_versor3d.gvect.ngplane
         point = Point(point_solution(np.array([[self.a, self.b, self.c]]),
                                      np.array([-self.d])))
         return geol_plane, point
@@ -843,12 +856,14 @@ class Plane(object):
 class GPlane(object):
     """
     Geological plane.
-    Defined by dip direction and dip angle.
+    Defined by dip direction and dip angle (both in degrees):
+     - dip direction: [0.0, 360.0[ clockwise, from 0 (North);
+     - dip angle: [0, 90.0]: downward-pointing.
     """
 
     def __init__(self, srcAzimuth, srcDipAngle, isRHRStrike=False):
         """
-        Class constructor
+        Geological plane constructor.
 
         @param  srcAzimuth:  Azimuth of the plane (RHR strike or dip direction).
         @type  srcAzimuth:  number or string convertible to float.
@@ -858,26 +873,28 @@ class GPlane(object):
         @return:  GeolPlane.
 
         Example:
-          >>> gp = GPlane(0, 90)
-    
+          >>> GPlane(0, 90)
+          GPlane(000.00, 90.00)
+          >>> GPlane(0, 90, isRHRStrike=True)
+          GPlane(090.00, 90.00)
+          >>> GPlane(0, 90, True)
+          GPlane(090.00, 90.00)
         """
 
         if isRHRStrike:
             self._dipdir = rhrstrk2dd(srcAzimuth)
         else:
             self._dipdir = srcAzimuth % 360.0
-        self._dipangle = srcDipAngle
+        self._dipangle = float(srcDipAngle)
 
     @property
     def dd(self):
         """
-
-        Returns the dip direction of the geological plane.
+        Return the dip direction of the geological plane.
 
         Example:
           >>> GPlane(34.2, 89.7).dd
           34.2
-
         """
 
         return self._dipdir
@@ -885,11 +902,11 @@ class GPlane(object):
     @property
     def da(self):
         """
-        Returns the dip angle of the geological plane.
+        Return the dip angle of the geological plane.
 
         Example:
           >>> GPlane(183, 77).da
-          77
+          77.0
 
         """
 
@@ -904,14 +921,13 @@ class GPlane(object):
           >>> gp = GPlane(89.4, 17.2)
           >>> gp.dda
           (89.4, 17.2)
-
         """
         
         return self.dd, self.da
 
     def __repr__(self):
 
-        return "GPlane({:.2f}, {:.2f})".format(*self.dda)
+        return "GPlane({:06.2f}, {:05.2f})".format(*self.dda)
 
     @property
     def normal(self):
@@ -919,11 +935,8 @@ class GPlane(object):
         Returns the normal to the plane, as a geological (downward) axis.
 
         Example:
-            >>> ga = GPlane(90, 55).normal
-            >>> ga.tr
-            270.0
-            >>> ga.pl
-            35.0
+            >>> GPlane(90, 55).normal
+            GVect(270.00, 35.00)
         """
         
         trend = (self.dd + 180.0) % 360.0
@@ -938,6 +951,7 @@ class GPlane(object):
                
         @return:  slope - float.    
         """
+
         return - sin(radians(self.dd)) * tan(radians(self.da))
 
     def plane_y_coeff(self):
@@ -947,6 +961,7 @@ class GPlane(object):
                
         @return:  slope - float.     
         """
+
         return - cos(radians(self.dd)) * tan(radians(self.da))
 
     def plane_from_geo(self, or_Pt):
@@ -973,6 +988,10 @@ class GPlane(object):
         return lambda x, y: a * (x - x0) + b * (y - y0) + z0
 
     def as_cartesplane(self, point):
+        """
+        Given a GPlane instance and a provide Point instance,
+        calculate the corresponding Plane instance.
+        """
 
         normal_versor = self.normal.dwngvect.versor
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
