@@ -12,6 +12,7 @@ from geosurf_utils import rhrstrk2dd
 MINIMUM_SEPARATION_THRESHOLD = 1e-10
 MINIMUM_VECTOR_MAGNITUDE = 1e-10
 MINIMUM_SCALAR_VALUE = 1e-15
+MINIMUM_ANGLE_DEGR_VALUE = 1e-10
 MINIMUM_VECTOR_MAGN_DIFF = MINIMUM_SCALAR_VALUE
 
 
@@ -956,10 +957,15 @@ class Plane(object):
 
         return self.nversor.vp(another.nversor).versor
 
-    def intersection_point3dt(self, another):
+    def inters_point(self, another):
         """
         Return point on intersection line (obviously non-unique solution)
         for two planes.
+
+        >>> a = Plane(1, 0, 0, 0)
+        >>> b = Plane(0, 0, 1, 0)
+        >>> a.inters_point(b)
+        Point(0.0000, 0.0000, 0.0000, nan)
         """
 
         # find a point lying on the intersection line (this is a non-unique solution)
@@ -969,17 +975,38 @@ class Plane(object):
 
         return Point(x, y, z)
 
-    def set_point_inside(self, pt):
+    def is_point_inplane(self, pt):
+        """
+          Check whether a point lie in a plane.
 
-        return self.a * pt.x + self.b * pt.y + self.c * pt.z + self.d
+          >>> pl = Plane(0, 0, 1, 0)
+          >>> pt = Point(0, 1, 0)
+          >>> pl.is_point_inplane(pt)
+          True
+        """
+
+        if abs(self.a * pt.x + self.b * pt.y + self.c * pt.z + self.d) < MINIMUM_SCALAR_VALUE:
+            return True
+        else:
+            return False
 
     def angle_degr(self, another):
+        """
+        Calculate angle (in degrees) between two planes.
+
+        Examples:
+          >>> Plane(1,0,0,0).angle_degr(Plane(0,1,0,0))
+          90.0
+          >>> Plane(1,0,0,0).angle_degr(Plane(1,0,1,0))
+          45.0
+          >>> Plane(1,0,0,0).angle_degr(Plane(1,0,0,0))
+          0.0
+        """
 
         angle_degr = self.nversor.angle(another.nversor)
-
-        assert angle_degr > 0.0
-
-        if angle_degr > 90.0:
+        if abs(angle_degr) < MINIMUM_ANGLE_DEGR_VALUE:
+            angle_degr = 0.0
+        elif angle_degr > 90.0:
             angle_degr = 180.0 - angle_degr
 
         return angle_degr
