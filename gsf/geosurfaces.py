@@ -9,11 +9,11 @@ from array_utils import point_solution
 from geosurf_utils import rhrstrk2dd
 
 
-MINIMUM_SEPARATION_THRESHOLD = 1e-10
-MINIMUM_VECTOR_MAGNITUDE = 1e-10
-MINIMUM_SCALAR_VALUE = 1e-15
-MINIMUM_ANGLE_DEGR_VALUE = 1e-10
-MINIMUM_VECTOR_MAGN_DIFF = MINIMUM_SCALAR_VALUE
+MIN_SEPARATION_THRESHOLD = 1e-10
+MIN_VECTOR_MAGNITUDE = 1e-10
+MIN_SCALAR_VALUE = 1e-15
+MIN_ANGLE_DEGR_VALUE = 1e-10
+MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
 
 
 class Point(object):
@@ -166,7 +166,7 @@ class Point(object):
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
-    def coincident(self, another, tolerance=MINIMUM_SEPARATION_THRESHOLD):
+    def coincident(self, another, tolerance=MIN_SEPARATION_THRESHOLD):
         """
         Check spatial coincidence of two points
 
@@ -345,7 +345,7 @@ class Vect(object):
           >>> Vect(1., 1., 1.) == Vect(1., 1., 1.)
           True
         """
-        return bool(abs(self - another) < MINIMUM_VECTOR_MAGN_DIFF)
+        return bool(abs(self - another) < MIN_VECTOR_MAGN_DIFF)
 
     def __ne__(self, another):
         """
@@ -435,15 +435,45 @@ class Vect(object):
 
         return self.scale(1.0 / abs(self))
 
+    def invert(self):
+        """
+        Create a new vector with inverted direction.
+
+        Examples:
+          >>> Vect(1, 1, 1).invert()
+          Vect(-1.0000, -1.0000, -1.0000)
+          >>> Vect(2, -1, 4).invert()
+          Vect(-2.0000, 1.0000, -4.0000)
+        """
+
+        return self.scale(-1)
+
     @property
-    def downvect(self):
+    def upward(self):
+        """
+        Calculate a new vector upward-pointing.
+
+        Example:
+          >>> Vect(1, 1, 1).upward
+          Vect(1.0000, 1.0000, 1.0000)
+          >>> Vect(-1, -1, -1).upward
+          Vect(1.0000, 1.0000, 1.0000)
+        """
+
+        if self.z < 0.0:
+            return self.scale(-1.0)
+        else:
+            return self.clone()
+
+    @property
+    def downward(self):
         """
         Calculate a new vector downward-pointing.
 
         Example:
-          >>> Vect(1, 1, 1).downvect
+          >>> Vect(1, 1, 1).downward
           Vect(-1.0000, -1.0000, -1.0000)
-          >>> Vect(-1, -1, -1).downvect
+          >>> Vect(-1, -1, -1).downward
           Vect(-1.0000, -1.0000, -1.0000)
         """
 
@@ -482,7 +512,7 @@ class Vect(object):
                 raise Exception("Zero-valued vector")
         else:
             slope = - degrees(atan(self.z / self.hlen))
-            if abs(slope) > MINIMUM_SCALAR_VALUE:
+            if abs(slope) > MIN_SCALAR_VALUE:
                 return slope
             else:
                 return 0.
@@ -490,7 +520,7 @@ class Vect(object):
     @property
     def gvect(self):
         """
-        Calculate the geological axis parallel to the original vector.
+        Calculate the geological vector parallel to the Vect instance.
         Trend range: [0°, 360°[
         Plunge range: [-90°, 90°], with negative values for upward-pointing
         geological axes and positive values for downward-pointing axes.
@@ -503,16 +533,16 @@ class Vect(object):
           >>> Vect(0, 0, 1).gvect
           GVect(000.00, -90.00)
           >>> Vect(0, 0, -1).gvect
-          GVect(000.00, 90.00)
+          GVect(000.00, +90.00)
           >>> Vect(-1, 0, 0).gvect
-          GVect(270.00, 00.00)
+          GVect(270.00, +00.00)
           >>> Vect(0, -1, 0).gvect
-          GVect(180.00, 00.00)
+          GVect(180.00, +00.00)
           >>> Vect(-1, -1, 0).gvect
-          GVect(225.00, 00.00)
+          GVect(225.00, +00.00)
         """
 
-        if abs(self) < MINIMUM_VECTOR_MAGNITUDE:
+        if abs(self) < MIN_VECTOR_MAGNITUDE:
             raise Exception("Provided vector has near-zero magnitude")
 
         plunge = self.slope  # upward pointing -> negative value, downward -> positive
@@ -674,7 +704,7 @@ class GVect(object):
 
     def __repr__(self):
 
-        return "GVect({:06.2f}, {:05.2f})".format(*self.tp)
+        return "GVect({:06.2f}, {:+06.2f})".format(*self.tp)
 
     @property
     def versor(self):
@@ -739,13 +769,13 @@ class GVect(object):
 
         Examples:
           >>> GVect(90, -45).downward
-          GVect(270.00, 45.00)
+          GVect(270.00, +45.00)
           >>> GVect(180, 45).downward
-          GVect(180.00, 45.00)
+          GVect(180.00, +45.00)
           >>> GVect(0, 0).downward
-          GVect(000.00, 00.00)
+          GVect(000.00, +00.00)
           >>> GVect(0, 90).downward
-          GVect(000.00, 90.00)
+          GVect(000.00, +90.00)
         """
 
         trend, plunge = self.tr, self.pl
@@ -754,6 +784,24 @@ class GVect(object):
             plunge = - plunge
 
         return GVect(trend, plunge)
+
+    def angle(self, another):
+        """
+        Calculate angle (in degrees) between the two
+        GVect instances.
+
+        Examples:
+          >>> GVect(0, 90).angle(GVect(90, 0)) # doctest: +NUMBER
+          90.0000000
+          >>> GVect(0, 0).angle(GVect(270, 0)) # doctest: +NUMBER
+          90.0000000
+          >>> GVect(0, 0).angle(GVect(0, 0)) # doctest: +NUMBER
+          0.0000000
+          >>> GVect(0, 0).angle(GVect(180, 0)) # doctest: +NUMBER
+          180.0000000
+        """
+
+        return self.versor.angle(another.versor)
 
     @property
     def upward(self):
@@ -766,7 +814,7 @@ class GVect(object):
           >>> GVect(180, 45).upward
           GVect(000.00, -45.00)
           >>> GVect(0, 0).upward
-          GVect(000.00, 00.00)
+          GVect(000.00, +00.00)
           >>> GVect(0, 90).upward
           GVect(180.00, -90.00)
         """
@@ -779,17 +827,17 @@ class GVect(object):
         return GVect(trend, plunge)
 
     @property
-    def ngplane(self):
+    def normal_gplane(self):
         """
         Return the geological plane that is normal to the geological vector.
 
         Examples:
-          >>> GVect(0, 45).ngplane
-          GPlane(180.00, 45.00)
-          >>> GVect(0, -45).ngplane
-          GPlane(000.00, 45.00)
-          >>> GVect(0, 90).ngplane
-          GPlane(180.00, 00.00)
+          >>> GVect(0, 45).normal_gplane
+          GPlane(180.00, +45.00)
+          >>> GVect(0, -45).normal_gplane
+          GPlane(000.00, +45.00)
+          >>> GVect(0, 90).normal_gplane
+          GPlane(180.00, +00.00)
         """
 
         down_axis = self.downward
@@ -797,6 +845,24 @@ class GVect(object):
         dipangle = 90.0 - down_axis.pl
 
         return GPlane(dipdir, dipangle)
+
+    def common_plane(self, another):
+        """
+        Calculate GPlane instance defined by the two GVect instances.
+
+        Examples:
+          >>> GVect(0, 0).common_plane(GVect(90, 0))
+          GPlane(180.00, +00.00)
+          >>> GVect(0, 0).common_plane(GVect(90, 90))
+          GPlane(090.00, +90.00)
+          >>> GVect(45, 0).common_plane(GVect(135, 45))
+          GPlane(135.00, +45.00)
+          >>> GVect(315, 45).common_plane(GVect(135, 45))
+          GPlane(225.00, +90.00)
+        """
+
+        normal = self.versor.vp(another.versor)
+        return normal.gvect.normal_gplane
 
 
 class Plane(object):
@@ -935,12 +1001,12 @@ class Plane(object):
         Examples:
           >>> gpl, pt = Plane(0, 0, 1, -1).gplane_point()
           >>> gpl
-          GPlane(000.00, 00.00)
+          GPlane(000.00, +00.00)
           >>> pt
           Point(0.0000, 0.0000, 1.0000, nan)
         """
 
-        geol_plane = self.nversor.gvect.ngplane
+        geol_plane = self.nversor.gvect.normal_gplane
         point = Point(*point_solution(np.array([[self.a, self.b, self.c]]),
                                      np.array([-self.d])))
         return geol_plane, point
@@ -985,7 +1051,7 @@ class Plane(object):
           True
         """
 
-        if abs(self.a * pt.x + self.b * pt.y + self.c * pt.z + self.d) < MINIMUM_SCALAR_VALUE:
+        if abs(self.a * pt.x + self.b * pt.y + self.c * pt.z + self.d) < MIN_SCALAR_VALUE:
             return True
         else:
             return False
@@ -1004,7 +1070,7 @@ class Plane(object):
         """
 
         angle_degr = self.nversor.angle(another.nversor)
-        if abs(angle_degr) < MINIMUM_ANGLE_DEGR_VALUE:
+        if abs(angle_degr) < MIN_ANGLE_DEGR_VALUE:
             angle_degr = 0.0
         elif angle_degr > 90.0:
             angle_degr = 180.0 - angle_degr
@@ -1033,11 +1099,11 @@ class GPlane(object):
 
         Example:
           >>> GPlane(0, 90)
-          GPlane(000.00, 90.00)
+          GPlane(000.00, +90.00)
           >>> GPlane(0, 90, isRHRStrike=True)
-          GPlane(090.00, 90.00)
+          GPlane(090.00, +90.00)
           >>> GPlane(0, 90, True)
-          GPlane(090.00, 90.00)
+          GPlane(090.00, +90.00)
         """
 
         if isRHRStrike:
@@ -1084,18 +1150,38 @@ class GPlane(object):
         
         return self.dd, self.da
 
+    @property
+    def strike_rhr(self):
+        """
+        Return the strike according to the right-hand-rule.
+
+        Examples:
+          >>> GPlane(90, 45).strike_rhr
+          0.0
+          >>> GPlane(45, 89).strike_rhr
+          315.0
+          >>> GPlane(275, 38).strike_rhr
+          185.0
+          >>> GPlane(0, 38).strike_rhr
+          270.0
+        """
+
+        return (self.dd - 90.0) % 360.0
+
     def __repr__(self):
 
-        return "GPlane({:06.2f}, {:05.2f})".format(*self.dda)
+        return "GPlane({:06.2f}, {:+06.2f})".format(*self.dda)
 
     @property
     def normal(self):
         """
-        Return the normal to the plane, as a geological (downward) axis.
+        Return the normal to the geological plane, as a (nominally) downward geological vector.
+        When the geological plane is vertical, there is no really downward choice,
+        but just two horizontal normals.
 
         Example:
             >>> GPlane(90, 55).normal
-            GVect(270.00, 35.00)
+            GVect(270.00, +35.00)
         """
         
         trend = (self.dd + 180.0) % 360.0
@@ -1103,71 +1189,36 @@ class GPlane(object):
 
         return GVect(trend, plunge)
 
-    def plane_x_coeff(self):
+    def plane(self, point):
         """
-        Calculate the slope of a given plane along the x direction.
-        The plane orientation  is expressed following the geological convention. 
-               
-        @return:  slope - float.    
-        """
-
-        return - sin(radians(self.dd)) * tan(radians(self.da))
-
-    def plane_y_coeff(self):
-        """
-        Calculate the slope of a given plane along the y direction.
-        The plane orientation  is expressed following the geological convention. 
-               
-        @return:  slope - float.     
-        """
-
-        return - cos(radians(self.dd)) * tan(radians(self.da))
-
-    def plane_from_geo(self, or_Pt):
-        """
-        Closure that embodies the analytical formula for a given, non-vertical plane.
-        This closure is used to calculate the z value from given horizontal coordinates (x, y).
-    
-        @param  or_Pt:  CartesianPoint3DT instance expressing a location point contained by the plane.
-        @type  or_Pt:  CartesianPoint3DT.
-        
-        @return:  lambda (closure) expressing an analytical formula for deriving z given x and y values.
-        """
-
-        x0 = or_Pt.x
-        y0 = or_Pt.y
-        z0 = or_Pt.z
-
-        # slope of the line parallel to the x axis and contained by the plane
-        a = self.plane_x_coeff()
-
-        # slope of the line parallel to the y axis and contained by the plane
-        b = self.plane_y_coeff()
-
-        return lambda x, y: a * (x - x0) + b * (y - y0) + z0
-
-    def as_cartesplane(self, point):
-        """
-        Given a GPlane instance and a provide Point instance,
+        Given a GPlane instance and a provided Point instance,
         calculate the corresponding Plane instance.
+
+        Example:
+          >>> GPlane(0, 0).plane(Point(0, 0, 0))
+          Plane(0.0000, -0.0000, -1.0000, -0.0000)
+          >>> GPlane(90, 45).plane(Point(0, 0, 0))
+          Plane(-0.7071, -0.0000, -0.7071, 0.0000)
+          >>> GPlane(0, 90).plane(Point(0, 0, 0))
+          Plane(0.0000, -1.0000, -0.0000, -0.0000)
         """
 
-        normal_versor = self.normal.downward.versor
+        normal_versor = self.normal.versor
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * point.x + b * point.y + c * point.z)
         return Plane(a, b, c, d)
 
-    def angle_degr(self, another):
+    def angle(self, another):
         """
         Calculate angle (in degrees) between two planes.
 
         >>> p1 = GPlane(100.0, 50.0)
-        >>> p1.angle_degr(p1)
+        >>> p1.angle(p1)
         0.0
 
         >>> p2 = GPlane(300.0, 10.0)
         >>> p3 = GPlane(300.0, 90.0)
-        >>> p2.angle_degr(p3)
+        >>> p2.angle(p3)
         80.0
         """
 
@@ -1176,8 +1227,41 @@ class GPlane(object):
 
         return vec0.angle(vec1)
 
+    def rake_to_gv(self, rake):
+        """
+        Calculate GVect given a Gplane instance and a rake value.
+        The rake is defined according to the Aki and Richards, 1980 conventions:
+        rake = 0° -> left-lateral
+        rake = 90° -> reverse
+        rake = +/- 180° -> right-lateral
+        rake = -90° -> normal
+
+        Examples:
+          >>> GPlane(180, 45).rake_to_gv(0.0)
+          GVect(090.00, +00.00)
+          >>> GPlane(180, 45).rake_to_gv(90.0)
+          GVect(000.00, -45.00)
+          >>> GPlane(180, 45).rake_to_gv(-90.0)
+          GVect(180.00, +45.00)
+          >>> GPlane(180, 45).rake_to_gv(180.0)
+          GVect(270.00, -00.00)
+          >>> GPlane(180, 45).rake_to_gv(-180.0)
+          GVect(270.00, +00.00)
+        """
+
+        rk = radians(rake)
+        strk = radians(self.strike_rhr)
+        dip = radians(self.da)
+
+        x = cos(rk)*sin(strk)-sin(rk)*cos(dip)*cos(strk)
+        y = cos(rk)*cos(strk)+sin(rk)*cos(dip)*sin(strk)
+        z = sin(rk)*sin(dip)
+
+        return Vect(x, y, z).gvect
+
 
 if __name__ == "__main__":
 
     import doctest
+    import numtest  # external module, used in doctest float checks
     doctest.testmod()
