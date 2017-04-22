@@ -1,7 +1,7 @@
 # gsf
 Python module for processing geological surface/fault data with Python.
 
-Current state: alpha
+Current state: beta
 
 Changes
 
@@ -14,3 +14,5 @@ Changes
 [2017-04-15] code refactoring and doctests implementation for Point
 
 [2017-04-16] reviewed GPlane implementation; doctests implementation for Plane
+
+[2017-04-22] created new branch "faults"; started implementing unit tests; implementing dip angle convention; changed code state to "beta"
