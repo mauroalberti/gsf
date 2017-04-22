@@ -479,6 +479,40 @@ class Vect(object):
         return self.scale(-1)
 
     @property
+    def is_upward(self):
+        """
+        Check that a vector is upward-directed.
+         
+        Example:
+          >>> Vect(0,0,1).is_upward
+          True
+          >>> Vect(0,0,-0.5).is_upward
+          False
+        """
+
+        if self.z > 0.0:
+            return True
+        else:
+            return False
+
+    @property
+    def is_downward(self):
+        """
+        Check that a vector is downward-directed.
+
+        Example:
+          >>> Vect(0,0,1).is_downward
+          False
+          >>> Vect(0,0,-0.5).is_downward
+          True
+        """
+
+        if self.z < 0.0:
+            return True
+        else:
+            return False
+
+    @property
     def upward(self):
         """
         Calculate a new vector upward-pointing.
@@ -712,18 +746,6 @@ class GVect(object):
         return self._trend
 
     @property
-    def tp(self):
-        """
-        Return trend and plunge of the geological direction.
-
-        Example:
-          >>> GVect(-90, -45).tp
-          (270.0, -45.0)
-        """
-
-        return self.tr, self.pl
-
-    @property
     def pl(self):
         """
         Return plunge of the geological direction.
@@ -736,17 +758,39 @@ class GVect(object):
 
         return self._plunge
 
+    @property
+    def tp(self):
+        """
+        Return trend and plunge of the geological direction.
+
+        Example:
+          >>> GVect(-90, -45).tp
+          (270.0, -45.0)
+        """
+
+        return self.tr, self.pl
+
     def __repr__(self):
 
         return "GVect({:06.2f}, {:+06.2f})".format(*self.tp)
 
-    @property
+    def copy(self):
+        """
+        Return a copy of the GVect instance.
+        
+        Example:
+          >>> GVect(10, 20).copy()
+          GVect(010.00, +20.00)
+        """
+
+        return GVect(*(self.tp))
+
     def opposite(self):
         """
         Return the opposite GVect.
         
         Example:
-          >>> GVect(0, 30).opposite
+          >>> GVect(0, 30).opposite()
           GVect(180.00, -30.00)
         """
 
@@ -817,6 +861,27 @@ class GVect(object):
             return False
 
     @property
+    def upward(self):
+        """
+        Return upward-point geological vector.
+
+        Examples:
+          >>> GVect(90, -45).upward
+          GVect(090.00, -45.00)
+          >>> GVect(180, 45).upward
+          GVect(000.00, -45.00)
+          >>> GVect(0, 0).upward
+          GVect(180.00, -00.00)
+          >>> GVect(0, 90).upward
+          GVect(180.00, -90.00)
+        """
+
+        if self.is_upward:
+            return self.copy()
+        else:
+            return self.opposite()
+
+    @property
     def downward(self):
         """
         Return downward-pointing geological vector.
@@ -833,32 +898,9 @@ class GVect(object):
         """
 
         if self.is_downward:
-            return GVect(self.tr, self.pl)
+            return self.copy()
         else:
-            return self.opposite
-
-    @property
-    def upward(self):
-        """
-        Return upward-point geological vector.
-
-        Examples:
-          >>> GVect(90, -45).upward
-          GVect(090.00, -45.00)
-          >>> GVect(180, 45).upward
-          GVect(000.00, -45.00)
-          >>> GVect(0, 0).upward
-          GVect(000.00, +00.00)
-          >>> GVect(0, 90).upward
-          GVect(180.00, -90.00)
-        """
-
-        trend, plunge = self.tr, self.pl
-        if plunge > 0.0:
-            trend = (trend + 180.0) % 360.0
-            plunge = - plunge
-
-        return GVect(trend, plunge)
+            return self.opposite()
 
     def angle(self, another):
         """
@@ -931,7 +973,7 @@ class Plane(object):
     ax + by + cz + d = 0
 
     Note: Plane is locational - its position in space is defined.
-    This contrast with GPlane, defined just by its attitude, but with undefinee position
+    This contrast with GPlane, defined just by its attitude, but with undefined position
 
     """
 

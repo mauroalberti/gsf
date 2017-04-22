@@ -29,8 +29,12 @@ class TestGsf(unittest.TestCase):
         """
 
         set_dip_angle_positive_up()
+        assert GVect(90, 90).is_upward
+        assert GVect(90, -45).is_downward
         assert isclose(GVect(90, 90).versor.z, 1.0)
         assert isclose(GVect(90, -90).versor.z, -1.0)
+        assert isclose(GVect(0, -90).upward.versor.z, 1.0)
+        assert isclose(GVect(0, 90).downward.versor.z, -1.0)
 
     def test_gvect_down(self):
         """
@@ -38,8 +42,12 @@ class TestGsf(unittest.TestCase):
         """
 
         set_dip_angle_positive_down()
+        assert GVect(90, 90).is_downward
+        assert GVect(90, -45).is_upward
         assert isclose(GVect(90, 90).versor.z, -1.0)
         assert isclose(GVect(90, -90).versor.z, 1.0)
+        assert isclose(GVect(0, 90).upward.versor.z, 1.0)
+        assert isclose(GVect(0, -90).downward.versor.z, -1.0)
 
     """
     def test_axes_angle(self):
@@ -54,4 +62,5 @@ class TestGsf(unittest.TestCase):
 
 
 if __name__ == '__main__':
+
     unittest.main()
