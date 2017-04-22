@@ -5,9 +5,10 @@ from __future__ import division
 from math import sqrt, sin, cos, tan, radians, asin, acos, atan, atan2, degrees
 import numpy as np
 
-from .config import dip_conventions, default_dip_angle_convention
-from .array_utils import point_solution
-from .geosurf_utils import rhrstrk2dd
+from config import dip_conventions, default_dip_angle_convention
+from array_utils import point_solution
+from geosurf_utils import rhrstrk2dd
+from errors import DipConventionException
 
 
 MIN_SEPARATION_THRESHOLD = 1e-10
@@ -19,11 +20,12 @@ MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
 
 dip_angle_convention = default_dip_angle_convention
 
-def set_dip_angle_downward_up():
+def set_dip_angle_positive_down():
     """
     Set the dip angle convention as positive for downward point angles 
     """
 
+    global dip_angle_convention
     dip_angle_convention = dip_conventions["positive_down"]
 
 
@@ -32,7 +34,9 @@ def set_dip_angle_positive_up():
     Set the dip angle convention as positive for upward point angles 
     """
 
+    global dip_angle_convention
     dip_angle_convention = dip_conventions["positive_up"]
+
 
 def get_dip_angle_convention():
     """
@@ -648,7 +652,7 @@ class Vect(object):
           >>> Vect(1, 0, 0).vp(Vect(1, 0, 0))
           Vect(0.0000, 0.0000, 0.0000)
           >>> Vect(1, 0, 0).vp(Vect(-1, 0, 0))
-          Vect(0.0000, 0.0000, 0.0000)
+          Vect(0.0000, -0.0000, 0.0000)
         """
 
         return Vect.from_array(np.cross(self.v, another.v))
@@ -667,15 +671,19 @@ class GVect(object):
     Geological vector.
     Defined by trend and plunge (both in degrees):
      - trend: [0.0, 360.0[ clockwise, from 0 (North):
-     - plunge: [-90.0, 90.0], negative value: upward axis, positive values: downward axis.
+     - plunge: [-90.0, 90.0],.
     """
 
     def __init__(self, srcTrend, srcPlunge):
         """
         Geological vector constructor.
         srcTrend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
-        srcPlunge: Plunge: [-90.0, 90.0], negative value: upward pointing axis, positive values: downward axis
-
+        srcPlunge: Plunge: [-90.0, 90.0], 
+        if dip_angle_convention == dip_conventions["positive_down"]:
+            negative value: upward pointing axis, positive values: downward axis;
+        if dip_angle_convention == dip_conventions["positive_up"]:
+            negative value: downward pointing axis, positive values: upward axis .
+            
         Example:
           >>> a = GVect(120, -27)
           >>> b = GVect(54, -320)
@@ -684,8 +692,8 @@ class GVect(object):
           AssertionError: plunge must be between -90° and +90° (comprised)
         """
 
-        assert -90.0 <= srcPlunge <= 90.0, "plunge must be between -90° and +90° (comprised)"
-        self._trend = srcTrend % 360.0
+        assert -90.0 <= float(srcPlunge) <= 90.0, "plunge must be between -90° and +90° (comprised)"
+        self._trend = float(srcTrend) % 360.0
         self._plunge = float(srcPlunge)
 
     @property
@@ -718,7 +726,7 @@ class GVect(object):
     @property
     def pl(self):
         """
-        Return plugne of the geological direction.
+        Return plunge of the geological direction.
         Range is [-90, 90]
 
         Example:
@@ -731,6 +739,21 @@ class GVect(object):
     def __repr__(self):
 
         return "GVect({:06.2f}, {:+06.2f})".format(*self.tp)
+
+    @property
+    def opposite(self):
+        """
+        Return the opposite GVect.
+        
+        Example:
+          >>> GVect(0, 30).opposite
+          GVect(180.00, -30.00)
+        """
+
+        trend = (self.tr + 180.) % 360.
+        plunge = -self.pl
+
+        return GVect(trend, plunge)
 
     @property
     def versor(self):
@@ -746,7 +769,12 @@ class GVect(object):
 
         north_coord = cos(radians(self.pl)) * cos(radians(self.tr))
         east_coord = cos(radians(self.pl)) * sin(radians(self.tr))
-        down_coord = sin(radians(self.pl))
+        if dip_angle_convention == dip_conventions["positive_down"]:
+            down_coord = sin(radians(self.pl))
+        elif dip_angle_convention == dip_conventions["positive_up"]:
+            down_coord = - sin(radians(self.pl))
+        else:
+            raise DipConventionException("Exception with defined dip angle convention")
 
         return Vect(east_coord, north_coord, -down_coord)
 
@@ -759,15 +787,15 @@ class GVect(object):
           >>> GVect(10, 15).is_upward
           False
           >>> GVect(257.4, 0.0).is_upward
-          True
+          False
           >>> GVect(90, -45).is_upward
           True
         """
 
-        if self.pl > 0.0:
-            return False
-        else:
+        if self.versor.z > 0.0:
             return True
+        else:
+            return False
 
     @property
     def is_downward(self):
@@ -778,20 +806,20 @@ class GVect(object):
           >>> GVect(10, 15).is_downward
           True
           >>> GVect(257.4, 0.0).is_downward
-          True
+          False
           >>> GVect(90, -45).is_downward
           False
         """
 
-        if self.pl < 0.0:
-            return False
-        else:
+        if self.versor.z < 0.0:
             return True
+        else:
+            return False
 
     @property
     def downward(self):
         """
-        Return downward-point geological vector.
+        Return downward-pointing geological vector.
 
         Examples:
           >>> GVect(90, -45).downward
@@ -799,35 +827,15 @@ class GVect(object):
           >>> GVect(180, 45).downward
           GVect(180.00, +45.00)
           >>> GVect(0, 0).downward
-          GVect(000.00, +00.00)
+          GVect(180.00, -00.00)
           >>> GVect(0, 90).downward
           GVect(000.00, +90.00)
         """
 
-        trend, plunge = self.tr, self.pl
-        if plunge < 0.0:
-            trend = (trend + 180.0) % 360.0
-            plunge = - plunge
-
-        return GVect(trend, plunge)
-
-    def angle(self, another):
-        """
-        Calculate angle (in degrees) between the two
-        GVect instances.
-
-        Examples:
-          >>> GVect(0, 90).angle(GVect(90, 0)) # doctest: +NUMBER
-          90.0000000
-          >>> GVect(0, 0).angle(GVect(270, 0)) # doctest: +NUMBER
-          90.0000000
-          >>> GVect(0, 0).angle(GVect(0, 0)) # doctest: +NUMBER
-          0.0000000
-          >>> GVect(0, 0).angle(GVect(180, 0)) # doctest: +NUMBER
-          180.0000000
-        """
-
-        return self.versor.angle(another.versor)
+        if self.is_downward:
+            return GVect(self.tr, self.pl)
+        else:
+            return self.opposite
 
     @property
     def upward(self):
@@ -851,6 +859,24 @@ class GVect(object):
             plunge = - plunge
 
         return GVect(trend, plunge)
+
+    def angle(self, another):
+        """
+        Calculate angle (in degrees) between the two
+        GVect instances.
+
+        Examples:
+          >>> GVect(0, 90).angle(GVect(90, 0)) # doctest: +NUMBER
+          90.0000000
+          >>> GVect(0, 0).angle(GVect(270, 0)) # doctest: +NUMBER
+          90.0000000
+          >>> GVect(0, 0).angle(GVect(0, 0)) # doctest: +NUMBER 
+          0.0000000
+          >>> GVect(0, 0).angle(GVect(180, 0)) # doctest: +NUMBER 
+          180.0000000
+        """
+
+        return self.versor.angle(another.versor)
 
     @property
     def normal_gplane(self):

@@ -1,6 +1,10 @@
 
 
-from __future__ import division
+class DipConventionException(Exception):
+    """
+    Exception for dip angle convention.
+    """
+    pass
 
 
 class RasterParametersException(Exception):
