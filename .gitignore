@@ -90,3 +90,5 @@ ENV/
 
 codice_sorgente/
 .idea/
+
+.directory

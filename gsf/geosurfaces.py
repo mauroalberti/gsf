@@ -5,8 +5,9 @@ from __future__ import division
 from math import sqrt, sin, cos, tan, radians, asin, acos, atan, atan2, degrees
 import numpy as np
 
-from array_utils import point_solution
-from geosurf_utils import rhrstrk2dd
+from .config import dip_conventions, default_dip_angle_convention
+from .array_utils import point_solution
+from .geosurf_utils import rhrstrk2dd
 
 
 MIN_SEPARATION_THRESHOLD = 1e-10
@@ -14,6 +15,31 @@ MIN_VECTOR_MAGNITUDE = 1e-10
 MIN_SCALAR_VALUE = 1e-15
 MIN_ANGLE_DEGR_VALUE = 1e-10
 MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
+
+
+dip_angle_convention = default_dip_angle_convention
+
+def set_dip_angle_downward_up():
+    """
+    Set the dip angle convention as positive for downward point angles 
+    """
+
+    dip_angle_convention = dip_conventions["positive_down"]
+
+
+def set_dip_angle_positive_up():
+    """
+    Set the dip angle convention as positive for upward point angles 
+    """
+
+    dip_angle_convention = dip_conventions["positive_up"]
+
+def get_dip_angle_convention():
+    """
+    Return the current angle convention
+    """
+
+    return dip_angle_convention
 
 
 class Point(object):
@@ -864,6 +890,13 @@ class GVect(object):
         normal = self.versor.vp(another.versor)
         return normal.gvect.normal_gplane
 
+"""
+class GAxis(GVect):
+
+    def __init__(self, srcTrend, srcPlunge):
+
+        super(GAxis, self).__init__()
+"""
 
 class Plane(object):
     """
