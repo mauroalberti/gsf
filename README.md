@@ -16,3 +16,6 @@ Changes
 [2017-04-16] reviewed GPlane implementation; doctests implementation for Plane
 
 [2017-04-22] created new branch "faults"; started implementing unit tests; implementing dip angle convention; changed code state to "beta"
+
+2017-04-23] removed dip angle convention
+
