@@ -792,6 +792,8 @@ class GVect(object):
         Example:
           >>> GVect(0, 30).opposite()
           GVect(180.00, -30.00)
+          >>> GVect(315, 10).opposite()
+          GVect(135.00, -10.00)
         """
 
         trend = (self.tr + 180.) % 360.
@@ -805,10 +807,13 @@ class GVect(object):
         Return the Vect corresponding to the geological vector.
 
         Examples:
-          >>> print GVect(0, 90).versor
+          >>> GVect(0, 90).versor
           Vect(0.0000, 0.0000, -1.0000)
-          >>> print GVect(0, -90).versor
+          >>> GVect(0, -90).versor
           Vect(0.0000, 0.0000, 1.0000)
+          >>> GVect(90, 90).versor
+          Vect(0.0000, 0.0000, -1.0000)
+          
         """
 
         north_coord = cos(radians(self.pl)) * cos(radians(self.tr))
@@ -958,13 +963,36 @@ class GVect(object):
         normal = self.versor.vp(another.versor)
         return normal.gvect.normal_gplane
 
-"""
+
 class GAxis(GVect):
 
     def __init__(self, srcTrend, srcPlunge):
 
-        super(GAxis, self).__init__()
-"""
+        super(GAxis, self).__init__(srcTrend, srcPlunge)
+
+    def __repr__(self):
+
+        return "GAxis({:06.2f}, {:+06.2f})".format(*self.tp)
+
+    def angle(self, another):
+        """
+        Calculate angle (in degrees) between the two
+        GVect instances.
+
+        Examples:
+          >>> GAxis(0, 90).angle(GAxis(90, 0)) # doctest: +NUMBER
+          90.0000000
+          >>> GAxis(0, 0).angle(GAxis(270, 0)) # doctest: +NUMBER
+          90.0000000
+          >>> GAxis(0, 0).angle(GAxis(0, 0)) # doctest: +NUMBER 
+          0.0000000
+          >>> GAxis(0, 0).angle(GAxis(180, 0)) # doctest: +NUMBER 
+          0.0000000
+        """
+
+        angle_vers = self.versor.angle(another.versor)
+        return min(angle_vers, 180. - angle_vers)
+
 
 class Plane(object):
     """
@@ -1157,16 +1185,16 @@ class Plane(object):
         else:
             return False
 
-    def angle_degr(self, another):
+    def angle(self, another):
         """
         Calculate angle (in degrees) between two planes.
 
         Examples:
-          >>> Plane(1,0,0,0).angle_degr(Plane(0,1,0,0))
+          >>> Plane(1,0,0,0).angle(Plane(0,1,0,0))
           90.0
-          >>> Plane(1,0,0,0).angle_degr(Plane(1,0,1,0))
+          >>> Plane(1,0,0,0).angle(Plane(1,0,1,0))
           45.0
-          >>> Plane(1,0,0,0).angle_degr(Plane(1,0,0,0))
+          >>> Plane(1,0,0,0).angle(Plane(1,0,0,0))
           0.0
         """
 
@@ -1269,6 +1297,24 @@ class GPlane(object):
 
         return (self.dd - 90.0) % 360.0
 
+    @property
+    def strike_lhr(self):
+        """
+        Return the strike according to the left-hand-rule.
+
+        Examples:
+          >>> GPlane(90, 45).strike_lhr
+          180.0
+          >>> GPlane(45, 89).strike_lhr
+          135.0
+          >>> GPlane(275, 38).strike_lhr
+          5.0
+          >>> GPlane(0, 38).strike_lhr
+          90.0
+        """
+
+        return (self.dd + 90.0) % 360.0
+
     def __repr__(self):
 
         return "GPlane({:06.2f}, {:+06.2f})".format(*self.dda)
@@ -1276,19 +1322,22 @@ class GPlane(object):
     @property
     def normal(self):
         """
-        Return the normal to the geological plane, as a (nominally) downward geological vector.
-        When the geological plane is vertical, there is no really downward choice,
-        but just two horizontal normals.
+        Return the geological axis normal to the geological plane,
+        with a positive dip angle, so that it is downward- or 
+        upward-pointing depending on the set dip angle convention.
+        When the geological plane is vertical, there is no real
+        upward/downward choice, but just two horizontal normals,
+        and one of them is chosen.
 
         Example:
             >>> GPlane(90, 55).normal
-            GVect(270.00, +35.00)
+            GAxis(270.00, +35.00)
         """
         
         trend = (self.dd + 180.0) % 360.0
         plunge = 90.0 - self.da
 
-        return GVect(trend, plunge)
+        return GAxis(trend, plunge)
 
     def plane(self, point):
         """
@@ -1311,7 +1360,7 @@ class GPlane(object):
 
     def angle(self, another):
         """
-        Calculate angle (in degrees) between two planes.
+        Calculate angle (in degrees) between two geoplanes.
 
         >>> p1 = GPlane(100.0, 50.0)
         >>> p1.angle(p1)
@@ -1323,10 +1372,7 @@ class GPlane(object):
         80.0
         """
 
-        vec0 = self.normal.versor
-        vec1 = another.normal.versor
-
-        return vec0.angle(vec1)
+        return self.normal.angle(another.normal)
 
     def rake_to_gv(self, rake):
         """
