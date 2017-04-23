@@ -2,12 +2,10 @@
 
 from __future__ import division
 
-from math import sqrt, sin, cos, tan, radians, asin, acos, atan, atan2, degrees
+from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
-from config import dip_conventions, default_dip_angle_convention
 from array_utils import point_solution
-from geosurf_utils import rhrstrk2dd
 from errors import DipConventionException
 
 
@@ -16,34 +14,6 @@ MIN_VECTOR_MAGNITUDE = 1e-10
 MIN_SCALAR_VALUE = 1e-15
 MIN_ANGLE_DEGR_VALUE = 1e-10
 MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
-
-
-dip_angle_convention = default_dip_angle_convention
-
-def set_dip_angle_positive_down():
-    """
-    Set the dip angle convention as positive for downward point angles 
-    """
-
-    global dip_angle_convention
-    dip_angle_convention = dip_conventions["positive_down"]
-
-
-def set_dip_angle_positive_up():
-    """
-    Set the dip angle convention as positive for upward point angles 
-    """
-
-    global dip_angle_convention
-    dip_angle_convention = dip_conventions["positive_up"]
-
-
-def get_dip_angle_convention():
-    """
-    Return the current angle convention
-    """
-
-    return dip_angle_convention
 
 
 class Point(object):
@@ -705,7 +675,7 @@ class GVect(object):
     Geological vector.
     Defined by trend and plunge (both in degrees):
      - trend: [0.0, 360.0[ clockwise, from 0 (North):
-     - plunge: [-90.0, 90.0],.
+     - plunge: [-90.0, 90.0].
     """
 
     def __init__(self, srcTrend, srcPlunge):
@@ -713,10 +683,7 @@ class GVect(object):
         Geological vector constructor.
         srcTrend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
         srcPlunge: Plunge: [-90.0, 90.0], 
-        if dip_angle_convention == dip_conventions["positive_down"]:
-            negative value: upward pointing axis, positive values: downward axis;
-        if dip_angle_convention == dip_conventions["positive_up"]:
-            negative value: downward pointing axis, positive values: upward axis .
+        negative value: upward pointing axis, positive values: downward axis;
             
         Example:
           >>> a = GVect(120, -27)
@@ -818,12 +785,7 @@ class GVect(object):
 
         north_coord = cos(radians(self.pl)) * cos(radians(self.tr))
         east_coord = cos(radians(self.pl)) * sin(radians(self.tr))
-        if dip_angle_convention == dip_conventions["positive_down"]:
-            down_coord = sin(radians(self.pl))
-        elif dip_angle_convention == dip_conventions["positive_up"]:
-            down_coord = - sin(radians(self.pl))
-        else:
-            raise DipConventionException("Exception with defined dip angle convention")
+        down_coord = sin(radians(self.pl))
 
         return Vect(east_coord, north_coord, -down_coord)
 
@@ -1235,6 +1197,16 @@ class GPlane(object):
           GPlane(090.00, +90.00)
         """
 
+        def rhrstrk2dd(rhr_strk):
+            """Converts RHR strike value to dip direction value.
+
+            Example:
+                >>> rhrstrk2dd(285.5)
+                15.5
+            """
+
+            return (rhr_strk + 90.0) % 360.0
+
         if isRHRStrike:
             self._dipdir = rhrstrk2dd(srcAzimuth)
         else:
@@ -1323,8 +1295,7 @@ class GPlane(object):
     def normal(self):
         """
         Return the geological axis normal to the geological plane,
-        with a positive dip angle, so that it is downward- or 
-        upward-pointing depending on the set dip angle convention.
+        with a positive dip angle, so that it is downward-pointing.
         When the geological plane is vertical, there is no real
         upward/downward choice, but just two horizontal normals,
         and one of them is chosen.
@@ -1402,7 +1373,7 @@ class GPlane(object):
 
         x = cos(rk)*sin(strk)-sin(rk)*cos(dip)*cos(strk)
         y = cos(rk)*cos(strk)+sin(rk)*cos(dip)*sin(strk)
-        z = sin(rk)*sin(dip)
+        z = sin(rk) * sin(dip)
 
         return Vect(x, y, z).gvect
 
