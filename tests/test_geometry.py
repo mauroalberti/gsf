@@ -3,7 +3,7 @@
 import unittest
 
 from gsf.math_utils import *
-from gsf.geosurfaces import *
+from gsf.geometry import *
 
 
 class TestGsf(unittest.TestCase):
