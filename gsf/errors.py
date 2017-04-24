@@ -1,11 +1,16 @@
 
 
-class DipConventionException(Exception):
+class SlickelineTypeException(Exception):
     """
-    Exception for dip angle convention.
+    Exception for slickenline type.
     """
     pass
 
+class SlickelineSenseException(Exception):
+    """
+    Exception for slickenline movement sense.
+    """
+    pass
 
 class RasterParametersException(Exception):
     """
