@@ -8,6 +8,8 @@ It is inspired by apsg by Ondrej Lexa. Requires Numpy.
 
 Current state: beta
 
+### Summary
+
 Currently the module allows to create several geometric and geological "objects" and to process them.
 
 The classes comprise cartesian points (**Point**), vectors (**Vect**) and planes (**Plane**).
