@@ -1,21 +1,20 @@
-# gsf
+
+[![Build Status](https://travis-ci.org/mauroalberti/gsf.svg?branch=master)](https://travis-ci.org/mauroalberti/gsf)
+
+# gsf 
 Python module for processing geological surface/fault data with Python.
+
+It is inspired by apsg by Ondrej Lexa. Requires Numpy.
 
 Current state: beta
 
-Changes
+Currently the module allows to create several geometric and geological "objects" and to process them.
 
-[2017-04-01] created repository 
+The classes comprise cartesian points (**Point**), vectors (**Vect**) and planes (**Plane**).
 
-[2017-04-02] transfer of selected code from geosurf; start improving the code
+Geological direction and axes (**GVect** and **GAxis**), as well geological planes (**GPlane**), are expressed via usual geological notation, i.e., dip direction and dip angle.
 
-[2017-04-09] code refactoring; implemented doctests for Vect and GVect
+For the processing of fault data, it is possible to create slickenline-type objects (**Slickenline**), with or without known movement sense. 
 
-[2017-04-15] code refactoring and doctests implementation for Point
-
-[2017-04-16] reviewed GPlane implementation; doctests implementation for Plane
-
-[2017-04-22] created new branch "faults"; started implementing unit tests; implementing dip angle convention; changed code state to "beta"
-
-[2017-04-23] removed dip angle convention
+A slickenline can be combined to a geological fault to create a fault - slickenline datum (**FaultSlick**), from which it is possible to derive P, T and B axes, and the M plane (**PTBAxes**). 
 
