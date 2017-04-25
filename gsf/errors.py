@@ -1,5 +1,11 @@
 
 
+class SubparallelLineationException(Exception):
+    """
+    Exception for subparallel GAxis/GVect instances.
+    """
+    pass
+
 class SlickelineTypeException(Exception):
     """
     Exception for slickenline type.

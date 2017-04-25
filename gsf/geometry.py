@@ -6,6 +6,7 @@ from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
 from array_utils import point_solution
+from errors import SubparallelLineationException
 
 
 MIN_SEPARATION_THRESHOLD = 1e-10
@@ -13,6 +14,7 @@ MIN_VECTOR_MAGNITUDE = 1e-10
 MIN_SCALAR_VALUE = 1e-15
 MIN_ANGLE_DEGR_VALUE = 1e-10
 MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
+MIN_ANGLE_DEGR_DISORIENTATION = 5.
 
 
 class Point(object):
@@ -938,6 +940,33 @@ class GVect(object):
 
         return GAxis(*self.tp)
 
+    def vp(self, another):
+        """
+        Calculate the GVect instance that is normal to the two provided sources.
+        Angle between sources must be larger than MIN_ANGLE_DEGR_DISORIENTATION,
+        otherwise a SubparallelLineationException will be raised.
+        
+        Example:
+          >>> GVect(0, 0).vp(GVect(4, 0))
+          Traceback (most recent call last):
+          ...
+          SubparallelLineationException: Sources must not be sub- or anti-parallel
+          >>> GVect(0, 0).vp(GVect(179, 0))
+          Traceback (most recent call last):
+          ...
+          SubparallelLineationException: Sources must not be sub- or anti-parallel
+          >>> GVect(0, 0).vp(GVect(5.1, 0))
+          GVect(000.00, +90.00)
+          >>> GVect(90, 45).vp(GVect(90, 0))
+          GVect(180.00, +00.00)
+        """
+
+        if not MIN_ANGLE_DEGR_DISORIENTATION <= self.angle(another) <= 180. - MIN_ANGLE_DEGR_DISORIENTATION:
+            raise SubparallelLineationException("Sources must not be sub- or anti-parallel")
+
+        return self.versor.vp(another.versor).gvect
+
+
 class GAxis(GVect):
 
     def __init__(self, srcTrend, srcPlunge):
@@ -962,7 +991,7 @@ class GAxis(GVect):
     def angle(self, another):
         """
         Calculate angle (in degrees) between the two
-        GVect instances.
+        GAxis instances.
 
         Examples:
           >>> GAxis(0, 90).angle(GAxis(90, 0)) # doctest: +NUMBER
@@ -977,6 +1006,64 @@ class GAxis(GVect):
 
         angle_vers = self.versor.angle(another.versor)
         return min(angle_vers, 180. - angle_vers)
+
+    @property
+    def normal_gplane(self):
+        """
+        Calculate the geological plane that is normal to the given GAxis instance.
+        
+        Example:
+          >>> GAxis(0, 90).normal_gplane
+          GPlane(180.00, +00.00)
+          >>> GAxis(0, 0).normal_gplane
+          GPlane(000.00, +90.00)
+          >>> GAxis(45, 45).normal_gplane
+          GPlane(225.00, +45.00)
+        """
+
+        return self.as_vect().normal_gplane
+
+    def common_plane(self, another):
+        """
+        Calculate GPlane instance defined by the two GAxis instances.
+
+        Examples:
+          >>> GAxis(0, 0).common_plane(GAxis(90, 0))
+          GPlane(180.00, +00.00)
+          >>> GAxis(0, 0).common_plane(GAxis(90, 90))
+          GPlane(090.00, +90.00)
+          >>> GAxis(45, 0).common_plane(GAxis(135, 45))
+          GPlane(135.00, +45.00)
+          >>> GAxis(315, 45).common_plane(GAxis(135, 45))
+          GPlane(225.00, +90.00)
+        """
+
+        return self.as_vect().common_plane(another.as_vect())
+
+    def vp(self, another):
+        """
+        Calculate the GAxis instance that is perpendicular to the two provided.
+        The two source GAxis must not be subparallel (threshold is MIN_ANGLE_DEGR_DISORIENTATION),
+        otherwise a SubparallelLineationException will be raised.
+        
+        Example:
+          >>> GAxis(0, 0).vp(GAxis(4, 0))
+          Traceback (most recent call last):
+          ...
+          SubparallelLineationException: Sources must not be sub- or anti-parallel
+          >>> GAxis(0, 0).vp(GAxis(180, 0))
+          Traceback (most recent call last):
+          ...
+          SubparallelLineationException: Sources must not be sub- or anti-parallel
+          >>> GAxis(90, 0).vp(GAxis(180, 0))
+          GAxis(000.00, +90.00)
+          >>> GAxis(90, 45).vp(GAxis(180, 0))
+          GAxis(270.00, +45.00)
+          >>> GAxis(270, 45).vp(GAxis(180, 90))
+          GAxis(180.00, -00.00)
+        """
+
+        return self.as_vect().vp(another.as_vect()).as_axis()
 
 
 class Plane(object):

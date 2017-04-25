@@ -275,6 +275,91 @@ class FaultSlick(object):
         return FaultSlick(self.fp, self.sl.invert())
 
 
+class PTBAxes(object):
+    """
+    Represent the triad of P, T and B kinematic axes.
+    It can also calculate the M plane.
+    """
+
+    def __init__(self, p_axis, t_axis):
+        """
+        Create a new PTBAxes instances, given the two
+        P and T axes.
+        
+        Example:
+          >>> PTBAxes(GVect(0, 0), GVect(90, 0))
+          Traceback (most recent call last):
+          ...
+          AssertionError: P axis must be an instance of GAxis
+          >>> PTBAxes(GAxis(0, 0), GAxis(80, 0))
+          Traceback (most recent call last):
+          ...
+          AssertionError: P and T axes must be perpendicular
+          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0))
+          PTBAxes(P: GAxis(000.00, +00.00), T: GAxis(090.00, +00.00))
+        """
+
+        assert isinstance(p_axis, GAxis), "P axis must be an instance of GAxis"
+        assert isinstance(t_axis, GAxis), "T axis must be an instance of GAxis"
+        assert isclose(p_axis.angle(t_axis), 90.), "P and T axes must be perpendicular"
+
+        self.p_ax = p_axis
+        self.t_ax = t_axis
+
+    @property
+    def Paxis(self):
+        """
+        Return the P axis.
+        
+        Example:
+          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).Paxis
+          GAxis(000.00, +00.00)
+        """
+
+        return self.p_ax
+
+    @property
+    def Taxis(self):
+        """
+        Return the T axis.
+
+        Example:
+          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).Taxis
+          GAxis(090.00, +00.00)
+        """
+
+        return self.t_ax
+
+    def __repr__(self):
+
+        return "PTBAxes(P: {}, T: {})".format(self.Paxis, self.Taxis)
+
+    @property
+    def Baxis(self):
+        """
+        Calculate the B axis.
+        
+        Example:
+          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).Baxis
+          GAxis(000.00, +90.00)
+        """
+
+        return self.Paxis.vp(self.Taxis).as_axis()
+
+    @property
+    def Mplane(self):
+        """
+        Calculate M plane.
+        
+        Example:
+          >>> PTBAxes(GAxis(0, 90), GAxis(90, 0)).Mplane
+          GPlane(000.00, +90.00)
+          >>> PTBAxes(GAxis(45, 45), GAxis(225, 45)).Mplane
+          GPlane(315.00, +90.00)
+        """
+
+        return self.Paxis.common_plane(self.Taxis)
+
 if __name__ == "__main__":
 
     import doctest
