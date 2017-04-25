@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from geometry import *
-from errors import SlickelineTypeException, SlickelineSenseException
-from math_utils import isclose
+from .geometry import *
+from .errors import SlickelineTypeException, SlickelineSenseException
+from .math_utils import isclose
 
 class Slickenline(object):
     """
@@ -104,7 +104,7 @@ class Slickenline(object):
     def lin(self):
         """
         Return the slickenline orientation value,
-        as a GVect or a GAxis instance.
+        as a GVect (known movement sense) or a GAxis instance (unknown movement sense).
 
         Example:
           >>> Slickenline(GVect(90, 45)).lin
@@ -274,6 +274,27 @@ class FaultSlick(object):
 
         return FaultSlick(self.fp, self.sl.invert())
 
+    def PTaxes(self):
+        """
+        Calculate P-T axes. 
+        Return P axis, T axis and a third variable, boolean, 
+        indicating if the P-T derivation is from a slickenline
+        with a known movement sense (True) or with
+        unknown/uncertain movement sense (False).
+        
+        Example:
+          >>> FaultSlick(GPlane(90, 45), Slickenline(GVect(90, 45))).PTaxes()
+          PTBAxes(P: GAxis(000.00, -90.00), T: GAxis(090.00, +00.00), True)
+        """
+
+        s_versor = self.sl.lin.versor
+        f_versor = self.fp.normal.versor
+        T_axis = (f_versor + s_versor).gaxis
+        P_axis = (f_versor - s_versor).gaxis
+        known = self.known_sense
+
+        return PTBAxes(P_axis, T_axis, known)
+
 
 class PTBAxes(object):
     """
@@ -281,7 +302,7 @@ class PTBAxes(object):
     It can also calculate the M plane.
     """
 
-    def __init__(self, p_axis, t_axis):
+    def __init__(self, p_axis, t_axis, known=True):
         """
         Create a new PTBAxes instances, given the two
         P and T axes.
@@ -296,15 +317,16 @@ class PTBAxes(object):
           ...
           AssertionError: P and T axes must be perpendicular
           >>> PTBAxes(GAxis(0, 0), GAxis(90, 0))
-          PTBAxes(P: GAxis(000.00, +00.00), T: GAxis(090.00, +00.00))
+          PTBAxes(P: GAxis(000.00, +00.00), T: GAxis(090.00, +00.00), True)
         """
 
         assert isinstance(p_axis, GAxis), "P axis must be an instance of GAxis"
         assert isinstance(t_axis, GAxis), "T axis must be an instance of GAxis"
         assert isclose(p_axis.angle(t_axis), 90.), "P and T axes must be perpendicular"
 
-        self.p_ax = p_axis
-        self.t_ax = t_axis
+        self._pax = p_axis
+        self._tax = t_axis
+        self._known = known
 
     @property
     def Paxis(self):
@@ -316,7 +338,7 @@ class PTBAxes(object):
           GAxis(000.00, +00.00)
         """
 
-        return self.p_ax
+        return self._pax
 
     @property
     def Taxis(self):
@@ -328,11 +350,23 @@ class PTBAxes(object):
           GAxis(090.00, +00.00)
         """
 
-        return self.t_ax
+        return self._tax
+
+    @property
+    def known(self):
+        """
+        Indicate if the movement sense is known.
+
+        Example:
+          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).known
+          True
+        """
+
+        return self._known
 
     def __repr__(self):
 
-        return "PTBAxes(P: {}, T: {})".format(self.Paxis, self.Taxis)
+        return "PTBAxes(P: {}, T: {}, {})".format(self.Paxis, self.Taxis, self.known)
 
     @property
     def Baxis(self):

@@ -3,7 +3,7 @@ from __future__ import division
 from numpy import *  # general import for compatibility with formula input
 from numpy.linalg import svd
 
-from errors import AnaliticSurfaceCalcException
+from .errors import AnaliticSurfaceCalcException
 
 
 def point_solution(a_array, b_array):
@@ -38,11 +38,11 @@ def formula_to_grid(array_range, array_size, formula):
     try:
         a_list, b_list = [a for a in a_array for b in b_array], [b for a in a_array for b in b_array]
     except:
-        raise AnaliticSurfaceCalcException, "Error in a-b values"
+        raise AnaliticSurfaceCalcException("Error in a-b values")
 
     try:
         z_list = [eval(formula) for a in a_array for b in b_array]
     except:
-        raise AnaliticSurfaceCalcException, "Error in applying formula to a and b array values"
+        raise AnaliticSurfaceCalcException("Error in applying formula to a and b array values")
 
     return a_list, b_list, z_list

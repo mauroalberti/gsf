@@ -2,9 +2,12 @@
 
 import unittest
 
+from gsf import *
+
+"""
 from gsf.math_utils import *
 from gsf.geometry import *
-
+"""
 
 class TestGsf(unittest.TestCase):
 
@@ -38,7 +41,7 @@ class TestGsf(unittest.TestCase):
 
     def test_gplane_normal(self):
 
-        assert GPlane(90, 45).normal.versor.is_downward
+        assert isclose(GPlane(90, 45).normal.angle(GVect(90, -45)), 0.)
 
     def test_gplane_plane(self):
 

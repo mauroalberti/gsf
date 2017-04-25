@@ -5,8 +5,8 @@ from __future__ import division
 from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
-from array_utils import point_solution
-from errors import SubparallelLineationException
+from .array_utils import point_solution
+from .errors import SubparallelLineationException
 
 
 MIN_SEPARATION_THRESHOLD = 1e-10
@@ -337,6 +337,8 @@ class Vect(object):
         Example:
           >>> Vect(1., 1., 1.) - Vect(1., 1., 1.)
           Vect(0.0000, 0.0000, 0.0000)
+          >>> Vect(0., 1., 4.) - Vect(7., 3., 1.)
+          Vect(-7.0000, -2.0000, 3.0000)
         """
 
         return Vect.from_array(self.v - another.v)
@@ -592,6 +594,34 @@ class Vect(object):
             trend = (90. - degrees(atan2(unit_vect.y, unit_vect.x))) % 360.
 
         return GVect(trend, plunge)
+
+
+    @property
+    def gaxis(self):
+        """
+        Calculate the geological axis parallel to the Vect instance.
+        Trend range: [0°, 360°[
+        Plunge range: [-90°, 90°], with negative values for upward-pointing
+        geological axes and positive values for downward-pointing axes.
+
+        Examples:
+          >>> Vect(0, 1, 1).gaxis
+          GAxis(000.00, -45.00)
+          >>> Vect(1, 0, 1).gaxis
+          GAxis(090.00, -45.00)
+          >>> Vect(0, 0, 1).gaxis
+          GAxis(000.00, -90.00)
+          >>> Vect(0, 0, -1).gaxis
+          GAxis(000.00, +90.00)
+          >>> Vect(-1, 0, 0).gaxis
+          GAxis(270.00, +00.00)
+          >>> Vect(0, -1, 0).gaxis
+          GAxis(180.00, +00.00)
+          >>> Vect(-1, -1, 0).gaxis
+          GAxis(225.00, +00.00)
+        """
+
+        return self.gvect.as_axis()
 
     def sp(self, another):
         """
@@ -1405,20 +1435,17 @@ class GPlane(object):
     def normal(self):
         """
         Return the geological axis normal to the geological plane,
-        with a positive dip angle, so that it is downward-pointing.
-        When the geological plane is vertical, there is no real
-        upward/downward choice, but just two horizontal normals,
-        and one of them is chosen.
+        pointing in the same direction as the geological plane.
 
         Example:
             >>> GPlane(90, 55).normal
-            GAxis(270.00, +35.00)
+            GVect(090.00, -35.00)
         """
         
-        trend = (self.dd + 180.0) % 360.0
-        plunge = 90.0 - self.da
+        trend = self.dd % 360.0
+        plunge = self.da - 90.0
 
-        return GAxis(trend, plunge)
+        return GVect(trend, plunge)
 
     def plane(self, point):
         """
@@ -1427,11 +1454,11 @@ class GPlane(object):
 
         Example:
           >>> GPlane(0, 0).plane(Point(0, 0, 0))
-          Plane(0.0000, -0.0000, -1.0000, -0.0000)
+          Plane(0.0000, 0.0000, 1.0000, -0.0000)
           >>> GPlane(90, 45).plane(Point(0, 0, 0))
-          Plane(-0.7071, -0.0000, -0.7071, 0.0000)
+          Plane(0.7071, 0.0000, 0.7071, -0.0000)
           >>> GPlane(0, 90).plane(Point(0, 0, 0))
-          Plane(0.0000, -1.0000, -0.0000, -0.0000)
+          Plane(0.0000, 1.0000, -0.0000, -0.0000)
         """
 
         normal_versor = self.normal.versor
@@ -1453,7 +1480,7 @@ class GPlane(object):
         80.0
         """
 
-        return self.normal.angle(another.normal)
+        return self.normal.as_axis().angle(another.normal.as_axis())
 
     def rake_to_gv(self, rake):
         """
