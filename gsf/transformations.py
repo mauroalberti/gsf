@@ -5,8 +5,8 @@ from math import radians, sin, cos, tan
 
 import numpy as np
 
-from .array_utils import almost_zero
-from .geometry import GAxis
+from array_utils import almost_zero
+from geometry import GAxis
 
 
 class RefFrame(object):
@@ -102,7 +102,7 @@ def simple_shear_vert_matrix(phi_angle_degr, alpha_angle_degr):
 
 def deformation_matrices(deform_params):
 
-    deformation_matrices = []
+    deform_matrix = []
 
     for deform_param in deform_params:
         if deform_param['type'] == 'displacement':
@@ -148,7 +148,13 @@ def deformation_matrices(deform_params):
         else:
             continue
 
-        deformation_matrices.append(deformation)
+        deform_matrix.append(deformation)
 
-    return deformation_matrices
+    return deform_matrix
 
+
+if __name__ == "__main__":
+
+    import doctest
+    import numtest  # external module, used in doctest float checks
+    doctest.testmod()

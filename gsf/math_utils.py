@@ -53,3 +53,8 @@ def isclose(a, b, rtol=1e-012, atol=1e-12, equal_nan=False, equal_inf=False):
         return abs(a - b) <= max(rtol * max(abs(a), abs(b)), atol)
 
 
+if __name__ == "__main__":
+
+    import doctest
+    import numtest  # external module, used in doctest float checks
+    doctest.testmod()

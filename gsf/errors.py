@@ -5,6 +5,7 @@ class AnaliticSurfaceCalcException(Exception):
 
     pass
 
+
 class SubparallelLineationException(Exception):
     """
     Exception for subparallel GAxis/GVect instances.

@@ -5,8 +5,8 @@ from __future__ import division
 from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
-from .array_utils import point_solution
-from .errors import SubparallelLineationException
+from array_utils import point_solution
+from errors import SubparallelLineationException
 
 
 MIN_SEPARATION_THRESHOLD = 1e-10
@@ -487,6 +487,22 @@ class Vect(object):
 
         return self.scale(-1)
 
+    def is_almost_zero(self, tolerance=1.e-6):
+        """
+        Check that a vector is almost zero.
+
+        Example:
+          >>> Vect(0, 0, 1).is_almost_zero()
+          False
+          >>> Vect(0 ,0 , 0).is_almost_zero()
+          True
+        """
+
+        if abs(self) < tolerance:
+            return True
+        else:
+            return False
+
     @property
     def is_upward(self):
         """
@@ -628,7 +644,6 @@ class Vect(object):
 
         return GVect(trend, plunge)
 
-
     @property
     def gaxis(self):
         """
@@ -722,8 +737,8 @@ class Vect(object):
           Vect(0.0000, 0.0000, 1.0000)
           >>> Vect(1, 0, 0).vp(Vect(1, 0, 0))
           Vect(0.0000, 0.0000, 0.0000)
-          >>> Vect(1, 0, 0).vp(Vect(-1, 0, 0))
-          Vect(0.0000, 0.0000, 0.0000)
+          >>> (Vect(1, 0, 0).vp(Vect(-1, 0, 0))).is_almost_zero()
+          True
         """
 
         return Vect.from_array(np.cross(self.v, another.v))
@@ -745,24 +760,24 @@ class GVect(object):
      - plunge: [-90.0, 90.0].
     """
 
-    def __init__(self, srcTrend, srcPlunge):
+    def __init__(self, src_trend, src_plunge):
         """
         Geological vector constructor.
-        srcTrend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
-        srcPlunge: Plunge: [-90.0, 90.0], 
+        src_trend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
+        src_plunge: Plunge: [-90.0, 90.0],
         negative value: upward pointing axis, positive values: downward axis;
             
         Example:
-          >>> a = GVect(120, -27)
-          >>> b = GVect(54, -320)
+          >>> a = GVect(120.2, -27.4)
+          >>> b = GVect(54.5, -320.3)
           Traceback (most recent call last):
           ...
           AssertionError: plunge must be between -90° and +90° (comprised)
         """
 
-        assert -90.0 <= float(srcPlunge) <= 90.0, "plunge must be between -90° and +90° (comprised)"
-        self._trend = float(srcTrend) % 360.0
-        self._plunge = float(srcPlunge)
+        assert -90.0 <= float(src_plunge) <= 90.0, "plunge must be between -90° and +90° (comprised)"
+        self._trend = float(src_trend) % 360.0
+        self._plunge = float(src_plunge)
 
     @property
     def tr(self):
@@ -952,7 +967,7 @@ class GVect(object):
           180.0000000
         """
 
-        return self.versor.angle(another.versor_full)
+        return self.versor.angle(another.versor)
 
     @property
     def normal_gplane(self):
@@ -989,7 +1004,7 @@ class GVect(object):
           GPlane(225.00, +90.00)
         """
 
-        normal = self.versor.vp(another.versor_full)
+        normal = self.versor.vp(another.versor)
         return normal.gvect.normal_gplane
 
     def as_axis(self):
@@ -1027,14 +1042,14 @@ class GVect(object):
         if not MIN_ANGLE_DEGR_DISORIENTATION <= self.angle(another) <= 180. - MIN_ANGLE_DEGR_DISORIENTATION:
             raise SubparallelLineationException("Sources must not be sub- or anti-parallel")
 
-        return self.versor.vp(another.versor_full).gvect
+        return self.versor.vp(another.versor).gvect
 
 
 class GAxis(GVect):
 
-    def __init__(self, srcTrend, srcPlunge):
+    def __init__(self, src_trend, src_plunge):
 
-        super(GAxis, self).__init__(srcTrend, srcPlunge)
+        super(GAxis, self).__init__(src_trend, src_plunge)
 
     def __repr__(self):
 
@@ -1067,7 +1082,7 @@ class GAxis(GVect):
           0.0000000
         """
 
-        angle_vers = self.versor.angle(another.versor_full)
+        angle_vers = self.versor.angle(another.versor)
         return min(angle_vers, 180. - angle_vers)
 
     @property
@@ -1340,7 +1355,7 @@ class Plane(object):
 
         geol_plane = self.nversor.gvect.normal_gplane
         point = Point(*point_solution(np.array([[self.a, self.b, self.c]]),
-                                     np.array([-self.d])))
+                                      np.array([-self.d])))
         return geol_plane, point
 
     def inters_versor(self, another):
@@ -1418,21 +1433,21 @@ class GPlane(object):
      - dip angle: [0, 90.0]: downward-pointing.
     """
 
-    def __init__(self, srcAzimuth, srcDipAngle, isRHRStrike=False):
+    def __init__(self, src_azimuth, src_dip_angle, is_rhr_strike=False):
         """
         Geological plane constructor.
 
-        @param  srcAzimuth:  Azimuth of the plane (RHR strike or dip direction).
-        @type  srcAzimuth:  number or string convertible to float.
-        @param  srcDipAngle:  Dip angle of the plane (0-90°).
-        @type  srcDipAngle:  number or string convertible to float.
+        @param  src_azimuth:  Azimuth of the plane (RHR strike or dip direction).
+        @type  src_azimuth:  number or string convertible to float.
+        @param  src_dip_angle:  Dip angle of the plane (0-90°).
+        @type  src_dip_angle:  number or string convertible to float.
            
         @return:  GPlane.
 
         Example:
           >>> GPlane(0, 90)
           GPlane(000.00, +90.00)
-          >>> GPlane(0, 90, isRHRStrike=True)
+          >>> GPlane(0, 90, is_rhr_strike=True)
           GPlane(090.00, +90.00)
           >>> GPlane(0, 90, True)
           GPlane(090.00, +90.00)
@@ -1448,11 +1463,11 @@ class GPlane(object):
 
             return (rhr_strk + 90.0) % 360.0
 
-        if isRHRStrike:
-            self._dipdir = rhrstrk2dd(srcAzimuth)
+        if is_rhr_strike:
+            self._dipdir = rhrstrk2dd(src_azimuth)
         else:
-            self._dipdir = srcAzimuth % 360.0
-        self._dipangle = float(srcDipAngle)
+            self._dipdir = src_azimuth % 360.0
+        self._dipangle = float(src_dip_angle)
 
     @property
     def dd(self):

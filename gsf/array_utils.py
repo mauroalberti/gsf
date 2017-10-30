@@ -5,7 +5,7 @@ from __future__ import division
 from numpy import *  # general import for compatibility with formula input
 from numpy.linalg import svd
 
-from .errors import AnaliticSurfaceCalcException
+from errors import AnaliticSurfaceCalcException
 
 
 def point_solution(a_array, b_array):
@@ -70,15 +70,15 @@ def is_number(s):
         return True
 
 
-def to_float(iterable):
+def to_float(iterable_obj):
 
-    return [float(item) for item in iterable]
+    return [float(item) for item in iterable_obj]
 
 
-def almost_zero(val):
+def almost_zero(an_val):
 
     tolerance = 1e-10
-    if abs(val) > tolerance:
+    if abs(an_val) > tolerance:
         return False
     else:
         return True
@@ -132,3 +132,8 @@ def array_from_function(row_num, col_num, x_transfer_func, y_transfer_func, z_tr
 
     return fromfunction(ij_transfer_func, (row_num, col_num), transfer_funcs=transfer_funcs)
 
+if __name__ == "__main__":
+
+    import doctest
+    import numtest  # external module, used in doctest float checks
+    doctest.testmod()

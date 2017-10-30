@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
-from .geometry import *
-from .errors import SlickelineTypeException, SlickelineSenseException
-from .math_utils import isclose
+from geometry import *
+from errors import SlickelineTypeException, SlickelineSenseException
+from math_utils import isclose
+
 
 class Slickenline(object):
     """
@@ -275,7 +276,7 @@ class FaultSlick(object):
 
         return FaultSlick(self.fp, self.sl.invert())
 
-    def PTaxes(self):
+    def pt_axes(self):
         """
         Calculate P-T axes. 
         Return P axis, T axis and a third variable, boolean, 
@@ -284,17 +285,17 @@ class FaultSlick(object):
         unknown/uncertain movement sense (False).
         
         Example:
-          >>> FaultSlick(GPlane(90, 45), Slickenline(GVect(90, 45))).PTaxes()
+          >>> FaultSlick(GPlane(90, 45), Slickenline(GVect(90, 45))).pt_axes()
           PTBAxes(P: GAxis(000.00, -90.00), T: GAxis(090.00, +00.00), True)
         """
 
-        s_versor = self.sl.lin.versor_full
-        f_versor = self.fp.normal.versor_full
-        T_axis = (f_versor + s_versor).gaxis
-        P_axis = (f_versor - s_versor).gaxis
+        s_versor = self.sl.lin.versor
+        f_versor = self.fp.normal.versor
+        t_axis = (f_versor + s_versor).gaxis
+        p_axis = (f_versor - s_versor).gaxis
         known = self.known_sense
 
-        return PTBAxes(P_axis, T_axis, known)
+        return PTBAxes(p_axis, t_axis, known)
 
 
 class PTBAxes(object):
@@ -330,24 +331,24 @@ class PTBAxes(object):
         self._known = known
 
     @property
-    def Paxis(self):
+    def p_axis(self):
         """
         Return the P axis.
         
         Example:
-          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).Paxis
+          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).p_axis
           GAxis(000.00, +00.00)
         """
 
         return self._pax
 
     @property
-    def Taxis(self):
+    def t_axis(self):
         """
         Return the T axis.
 
         Example:
-          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).Taxis
+          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).t_axis
           GAxis(090.00, +00.00)
         """
 
@@ -367,33 +368,33 @@ class PTBAxes(object):
 
     def __repr__(self):
 
-        return "PTBAxes(P: {}, T: {}, {})".format(self.Paxis, self.Taxis, self.known)
+        return "PTBAxes(P: {}, T: {}, {})".format(self.p_axis, self.t_axis, self.known)
 
     @property
-    def Baxis(self):
+    def b_axis(self):
         """
         Calculate the B axis.
         
         Example:
-          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).Baxis
+          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).b_axis
           GAxis(000.00, +90.00)
         """
 
-        return self.Paxis.vp(self.Taxis).as_axis()
+        return self.p_axis.vp(self.t_axis).as_axis()
 
     @property
-    def Mplane(self):
+    def m_plane(self):
         """
         Calculate M plane.
         
         Example:
-          >>> PTBAxes(GAxis(0, 90), GAxis(90, 0)).Mplane
+          >>> PTBAxes(GAxis(0, 90), GAxis(90, 0)).m_plane
           GPlane(000.00, +90.00)
-          >>> PTBAxes(GAxis(45, 45), GAxis(225, 45)).Mplane
+          >>> PTBAxes(GAxis(45, 45), GAxis(225, 45)).m_plane
           GPlane(315.00, +90.00)
         """
 
-        return self.Paxis.common_plane(self.Taxis)
+        return self.p_axis.common_plane(self.t_axis)
 
 if __name__ == "__main__":
 
