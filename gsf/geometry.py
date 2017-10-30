@@ -136,6 +136,7 @@ class Point(object):
     def __abs__(self):
         """
         Point distance from frame origin.
+        todo: make sure it works as intended with nan values
 
         Example:
           >>> abs(Point(3, 4, 0))
@@ -149,6 +150,7 @@ class Point(object):
     def dist_3d(self, another):
         """
         Calculate Euclidean spatial distance between two points.
+        todo: make sure it works as intended with nan values
 
         Examples:
           >>> Point(1., 1., 1.).dist_3d(Point(4., 5., 1,))
@@ -162,6 +164,7 @@ class Point(object):
     def dist_2d(self, another):
         """
         Calculate horizontal (2D) distance between two points.
+        todo: make sure it works as intended with nan values
 
         Examples:
           >>> Point(1.,1.,1.).dist_2d(Point(4.,5.,7.))
@@ -173,6 +176,7 @@ class Point(object):
     def coincident(self, another, tolerance=MIN_SEPARATION_THRESHOLD):
         """
         Check spatial coincidence of two points
+        todo: make sure it works as intended with Points with nan values
 
         Example:
           >>> Point(1., 0., -1.).coincident(Point(1., 1.5, -1.))
@@ -181,7 +185,9 @@ class Point(object):
           True
         """
 
-        if self.dist_3d(another) > tolerance:
+        if self.dist_2d(another) > tolerance:
+            return False
+        elif self.dist_3d(another) > tolerance:
             return False
         else:
             return True
@@ -405,16 +411,25 @@ class Vect(object):
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     @property
-    def hlen(self):
+    def len_2d(self):
         """
         Vector length projected on the horizontal (xy) plane.
 
         Example:
-          >>> Vect(3, 4, 7).hlen
+          >>> Vect(3, 4, 7).len_2d
           5.0
         """
 
         return sqrt(self.x * self.x + self.y * self.y)
+
+    @property
+    def len_3d(self):
+        """
+        Vector length projected on the xyz space.
+
+        """
+
+        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     def scale(self, scale_factor):
         """
@@ -428,18 +443,36 @@ class Vect(object):
         return Vect.from_array(self.v * scale_factor)
 
     @property
-    def versor(self):
+    def versor_full(self):
         """
         Calculate versor.
 
         Example:
-          >>> Vect(5, 0, 0).versor
+          >>> Vect(5, 0, 0).versor_full
           Vect(1.0000, 0.0000, 0.0000)
-          >>> Vect(0, 0, -1).versor
+          >>> Vect(0, 0, -1).versor_full
           Vect(0.0000, 0.0000, -1.0000)
         """
 
         return self.scale(1.0 / abs(self))
+
+    @property
+    def versor_3d(self):
+        """
+        Calculate versor in xyz space.
+
+        """
+
+        return self.scale(1.0 / self.len_3d)
+
+    @property
+    def versor_2d(self):
+        """
+        Calculate versor in xy space.
+
+        """
+
+        return self.scale(1.0 / self.len_2d)
 
     def invert(self):
         """
@@ -542,7 +575,7 @@ class Vect(object):
           90.0
         """
 
-        hlen = self.hlen
+        hlen = self.len_2d
         if hlen == 0.0:
             if self.z > 0.:
                 return -90.
@@ -551,7 +584,7 @@ class Vect(object):
             else:
                 raise Exception("Zero-valued vector")
         else:
-            slope = - degrees(atan(self.z / self.hlen))
+            slope = - degrees(atan(self.z / self.len_2d))
             if abs(slope) > MIN_SCALAR_VALUE:
                 return slope
             else:
@@ -587,7 +620,7 @@ class Vect(object):
 
         plunge = self.slope  # upward pointing -> negative value, downward -> positive
 
-        unit_vect = self.versor
+        unit_vect = self.versor_full
         if unit_vect.y == 0. and unit_vect.x == 0:
             trend = 0.
         else:
@@ -690,7 +723,7 @@ class Vect(object):
           >>> Vect(1, 0, 0).vp(Vect(1, 0, 0))
           Vect(0.0000, 0.0000, 0.0000)
           >>> Vect(1, 0, 0).vp(Vect(-1, 0, 0))
-          Vect(0.0000, -0.0000, 0.0000)
+          Vect(0.0000, 0.0000, 0.0000)
         """
 
         return Vect.from_array(np.cross(self.v, another.v))
@@ -919,7 +952,7 @@ class GVect(object):
           180.0000000
         """
 
-        return self.versor.angle(another.versor)
+        return self.versor.angle(another.versor_full)
 
     @property
     def normal_gplane(self):
@@ -956,7 +989,7 @@ class GVect(object):
           GPlane(225.00, +90.00)
         """
 
-        normal = self.versor.vp(another.versor)
+        normal = self.versor.vp(another.versor_full)
         return normal.gvect.normal_gplane
 
     def as_axis(self):
@@ -994,7 +1027,7 @@ class GVect(object):
         if not MIN_ANGLE_DEGR_DISORIENTATION <= self.angle(another) <= 180. - MIN_ANGLE_DEGR_DISORIENTATION:
             raise SubparallelLineationException("Sources must not be sub- or anti-parallel")
 
-        return self.versor.vp(another.versor).gvect
+        return self.versor.vp(another.versor_full).gvect
 
 
 class GAxis(GVect):
@@ -1034,7 +1067,7 @@ class GAxis(GVect):
           0.0000000
         """
 
-        angle_vers = self.versor.angle(another.versor)
+        angle_vers = self.versor.angle(another.versor_full)
         return min(angle_vers, 180. - angle_vers)
 
     @property
@@ -1052,6 +1085,74 @@ class GAxis(GVect):
         """
 
         return self.as_vect().normal_gplane
+
+    @property
+    def is_upward(self):
+        """
+        Check whether the instance is pointing upward or horizontal.
+
+        Examples:
+          >>> GAxis(10, 15).is_upward
+          False
+          >>> GAxis(257.4, 0.0).is_upward
+          False
+          >>> GAxis(90, -45).is_upward
+          True
+        """
+
+        return self.as_vect().is_upward
+
+    @property
+    def is_downward(self):
+        """
+        Check whether the instance is pointing downward or horizontal.
+
+        Examples:
+          >>> GAxis(10, 15).is_downward
+          True
+          >>> GAxis(257.4, 0.0).is_downward
+          False
+          >>> GAxis(90, -45).is_downward
+          False
+        """
+
+        return self.as_vect().is_downward
+
+    @property
+    def upward(self):
+        """
+        Return upward-point geological axis.
+
+        Examples:
+          >>> GAxis(90, -45).upward
+          GAxis(090.00, -45.00)
+          >>> GAxis(180, 45).upward
+          GAxis(000.00, -45.00)
+          >>> GAxis(0, 0).upward
+          GAxis(180.00, -00.00)
+          >>> GAxis(0, 90).upward
+          GAxis(180.00, -90.00)
+        """
+
+        return self.as_vect().upward.as_axis()
+
+    @property
+    def downward(self):
+        """
+        Return downward-pointing geological vector.
+
+        Examples:
+          >>> GAxis(90, -45).downward
+          GAxis(270.00, +45.00)
+          >>> GAxis(180, 45).downward
+          GAxis(180.00, +45.00)
+          >>> GAxis(0, 0).downward
+          GAxis(180.00, -00.00)
+          >>> GAxis(0, 90).downward
+          GAxis(000.00, +90.00)
+        """
+
+        return self.as_vect().downward.as_axis()
 
     def common_plane(self, another):
         """
@@ -1222,7 +1323,7 @@ class Plane(object):
           Vect(0.0000, 1.0000, 0.0000)
         """
 
-        return Vect(self.a, self.b, self.c).versor
+        return Vect(self.a, self.b, self.c).versor_full
 
     def gplane_point(self):
         """
@@ -1252,7 +1353,7 @@ class Plane(object):
         Vect(0.0000, -1.0000, 0.0000)
         """
 
-        return self.nversor.vp(another.nversor).versor
+        return self.nversor.vp(another.nversor).versor_full
 
     def inters_point(self, another):
         """
@@ -1326,7 +1427,7 @@ class GPlane(object):
         @param  srcDipAngle:  Dip angle of the plane (0-90°).
         @type  srcDipAngle:  number or string convertible to float.
            
-        @return:  GeolPlane.
+        @return:  GPlane.
 
         Example:
           >>> GPlane(0, 90)
@@ -1434,7 +1535,7 @@ class GPlane(object):
     @property
     def normal(self):
         """
-        Return the geological axis normal to the geological plane,
+        Return the geological vector normal to the geological plane,
         pointing in the same direction as the geological plane.
 
         Example:
@@ -1484,7 +1585,7 @@ class GPlane(object):
 
     def rake_to_gv(self, rake):
         """
-        Calculate GVect given a Gplane instance and a rake value.
+        Calculate GVect given a GPlane instance and a rake value.
         The rake is defined according to the Aki and Richards, 1980 conventions:
         rake = 0° -> left-lateral
         rake = 90° -> reverse
