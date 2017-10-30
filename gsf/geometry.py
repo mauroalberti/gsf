@@ -5,8 +5,8 @@ from __future__ import division
 from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
-from array_utils import point_solution
-from errors import SubparallelLineationException
+from .array_utils import point_solution
+from .errors import SubparallelLineationException
 
 
 MIN_SEPARATION_THRESHOLD = 1e-10

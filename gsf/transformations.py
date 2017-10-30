@@ -5,8 +5,8 @@ from math import radians, sin, cos, tan
 
 import numpy as np
 
-from array_utils import almost_zero
-from geometry import GAxis
+from .array_utils import almost_zero
+from .geometry import GAxis
 
 
 class RefFrame(object):
