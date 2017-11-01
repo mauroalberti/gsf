@@ -25,12 +25,22 @@ def xyz_svd(xyz_array):
     # http://stackoverflow.com/questions/15959411/best-fit-plane-algorithms-why-different-results-solved
 
     try:
-        return dict(result=svd(xyz_array))
+        result = svd(xyz_array)
     except:
-        return dict(result=None)
+        result = None
+
+    return dict(result=result)
 
 
 def formula_to_grid(array_range, array_size, formula):
+    """
+    Todo: check usages and correctness
+
+    :param array_range:
+    :param array_size:
+    :param formula:
+    :return: three lists of float values
+    """
 
     a_min, a_max, b_max, b_min = array_range  # note: b range reversed for conventional j order in arrays
     array_rows, array_cols = array_size
@@ -39,7 +49,7 @@ def formula_to_grid(array_range, array_size, formula):
     b_array = linspace(b_max, b_min, num=array_rows)  # note: reversed for conventional j order in arrays
 
     try:
-        a_list, b_list = [a for a in a_array for b in b_array], [b for a in a_array for b in b_array]
+        a_list, b_list = [a for a in a_array for _ in b_array], [b for _ in a_array for b in b_array]
     except:
         raise AnaliticSurfaceCalcException("Error in a-b values")
 
@@ -60,6 +70,15 @@ def is_number(s):
 
     @return:  boolean, whether string can be converted to a number (float).
 
+    Example:
+      >>> is_number("1.0")
+      True
+      >>> is_number("1")
+      True
+      >>> is_number(None)
+      False
+      >>> is_number("one")
+      False
     """
 
     try:
@@ -70,23 +89,40 @@ def is_number(s):
         return True
 
 
-def to_float(iterable_obj):
+def to_floats(iterable_obj):
+    """
+    Converts an iterable object storing float-compatible values
+    to a list of floats.
+
+    :param iterable_obj:
+    :return: list of Floats
+
+      >>> to_floats([1, 2, 3])
+      [1.0, 2.0, 3.0]
+    """
 
     return [float(item) for item in iterable_obj]
 
 
-def almost_zero(an_val):
+def almost_zero(an_val, tolerance=1e-10):
+    """
+    Check if a value for which abs can be used, is near zero.
 
-    tolerance = 1e-10
-    if abs(an_val) > tolerance:
-        return False
-    else:
-        return True
+    :param an_val: an abs-compatible object
+    :param tolerance: the tolerance value
+    :return: Boolean
 
+      >>> almost_zero(1)
+      False
+      >>> almost_zero(1e-11)
+      True
+    """
+
+    return abs(an_val) <= tolerance
 
 def ij_transfer_func(i, j, transfer_funcs):
     """
-    Return a p_z value as the result of a function (transfer_func_z) applied to a (p_x,p_y) point.
+    Return a p_z value as the result of a function (transfer_func_z) applied to a (x, y) point.
     This point is derived from a (i,j) point given two "transfer" functions (transfer_func_y, transfer_func_x).
     All three functions are stored into a tuple (transfer_funcs).
 

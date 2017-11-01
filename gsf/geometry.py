@@ -5,27 +5,29 @@ from __future__ import division
 from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
+from .math_utils import isclose
 from .array_utils import point_solution
 from .errors import SubparallelLineationException
 
 
 MIN_SEPARATION_THRESHOLD = 1e-10
-MIN_VECTOR_MAGNITUDE = 1e-10
-MIN_SCALAR_VALUE = 1e-15
-MIN_ANGLE_DEGR_VALUE = 1e-10
+MIN_VECTOR_MAGNITUDE = 1e-9
+MIN_SCALAR_VALUE = 1e-12
+MIN_ANGLE_DEGR_VALUE = 1e-6
 MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
 MIN_ANGLE_DEGR_DISORIENTATION = 5.
-
+VECTOR_ANGLE_THRESHOLD = 1e-3
+PLANE_ANGLE_THRESHOLD = VECTOR_ANGLE_THRESHOLD
 
 class Point(object):
     """
     Cartesian point.
-    Dimensions: 3D + time
+    Dimensions: 3D (space) + time
     """
 
     def __init__(self, x=np.nan, y=np.nan, z=np.nan, t=np.nan):
         """
-        Construct a Point instance given 3 or 4 float values.
+        Construct a Point instance given 2, 3 or 4 float values.
         """
 
         self._p = np.array([x, y, z, t], dtype=np.float64)
@@ -47,12 +49,14 @@ class Point(object):
         obj = cls()
 
         assert 3 <= a.size <= 4
+
         b = a.astype(np.float64)
         if b.size == 3:
             c = np.append(b, [np.nan])
         else:
             c = b
         obj._p = c
+
         return obj
 
     @property
@@ -109,6 +113,8 @@ class Point(object):
         Example:
           >>> Point(1.5, 3.2, 41., 22.).t
           22.0
+          >>> Point(1, 0, 0).t
+          nan
         """
         return self.v[3]
 
@@ -129,6 +135,8 @@ class Point(object):
         Example:
           >>> Point(1., 1., 1.) - Point(1., 1., 1.)
           Point(0.0000, 0.0000, 0.0000, nan)
+          >>> Point(1., 1.) - Point(1., 1.)
+          Point(0.0000, 0.0000, nan, nan)
         """
 
         return Point.from_array(self.v - another.v)
@@ -167,21 +175,21 @@ class Point(object):
         todo: make sure it works as intended with nan values
 
         Examples:
-          >>> Point(1.,1.,1.).dist_2d(Point(4.,5.,7.))
+          >>> Point(1., 1., 1.).dist_2d(Point(4., 5., 7.))
           5.0
         """
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
-    def coincident(self, another, tolerance=MIN_SEPARATION_THRESHOLD):
+    def space_coincident(self, another, tolerance=MIN_SEPARATION_THRESHOLD):
         """
         Check spatial coincidence of two points
         todo: make sure it works as intended with Points with nan values
 
         Example:
-          >>> Point(1., 0., -1.).coincident(Point(1., 1.5, -1.))
+          >>> Point(1., 0., -1.).space_coincident(Point(1., 1.5, -1.))
           False
-          >>> Point(1., 0., 0.).coincident(Point(1., 0., 0.))
+          >>> Point(1., 0., 0.).space_coincident(Point(1., 0., 0.))
           True
         """
 
@@ -264,7 +272,7 @@ class Vect(object):
     z axis -> Up
     """
 
-    def __init__(self, x=np.nan, y=np.nan, z=np.nan):
+    def __init__(self, x=0.0, y=0.0, z=0.0):
         """
         Vect constructor
         """
@@ -277,7 +285,7 @@ class Vect(object):
         Class method to construct a vector from a numpy 1x3 array.
 
         Example:
-          >>> Vect.from_array(np.array([1,0,1]))
+          >>> Vect.from_array(np.array([1, 0, 1]))
           Vect(1.0000, 0.0000, 1.0000)
         """
 
@@ -354,10 +362,11 @@ class Vect(object):
         Return True if vectors are equal.
 
         Example:
-          >>> Vect(1., 1., 1.) == Vect(1., 1., 1.)
+          >>> Vect(1., 1., 1.) == Vect(1, 1, 1)
           True
         """
-        return bool(abs(self - another) < MIN_VECTOR_MAGN_DIFF)
+
+        return bool((self - another).len_3d < MIN_VECTOR_MAGN_DIFF)
 
     def __ne__(self, another):
         """
@@ -397,27 +406,16 @@ class Vect(object):
         """
         return Vect.from_array(self.v)
 
-    def __abs__(self):
-        """
-        Vector magnitude.
-
-        Example:
-          >>> abs(Vect(3, 4, 0))
-          5.0
-          >>> abs(Vect(0, 12, 5))
-          13.0
-        """
-
-        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
-
     @property
     def len_2d(self):
         """
-        Vector length projected on the horizontal (xy) plane.
+        2D Vector magnitude.
 
         Example:
-          >>> Vect(3, 4, 7).len_2d
+          >>> Vect(3, 4).len_2d
           5.0
+          >>> Vect(12, 5, 3).len_2d
+          13.0
         """
 
         return sqrt(self.x * self.x + self.y * self.y)
@@ -425,8 +423,13 @@ class Vect(object):
     @property
     def len_3d(self):
         """
-        Vector length projected on the xyz space.
+        3D Vector magnitude.
 
+        Example:
+          >>> Vect(12, 0, 5).len_3d
+          13.0
+          >>> Vect(3, 0, 4).len_3d
+          5.0
         """
 
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
@@ -443,36 +446,42 @@ class Vect(object):
         return Vect.from_array(self.v * scale_factor)
 
     @property
-    def versor_full(self):
-        """
-        Calculate versor.
-
-        Example:
-          >>> Vect(5, 0, 0).versor_full
-          Vect(1.0000, 0.0000, 0.0000)
-          >>> Vect(0, 0, -1).versor_full
-          Vect(0.0000, 0.0000, -1.0000)
-        """
-
-        return self.scale(1.0 / abs(self))
-
-    @property
-    def versor_3d(self):
+    def versor(self):
         """
         Calculate versor in xyz space.
 
+        Example:
+          >>> Vect(5, 0, 0).versor
+          Vect(1.0000, 0.0000, 0.0000)
+          >>> Vect(0, 0, -1).versor
+          Vect(0.0000, 0.0000, -1.0000)
         """
 
         return self.scale(1.0 / self.len_3d)
 
-    @property
+    def to_2d(self):
+        """
+        Create equivalent vector in xy space.
+
+        Example:
+          >>> Vect(5, 16, 43).to_2d()
+          Vect(5.0000, 16.0000, 0.0000)
+        """
+
+        return Vect(self.x, self.y, 0.0)
+
     def versor_2d(self):
         """
-        Calculate versor in xy space.
+        Create 2D versor equivalent of the current vector
 
+        :return: Vector
+
+        Example:
+          >>> Vect(7, 0, 10).versor_2d()
+          Vect(1.0000, 0.0000, 0.0000)
         """
 
-        return self.scale(1.0 / self.len_2d)
+        return self.to_2d().versor
 
     def invert(self):
         """
@@ -487,7 +496,7 @@ class Vect(object):
 
         return self.scale(-1)
 
-    def is_almost_zero(self, tolerance=1.e-6):
+    def is_almost_zero(self, tolerance=MIN_VECTOR_MAGNITUDE):
         """
         Check that a vector is almost zero.
 
@@ -498,10 +507,7 @@ class Vect(object):
           True
         """
 
-        if abs(self) < tolerance:
-            return True
-        else:
-            return False
+        return self.len_3d <= tolerance
 
     @property
     def is_upward(self):
@@ -515,10 +521,7 @@ class Vect(object):
           False
         """
 
-        if self.z > 0.0:
-            return True
-        else:
-            return False
+        return self.z > 0.0
 
     @property
     def is_downward(self):
@@ -532,10 +535,7 @@ class Vect(object):
           True
         """
 
-        if self.z < 0.0:
-            return True
-        else:
-            return False
+        return self.z < 0.0
 
     @property
     def upward(self):
@@ -631,12 +631,12 @@ class Vect(object):
           GVect(225.00, +00.00)
         """
 
-        if abs(self) < MIN_VECTOR_MAGNITUDE:
+        if self.len_3d < MIN_VECTOR_MAGNITUDE:
             raise Exception("Provided vector has near-zero magnitude")
 
         plunge = self.slope  # upward pointing -> negative value, downward -> positive
 
-        unit_vect = self.versor_full
+        unit_vect = self.versor
         if unit_vect.y == 0. and unit_vect.x == 0:
             trend = 0.
         else:
@@ -700,7 +700,7 @@ class Vect(object):
         """
 
         try:
-            val = self.sp(another) / (abs(self) * abs(another))
+            val = self.sp(another) / (self.len_3d * another.len_3d)
             if val > 1.0:
                 return 1.0
             elif val < -1.0:
@@ -727,6 +727,25 @@ class Vect(object):
         """
 
         return degrees(acos(self.cos_angle(another)))
+
+    def almost_parallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+        """
+        Check that two Vect are sub-parallel,
+
+        :param another: a Vect instance
+        :param angle_tolerance: the maximum allowed divergence angle (in degrees)
+        :return: Boolean
+
+        Examples:
+          >>> Vect(1, 0, 0).almost_parallel(Vect(1, 0, 0))
+          True
+          >>> Vect(1, 0, 0).almost_parallel(Vect(0, 0, 1))
+          False
+          >>> Vect(1, 0, 0).almost_parallel(Vect(-1, 0, 0))
+          False
+        """
+
+        return self.angle(another) <= angle_tolerance
 
     def vp(self, another):
         """
@@ -885,10 +904,7 @@ class GVect(object):
           True
         """
 
-        if self.versor.z > 0.0:
-            return True
-        else:
-            return False
+        return self.versor.z > 0.0
 
     @property
     def is_downward(self):
@@ -953,8 +969,8 @@ class GVect(object):
 
     def angle(self, another):
         """
-        Calculate angle (in degrees) between the two
-        GVect instances.
+        Calculate angle (in degrees) between the two GVect instances.
+        Range is 0°-180°.
 
         Examples:
           >>> GVect(0, 90).angle(GVect(90, 0)) # doctest: +NUMBER
@@ -968,6 +984,25 @@ class GVect(object):
         """
 
         return self.versor.angle(another.versor)
+
+    def almost_parallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+        """
+        Check that two GVect are sub-parallel,
+
+        :param another: a GVect instance
+        :param angle_tolerance: the maximum allowed divergence angle (in degrees)
+        :return: Boolean
+
+        Examples:
+          >>> GVect(0, 90).almost_parallel(GVect(90, 0))
+          False
+          >>> GVect(0, 0).almost_parallel(GVect(0, 1e-6))
+          True
+          >>> GVect(0, 90).almost_parallel(GVect(180, 0))
+          False
+        """
+
+        return self.angle(another) <= angle_tolerance
 
     @property
     def normal_gplane(self):
@@ -996,8 +1031,8 @@ class GVect(object):
         Examples:
           >>> GVect(0, 0).common_plane(GVect(90, 0))
           GPlane(180.00, +00.00)
-          >>> GVect(0, 0).common_plane(GVect(90, 90))
-          GPlane(090.00, +90.00)
+          >>> GVect(0, 0).common_plane(GVect(90, 90)).almost_parallel(GPlane(90.0, 90.0))
+          True
           >>> GVect(45, 0).common_plane(GVect(135, 45))
           GPlane(135.00, +45.00)
           >>> GVect(315, 45).common_plane(GVect(135, 45))
@@ -1068,8 +1103,8 @@ class GAxis(GVect):
 
     def angle(self, another):
         """
-        Calculate angle (in degrees) between the two
-        GAxis instances.
+        Calculate angle (in degrees) between the two GAxis instances.
+        Range: 0.0 - 90.0
 
         Examples:
           >>> GAxis(0, 90).angle(GAxis(90, 0)) # doctest: +NUMBER
@@ -1080,10 +1115,35 @@ class GAxis(GVect):
           0.0000000
           >>> GAxis(0, 0).angle(GAxis(180, 0)) # doctest: +NUMBER 
           0.0000000
+          >>> GAxis(0, 0).angle(GAxis(179, 0)) # doctest: +NUMBER
+          1.0000000
+          >>> GAxis(0, -90).angle(GAxis(0, 90)) # doctest: +NUMBER
+          0.0000000
+          >>> GAxis(90, 0).angle(GAxis(315, 0)) # doctest: +NUMBER
+          45.0000000
         """
 
         angle_vers = self.versor.angle(another.versor)
         return min(angle_vers, 180. - angle_vers)
+
+    def almost_parallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+        """
+        Check that two GAxis are sub-parallel
+
+        :param another: a GAxis instance
+        :param angle_tolerance: the maximum allowed divergence angle (in degrees)
+        :return: Boolean
+
+         Examples:
+          >>> GAxis(0, 90).almost_parallel(GAxis(90, 0))
+          False
+          >>> GAxis(0, 0).almost_parallel(GAxis(0, 1.e-6))
+          True
+          >>> GAxis(0, 0).almost_parallel(GAxis(180, 0))
+          True
+        """
+
+        return self.angle(another) <= angle_tolerance
 
     @property
     def normal_gplane(self):
@@ -1176,8 +1236,8 @@ class GAxis(GVect):
         Examples:
           >>> GAxis(0, 0).common_plane(GAxis(90, 0))
           GPlane(180.00, +00.00)
-          >>> GAxis(0, 0).common_plane(GAxis(90, 90))
-          GPlane(090.00, +90.00)
+          >>> GAxis(0, 0).common_plane(GAxis(90, 90)).almost_parallel(GPlane(90.0, 90.0))
+          True
           >>> GAxis(45, 0).common_plane(GAxis(135, 45))
           GPlane(135.00, +45.00)
           >>> GAxis(315, 45).common_plane(GAxis(135, 45))
@@ -1205,8 +1265,8 @@ class GAxis(GVect):
           GAxis(000.00, +90.00)
           >>> GAxis(90, 45).vp(GAxis(180, 0))
           GAxis(270.00, +45.00)
-          >>> GAxis(270, 45).vp(GAxis(180, 90))
-          GAxis(180.00, -00.00)
+          >>> GAxis(270, 45).vp(GAxis(180, 90)).almost_parallel(GAxis(180, 0))
+          True
         """
 
         return self.as_vect().vp(another.as_vect()).as_axis()
@@ -1338,7 +1398,7 @@ class Plane(object):
           Vect(0.0000, 1.0000, 0.0000)
         """
 
-        return Vect(self.a, self.b, self.c).versor_full
+        return Vect(self.a, self.b, self.c).versor
 
     def gplane_point(self):
         """
@@ -1368,7 +1428,7 @@ class Plane(object):
         Vect(0.0000, -1.0000, 0.0000)
         """
 
-        return self.nversor.vp(another.nversor).versor_full
+        return self.nversor.vp(another.nversor).versor
 
     def inters_point(self, another):
         """
@@ -1424,6 +1484,22 @@ class Plane(object):
 
         return angle_degr
 
+    def almost_parallel(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD):
+        """
+        Check that two Plane are sub-parallel
+
+        :param another: a Plane instance
+        :param angle_tolerance: the maximum allowed divergence angle (in degrees)
+        :return: Boolean
+
+         Examples:
+          >>> Plane(1,0,0,0).almost_parallel(Plane(1,0,0,0))
+          True
+          >>> Plane(1,0,0,0).almost_parallel(Plane(1,0,1,0))
+          False
+        """
+
+        return self.angle(another) <= angle_tolerance
 
 class GPlane(object):
     """
@@ -1585,18 +1661,44 @@ class GPlane(object):
     def angle(self, another):
         """
         Calculate angle (in degrees) between two geoplanes.
+        Range is 0°-90°.
 
-        >>> p1 = GPlane(100.0, 50.0)
-        >>> p1.angle(p1)
+        >>> GPlane(100.0, 50.0).angle(GPlane(100.0, 50.0))
         0.0
-
-        >>> p2 = GPlane(300.0, 10.0)
-        >>> p3 = GPlane(300.0, 90.0)
-        >>> p2.angle(p3)
+        >>> GPlane(300.0, 10.0).angle(GPlane(300.0, 90.0))
         80.0
+        >>> GPlane(90.0, 90.0).angle(GPlane(270.0, 90.0))
+        0.0
+        >>> isclose(GPlane(90.0, 10.0).angle(GPlane(270.0, 10.0)), 20.0)
+        True
+        >>> isclose(GPlane(90.0, 10.0).angle(GPlane(270.0, 30.0)), 40.0)
+        True
         """
 
         return self.normal.as_axis().angle(another.normal.as_axis())
+
+    def almost_parallel(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD):
+        """
+        Check that two GPlanes are sub-parallel
+
+        :param another: a GPlane instance
+        :param angle_tolerance: the maximum allowed divergence angle (in degrees)
+        :return: Boolean
+
+         Examples:
+          >>> GPlane(0, 90).almost_parallel(GPlane(270, 90))
+          False
+          >>> GPlane(0, 90).almost_parallel(GPlane(180, 90))
+          True
+          >>> GPlane(0, 90).almost_parallel(GPlane(0, 0))
+          False
+          >>> GPlane(0, 0).almost_parallel(GPlane(0, 1e-6))
+          True
+          >>> GPlane(0, 0).almost_parallel(GPlane(0, 1))
+          False
+        """
+
+        return self.angle(another) <= angle_tolerance
 
     def rake_to_gv(self, rake):
         """
@@ -1614,8 +1716,8 @@ class GPlane(object):
           GVect(000.00, -45.00)
           >>> GPlane(180, 45).rake_to_gv(-90.0)
           GVect(180.00, +45.00)
-          >>> GPlane(180, 45).rake_to_gv(180.0)
-          GVect(270.00, -00.00)
+          >>> GPlane(180, 45).rake_to_gv(180.0).almost_parallel(GVect(270.00, -00.00))
+          True
           >>> GPlane(180, 45).rake_to_gv(-180.0)
           GVect(270.00, +00.00)
         """

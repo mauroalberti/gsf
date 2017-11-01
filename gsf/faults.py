@@ -9,13 +9,11 @@ from .math_utils import isclose
 class Slickenline(object):
     """
     Slickeline.
-    It can be defined through a GVect instance, in which case
-    it has a movement sense, or via a GAxis, when the movement sense 
-    is unknown or not sure.
-    When the movement sense is known, the GVect instance indicates
-    the displacement of the block that is:
-    for a horizontal or a dipping, non vertical fault: the upper block
-    for a vertical fault: the block individuated by the (formal) dip direction. 
+    It can be defined through a GVect instance, in which caseit has a movement sense,
+    or via a GAxis, when the movement sense is unknown or not sure.
+    When the movement sense is known, the GVect instance indicates the displacement of the block that is:
+    - for a horizontal or a dipping, non vertical fault: the upper block
+    - for a vertical fault: the block individuated by the (formal) dip direction.
     """
 
     def __init__(self, mov_lin):
@@ -66,39 +64,23 @@ class Slickenline(object):
 
     def set_known_sense(self):
         """
-        Set (formal) movement sense to Slickline instance without known/certain
-        movemment sense. Raise SlickelineSenseException when already known.
+        Set (formal) movement sense to Slickline instance without known/certain movement sense.
 
         Example:
-          >>> Slickenline(GVect(180, -30)).set_known_sense()
-          Traceback (most recent call last):
-          ...
-          SlickelineSenseException: Slickenline must have unknown movement sense
           >>> Slickenline(GAxis(180, -30)).set_known_sense() 
           Slickenline(180.00, -30.00, True)
         """
-
-        if self.has_known_sense():
-            raise SlickelineSenseException("Slickenline must have unknown movement sense")
 
         return Slickenline(self.lin.as_vect())
 
     def set_unknown_sense(self):
         """
         Set to unknown/uncertain the movement sense for the current Slickline instance. 
-        Raise SlickelineSenseException when already unknown.
 
         Example:
-          >>> Slickenline(GAxis(180, -30)).set_unknown_sense()
-          Traceback (most recent call last):
-          ...
-          SlickelineSenseException: Slickenline must have known movement sense
           >>> Slickenline(GVect(180, -30)).set_unknown_sense() 
           Slickenline(180.00, -30.00, False)
         """
-
-        if self.has_unknown_sense():
-            raise SlickelineSenseException("Slickenline must have known movement sense")
 
         return Slickenline(self.lin.as_axis())
 
@@ -106,7 +88,8 @@ class Slickenline(object):
     def lin(self):
         """
         Return the slickenline orientation value,
-        as a GVect (known movement sense) or a GAxis instance (unknown movement sense).
+        as a GVect (known movement sense)
+        or a GAxis instance (unknown movement sense).
 
         Example:
           >>> Slickenline(GVect(90, 45)).lin
@@ -152,9 +135,9 @@ class Slickenline(object):
 
 class FaultSlick(object):
     """
-    Represent a couple of geological observations made up by a fault plane, 
-    represented by a GPlane instance, and a slickenline observation, 
-    represented by a Slickenline instance.
+    Represent a couple of geological observations,
+    made up by a fault plane, represented by a GPlane instance,
+    and a slickenline observation, represented by a Slickenline instance.
     """
 
     def __init__(self, fault_plane, slickenline):
@@ -200,8 +183,7 @@ class FaultSlick(object):
     @property
     def known_sense(self):
         """
-        Check if Slickenline in FautlSlick instance has known
-        movement sense.
+        Check if the Slickenline instance in the FaultSlick instance has a known movement sense.
 
         Example: 
           >>> FaultSlick(GPlane(90, 45), Slickenline(GAxis(90, 45))).known_sense
@@ -210,46 +192,27 @@ class FaultSlick(object):
           True
         """
 
-        if self.sl.has_known_sense():
-            return True
-        else:
-            return False
+        return self.sl.has_known_sense()
 
     def set_known_sense(self):
         """
-        Create FaultSlick instance with known movement sense
-         from another instance, raising SlickelineSenseException if already known.
+        Create FaultSlick instance with known movement sense from another instance.
 
-        Example: 
-          >>> FaultSlick(GPlane(90, 45), Slickenline(GVect(90, 45))).set_known_sense()
-          Traceback (most recent call last):
-          ...
-          SlickelineSenseException: Fault slickenline sense must be unknown
+        Example:
           >>> FaultSlick(GPlane(0, 45), Slickenline(GAxis(0, 45))).set_known_sense()
           FaultSlick(GPlane(000.00, +45.00), Slickenline(000.00, +45.00, True))
         """
-
-        if self.known_sense:
-            raise SlickelineSenseException("Fault slickenline sense must be unknown")
 
         return FaultSlick(self.fp, self.sl.set_known_sense())
 
     def set_unknown_sense(self):
         """
         Create FaultSlick instance with unknown/uncertain movement sense.
-        Raise SlickelineSenseException if source instance has already unknown movement sense.
 
-        Example: 
-          >>> FaultSlick(GPlane(90, 45), Slickenline(GAxis(90, 45))).set_unknown_sense()
-          Traceback (most recent call last):
-          ...
-          SlickelineSenseException: Fault slickenline sense must be known
+        Example:
           >>> FaultSlick(GPlane(0, 45), Slickenline(GVect(0, 45))).set_unknown_sense()
           FaultSlick(GPlane(000.00, +45.00), Slickenline(000.00, +45.00, False))
         """
-
-        if not self.known_sense:
-            raise SlickelineSenseException("Fault slickenline sense must be known")
 
         return FaultSlick(self.fp, self.sl.set_unknown_sense())
 
@@ -279,7 +242,7 @@ class FaultSlick(object):
     def pt_axes(self):
         """
         Calculate P-T axes. 
-        Return P axis, T axis and a third variable, boolean, 
+        Return P axis, T axis and a third variable, Boolean,
         indicating if the P-T derivation is from a slickenline
         with a known movement sense (True) or with
         unknown/uncertain movement sense (False).
@@ -388,8 +351,8 @@ class PTBAxes(object):
         Calculate M plane.
         
         Example:
-          >>> PTBAxes(GAxis(0, 90), GAxis(90, 0)).m_plane
-          GPlane(000.00, +90.00)
+          >>> PTBAxes(GAxis(0, 90), GAxis(90, 0)).m_plane.almost_parallel(GPlane(0.0, 90.0))
+          True
           >>> PTBAxes(GAxis(45, 45), GAxis(225, 45)).m_plane
           GPlane(315.00, +90.00)
         """
