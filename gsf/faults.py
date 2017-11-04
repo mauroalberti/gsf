@@ -151,8 +151,8 @@ class FaultSlick(object):
 
         assert isinstance(fault_plane, GPlane), "Provided fault plane must be a GPlane instance"
         assert isinstance(slickenline, Slickenline), "Provided slickenline must be a Slickenline instance"
-
         assert isclose(fault_plane.normal.angle(slickenline.lin), 90.), "Slickenline is not within fault plane"
+
         self._fltpln = fault_plane
         self._slick = slickenline
 
@@ -242,10 +242,9 @@ class FaultSlick(object):
     def pt_axes(self):
         """
         Calculate P-T axes. 
-        Return P axis, T axis and a third variable, Boolean,
-        indicating if the P-T derivation is from a slickenline
-        with a known movement sense (True) or with
-        unknown/uncertain movement sense (False).
+        Return P and T axes and a third Boolean variable,
+        indicating whether the P-T derivation is from a slickenline with a known movement sense (True)
+        or with unknown/uncertain movement sense (False).
         
         Example:
           >>> FaultSlick(GPlane(90, 45), Slickenline(GVect(90, 45))).pt_axes()
@@ -358,6 +357,7 @@ class PTBAxes(object):
         """
 
         return self.p_axis.common_plane(self.t_axis)
+
 
 if __name__ == "__main__":
 

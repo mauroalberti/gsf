@@ -9,7 +9,6 @@ from .math_utils import isclose
 from .array_utils import point_solution
 from .errors import SubparallelLineationException
 
-
 MIN_SEPARATION_THRESHOLD = 1e-10
 MIN_VECTOR_MAGNITUDE = 1e-9
 MIN_SCALAR_VALUE = 1e-12
@@ -18,6 +17,7 @@ MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
 MIN_ANGLE_DEGR_DISORIENTATION = 5.
 VECTOR_ANGLE_THRESHOLD = 1e-3
 PLANE_ANGLE_THRESHOLD = VECTOR_ANGLE_THRESHOLD
+
 
 class Point(object):
     """
@@ -46,9 +46,9 @@ class Point(object):
           Point(1.0000, 0.0000, 1.0000, nan)
         """
 
-        obj = cls()
-
         assert 3 <= a.size <= 4
+
+        obj = cls()
 
         b = a.astype(np.float64)
         if b.size == 3:
@@ -144,13 +144,14 @@ class Point(object):
     def __abs__(self):
         """
         Point distance from frame origin.
-        todo: make sure it works as intended with nan values
 
         Example:
           >>> abs(Point(3, 4, 0))
           5.0
           >>> abs(Point(0, 12, 5))
           13.0
+          >>> abs(Point(0, 12, np.nan))
+          nan
         """
 
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
@@ -158,13 +159,14 @@ class Point(object):
     def dist_3d(self, another):
         """
         Calculate Euclidean spatial distance between two points.
-        todo: make sure it works as intended with nan values
 
         Examples:
           >>> Point(1., 1., 1.).dist_3d(Point(4., 5., 1,))
           5.0
           >>> Point(1, 1, 1, 4).dist_3d(Point(4, 5, 1, 14))
           5.0
+          >>> Point(1, np.nan, 1, 4).dist_3d(Point(4, 5, 1, 14))
+          nan
         """
 
         return abs(self - another)
@@ -172,11 +174,12 @@ class Point(object):
     def dist_2d(self, another):
         """
         Calculate horizontal (2D) distance between two points.
-        todo: make sure it works as intended with nan values
 
         Examples:
           >>> Point(1., 1., 1.).dist_2d(Point(4., 5., 7.))
           5.0
+          >>> Point(1., np.nan, 1.).dist_2d(Point(4., np.nan, 7.))
+          nan
         """
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
@@ -184,21 +187,25 @@ class Point(object):
     def space_coincident(self, another, tolerance=MIN_SEPARATION_THRESHOLD):
         """
         Check spatial coincidence of two points
-        todo: make sure it works as intended with Points with nan values
 
         Example:
           >>> Point(1., 0., -1.).space_coincident(Point(1., 1.5, -1.))
           False
           >>> Point(1., 0., 0.).space_coincident(Point(1., 0., 0.))
           True
+          >>> Point(1., 0., 0.).space_coincident(Point(1., 0., np.nan))
+          False
         """
 
-        if self.dist_2d(another) > tolerance:
+        distance_2d = self.dist_2d(another)
+        if np.isnan(distance_2d) or distance_2d > tolerance:
             return False
-        elif self.dist_3d(another) > tolerance:
+
+        distance_3d = self.dist_3d(another)
+        if np.isnan(distance_3d) or distance_3d > tolerance:
             return False
-        else:
-            return True
+
+        return True
 
     def translate(self, sx=0.0, sy=0.0, sz=0.0, st=0.0):
         """
@@ -244,6 +251,8 @@ class Point(object):
         Example:
           >>> Point(1,1,1,4).delta_time(Point(1,1,2,5))
           1.0
+          >>> Point(1,1,1,4).delta_time(Point(1,1,2,np.nan))
+          nan
         """
 
         return another.t - self.t
@@ -255,12 +264,23 @@ class Point(object):
         Example:
           >>> Point(1, 1, 1, 4).speed(Point(4, 5, 1, 14))
           0.5
+          >>> Point(1, 1, 1, 4).speed(Point(4, 5, 1, 4))
+          inf
+          >>> Point(1, 1, 1, 4).speed(Point(1, 1, 1, 4))
+          nan
+          >>> Point(1, 1, 1, 4).speed(Point(4, 5, 1))
+          nan
         """
 
-        try:
-            return self.dist_3d(another) / self.delta_time(another)
-        except:
-            return np.Infinity
+        delta_s = self.dist_3d(another)
+        delta_t = self.delta_time(another)
+        if delta_t == 0.0:
+            if delta_s == 0.0:
+                return np.nan
+            else:
+                return np.Infinity
+        else:
+            return delta_s / delta_t
 
 
 class Vect(object):
@@ -344,6 +364,93 @@ class Vect(object):
 
         return self.v[2]
 
+    @property
+    def len_2d(self):
+        """
+        2D Vector magnitude.
+
+        Example:
+          >>> Vect(3, 4).len_2d
+          5.0
+          >>> Vect(12, 5, 3).len_2d
+          13.0
+          >>> Vect(12, np.nan, 3).len_2d
+          nan
+        """
+
+        return sqrt(self.x * self.x + self.y * self.y)
+
+    @property
+    def len_3d(self):
+        """
+        3D Vector magnitude.
+
+        Example:
+          >>> Vect(12, 0, 5).len_3d
+          13.0
+          >>> Vect(3, 0, 4).len_3d
+          5.0
+          >>> Vect(3, np.nan, 4).len_3d
+          nan
+        """
+
+        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+
+    def has_nan(self):
+        """
+        Check if a Vect instance contains any nan values.
+
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 2, 0).has_nan()
+          False
+          >>> Vect(1, np.nan, 10).has_nan()
+          True
+        """
+
+        if np.isnan(self.x) or np.isnan(self.y) or np.isnan(self.z):
+            return True
+
+        return False
+
+    def is_zero(self):
+        """
+        Check if all Vect instance components are zero.
+
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 2, 0).is_zero()
+          False
+          >>> Vect(0, np.nan, 0).is_zero()
+          False
+          >>> Vect(0.0, 0.0, 0.0).is_zero()
+          True
+        """
+
+        if self.len_3d == 0.0:
+            return True
+
+        return False
+
+    def valid(self):
+        """
+        Check if a Vect instance does not contain any nan values.
+
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 2, 0).valid()
+          True
+          >>> Vect(1, np.nan, 10).valid()
+          False
+          >>> Vect(0.0, 0.0, 0.0).valid()
+          False
+        """
+
+        return (not self.has_nan()) and (not self.is_zero())
+
     def __sub__(self, another):
         """
         Return vector difference.
@@ -353,6 +460,8 @@ class Vect(object):
           Vect(0.0000, 0.0000, 0.0000)
           >>> Vect(0., 1., 4.) - Vect(7., 3., 1.)
           Vect(-7.0000, -2.0000, 3.0000)
+          >>> Vect(0., 1., 4.) - Vect(7., np.nan, 1.)
+          Vect(-7.0000, nan, 3.0000)
         """
 
         return Vect.from_array(self.v - another.v)
@@ -364,9 +473,13 @@ class Vect(object):
         Example:
           >>> Vect(1., 1., 1.) == Vect(1, 1, 1)
           True
+          >>> Vect(1., 1., 1.) == Vect(1, 1, np.nan)
+          False
+          >>> Vect(1., 1., np.nan) == Vect(1, 1, np.nan)
+          False
         """
 
-        return bool((self - another).len_3d < MIN_VECTOR_MAGN_DIFF)
+        return (self - another).len_3d < MIN_VECTOR_MAGN_DIFF
 
     def __ne__(self, another):
         """
@@ -377,7 +490,7 @@ class Vect(object):
           True
         """
 
-        return not self == another
+        return not (self == another)
 
     def __repr__(self):
 
@@ -406,34 +519,6 @@ class Vect(object):
         """
         return Vect.from_array(self.v)
 
-    @property
-    def len_2d(self):
-        """
-        2D Vector magnitude.
-
-        Example:
-          >>> Vect(3, 4).len_2d
-          5.0
-          >>> Vect(12, 5, 3).len_2d
-          13.0
-        """
-
-        return sqrt(self.x * self.x + self.y * self.y)
-
-    @property
-    def len_3d(self):
-        """
-        3D Vector magnitude.
-
-        Example:
-          >>> Vect(12, 0, 5).len_3d
-          13.0
-          >>> Vect(3, 0, 4).len_3d
-          5.0
-        """
-
-        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
-
     def scale(self, scale_factor):
         """
         Create a scaled vector.
@@ -441,8 +526,18 @@ class Vect(object):
         Example;
           >>> Vect(1,0,1).scale(2.5)
           Vect(2.5000, 0.0000, 2.5000)
+          >>> Vect(1,0,1).scale(np.nan)
+          Traceback (most recent call last):
+          ...
+          AssertionError: scale factor for vector must not be nan
+          >>> Vect(1,0,1).scale(0.0)
+          Traceback (most recent call last):
+          ...
+          AssertionError: scale factor for vector must not be zero
         """
 
+        assert not np.isnan(scale_factor), "scale factor for vector must not be nan"
+        assert scale_factor != 0.0, "scale factor for vector must not be zero"
         return Vect.from_array(self.v * scale_factor)
 
     @property
@@ -455,8 +550,13 @@ class Vect(object):
           Vect(1.0000, 0.0000, 0.0000)
           >>> Vect(0, 0, -1).versor
           Vect(0.0000, 0.0000, -1.0000)
+          >>> Vect(0, 0, np.nan).versor
+          Traceback (most recent call last):
+          ...
+          AssertionError: vector must be valid
         """
 
+        assert self.valid(), "vector must be valid"
         return self.scale(1.0 / self.len_3d)
 
     def to_2d(self):
@@ -503,11 +603,13 @@ class Vect(object):
         Example:
           >>> Vect(0, 0, 1).is_almost_zero()
           False
-          >>> Vect(0 ,0 , 0).is_almost_zero()
+          >>> Vect(0, 0, 0).is_almost_zero()
           True
+          >>> Vect(0, np.nan, 0).is_almost_zero()
+          False
         """
 
-        return self.len_3d <= tolerance
+        return self.is_zero() or self.len_3d <= tolerance
 
     @property
     def is_upward(self):

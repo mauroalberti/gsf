@@ -21,8 +21,12 @@ def point_solution(a_array, b_array):
 
 
 def xyz_svd(xyz_array):
+    """
+    Calculates the SVD solution given a Numpy array.
+
     # modified after: 
     # http://stackoverflow.com/questions/15959411/best-fit-plane-algorithms-why-different-results-solved
+    """
 
     try:
         result = svd(xyz_array)
@@ -91,8 +95,7 @@ def is_number(s):
 
 def to_floats(iterable_obj):
     """
-    Converts an iterable object storing float-compatible values
-    to a list of floats.
+    Converts an iterable object storing float-compatible values to a list of floats.
 
     :param iterable_obj:
     :return: list of Floats
