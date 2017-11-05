@@ -151,7 +151,7 @@ class FaultSlick(object):
 
         assert isinstance(fault_plane, GPlane), "Provided fault plane must be a GPlane instance"
         assert isinstance(slickenline, Slickenline), "Provided slickenline must be a Slickenline instance"
-        assert isclose(fault_plane.normal.angle(slickenline.lin), 90.), "Slickenline is not within fault plane"
+        assert isclose(fault_plane.normal().angle(slickenline.lin), 90.), "Slickenline is not within fault plane"
 
         self._fltpln = fault_plane
         self._slick = slickenline
@@ -251,10 +251,10 @@ class FaultSlick(object):
           PTBAxes(P: GAxis(000.00, -90.00), T: GAxis(090.00, +00.00), True)
         """
 
-        s_versor = self.sl.lin.versor
-        f_versor = self.fp.normal.versor
-        t_axis = (f_versor + s_versor).gaxis
-        p_axis = (f_versor - s_versor).gaxis
+        s_versor = self.sl.lin.versor()
+        f_versor = self.fp.normal().versor()
+        t_axis = (f_versor + s_versor).gaxis()
+        p_axis = (f_versor - s_versor).gaxis()
         known = self.known_sense
 
         return PTBAxes(p_axis, t_axis, known)
@@ -352,8 +352,8 @@ class PTBAxes(object):
         Example:
           >>> PTBAxes(GAxis(0, 90), GAxis(90, 0)).m_plane.almost_parallel(GPlane(0.0, 90.0))
           True
-          >>> PTBAxes(GAxis(45, 45), GAxis(225, 45)).m_plane
-          GPlane(315.00, +90.00)
+          >>> (PTBAxes(GAxis(45, 45), GAxis(225, 45)).m_plane).almost_parallel(GPlane(315.00, 90.00))
+          True
         """
 
         return self.p_axis.common_plane(self.t_axis)

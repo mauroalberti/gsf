@@ -16,7 +16,7 @@ MIN_ANGLE_DEGR_VALUE = 1e-6
 MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
 MIN_ANGLE_DEGR_DISORIENTATION = 5.
 VECTOR_ANGLE_THRESHOLD = 1e-3
-PLANE_ANGLE_THRESHOLD = VECTOR_ANGLE_THRESHOLD
+PLANE_ANGLE_THRESHOLD = 1
 DIP_ANGLE_THRESHOLD = 5
 
 
@@ -1566,15 +1566,14 @@ class Plane(object):
 
         return "Plane({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(*self.v)
 
-    @property
     def nversor(self):
         """
         Return the versor normal to the cartesian plane.
 
         Examples:
-          >>> Plane(0, 0, 5, -2).nversor
+          >>> Plane(0, 0, 5, -2).nversor()
           Vect(0.0000, 0.0000, 1.0000)
-          >>> Plane(0, 7, 0, 5).nversor
+          >>> Plane(0, 7, 0, 5).nversor()
           Vect(0.0000, 1.0000, 0.0000)
         """
 
@@ -1593,7 +1592,7 @@ class Plane(object):
           Point(0.0000, 0.0000, 1.0000, nan)
         """
 
-        geol_plane = self.nversor.gvect().normal_gplane()
+        geol_plane = self.nversor().gvect().normal_gplane()
         point = Point(*point_solution(np.array([[self.a, self.b, self.c]]),
                                       np.array([-self.d])))
         return geol_plane, point
@@ -1608,7 +1607,7 @@ class Plane(object):
         Vect(0.0000, -1.0000, 0.0000)
         """
 
-        return self.nversor.vp(another.nversor).versor()
+        return self.nversor().vp(another.nversor()).versor()
 
     def inters_point(self, another):
         """
@@ -1628,13 +1627,13 @@ class Plane(object):
 
         return Point(x, y, z)
 
-    def is_point_inplane(self, pt):
+    def is_point_in_plane(self, pt):
         """
           Check whether a point lie in a plane.
 
           >>> pl = Plane(0, 0, 1, 0)
           >>> pt = Point(0, 1, 0)
-          >>> pl.is_point_inplane(pt)
+          >>> pl.is_point_in_plane(pt)
           True
         """
 
@@ -1656,7 +1655,7 @@ class Plane(object):
           0.0
         """
 
-        angle_degr = self.nversor.angle(another.nversor)
+        angle_degr = self.nversor().angle(another.nversor())
         if abs(angle_degr) < MIN_ANGLE_DEGR_VALUE:
             angle_degr = 0.0
         elif angle_degr > 90.0:
@@ -1679,7 +1678,7 @@ class Plane(object):
           False
         """
 
-        return self.angle(another) <= angle_tolerance
+        return self.angle(another) < angle_tolerance
 
 class GPlane(object):
     """
@@ -1811,6 +1810,10 @@ class GPlane(object):
         Example:
             >>> GPlane(90, 55).normal()
             GVect(090.00, -35.00)
+            >>> GPlane(90, 90).normal()
+            GVect(090.00, +00.00)
+            >>> GPlane(90, 0).normal()
+            GVect(090.00, -90.00)
         """
         
         trend = self.dd % 360.0
@@ -1873,13 +1876,13 @@ class GPlane(object):
           False
           >>> GPlane(0, 0).almost_parallel(GPlane(0, 1e-6))
           True
-          >>> GPlane(0, 0).almost_parallel(GPlane(0, 1))
+          >>> GPlane(0, 0).almost_parallel(GPlane(0, 1.1))
           False
         """
 
-        return self.angle(another) <= angle_tolerance
+        return self.angle(another) < angle_tolerance
 
-    def rake_to_gv(self, rake):
+    def rake_to_gvect(self, rake):
         """
         Calculate GVect given a GPlane instance and a rake value.
         The rake is defined according to the Aki and Richards, 1980 conventions:
@@ -1889,15 +1892,15 @@ class GPlane(object):
         rake = -90° -> normal
 
         Examples:
-          >>> GPlane(180, 45).rake_to_gv(0.0)
+          >>> GPlane(180, 45).rake_to_gvect(0.0)
           GVect(090.00, +00.00)
-          >>> GPlane(180, 45).rake_to_gv(90.0)
+          >>> GPlane(180, 45).rake_to_gvect(90.0)
           GVect(000.00, -45.00)
-          >>> GPlane(180, 45).rake_to_gv(-90.0)
+          >>> GPlane(180, 45).rake_to_gvect(-90.0)
           GVect(180.00, +45.00)
-          >>> GPlane(180, 45).rake_to_gv(180.0).almost_parallel(GVect(270.00, -00.00))
+          >>> GPlane(180, 45).rake_to_gvect(180.0).almost_parallel(GVect(270.00, -00.00))
           True
-          >>> GPlane(180, 45).rake_to_gv(-180.0)
+          >>> GPlane(180, 45).rake_to_gvect(-180.0)
           GVect(270.00, +00.00)
         """
 
