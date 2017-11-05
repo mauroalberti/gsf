@@ -4,10 +4,6 @@ import unittest
 
 from gsf import *
 
-"""
-from gsf.math_utils import *
-from gsf.geometry import *
-"""
 
 class TestGsf(unittest.TestCase):
 
@@ -22,10 +18,10 @@ class TestGsf(unittest.TestCase):
 
         assert GVect(90, 90).is_downward
         assert GVect(90, -45).is_upward
-        assert isclose(GVect(90, 90).versor.z, -1.0)
-        assert isclose(GVect(90, -90).versor.z, 1.0)
-        assert isclose(GVect(0, 90).upward.versor.z, 1.0)
-        assert isclose(GVect(0, -90).downward.versor.z, -1.0)
+        assert isclose(GVect(90, 90).versor().z, -1.0)
+        assert isclose(GVect(90, -90).versor().z, 1.0)
+        assert isclose(GVect(0, 90).upward().versor().z, 1.0)
+        assert isclose(GVect(0, -90).downward().versor().z, -1.0)
 
     def test_gvect_angle(self):
 
@@ -41,7 +37,7 @@ class TestGsf(unittest.TestCase):
 
     def test_gplane_normal(self):
 
-        assert isclose(GPlane(90, 45).normal.angle(GVect(90, -45)), 0.)
+        assert isclose(GPlane(90, 45).normal().angle(GVect(90, -45)), 0.)
 
     def test_gplane_plane(self):
 
