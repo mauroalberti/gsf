@@ -17,6 +17,7 @@ MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
 MIN_ANGLE_DEGR_DISORIENTATION = 5.
 VECTOR_ANGLE_THRESHOLD = 1e-3
 PLANE_ANGLE_THRESHOLD = VECTOR_ANGLE_THRESHOLD
+DIP_ANGLE_THRESHOLD = 5
 
 
 class Point(object):
@@ -292,11 +293,26 @@ class Vect(object):
     z axis -> Up
     """
 
-    def __init__(self, x=0.0, y=0.0, z=0.0):
+    def __init__(self, x=0, y=0, z=0):
         """
         Vect constructor
+
+        Example;
+          >>> Vect(1, 0, 1)
+          Vect(1.0000, 0.0000, 1.0000)
+          >>> Vect(1, np.nan, 1)
+          Traceback (most recent call last):
+          ...
+          AssertionError: all vector components must be finite
+          >>> Vect(1, 0, np.inf)
+          Traceback (most recent call last):
+          ...
+          AssertionError: all vector components must be finite
+          >>> Vect(0, 0, 0)
+          Vect(0.0000, 0.0000, 0.0000)
         """
 
+        assert np.isfinite(x) and np.isfinite(y) and np.isfinite(z), "all vector components must be finite"
         self._v = np.array([x, y, z], dtype=np.float64)
 
     @classmethod
@@ -365,6 +381,41 @@ class Vect(object):
         return self.v[2]
 
     @property
+    def is_zero(self):
+        """
+        Check if all Vect instance components are zero.
+
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 2, 0).is_zero
+          False
+          >>> Vect(0.0, 0.0, 0.0).is_zero
+          True
+        """
+
+        if self.x == 0.0 and self.y == 0 and self.z == 0:
+            return True
+        else:
+            return False
+
+    @property
+    def valid(self):
+        """
+        Check if the Vect instance components are not all zero.
+
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 2, 0).valid
+          True
+          >>> Vect(0.0, 0.0, 0.0).valid
+          False
+        """
+
+        return not self.is_zero
+
+    @property
     def len_2d(self):
         """
         2D Vector magnitude.
@@ -374,8 +425,6 @@ class Vect(object):
           5.0
           >>> Vect(12, 5, 3).len_2d
           13.0
-          >>> Vect(12, np.nan, 3).len_2d
-          nan
         """
 
         return sqrt(self.x * self.x + self.y * self.y)
@@ -390,66 +439,9 @@ class Vect(object):
           13.0
           >>> Vect(3, 0, 4).len_3d
           5.0
-          >>> Vect(3, np.nan, 4).len_3d
-          nan
         """
 
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
-
-    def has_nan(self):
-        """
-        Check if a Vect instance contains any nan values.
-
-        :return: Boolean
-
-        Example:
-          >>> Vect(1, 2, 0).has_nan()
-          False
-          >>> Vect(1, np.nan, 10).has_nan()
-          True
-        """
-
-        if np.isnan(self.x) or np.isnan(self.y) or np.isnan(self.z):
-            return True
-
-        return False
-
-    def is_zero(self):
-        """
-        Check if all Vect instance components are zero.
-
-        :return: Boolean
-
-        Example:
-          >>> Vect(1, 2, 0).is_zero()
-          False
-          >>> Vect(0, np.nan, 0).is_zero()
-          False
-          >>> Vect(0.0, 0.0, 0.0).is_zero()
-          True
-        """
-
-        if self.len_3d == 0.0:
-            return True
-
-        return False
-
-    def valid(self):
-        """
-        Check if a Vect instance does not contain any nan values.
-
-        :return: Boolean
-
-        Example:
-          >>> Vect(1, 2, 0).valid()
-          True
-          >>> Vect(1, np.nan, 10).valid()
-          False
-          >>> Vect(0.0, 0.0, 0.0).valid()
-          False
-        """
-
-        return (not self.has_nan()) and (not self.is_zero())
 
     def __sub__(self, another):
         """
@@ -460,8 +452,6 @@ class Vect(object):
           Vect(0.0000, 0.0000, 0.0000)
           >>> Vect(0., 1., 4.) - Vect(7., 3., 1.)
           Vect(-7.0000, -2.0000, 3.0000)
-          >>> Vect(0., 1., 4.) - Vect(7., np.nan, 1.)
-          Vect(-7.0000, nan, 3.0000)
         """
 
         return Vect.from_array(self.v - another.v)
@@ -473,10 +463,6 @@ class Vect(object):
         Example:
           >>> Vect(1., 1., 1.) == Vect(1, 1, 1)
           True
-          >>> Vect(1., 1., 1.) == Vect(1, 1, np.nan)
-          False
-          >>> Vect(1., 1., np.nan) == Vect(1, 1, np.nan)
-          False
         """
 
         return (self - another).len_3d < MIN_VECTOR_MAGN_DIFF
@@ -529,34 +515,32 @@ class Vect(object):
           >>> Vect(1,0,1).scale(np.nan)
           Traceback (most recent call last):
           ...
-          AssertionError: scale factor for vector must not be nan
-          >>> Vect(1,0,1).scale(0.0)
+          AssertionError: scale factor for vector must be finite
+          >>> Vect(1,0,1).scale(np.inf)
           Traceback (most recent call last):
           ...
-          AssertionError: scale factor for vector must not be zero
+          AssertionError: scale factor for vector must be finite
         """
 
-        assert not np.isnan(scale_factor), "scale factor for vector must not be nan"
-        assert scale_factor != 0.0, "scale factor for vector must not be zero"
+        assert np.isfinite(scale_factor), "scale factor for vector must be finite"
         return Vect.from_array(self.v * scale_factor)
 
-    @property
     def versor(self):
         """
         Calculate versor in xyz space.
 
         Example:
-          >>> Vect(5, 0, 0).versor
+          >>> Vect(5, 0, 0).versor()
           Vect(1.0000, 0.0000, 0.0000)
-          >>> Vect(0, 0, -1).versor
+          >>> Vect(0, 0, -1).versor()
           Vect(0.0000, 0.0000, -1.0000)
-          >>> Vect(0, 0, np.nan).versor
+          >>> Vect(0, 0, 0).versor()
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid
+          AssertionError: vector must be valid (not zero-valued)
         """
 
-        assert self.valid(), "vector must be valid"
+        assert self.valid, "vector must be valid (not zero-valued)"
         return self.scale(1.0 / self.len_3d)
 
     def to_2d(self):
@@ -581,7 +565,7 @@ class Vect(object):
           Vect(1.0000, 0.0000, 0.0000)
         """
 
-        return self.to_2d().versor
+        return self.to_2d().versor()
 
     def invert(self):
         """
@@ -596,20 +580,19 @@ class Vect(object):
 
         return self.scale(-1)
 
+    @property
     def is_almost_zero(self, tolerance=MIN_VECTOR_MAGNITUDE):
         """
         Check that a vector is almost zero.
 
         Example:
-          >>> Vect(0, 0, 1).is_almost_zero()
+          >>> Vect(0, 0, 1).is_almost_zero
           False
-          >>> Vect(0, 0, 0).is_almost_zero()
+          >>> Vect(0, 0, 0).is_almost_zero
           True
-          >>> Vect(0, np.nan, 0).is_almost_zero()
-          False
         """
 
-        return self.is_zero() or self.len_3d <= tolerance
+        return self.is_zero or self.len_3d <= tolerance
 
     @property
     def is_upward(self):
@@ -639,15 +622,14 @@ class Vect(object):
 
         return self.z < 0.0
 
-    @property
     def upward(self):
         """
-        Calculate a new vector upward-pointing.
+        Calculate a new upward-pointing vector.
 
         Example:
-          >>> Vect(1, 1, 1).upward
+          >>> Vect(1, 1, 1).upward()
           Vect(1.0000, 1.0000, 1.0000)
-          >>> Vect(-1, -1, -1).upward
+          >>> Vect(-1, -1, -1).upward()
           Vect(1.0000, 1.0000, 1.0000)
         """
 
@@ -656,15 +638,14 @@ class Vect(object):
         else:
             return self.clone()
 
-    @property
     def downward(self):
         """
         Calculate a new vector downward-pointing.
 
         Example:
-          >>> Vect(1, 1, 1).downward
+          >>> Vect(1, 1, 1).downward()
           Vect(-1.0000, -1.0000, -1.0000)
-          >>> Vect(-1, -1, -1).downward
+          >>> Vect(-1, -1, -1).downward()
           Vect(-1.0000, -1.0000, -1.0000)
         """
 
@@ -691,7 +672,13 @@ class Vect(object):
           -90.0
           >>> Vect(0, 0, -1).slope
           90.0
+          >>> Vect(0, 0, 0).slope
+          Traceback (most recent call last):
+          ...
+          AssertionError: vector must be valid (not zero-valued)
         """
+
+        assert self.valid, "vector must be valid (not zero-valued)"
 
         hlen = self.len_2d
         if hlen == 0.0:
@@ -708,7 +695,6 @@ class Vect(object):
             else:
                 return 0.
 
-    @property
     def gvect(self):
         """
         Calculate the geological vector parallel to the Vect instance.
@@ -717,28 +703,31 @@ class Vect(object):
         geological axes and positive values for downward-pointing axes.
 
         Examples:
-          >>> Vect(0, 1, 1).gvect
+          >>> Vect(0, 1, 1).gvect()
           GVect(000.00, -45.00)
-          >>> Vect(1, 0, 1).gvect
+          >>> Vect(1, 0, 1).gvect()
           GVect(090.00, -45.00)
-          >>> Vect(0, 0, 1).gvect
+          >>> Vect(0, 0, 1).gvect()
           GVect(000.00, -90.00)
-          >>> Vect(0, 0, -1).gvect
+          >>> Vect(0, 0, -1).gvect()
           GVect(000.00, +90.00)
-          >>> Vect(-1, 0, 0).gvect
+          >>> Vect(-1, 0, 0).gvect()
           GVect(270.00, +00.00)
-          >>> Vect(0, -1, 0).gvect
+          >>> Vect(0, -1, 0).gvect()
           GVect(180.00, +00.00)
-          >>> Vect(-1, -1, 0).gvect
+          >>> Vect(-1, -1, 0).gvect()
           GVect(225.00, +00.00)
+          >>> Vect(0, 0, 0).gvect()
+          Traceback (most recent call last):
+          ...
+          AssertionError: vector must be valid (not zero-valued)
         """
 
-        if self.len_3d < MIN_VECTOR_MAGNITUDE:
-            raise Exception("Provided vector has near-zero magnitude")
+        assert self.valid, "vector must be valid (not zero-valued)"
 
         plunge = self.slope  # upward pointing -> negative value, downward -> positive
 
-        unit_vect = self.versor
+        unit_vect = self.versor()
         if unit_vect.y == 0. and unit_vect.x == 0:
             trend = 0.
         else:
@@ -746,7 +735,6 @@ class Vect(object):
 
         return GVect(trend, plunge)
 
-    @property
     def gaxis(self):
         """
         Calculate the geological axis parallel to the Vect instance.
@@ -755,23 +743,29 @@ class Vect(object):
         geological axes and positive values for downward-pointing axes.
 
         Examples:
-          >>> Vect(0, 1, 1).gaxis
+          >>> Vect(0, 1, 1).gaxis()
           GAxis(000.00, -45.00)
-          >>> Vect(1, 0, 1).gaxis
+          >>> Vect(1, 0, 1).gaxis()
           GAxis(090.00, -45.00)
-          >>> Vect(0, 0, 1).gaxis
+          >>> Vect(0, 0, 1).gaxis()
           GAxis(000.00, -90.00)
-          >>> Vect(0, 0, -1).gaxis
+          >>> Vect(0, 0, -1).gaxis()
           GAxis(000.00, +90.00)
-          >>> Vect(-1, 0, 0).gaxis
+          >>> Vect(-1, 0, 0).gaxis()
           GAxis(270.00, +00.00)
-          >>> Vect(0, -1, 0).gaxis
+          >>> Vect(0, -1, 0).gaxis()
           GAxis(180.00, +00.00)
-          >>> Vect(-1, -1, 0).gaxis
+          >>> Vect(-1, -1, 0).gaxis()
           GAxis(225.00, +00.00)
+          >>> Vect(0, 0, 0).gaxis()
+          Traceback (most recent call last):
+          ...
+          AssertionError: vector must be valid (not zero-valued)
         """
 
-        return self.gvect.as_axis()
+        assert self.valid, "vector must be valid (not zero-valued)"
+
+        return self.gvect().as_axis()
 
     def sp(self, another):
         """
@@ -799,18 +793,26 @@ class Vect(object):
           -1.0
           >>> Vect(1,0,0).cos_angle(Vect(1,0,0))
           1.0
+          >>> Vect(0, 0, 0).cos_angle(Vect(1,0,0))
+          Traceback (most recent call last):
+          ...
+          AssertionError: vector must be valid (not zero-valued)
+          >>> Vect(1, 0, 0).cos_angle(Vect(0,0,0))
+          Traceback (most recent call last):
+          ...
+          AssertionError: vector must be valid (not zero-valued)
         """
 
-        try:
-            val = self.sp(another) / (self.len_3d * another.len_3d)
-            if val > 1.0:
-                return 1.0
-            elif val < -1.0:
-                return -1.0
-            else:
-                return val
-        except ZeroDivisionError:
-            return np.nan
+        assert self.valid, "vector must be valid (not zero-valued)"
+        assert another.valid, "vector must be valid (not zero-valued)"
+
+        val = self.sp(another) / (self.len_3d * another.len_3d)
+        if val > 1.0:
+            return 1.0
+        elif val < -1.0:
+            return -1.0
+        else:
+            return val
 
     def angle(self, another):
         """
@@ -826,7 +828,18 @@ class Vect(object):
           180.0
           >>> Vect(1, 1, 1).angle(Vect(1, 1,1 ))
           0.0
+          >>> Vect(0, 0, 0).angle(Vect(1,0,0))
+          Traceback (most recent call last):
+          ...
+          AssertionError: vector must be valid (not zero-valued)
+          >>> Vect(1, 0, 0).angle(Vect(0,0,0))
+          Traceback (most recent call last):
+          ...
+          AssertionError: vector must be valid (not zero-valued)
         """
+
+        assert self.valid, "vector must be valid (not zero-valued)"
+        assert another.valid, "vector must be valid (not zero-valued)"
 
         return degrees(acos(self.cos_angle(another)))
 
@@ -845,7 +858,18 @@ class Vect(object):
           False
           >>> Vect(1, 0, 0).almost_parallel(Vect(-1, 0, 0))
           False
+          >>> Vect(0, 0, 0).almost_parallel(Vect(1,0,0))
+          Traceback (most recent call last):
+          ...
+          AssertionError: vector must be valid (not zero-valued)
+          >>> Vect(1, 0, 0).almost_parallel(Vect(0,0,0))
+          Traceback (most recent call last):
+          ...
+          AssertionError: vector must be valid (not zero-valued)
         """
+
+        assert self.valid, "vector must be valid (not zero-valued)"
+        assert another.valid, "vector must be valid (not zero-valued)"
 
         return self.angle(another) <= angle_tolerance
 
@@ -858,7 +882,7 @@ class Vect(object):
           Vect(0.0000, 0.0000, 1.0000)
           >>> Vect(1, 0, 0).vp(Vect(1, 0, 0))
           Vect(0.0000, 0.0000, 0.0000)
-          >>> (Vect(1, 0, 0).vp(Vect(-1, 0, 0))).is_almost_zero()
+          >>> (Vect(1, 0, 0).vp(Vect(-1, 0, 0))).is_almost_zero
           True
         """
 
@@ -971,17 +995,16 @@ class GVect(object):
 
         return GVect(trend, plunge)
 
-    @property
     def versor(self):
         """
         Return the Vect corresponding to the geological vector.
 
         Examples:
-          >>> GVect(0, 90).versor
+          >>> GVect(0, 90).versor()
           Vect(0.0000, 0.0000, -1.0000)
-          >>> GVect(0, -90).versor
+          >>> GVect(0, -90).versor()
           Vect(0.0000, 0.0000, 1.0000)
-          >>> GVect(90, 90).versor
+          >>> GVect(90, 90).versor()
           Vect(0.0000, 0.0000, -1.0000)
           
         """
@@ -1006,7 +1029,7 @@ class GVect(object):
           True
         """
 
-        return self.versor.z > 0.0
+        return self.versor().z > 0.0
 
     @property
     def is_downward(self):
@@ -1022,49 +1045,63 @@ class GVect(object):
           False
         """
 
-        if self.versor.z < 0.0:
+        if self.versor().z < 0.0:
             return True
         else:
             return False
 
-    @property
     def upward(self):
         """
         Return upward-point geological vector.
 
         Examples:
-          >>> GVect(90, -45).upward
-          GVect(090.00, -45.00)
-          >>> GVect(180, 45).upward
-          GVect(000.00, -45.00)
-          >>> GVect(0, 0).upward
-          GVect(180.00, -00.00)
-          >>> GVect(0, 90).upward
-          GVect(180.00, -90.00)
+          >>> GVect(90, -45).upward().almost_parallel(GVect(90.0, -45.0))
+          True
+          >>> GVect(180, 45).upward().almost_parallel(GVect(0.0, -45.0))
+          True
+          >>> GVect(0, 0).upward().almost_parallel(GVect(0.0, 0.0))
+          True
+          >>> GVect(0, 90).upward().almost_parallel(GVect(180.0, -90.0))
+          True
+          >>> GVect(90, -45).upward().almost_parallel(GVect(90.0, -35.0))
+          False
+          >>> GVect(180, 45).upward().almost_parallel(GVect(10.0, -45.0))
+          False
+          >>> GVect(0, 0).upward().almost_parallel(GVect(170.0, 0.0))
+          False
+          >>> GVect(0, 90).upward().almost_parallel(GVect(180.0, -80.0))
+          False
         """
 
-        if self.is_upward:
+        if not self.is_downward:
             return self.copy()
         else:
             return self.opposite()
 
-    @property
     def downward(self):
         """
         Return downward-pointing geological vector.
 
         Examples:
-          >>> GVect(90, -45).downward
-          GVect(270.00, +45.00)
-          >>> GVect(180, 45).downward
-          GVect(180.00, +45.00)
-          >>> GVect(0, 0).downward
-          GVect(180.00, -00.00)
-          >>> GVect(0, 90).downward
-          GVect(000.00, +90.00)
+          >>> GVect(90, -45).downward().almost_parallel(GVect(270.0, 45.0))
+          True
+          >>> GVect(180, 45).downward().almost_parallel(GVect(180.0, 45.0))
+          True
+          >>> GVect(0, 0).downward().almost_parallel(GVect(180.0, 0.0))
+          False
+          >>> GVect(0, 90).downward().almost_parallel(GVect(0.0, 90.0))
+          True
+          >>> GVect(90, -45).downward().almost_parallel(GVect(270.0, 35.0))
+          False
+          >>> GVect(180, 45).downward().almost_parallel(GVect(170.0, 45.0))
+          False
+          >>> GVect(0, 0).downward().almost_parallel(GVect(180.0, 10.0))
+          False
+          >>> GVect(0, 90).downward().almost_parallel(GVect(0.0, 80.0))
+          False
         """
 
-        if self.is_downward:
+        if not self.is_upward:
             return self.copy()
         else:
             return self.opposite()
@@ -1085,7 +1122,7 @@ class GVect(object):
           180.0000000
         """
 
-        return self.versor.angle(another.versor)
+        return self.versor().angle(another.versor())
 
     def almost_parallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """
@@ -1106,21 +1143,20 @@ class GVect(object):
 
         return self.angle(another) <= angle_tolerance
 
-    @property
     def normal_gplane(self):
         """
         Return the geological plane that is normal to the geological vector.
 
         Examples:
-          >>> GVect(0, 45).normal_gplane
+          >>> GVect(0, 45).normal_gplane()
           GPlane(180.00, +45.00)
-          >>> GVect(0, -45).normal_gplane
+          >>> GVect(0, -45).normal_gplane()
           GPlane(000.00, +45.00)
-          >>> GVect(0, 90).normal_gplane
+          >>> GVect(0, 90).normal_gplane()
           GPlane(180.00, +00.00)
         """
 
-        down_axis = self.downward
+        down_axis = self.downward()
         dipdir = (down_axis.tr + 180.0) % 360.0
         dipangle = 90.0 - down_axis.pl
 
@@ -1131,18 +1167,26 @@ class GVect(object):
         Calculate GPlane instance defined by the two GVect instances.
 
         Examples:
-          >>> GVect(0, 0).common_plane(GVect(90, 0))
-          GPlane(180.00, +00.00)
+          >>> GVect(0, 0).common_plane(GVect(90, 0)).almost_parallel(GPlane(180.0, 0.0))
+          True
           >>> GVect(0, 0).common_plane(GVect(90, 90)).almost_parallel(GPlane(90.0, 90.0))
           True
-          >>> GVect(45, 0).common_plane(GVect(135, 45))
-          GPlane(135.00, +45.00)
-          >>> GVect(315, 45).common_plane(GVect(135, 45))
-          GPlane(225.00, +90.00)
+          >>> GVect(45, 0).common_plane(GVect(135, 45)).almost_parallel(GPlane(135.0, 45.0))
+          True
+          >>> GVect(315, 45).common_plane(GVect(135, 45)).almost_parallel(GPlane(225.0, 90.0))
+          True
+          >>> GVect(0, 0).common_plane(GVect(90, 0)).almost_parallel(GPlane(180.0, 10.0))
+          False
+          >>> GVect(0, 0).common_plane(GVect(90, 90)).almost_parallel(GPlane(90.0, 80.0))
+          False
+          >>> GVect(45, 0).common_plane(GVect(135, 45)).almost_parallel(GPlane(125.0, 45.0))
+          False
+          >>> GVect(315, 45).common_plane(GVect(135, 45)).almost_parallel(GPlane(225.0, 80.0))
+          False
         """
 
-        normal = self.versor.vp(another.versor)
-        return normal.gvect.normal_gplane
+        normal_versor = self.versor().vp(another.versor())
+        return normal_versor.gvect().normal_gplane()
 
     def as_axis(self):
         """
@@ -1179,7 +1223,7 @@ class GVect(object):
         if not MIN_ANGLE_DEGR_DISORIENTATION <= self.angle(another) <= 180. - MIN_ANGLE_DEGR_DISORIENTATION:
             raise SubparallelLineationException("Sources must not be sub- or anti-parallel")
 
-        return self.versor.vp(another.versor).gvect
+        return self.versor().vp(another.versor()).gvect()
 
 
 class GAxis(GVect):
@@ -1225,7 +1269,7 @@ class GAxis(GVect):
           45.0000000
         """
 
-        angle_vers = self.versor.angle(another.versor)
+        angle_vers = self.versor().angle(another.versor())
         return min(angle_vers, 180. - angle_vers)
 
     def almost_parallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
@@ -1247,26 +1291,31 @@ class GAxis(GVect):
 
         return self.angle(another) <= angle_tolerance
 
-    @property
     def normal_gplane(self):
         """
         Calculate the geological plane that is normal to the given GAxis instance.
         
         Example:
-          >>> GAxis(0, 90).normal_gplane
-          GPlane(180.00, +00.00)
-          >>> GAxis(0, 0).normal_gplane
-          GPlane(000.00, +90.00)
-          >>> GAxis(45, 45).normal_gplane
-          GPlane(225.00, +45.00)
+          >>> GAxis(0, 90).normal_gplane().almost_parallel(GPlane(180.00, 0.00))
+          True
+          >>> GAxis(0, 0).normal_gplane().almost_parallel(GPlane(0.00, 90.00))
+          True
+          >>> GAxis(45, 45).normal_gplane().almost_parallel(GPlane(225.00, 45.00))
+          True
+          >>> GAxis(0, 90).normal_gplane().almost_parallel(GPlane(170.00, 10.00))
+          False
+          >>> GAxis(0, 0).normal_gplane().almost_parallel(GPlane(20.00, 90.00))
+          False
+          >>> GAxis(45, 45).normal_gplane().almost_parallel(GPlane(215.00, 45.00))
+          False
         """
 
-        return self.as_vect().normal_gplane
+        return self.as_vect().normal_gplane()
 
     @property
     def is_upward(self):
         """
-        Check whether the instance is pointing upward or horizontal.
+        Check whether the instance is pointing upward.
 
         Examples:
           >>> GAxis(10, 15).is_upward
@@ -1282,7 +1331,7 @@ class GAxis(GVect):
     @property
     def is_downward(self):
         """
-        Check whether the instance is pointing downward or horizontal.
+        Check whether the instance is pointing downward.
 
         Examples:
           >>> GAxis(10, 15).is_downward
@@ -1295,55 +1344,84 @@ class GAxis(GVect):
 
         return self.as_vect().is_downward
 
-    @property
+    def is_subhorizontal(self, max_dip_angle=DIP_ANGLE_THRESHOLD):
+        """
+        Check whether the instance is almost horizontal.
+
+        Examples:
+          >>> GAxis(10, 15).is_subhorizontal()
+          False
+          >>> GAxis(257, 2).is_subhorizontal()
+          True
+          >>> GAxis(90, -5).is_subhorizontal()
+          False
+        """
+
+        return abs(self.pl) < max_dip_angle
+
     def upward(self):
         """
         Return upward-point geological axis.
 
         Examples:
-          >>> GAxis(90, -45).upward
-          GAxis(090.00, -45.00)
-          >>> GAxis(180, 45).upward
-          GAxis(000.00, -45.00)
-          >>> GAxis(0, 0).upward
-          GAxis(180.00, -00.00)
-          >>> GAxis(0, 90).upward
-          GAxis(180.00, -90.00)
+          >>> GAxis(90, -45).upward().almost_parallel(GAxis(90.0, -45.0))
+          True
+          >>> GAxis(180, 45).upward().almost_parallel(GAxis(0.0, -45.0))
+          True
+          >>> GAxis(0, 0).upward().almost_parallel(GAxis(180.0, 0.0))
+          True
+          >>> GAxis(0, 90).upward().almost_parallel(GAxis(180.0, -90.0))
+          True
+          >>> GAxis(90, -45).upward().almost_parallel(GAxis(80.0, -45.0))
+          False
+          >>> GAxis(180, 45).upward().almost_parallel(GAxis(10.0, -45.0))
+          False
+          >>> GAxis(0, 0).upward().almost_parallel(GAxis(180.0, 10.0))
+          False
+          >>> GAxis(0, 90).upward().almost_parallel(GAxis(180.0, -80.0))
+          False
         """
 
-        return self.as_vect().upward.as_axis()
+        return self.as_vect().upward().as_axis()
 
-    @property
     def downward(self):
         """
         Return downward-pointing geological vector.
 
         Examples:
-          >>> GAxis(90, -45).downward
-          GAxis(270.00, +45.00)
-          >>> GAxis(180, 45).downward
-          GAxis(180.00, +45.00)
-          >>> GAxis(0, 0).downward
-          GAxis(180.00, -00.00)
-          >>> GAxis(0, 90).downward
-          GAxis(000.00, +90.00)
+          >>> GAxis(90, -45).downward().almost_parallel(GAxis(270, 45))
+          True
+          >>> GAxis(180, 45).downward().almost_parallel(GAxis(180, 45))
+          True
+          >>> GAxis(0, 0).downward().almost_parallel(GAxis(180, 0))
+          True
+          >>> GAxis(0, 90).downward().almost_parallel(GAxis(0, 90))
+          True
+          >>> GAxis(0, 0).downward().almost_parallel(GAxis(170, 0))
+          False
+          >>> GAxis(0, 90).downward().almost_parallel(GAxis(0, 80))
+          False
         """
 
-        return self.as_vect().downward.as_axis()
+        return self.as_vect().downward().as_axis()
 
     def common_plane(self, another):
         """
         Calculate GPlane instance defined by the two GAxis instances.
 
         Examples:
-          >>> GAxis(0, 0).common_plane(GAxis(90, 0))
-          GPlane(180.00, +00.00)
+          >>> GAxis(0, 0).common_plane(GAxis(90, 0)).almost_parallel(GPlane(180.0, 0.0))
+          True
           >>> GAxis(0, 0).common_plane(GAxis(90, 90)).almost_parallel(GPlane(90.0, 90.0))
           True
-          >>> GAxis(45, 0).common_plane(GAxis(135, 45))
-          GPlane(135.00, +45.00)
-          >>> GAxis(315, 45).common_plane(GAxis(135, 45))
-          GPlane(225.00, +90.00)
+          >>> GAxis(45, 0).common_plane(GAxis(135, 45)).almost_parallel(GPlane(135.0, 45.0))
+          True
+          >>> GAxis(315, 45).common_plane(GAxis(135, 45)).almost_parallel(GPlane(225.0, 90.0))
+          True
+          >>> GAxis(45, 0).common_plane(GAxis(135, 45)).almost_parallel(GPlane(135.0, 39.0))
+          False
+          >>> GAxis(315, 45).common_plane(GAxis(135, 45)).almost_parallel(GPlane(225.0, 80.0))
+          False
         """
 
         return self.as_vect().common_plane(another.as_vect())
@@ -1500,7 +1578,7 @@ class Plane(object):
           Vect(0.0000, 1.0000, 0.0000)
         """
 
-        return Vect(self.a, self.b, self.c).versor
+        return Vect(self.a, self.b, self.c).versor()
 
     def gplane_point(self):
         """
@@ -1515,7 +1593,7 @@ class Plane(object):
           Point(0.0000, 0.0000, 1.0000, nan)
         """
 
-        geol_plane = self.nversor.gvect.normal_gplane
+        geol_plane = self.nversor.gvect().normal_gplane()
         point = Point(*point_solution(np.array([[self.a, self.b, self.c]]),
                                       np.array([-self.d])))
         return geol_plane, point
@@ -1530,7 +1608,7 @@ class Plane(object):
         Vect(0.0000, -1.0000, 0.0000)
         """
 
-        return self.nversor.vp(another.nversor).versor
+        return self.nversor.vp(another.nversor).versor()
 
     def inters_point(self, another):
         """
@@ -1725,14 +1803,13 @@ class GPlane(object):
 
         return "GPlane({:06.2f}, {:+06.2f})".format(*self.dda)
 
-    @property
     def normal(self):
         """
         Return the geological vector normal to the geological plane,
         pointing in the same direction as the geological plane.
 
         Example:
-            >>> GPlane(90, 55).normal
+            >>> GPlane(90, 55).normal()
             GVect(090.00, -35.00)
         """
         
@@ -1755,7 +1832,7 @@ class GPlane(object):
           Plane(0.0000, 1.0000, -0.0000, -0.0000)
         """
 
-        normal_versor = self.normal.versor
+        normal_versor = self.normal().versor()
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * point.x + b * point.y + c * point.z)
         return Plane(a, b, c, d)
@@ -1777,7 +1854,7 @@ class GPlane(object):
         True
         """
 
-        return self.normal.as_axis().angle(another.normal.as_axis())
+        return self.normal().as_axis().angle(another.normal().as_axis())
 
     def almost_parallel(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD):
         """
@@ -1832,7 +1909,7 @@ class GPlane(object):
         y = cos(rk)*cos(strk)+sin(rk)*cos(dip)*sin(strk)
         z = sin(rk) * sin(dip)
 
-        return Vect(x, y, z).gvect
+        return Vect(x, y, z).gvect()
 
 
 if __name__ == "__main__":
