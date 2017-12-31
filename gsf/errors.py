@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
+class QuaternionException(Exception):
+    """
+    Exception for Quaternion calculation.
+    """
+
+    pass
+
 class AnaliticSurfaceCalcException(Exception):
     """
     Exception for Analytical Surface calculation.

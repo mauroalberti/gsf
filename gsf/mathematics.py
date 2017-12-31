@@ -1,7 +1,59 @@
 # -*- coding: utf-8 -*-
 
-
 import numpy as np
+
+
+def is_number(s):
+    """
+    Check if string can be converted to number.
+
+    @param  s:  parameter to check.
+    @type  s:  string
+
+    @return:  boolean, whether string can be converted to a number (float).
+
+    Example:
+      >>> is_number("1.0")
+      True
+      >>> is_number("1")
+      True
+      >>> is_number(None)
+      False
+      >>> is_number(u"-10")
+      True
+      >>> is_number("one")
+      False
+      >>> is_number("1e-10")
+      True
+      >>> is_number("")
+      False
+    """
+
+    try:
+        float(s)
+    except:
+        return False
+    else:
+        return True
+
+
+def almost_zero(an_val, tolerance=1e-10):
+    """
+    Check if a value for which abs can be used, is near zero.
+
+    :param an_val: an abs-compatible object
+    :param tolerance: the tolerance value
+    :return: Boolean
+
+      >>> almost_zero(1)
+      False
+      >>> almost_zero(1e-9)
+      False
+      >>> almost_zero(1e-11)
+      True
+    """
+
+    return abs(an_val) <= tolerance
 
 
 def isclose(a, b, rtol=1e-012, atol=1e-12, equal_nan=False, equal_inf=False):
@@ -51,6 +103,7 @@ def isclose(a, b, rtol=1e-012, atol=1e-12, equal_nan=False, equal_inf=False):
         return False
     else:
         return abs(a - b) <= max(rtol * max(abs(a), abs(b)), atol)
+
 
 
 if __name__ == "__main__":

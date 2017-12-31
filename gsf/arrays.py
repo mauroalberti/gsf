@@ -65,34 +65,6 @@ def formula_to_grid(array_range, array_size, formula):
     return a_list, b_list, z_list
 
 
-def is_number(s):
-    """
-    Check if string can be converted to number.
-
-    @param  s:  parameter to check.
-    @type  s:  string
-
-    @return:  boolean, whether string can be converted to a number (float).
-
-    Example:
-      >>> is_number("1.0")
-      True
-      >>> is_number("1")
-      True
-      >>> is_number(None)
-      False
-      >>> is_number("one")
-      False
-    """
-
-    try:
-        float(s)
-    except:
-        return False
-    else:
-        return True
-
-
 def to_floats(iterable_obj):
     """
     Converts an iterable object storing float-compatible values to a list of floats.
@@ -100,28 +72,13 @@ def to_floats(iterable_obj):
     :param iterable_obj:
     :return: list of Floats
 
+    Example:
       >>> to_floats([1, 2, 3])
       [1.0, 2.0, 3.0]
     """
 
     return [float(item) for item in iterable_obj]
 
-
-def almost_zero(an_val, tolerance=1e-10):
-    """
-    Check if a value for which abs can be used, is near zero.
-
-    :param an_val: an abs-compatible object
-    :param tolerance: the tolerance value
-    :return: Boolean
-
-      >>> almost_zero(1)
-      False
-      >>> almost_zero(1e-11)
-      True
-    """
-
-    return abs(an_val) <= tolerance
 
 def ij_transfer_func(i, j, transfer_funcs):
     """

@@ -5,9 +5,10 @@ from __future__ import division
 from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
-from .math_utils import isclose
-from .array_utils import point_solution
+from .mathematics import isclose
+from .arrays import point_solution
 from .errors import SubparallelLineationException
+
 
 MIN_SEPARATION_THRESHOLD = 1e-10
 MIN_VECTOR_MAGNITUDE = 1e-9
@@ -295,7 +296,7 @@ class Vect(object):
 
     def __init__(self, x=0, y=0, z=0):
         """
-        Vect constructor
+        Vect constructor.
 
         Example;
           >>> Vect(1, 0, 1)
@@ -703,6 +704,8 @@ class Vect(object):
         geological axes and positive values for downward-pointing axes.
 
         Examples:
+          >>> Vect(1, 1, 1).gvect()
+          GVect(045.00, -35.26)
           >>> Vect(0, 1, 1).gvect()
           GVect(000.00, -45.00)
           >>> Vect(1, 0, 1).gvect()
@@ -769,7 +772,7 @@ class Vect(object):
 
     def sp(self, another):
         """
-        Vector scalar product.
+        Vector scalar __mul__.
 
         Examples:
           >>> Vect(1, 0, 0).sp(Vect(1, 0, 0))
@@ -875,7 +878,7 @@ class Vect(object):
 
     def vp(self, another):
         """
-        Vector product.
+        Vector __mul__.
 
         Examples:
           >>> Vect(1, 0, 0).vp(Vect(0, 1, 0))

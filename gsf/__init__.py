@@ -5,5 +5,5 @@ from .geometry import (Point, Vect, GVect, GAxis,
 
 from .faults import (Slickenline, FaultSlick, PTBAxes)
 
-from .math_utils import isclose
+from .mathematics import isclose
 

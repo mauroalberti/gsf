@@ -3,7 +3,7 @@
 
 from .geometry import *
 from .errors import SlickelineTypeException, SlickelineSenseException
-from .math_utils import isclose
+from .mathematics import isclose
 
 
 class Slickenline(object):

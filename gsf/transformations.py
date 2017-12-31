@@ -5,8 +5,8 @@ from math import radians, sin, cos, tan
 
 import numpy as np
 
-from .array_utils import almost_zero
-from .geometry import GAxis
+from .mathematics import almost_zero
+from .geometry import GVect, GAxis
 
 
 class RefFrame(object):
@@ -33,6 +33,33 @@ class RefFrame(object):
                 rot_matrix[i, j] = init_frame_versor.scalar_product(rot_frame_versor)
 
         return rot_matrix
+
+
+
+class Rotation(object):
+    """
+    Rotation vector, expressed by a geological vector and a rotation angle.
+    """
+
+    def __init__(self, trend, plunge, rot_ang):
+        """
+        Constructor.
+
+        :param trend: Float/Integer
+        :param plunge: Float/Integer
+        :param rot_ang: Float/Integer
+
+        Example:
+        >> Rotation(0, 90, 120)
+        Rotation(0.000, 90.000, 120.000)
+        """
+
+        self.gv = GVect(trend, plunge)
+        self.a = rot_ang % 360.0
+
+    def __repr__(self):
+
+        return "Rotation({:.4f}, {:.4f}, {:.4f})".format(self.gv.tr, self.gv.pl, self.a)
 
 
 def rotation_matrix(rot_axis_trend, rot_axis_plunge, rot_angle):
