@@ -9,6 +9,75 @@ from .mathematics import almost_zero
 from .geometry import GVect, GAxis
 
 
+class RotationAxis(object):
+    """
+    Rotation axis, expressed by a geological vector and a rotation angle.
+    """
+
+    def __init__(self, trend, plunge, rot_ang):
+        """
+        Constructor.
+
+        :param trend: Float/Integer
+        :param plunge: Float/Integer
+        :param rot_ang: Float/Integer
+
+        Example:
+        >> RotationAxis(0, 90, 120)
+        RotationAxis(0.000, 90.000, 120.000)
+        """
+
+        self.gv = GVect(trend, plunge)
+        self.a = rot_ang % 360.0
+
+    def __repr__(self):
+
+        return "RotationAxis({:.4f}, {:.4f}, {:.4f})".format(self.gv.tr, self.gv.pl, self.a)
+
+    @property
+    def versor(self):
+        """
+        Return the versor correspinding to the Rotation geological vector.
+
+        :return: Vect
+        """
+
+        return self.gv.versor()
+
+    def to_rotation_matrix(self):
+        """
+        Derives the rotation matrix from the RotationAxis instance.
+
+        :return: 3x3 numpy array
+        """
+
+        rotation_versor = self.versor
+        phi = radians(self.a)
+
+        l = rotation_versor.x
+        m = rotation_versor.y
+        n = rotation_versor.z
+
+        cos_phi = cos(phi)
+        sin_phi = sin(phi)
+
+        a11 = cos_phi + ((l * l) * (1 - cos_phi))
+        a12 = ((l * m) * (1 - cos_phi)) - (n * sin_phi)
+        a13 = ((l * n) * (1 - cos_phi)) + (m * sin_phi)
+
+        a21 = ((l * m) * (1 - cos_phi)) + (n * sin_phi)
+        a22 = cos_phi + ((m * m) * (1 - cos_phi))
+        a23 = ((m * n) * (1 - cos_phi)) - (l * sin_phi)
+
+        a31 = ((l * n) * (1 - cos_phi)) - (m * sin_phi)
+        a32 = ((m * n) * (1 - cos_phi)) + (l * sin_phi)
+        a33 = cos_phi + ((n * n) * (1 - cos_phi))
+
+        return np.array([(a11, a12, a13),
+                         (a21, a22, a23),
+                         (a31, a32, a33)])
+
+
 class RefFrame(object):
 
     def __init__(self, versor_x, versor_y, versor_z):
@@ -33,33 +102,6 @@ class RefFrame(object):
                 rot_matrix[i, j] = init_frame_versor.scalar_product(rot_frame_versor)
 
         return rot_matrix
-
-
-
-class Rotation(object):
-    """
-    Rotation vector, expressed by a geological vector and a rotation angle.
-    """
-
-    def __init__(self, trend, plunge, rot_ang):
-        """
-        Constructor.
-
-        :param trend: Float/Integer
-        :param plunge: Float/Integer
-        :param rot_ang: Float/Integer
-
-        Example:
-        >> Rotation(0, 90, 120)
-        Rotation(0.000, 90.000, 120.000)
-        """
-
-        self.gv = GVect(trend, plunge)
-        self.a = rot_ang % 360.0
-
-    def __repr__(self):
-
-        return "Rotation({:.4f}, {:.4f}, {:.4f})".format(self.gv.tr, self.gv.pl, self.a)
 
 
 def rotation_matrix(rot_axis_trend, rot_axis_plunge, rot_angle):

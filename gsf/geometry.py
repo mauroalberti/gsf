@@ -5,7 +5,7 @@ from __future__ import division
 from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
-from .mathematics import isclose
+from .mathematics import are_close
 from .arrays import point_solution
 from .errors import SubparallelLineationException
 
@@ -1000,7 +1000,7 @@ class GVect(object):
 
     def versor(self):
         """
-        Return the Vect corresponding to the geological vector.
+        Return the unit vector corresponding to the geological vector.
 
         Examples:
           >>> GVect(0, 90).versor()
@@ -1854,9 +1854,9 @@ class GPlane(object):
         80.0
         >>> GPlane(90.0, 90.0).angle(GPlane(270.0, 90.0))
         0.0
-        >>> isclose(GPlane(90.0, 10.0).angle(GPlane(270.0, 10.0)), 20.0)
+        >>> are_close(GPlane(90.0, 10.0).angle(GPlane(270.0, 10.0)), 20.0)
         True
-        >>> isclose(GPlane(90.0, 10.0).angle(GPlane(270.0, 30.0)), 40.0)
+        >>> are_close(GPlane(90.0, 10.0).angle(GPlane(270.0, 30.0)), 40.0)
         True
         """
 

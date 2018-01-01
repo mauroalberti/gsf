@@ -3,7 +3,7 @@
 
 from .geometry import *
 from .errors import SlickelineTypeException, SlickelineSenseException
-from .mathematics import isclose
+from .mathematics import are_close
 
 
 class Slickenline(object):
@@ -151,7 +151,7 @@ class FaultSlick(object):
 
         assert isinstance(fault_plane, GPlane), "Provided fault plane must be a GPlane instance"
         assert isinstance(slickenline, Slickenline), "Provided slickenline must be a Slickenline instance"
-        assert isclose(fault_plane.normal().angle(slickenline.lin), 90.), "Slickenline is not within fault plane"
+        assert are_close(fault_plane.normal().angle(slickenline.lin), 90.), "Slickenline is not within fault plane"
 
         self._fltpln = fault_plane
         self._slick = slickenline
@@ -286,7 +286,7 @@ class PTBAxes(object):
 
         assert isinstance(p_axis, GAxis), "P axis must be an instance of GAxis"
         assert isinstance(t_axis, GAxis), "T axis must be an instance of GAxis"
-        assert isclose(p_axis.angle(t_axis), 90.), "P and T axes must be perpendicular"
+        assert are_close(p_axis.angle(t_axis), 90.), "P and T axes must be perpendicular"
 
         self._pax = p_axis
         self._tax = t_axis

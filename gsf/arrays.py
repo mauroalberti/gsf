@@ -2,10 +2,44 @@
 
 from __future__ import division
 
-from numpy import *  # general import for compatibility with formula input
-from numpy.linalg import svd
+import numpy as np
+#from numpy.linalg import svd
 
-from .errors import AnaliticSurfaceCalcException
+from .mathematics import are_close
+
+
+def arrays_are_close(a_array, b_array, rtol=1e-012, atol=1e-12, equal_nan=False, equal_inf=False):
+    """
+    Check for equivalence between two numpy arrays.
+
+    :param a_array: numpy array
+    :param b_array: numpy array
+    :param rtol: relative tolerance
+    :param atol: absolute tolerance
+    :param equal_nan: consider nan values equivalent or not
+    :param equal_inf: consider inf values equivalent or not
+    :return: Boolean
+
+    Example:
+      >>> arrays_are_close(np.array([1,2,3]), np.array([1,2,3]))
+      True
+      >>> arrays_are_close(np.array([[1,2,3], [4, 5, 6]]), np.array([1,2,3]))
+      False
+      >>> arrays_are_close(np.array([[1,2,3], [4,5,6]]), np.array([[1,2,3], [4,5,6]]))
+      True
+      >>> arrays_are_close(np.array([[1,2,np.nan], [4,5,6]]), np.array([[1,2,np.nan], [4,5,6]]))
+      False
+      >>> arrays_are_close(np.array([[1,2,np.nan], [4,5,6]]), np.array([[1,2,np.nan], [4,5,6]]), equal_nan=True)
+      True
+    """
+    if a_array.shape != b_array.shape:
+        return False
+
+    are_equal = []
+    for a, b in np.nditer([a_array, b_array]):
+        are_equal.append(are_close(a.item(0), b.item(0), rtol=rtol, atol=atol, equal_nan=equal_nan, equal_inf=equal_inf))
+
+    return all(are_equal)
 
 
 def point_solution(a_array, b_array):
@@ -15,7 +49,7 @@ def point_solution(a_array, b_array):
     """
 
     try:
-        return linalg.lstsq(a_array, b_array)[0]
+        return np.linalg.lstsq(a_array, b_array)[0]
     except:
         return None, None, None
 
@@ -29,40 +63,11 @@ def xyz_svd(xyz_array):
     """
 
     try:
-        result = svd(xyz_array)
+        result = np.svd(xyz_array)
     except:
         result = None
 
     return dict(result=result)
-
-
-def formula_to_grid(array_range, array_size, formula):
-    """
-    Todo: check usages and correctness
-
-    :param array_range:
-    :param array_size:
-    :param formula:
-    :return: three lists of float values
-    """
-
-    a_min, a_max, b_max, b_min = array_range  # note: b range reversed for conventional j order in arrays
-    array_rows, array_cols = array_size
-
-    a_array = linspace(a_min, a_max, num=array_cols)
-    b_array = linspace(b_max, b_min, num=array_rows)  # note: reversed for conventional j order in arrays
-
-    try:
-        a_list, b_list = [a for a in a_array for _ in b_array], [b for _ in a_array for b in b_array]
-    except:
-        raise AnaliticSurfaceCalcException("Error in a-b values")
-
-    try:
-        z_list = [eval(formula) for a in a_array for b in b_array]
-    except:
-        raise AnaliticSurfaceCalcException("Error in applying formula to a and b array values")
-
-    return a_list, b_list, z_list
 
 
 def to_floats(iterable_obj):
@@ -79,54 +84,6 @@ def to_floats(iterable_obj):
 
     return [float(item) for item in iterable_obj]
 
-
-def ij_transfer_func(i, j, transfer_funcs):
-    """
-    Return a p_z value as the result of a function (transfer_func_z) applied to a (x, y) point.
-    This point is derived from a (i,j) point given two "transfer" functions (transfer_func_y, transfer_func_x).
-    All three functions are stored into a tuple (transfer_funcs).
-
-    @param  i:  array i (-p_y) coordinate of a single point.
-    @type  i:  float.
-    @param  j:  array j (p_x) coordinate of a single point.
-    @type  j:  float.
-    @param  transfer_funcs:  tuple storing three functions (transfer_func_x, transfer_func_y, transfer_func_z)
-                            that derives p_y from i (transfer_func_y), p_x from j (transfer_func_x)
-                            and p_z from (p_x,p_y) (transfer_func_z).
-    @type  transfer_funcs:  Tuple of Functions.
-
-    @return:  p_z value - float.
-
-    """
-
-    transfer_func_x, transfer_func_y, transfer_func_z = transfer_funcs
-
-    return transfer_func_z(transfer_func_x(j), transfer_func_y(i))
-
-
-def array_from_function(row_num, col_num, x_transfer_func, y_transfer_func, z_transfer_func):
-    """
-    Creates an array of p_z values based on functions that map (i,j) indices (to be created)
-    into (p_x, p_y) values and then p_z values.
-
-    @param  row_num:  row number of the array to be created.
-    @type  row_num:  int.
-    @param  col_num:  column number of the array to be created.
-    @type  col_num:  int.
-    @param  x_transfer_func:  function that derives p_x given a j array index.
-    @type  x_transfer_func:  Function.
-    @param  y_transfer_func:  function that derives p_y given an i array index.
-    @type  y_transfer_func:  Function.
-    @param  z_transfer_func:  function that derives p_z given a (p_x,p_y) point.
-    @type  z_transfer_func:  Function.
-
-    @return:  array of p_z value - array of float numbers.
-
-    """
-
-    transfer_funcs = (x_transfer_func, y_transfer_func, z_transfer_func)
-
-    return fromfunction(ij_transfer_func, (row_num, col_num), transfer_funcs=transfer_funcs)
 
 if __name__ == "__main__":
 
