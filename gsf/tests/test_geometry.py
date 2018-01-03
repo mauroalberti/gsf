@@ -2,7 +2,7 @@
 
 import unittest
 
-from gsf import *
+from ..geometry import *
 
 
 class TestGsf(unittest.TestCase):

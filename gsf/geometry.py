@@ -917,13 +917,9 @@ class GVect(object):
             
         Example:
           >>> a = GVect(120.2, -27.4)
-          >>> b = GVect(54.5, -320.3)
-          Traceback (most recent call last):
-          ...
-          AssertionError: plunge must be between -90° and +90° (comprised)
-        """
+       """
 
-        assert -90.0 <= float(src_plunge) <= 90.0, "plunge must be between -90° and +90° (comprised)"
+        # assert -90.0 <= float(src_plunge) <= 90.0, "plunge must be between -90° and +90° (comprised)"
         self._trend = float(src_trend) % 360.0
         self._plunge = float(src_plunge)
 

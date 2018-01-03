@@ -83,3 +83,9 @@ def array_from_function(row_num, col_num, x_transfer_func, y_transfer_func, z_tr
 
     return fromfunction(ij_transfer_func, (row_num, col_num), transfer_funcs=transfer_funcs)
 
+
+if __name__ == "__main__":
+
+    import doctest
+    import numtest  # external module, used in doctest float checks
+    doctest.testmod()

@@ -5,133 +5,8 @@ from math import radians, sin, cos, tan
 
 import numpy as np
 
-from .mathematics import almost_zero
-from .geometry import GVect, GAxis
 
-
-class RotationAxis(object):
-    """
-    Rotation axis, expressed by a geological vector and a rotation angle.
-    """
-
-    def __init__(self, trend, plunge, rot_ang):
-        """
-        Constructor.
-
-        :param trend: Float/Integer
-        :param plunge: Float/Integer
-        :param rot_ang: Float/Integer
-
-        Example:
-        >> RotationAxis(0, 90, 120)
-        RotationAxis(0.000, 90.000, 120.000)
-        """
-
-        self.gv = GVect(trend, plunge)
-        self.a = rot_ang % 360.0
-
-    def __repr__(self):
-
-        return "RotationAxis({:.4f}, {:.4f}, {:.4f})".format(self.gv.tr, self.gv.pl, self.a)
-
-    @property
-    def versor(self):
-        """
-        Return the versor correspinding to the Rotation geological vector.
-
-        :return: Vect
-        """
-
-        return self.gv.versor()
-
-    def to_rotation_matrix(self):
-        """
-        Derives the rotation matrix from the RotationAxis instance.
-
-        :return: 3x3 numpy array
-        """
-
-        rotation_versor = self.versor
-        phi = radians(self.a)
-
-        l = rotation_versor.x
-        m = rotation_versor.y
-        n = rotation_versor.z
-
-        cos_phi = cos(phi)
-        sin_phi = sin(phi)
-
-        a11 = cos_phi + ((l * l) * (1 - cos_phi))
-        a12 = ((l * m) * (1 - cos_phi)) - (n * sin_phi)
-        a13 = ((l * n) * (1 - cos_phi)) + (m * sin_phi)
-
-        a21 = ((l * m) * (1 - cos_phi)) + (n * sin_phi)
-        a22 = cos_phi + ((m * m) * (1 - cos_phi))
-        a23 = ((m * n) * (1 - cos_phi)) - (l * sin_phi)
-
-        a31 = ((l * n) * (1 - cos_phi)) - (m * sin_phi)
-        a32 = ((m * n) * (1 - cos_phi)) + (l * sin_phi)
-        a33 = cos_phi + ((n * n) * (1 - cos_phi))
-
-        return np.array([(a11, a12, a13),
-                         (a21, a22, a23),
-                         (a31, a32, a33)])
-
-
-class RefFrame(object):
-
-    def __init__(self, versor_x, versor_y, versor_z):
-
-        assert almost_zero(versor_x.scalar_product(versor_y))
-        assert almost_zero(versor_x.scalar_product(versor_z))
-        assert almost_zero(versor_y.scalar_product(versor_z))
-
-        self.axes = [versor_x, versor_y, versor_z]
-
-    def rotation_matrix(self, rotated_frame):
-
-        for frame_axis in self.axes:
-            assert almost_zero(frame_axis.lenght_3d() - 1.0)
-        for frame_axis in rotated_frame.axes:
-            assert almost_zero(frame_axis.lenght_3d() - 1.0)
-
-        rot_matrix = np.zeros((3, 3)) * np.nan
-
-        for i, rot_frame_versor in enumerate(rotated_frame.axes):
-            for j, init_frame_versor in enumerate(self.axes):
-                rot_matrix[i, j] = init_frame_versor.scalar_product(rot_frame_versor)
-
-        return rot_matrix
-
-
-def rotation_matrix(rot_axis_trend, rot_axis_plunge, rot_angle):
-
-    phi = radians(rot_angle)
-
-    rotation_versor = GAxis(rot_axis_trend, rot_axis_plunge).as_vect()
-
-    l = rotation_versor.x
-    m = rotation_versor.y
-    n = rotation_versor.z
-
-    cos_phi = cos(phi)
-    sin_phi = sin(phi)
-
-    a11 = cos_phi + ((l * l) * (1 - cos_phi))
-    a12 = ((l * m) * (1 - cos_phi)) - (n * sin_phi)
-    a13 = ((l * n) * (1 - cos_phi)) + (m * sin_phi)
-
-    a21 = ((l * m) * (1 - cos_phi)) + (n * sin_phi)
-    a22 = cos_phi + ((m * m) * (1 - cos_phi))
-    a23 = ((m * n) * (1 - cos_phi)) - (l * sin_phi)
-
-    a31 = ((l * n) * (1 - cos_phi)) - (m * sin_phi)
-    a32 = ((m * n) * (1 - cos_phi)) + (l * sin_phi)
-    a33 = cos_phi + ((n * n) * (1 - cos_phi))
-
-    return np.array([(a11, a12, a13),
-                     (a21, a22, a23),
-                     (a31, a32, a33)])
+from .rotations import RotationAxis
 
 
 def scaling_matrix(scale_factor_x, scale_factor_y, scale_factor_z):
@@ -181,9 +56,9 @@ def deformation_matrices(deform_params):
             deformation = {'increment': 'additive',
                            'matrix': np.array([displ_x, displ_y, displ_z])}
         elif deform_param['type'] == 'rotation':
-            rot_matr = rotation_matrix(deform_param['parameters']['rotation axis trend'],
+            rot_matr = RotationAxis(deform_param['parameters']['rotation axis trend'],
                                        deform_param['parameters']['rotation axis plunge'],
-                                       deform_param['parameters']['rotation angle'])
+                                       deform_param['parameters']['rotation angle']).to_rotation_matrix()
             deformation = {'increment': 'multiplicative',
                            'matrix': rot_matr,
                            'shift_pt': np.array([deform_param['parameters']['center x'],
