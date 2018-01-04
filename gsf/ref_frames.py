@@ -34,5 +34,4 @@ class RefFrame(object):
 if __name__ == "__main__":
 
     import doctest
-    import numtest  # external module, used in doctest float checks
     doctest.testmod()

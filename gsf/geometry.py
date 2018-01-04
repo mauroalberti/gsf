@@ -7,7 +7,6 @@ import numpy as np
 
 from .mathematics import are_close
 from .arrays import point_solution
-from .errors import SubparallelLineationException
 
 
 MIN_SEPARATION_THRESHOLD = 1e-10
@@ -1111,14 +1110,14 @@ class GVect(object):
         Range is 0°-180°.
 
         Examples:
-          >>> GVect(0, 90).angle(GVect(90, 0)) # doctest: +NUMBER
-          90.0000000
-          >>> GVect(0, 0).angle(GVect(270, 0)) # doctest: +NUMBER
-          90.0000000
-          >>> GVect(0, 0).angle(GVect(0, 0)) # doctest: +NUMBER 
-          0.0000000
-          >>> GVect(0, 0).angle(GVect(180, 0)) # doctest: +NUMBER 
-          180.0000000
+          >>> are_close(GVect(0, 90).angle(GVect(90, 0)), 90)
+          True
+          >>> are_close(GVect(0, 0).angle(GVect(270, 0)), 90)
+          True
+          >>> are_close(GVect(0, 0).angle(GVect(0, 0)), 0)
+          True
+          >>> are_close(GVect(0, 0).angle(GVect(180, 0)), 180)
+          True
         """
 
         return self.versor().angle(another.versor())
@@ -1252,20 +1251,20 @@ class GAxis(GVect):
         Range: 0.0 - 90.0
 
         Examples:
-          >>> GAxis(0, 90).angle(GAxis(90, 0)) # doctest: +NUMBER
-          90.0000000
-          >>> GAxis(0, 0).angle(GAxis(270, 0)) # doctest: +NUMBER
-          90.0000000
-          >>> GAxis(0, 0).angle(GAxis(0, 0)) # doctest: +NUMBER 
-          0.0000000
-          >>> GAxis(0, 0).angle(GAxis(180, 0)) # doctest: +NUMBER 
-          0.0000000
-          >>> GAxis(0, 0).angle(GAxis(179, 0)) # doctest: +NUMBER
-          1.0000000
-          >>> GAxis(0, -90).angle(GAxis(0, 90)) # doctest: +NUMBER
-          0.0000000
-          >>> GAxis(90, 0).angle(GAxis(315, 0)) # doctest: +NUMBER
-          45.0000000
+          >>> are_close(GAxis(0, 90).angle(GAxis(90, 0)), 90)
+          True
+          >>> are_close(GAxis(0, 0).angle(GAxis(270, 0)), 90)
+          True
+          >>> are_close(GAxis(0, 0).angle(GAxis(0, 0)), 0)
+          True
+          >>> are_close(GAxis(0, 0).angle(GAxis(180, 0)), 0)
+          True
+          >>> are_close(GAxis(0, 0).angle(GAxis(179, 0)), 1)
+          True
+          >>> are_close(GAxis(0, -90).angle(GAxis(0, 90)), 0)
+          True
+          >>> are_close(GAxis(90, 0).angle(GAxis(315, 0)), 45)
+          True
         """
 
         angle_vers = self.versor().angle(another.versor())
@@ -1914,8 +1913,15 @@ class GPlane(object):
         return Vect(x, y, z).gvect()
 
 
+class SubparallelLineationException(Exception):
+    """
+    Exception for subparallel GAxis/GVect instances.
+    """
+
+    pass
+
+
 if __name__ == "__main__":
 
     import doctest
-    import numtest  # external module, used in doctest float checks
     doctest.testmod()

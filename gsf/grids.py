@@ -4,8 +4,6 @@ from __future__ import division
 
 from numpy import *  # general import for compatibility with formula input
 
-from .errors import AnaliticSurfaceCalcException
-
 
 def formula_to_grid(array_range, array_size, formula):
     """
@@ -84,8 +82,15 @@ def array_from_function(row_num, col_num, x_transfer_func, y_transfer_func, z_tr
     return fromfunction(ij_transfer_func, (row_num, col_num), transfer_funcs=transfer_funcs)
 
 
+class AnaliticSurfaceCalcException(Exception):
+    """
+    Exception for Analytical Surface calculation.
+    """
+
+    pass
+
+
 if __name__ == "__main__":
 
     import doctest
-    import numtest  # external module, used in doctest float checks
     doctest.testmod()

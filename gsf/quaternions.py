@@ -7,7 +7,6 @@ from .mathematics import are_close
 from .geometry import Vect
 from .arrays import arrays_are_close
 from .rotations import RotationAxis
-from .errors import QuaternionException
 
 
 quat_normaliz_tolerance = 1.0e-6
@@ -414,18 +413,16 @@ class Quaternion(object):
           Quaternion(1.00000, 1.00000, 3.00000, 0.00000)
           >>> Quaternion.identity() * Vect(1, 3, 2)
           Quaternion(0.00000, 1.00000, 3.00000, 2.00000)
-          >>> Quaternion(3, 1, -2, 1) * "a"
-          Traceback (most recent call last):
-          ...
-          QuaternionException: Multiplicand is not number or quaternion
         """
 
-        if isinstance(another, (int, long, float)):
+        if isinstance(another, (float, int)):
             return self.scalar_mult(another)
         elif isinstance(another, Vect):
             return self.vector_mult(another)
         elif isinstance(another, Quaternion):
             return self.quater_mult(another)
+        elif isinstance(another, long): # separated to accomodated Python 3
+            return self.scalar_mult(another)
         else:
             raise QuaternionException("Multiplicand is not number or quaternion")
 
@@ -564,9 +561,10 @@ class Quaternion(object):
 
         return self * another.conjugate / another.sqrd_norm()
 
-    def __div__(self, another):
+    def __truediv__(self, another):
         """
         Wrapper for quaternion division.
+        This is only compatible with Python 3.
 
         Example:
           >>> Quaternion(1, 1, 3, 0) / 3
@@ -575,10 +573,12 @@ class Quaternion(object):
           Quaternion(1.00000, 0.00000, 0.00000, 0.00000)
         """
 
-        if isinstance(another, (int, long, float)):
+        if isinstance(another, (int, float)):
             return self.scalar_div(another)
         elif isinstance(another, Quaternion):
             return self.quater_div(another)
+        elif isinstance(another, long): # separated for accomodating missing long in Python 3
+            return self.scalar_div(another)
         else:
             raise QuaternionException("Denominator is not number or quaternion")
 
@@ -713,9 +713,16 @@ class Quaternion(object):
                          (a31, a32, a33)])
 
 
+class QuaternionException(Exception):
+    """
+    Exception for Quaternion calculation.
+    """
+
+    pass
+
+
 if __name__ == "__main__":
 
     import doctest
-    import numtest  # external module, used in doctest float checks
     doctest.testmod()
 

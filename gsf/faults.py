@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .geometry import *
-from .errors import SlickelineTypeException, SlickelineSenseException
+#from .errors import SlickelineTypeException, SlickelineSenseException
 from .mathematics import are_close
 
 
@@ -239,8 +239,23 @@ class FaultSlick(object):
         return FaultSlick(self.fp, self.sl.invert())
 
 
+class SlickelineSenseException(Exception):
+    """
+    Exception for slickenline movement sense.
+    """
+
+    pass
+
+
+class SlickelineTypeException(Exception):
+    """
+    Exception for slickenline type.
+    """
+
+    pass
+
+
 if __name__ == "__main__":
 
     import doctest
-    import numtest  # external module, used in doctest float checks
     doctest.testmod()
