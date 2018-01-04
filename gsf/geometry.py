@@ -381,25 +381,6 @@ class Vect(object):
         return self.v[2]
 
     @property
-    def is_zero(self):
-        """
-        Check if all Vect instance components are zero.
-
-        :return: Boolean
-
-        Example:
-          >>> Vect(1, 2, 0).is_zero
-          False
-          >>> Vect(0.0, 0.0, 0.0).is_zero
-          True
-        """
-
-        if self.x == 0.0 and self.y == 0 and self.z == 0:
-            return True
-        else:
-            return False
-
-    @property
     def valid(self):
         """
         Check if the Vect instance components are not all zero.
@@ -413,7 +394,7 @@ class Vect(object):
           False
         """
 
-        return not self.is_zero
+        return not self.is_near_zero
 
     @property
     def len_2d(self):
@@ -442,6 +423,38 @@ class Vect(object):
         """
 
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+
+    @property
+    def is_near_zero(self):
+        """
+        Check if the Vect instance lenght is near zero.
+
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 2, 0).is_near_zero
+          False
+          >>> Vect(0.0, 0.0, 0.0).is_near_zero
+          True
+        """
+
+        return are_close(self.len_3d, 0)
+
+    @property
+    def is_near_unit(self):
+        """
+        Check if the Vect instance lenght is near unit.
+
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 2, 0).is_near_unit
+          False
+          >>> Vect(0.0, 1.0, 0.0).is_near_unit
+          True
+        """
+
+        return are_close(self.len_3d, 1)
 
     def __sub__(self, another):
         """
@@ -579,20 +592,6 @@ class Vect(object):
         """
 
         return self.scale(-1)
-
-    @property
-    def is_almost_zero(self, tolerance=MIN_VECTOR_MAGNITUDE):
-        """
-        Check that a vector is almost zero.
-
-        Example:
-          >>> Vect(0, 0, 1).is_almost_zero
-          False
-          >>> Vect(0, 0, 0).is_almost_zero
-          True
-        """
-
-        return self.is_zero or self.len_3d <= tolerance
 
     @property
     def is_upward(self):
@@ -875,6 +874,24 @@ class Vect(object):
 
         return self.angle(another) <= angle_tolerance
 
+    def is_suborthogonal(self, another):
+        """
+        Check whether two vectors are sub-orhogonal.
+
+        :param another:
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 0, 0).is_suborthogonal(Vect(0, 1, 0))
+          True
+          >>> Vect(1, 0, 0).is_suborthogonal(Vect(0, 1, 1))
+          True
+          >>> Vect(1, 0, 0).is_suborthogonal(Vect(0, 0.9999999999999, 0))
+          True
+        """
+
+        return are_close(0, self.cos_angle(another))
+
     def vp(self, another):
         """
         Vector __mul__.
@@ -884,7 +901,7 @@ class Vect(object):
           Vect(0.0000, 0.0000, 1.0000)
           >>> Vect(1, 0, 0).vp(Vect(1, 0, 0))
           Vect(0.0000, 0.0000, 0.0000)
-          >>> (Vect(1, 0, 0).vp(Vect(-1, 0, 0))).is_almost_zero
+          >>> (Vect(1, 0, 0).vp(Vect(-1, 0, 0))).is_near_zero
           True
         """
 
