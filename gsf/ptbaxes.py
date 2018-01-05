@@ -10,19 +10,27 @@ class PTBAxes(object):
     It can also calculate the M plane.
     """
 
-    def __init__(self, p_axis=None, t_axis=None, known=True):
+    def __repr__(self):
+        return "PTBAxes(P: {}, T: {})".format(
+            self._p_versor.gaxis(),
+            self._t_versor.gaxis())
+
+    def __init__(self, p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)):
         """
         Create a new PTBAxes instances, given the two
-        P and T axes.
+        P and T axes (provided as GAxis instances).
 
         Example:
           >>> PTBAxes(GAxis(0, 0), GAxis(90, 0))
-          PTBAxes(P: GAxis(000.00, +00.00), T: GAxis(090.00, +00.00), True)
+          PTBAxes(P: GAxis(000.00, +00.00), T: GAxis(090.00, +00.00))
         """
 
-        self._pax = p_axis
-        self._tax = t_axis
-        self._known = known
+        p_versor = p_axis.as_versor()
+        t_versor = t_axis.as_versor()
+        assert p_versor.is_suborthogonal(t_versor)
+
+        self._p_versor = p_versor
+        self._t_versor = t_versor
 
     @classmethod
     def from_faultslick(cls, fault_slick):
@@ -34,17 +42,15 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes.from_faultslick(FaultSlick(GPlane(90, 45), Slickenline(GVect(90, 45))))
-          PTBAxes(P: GAxis(000.00, -90.00), T: GAxis(090.00, +00.00), True)
+          PTBAxes(P: GAxis(000.00, -90.00), T: GAxis(090.00, +00.00))
         """
 
         s_versor = fault_slick.sl.lin.versor()
         f_versor = fault_slick.fp.normal().versor()
-        known = fault_slick.known_sense
 
         obj = cls()
-        obj._pax = (f_versor - s_versor).gaxis()
-        obj._tax = (f_versor + s_versor).gaxis()
-        obj._known = known
+        obj._p_versor = (f_versor - s_versor).versor()
+        obj._t_versor = (f_versor + s_versor).versor()
 
         return obj
 
@@ -58,7 +64,7 @@ class PTBAxes(object):
           GAxis(000.00, +00.00)
         """
 
-        return self._pax
+        return self._p_versor.gaxis()
 
     @property
     def t_axis(self):
@@ -70,22 +76,7 @@ class PTBAxes(object):
           GAxis(090.00, +00.00)
         """
 
-        return self._tax
-
-    @property
-    def known(self):
-        """
-        Indicate if the movement sense is known.
-
-        Example:
-          >>> PTBAxes(GAxis(0, 0), GAxis(90, 0)).known
-          True
-        """
-
-        return self._known
-
-    def __repr__(self):
-        return "PTBAxes(P: {}, T: {}, {})".format(self.p_axis, self.t_axis, self.known)
+        return self._t_versor.gaxis()
 
     @property
     def b_axis(self):
@@ -97,7 +88,7 @@ class PTBAxes(object):
           GAxis(000.00, +90.00)
         """
 
-        return self.p_axis.vp(self.t_axis).as_axis()
+        return self._p_versor.vp(self._t_versor).gaxis()
 
     @property
     def m_plane(self):

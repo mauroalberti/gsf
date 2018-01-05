@@ -1135,6 +1135,8 @@ class GVect(object):
           True
           >>> are_close(GVect(0, 0).angle(GVect(180, 0)), 180)
           True
+          >>> are_close(GVect(90, 0).angle(GVect(270, 0)), 180)
+          True
         """
 
         return self.versor().angle(another.versor())
@@ -1153,6 +1155,8 @@ class GVect(object):
           >>> GVect(0, 0).almost_parallel(GVect(0, 1e-6))
           True
           >>> GVect(0, 90).almost_parallel(GVect(180, 0))
+          False
+          >>> GVect(0, 90).almost_parallel(GVect(0, -90))
           False
         """
 
@@ -1242,6 +1246,13 @@ class GVect(object):
 
 
 class GAxis(GVect):
+    """
+    Geological axis.
+    While GAxis is non-directional, the geological vector (GVect) is directional.
+    Defined by trend and plunge (both in degrees):
+     - trend: [0.0, 360.0[ clockwise, from 0 (North):
+     - plunge: [-90.0, 90.0].
+    """
 
     def __init__(self, src_trend, src_plunge):
 
@@ -1251,16 +1262,33 @@ class GAxis(GVect):
 
         return "GAxis({:06.2f}, {:+06.2f})".format(*self.tp)
 
-    def as_vect(self):
+    def as_gvect(self):
         """
         Create GVect instance with the same attitude as the self instance.
         
         Example:
-          >>> GAxis(220, 32).as_vect()
+          >>> GAxis(220, 32).as_gvect()
           GVect(220.00, +32.00)
         """
 
         return GVect(*self.tp)
+
+    def as_versor(self):
+        """
+        Create a unit Vect instance with the same attitude as the self instance.
+
+        Example:
+          >>> GAxis(90, 0).as_versor()
+          Vect(1.0000, 0.0000, -0.0000)
+          >>> GAxis(0, 45).as_versor()
+          Vect(0.0000, 0.7071, -0.7071)
+          >>> GAxis(0, 90).as_versor()
+          Vect(0.0000, 0.0000, -1.0000)
+          >>> GAxis(270, -90).as_versor()
+          Vect(-0.0000, -0.0000, 1.0000)
+        """
+
+        return GVect(*self.tp).versor()
 
     def angle(self, another):
         """
@@ -1302,6 +1330,10 @@ class GAxis(GVect):
           True
           >>> GAxis(0, 0).almost_parallel(GAxis(180, 0))
           True
+          >>> GAxis(90, 0).almost_parallel(GAxis(270, 0))
+          True
+          >>> GAxis(0, 90).almost_parallel(GAxis(0, -90))
+          True
         """
 
         return self.angle(another) <= angle_tolerance
@@ -1325,7 +1357,7 @@ class GAxis(GVect):
           False
         """
 
-        return self.as_vect().normal_gplane()
+        return self.as_gvect().normal_gplane()
 
     @property
     def is_upward(self):
@@ -1341,7 +1373,7 @@ class GAxis(GVect):
           True
         """
 
-        return self.as_vect().is_upward
+        return self.as_gvect().is_upward
 
     @property
     def is_downward(self):
@@ -1357,7 +1389,7 @@ class GAxis(GVect):
           False
         """
 
-        return self.as_vect().is_downward
+        return self.as_gvect().is_downward
 
     def is_subhorizontal(self, max_dip_angle=DIP_ANGLE_THRESHOLD):
         """
@@ -1397,7 +1429,7 @@ class GAxis(GVect):
           False
         """
 
-        return self.as_vect().upward().as_axis()
+        return self.as_gvect().upward().as_axis()
 
     def downward(self):
         """
@@ -1418,7 +1450,7 @@ class GAxis(GVect):
           False
         """
 
-        return self.as_vect().downward().as_axis()
+        return self.as_gvect().downward().as_axis()
 
     def common_plane(self, another):
         """
@@ -1439,7 +1471,7 @@ class GAxis(GVect):
           False
         """
 
-        return self.as_vect().common_plane(another.as_vect())
+        return self.as_gvect().common_plane(another.as_gvect())
 
     def vp(self, another):
         """
@@ -1464,7 +1496,7 @@ class GAxis(GVect):
           True
         """
 
-        return self.as_vect().vp(another.as_vect()).as_axis()
+        return self.as_gvect().vp(another.as_gvect()).as_axis()
 
 
 class Plane(object):

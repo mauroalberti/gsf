@@ -70,7 +70,7 @@ class Slickenline(object):
           Slickenline(180.00, -30.00, True)
         """
 
-        return Slickenline(self.lin.as_vect())
+        return Slickenline(self.lin.as_gvect())
 
     def set_unknown_sense(self):
         """
