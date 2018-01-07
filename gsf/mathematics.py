@@ -3,7 +3,7 @@
 from math import isnan, isinf
 
 
-def is_number(s):
+def is_number(s: str) -> bool:
     """
     Check if string can be converted to number.
 
@@ -17,8 +17,6 @@ def is_number(s):
       True
       >>> is_number("1")
       True
-      >>> is_number(None)
-      False
       >>> is_number(u"-10")
       True
       >>> is_number("one")
@@ -37,7 +35,7 @@ def is_number(s):
         return True
 
 
-def almost_zero(an_val, tolerance=1e-10):
+def almost_zero(an_val: float, tolerance: float = 1e-10) -> bool:
     """
     Check if a value for which abs can be used, is near zero.
 
@@ -56,7 +54,7 @@ def almost_zero(an_val, tolerance=1e-10):
     return abs(an_val) <= tolerance
 
 
-def are_close(a, b, rtol=1e-012, atol=1e-12, equal_nan=False, equal_inf=False):
+def are_close(a: float, b: float, rtol: float = 1e-012, atol: float = 1e-12, equal_nan: bool = False, equal_inf: bool = False) -> bool:
     """
     Mimics math.isclose from Python 3.5 (see: https://docs.python.org/3.5/library/math.html)
 
@@ -113,7 +111,10 @@ def are_close(a, b, rtol=1e-012, atol=1e-12, equal_nan=False, equal_inf=False):
     return abs(a - b) <= max(rtol * max(abs(a), abs(b)), atol)
 
 
-if __name__ == "__main__":
-
+def _test():
     import doctest
-    doctest.testmod()
+    return doctest.testmod()
+
+
+if __name__ == '__main__':
+    _test()

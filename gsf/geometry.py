@@ -15,7 +15,7 @@ MIN_SCALAR_VALUE = 1e-12
 MIN_ANGLE_DEGR_VALUE = 1e-6
 MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
 MIN_ANGLE_DEGR_DISORIENTATION = 5.
-VECTOR_ANGLE_THRESHOLD = 1e-3
+VECTOR_ANGLE_THRESHOLD = 1
 PLANE_ANGLE_THRESHOLD = 1
 DIP_ANGLE_THRESHOLD = 5
 
@@ -67,7 +67,7 @@ class Point(object):
 
         Example:
           >>> Point(1, 0, 0).v
-          array([  1.,   0.,   0.,  nan])
+          array([ 1.,  0.,  0., nan])
         """
 
         return self._p
@@ -339,7 +339,7 @@ class Vect(object):
 
         Example:
           >>> Vect(1, 1, 0).v
-          array([ 1.,  1.,  0.])
+          array([1., 1., 0.])
         """
 
         return self._v
@@ -1337,6 +1337,29 @@ class GAxis(GVect):
         """
 
         return self.angle(another) <= angle_tolerance
+
+    def is_suborthogonal(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+        """
+        Check that two GAxis are sub-orthogonal
+
+        :param another: a GAxis instance
+        :param angle_tolerance: the maximum allowed divergence angle (in degrees) from orthogonality
+        :return: Boolean
+
+         Examples:
+          >>> GAxis(0, 90).is_suborthogonal(GAxis(90, 0))
+          True
+          >>> GAxis(0, 0).is_suborthogonal(GAxis(0, 1.e-6))
+          False
+          >>> GAxis(0, 0).is_suborthogonal(GAxis(180, 0))
+          False
+          >>> GAxis(90, 0).is_suborthogonal(GAxis(270, 89.5))
+          True
+          >>> GAxis(0, 90).is_suborthogonal(GAxis(0, 0.5))
+          True
+        """
+
+        return self.angle(another) >= 90.0 - angle_tolerance
 
     def normal_gplane(self):
         """

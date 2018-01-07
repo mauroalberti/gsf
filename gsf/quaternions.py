@@ -712,6 +712,36 @@ class Quaternion(object):
                          (a21, a22, a23),
                          (a31, a32, a33)])
 
+    def rotate_vect(self, vect):
+        """
+        Calculates a rotated solution of a vector given a normalized quaternion.
+
+        :param vect: a Vect instance
+        :return: a rotated Vect instance
+
+        Example:
+          >>> q = Quaternion.i()  # rotation of 180° around the x axis
+          >>> q.rotate_vect(Vect(0, 1, 0))
+          Vect(0.0000, -1.0000, 0.0000)
+          >>> q.rotate_vect(Vect(0, 1, 1))
+          Vect(0.0000, -1.0000, -1.0000)
+          >>> q = Quaternion.k()  # rotation of 180° around the z axis
+          >>> q.rotate_vect(Vect(0, 1, 1))
+          Vect(0.0000, -1.0000, 1.0000)
+          >>> q = Quaternion.j()  # rotation of 180° around the y axis
+          >>> q.rotate_vect(Vect(1, 0, 1))
+          Vect(-1.0000, 0.0000, -1.0000)
+        """
+
+        assert self.is_normalized()
+
+        q = self
+        v = Quaternion.from_vect(vect)
+
+        rotated_v = q * (v * q.inverse)
+
+        return rotated_v.vector
+
 
 class QuaternionException(Exception):
     """

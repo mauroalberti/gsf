@@ -90,5 +90,5 @@ ENV/
 
 codice_sorgente/
 .idea/
-
-.directory
+.mypy_cache/
+docs/
