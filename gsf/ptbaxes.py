@@ -21,6 +21,8 @@ class PTBAxes(object):
         """
         Create a new PTBAxes instances, given the two
         P and T axes (provided as GAxis instances).
+        T and P axes are recalculated to be strictly orthogonal,
+        based on fixed T orientation.
 
         Example:
           >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0))
@@ -28,9 +30,10 @@ class PTBAxes(object):
         """
 
         assert p_axis.is_suborthogonal(t_axis)
+        b_vect = t_axis.normal_vect(p_axis)
 
-        self._p_versor = p_axis.as_versor()
         self._t_versor = t_axis.as_versor()
+        self._p_versor = b_vect.vp(self._t_versor).versor()
 
     @classmethod
     def from_faultslick(cls, fault_slick):
@@ -63,7 +66,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)).p_versor
-          Vect(0.0000, 1.0000, -0.0000)
+          Vect(-0.0000, 1.0000, 0.0000)
         """
 
         return self._p_versor
@@ -175,6 +178,22 @@ class PTBAxes(object):
             [t.y, p.y, b.y],
             [t.z, p.z, b.z]
         ])
+
+    def to_quaternion(self):
+        """
+        Transforms the focal mechanism into a quaternion.
+
+        :return: a Quaternion instance.
+
+        Example:
+          >>> PTBAxes(p_axis=GAxis(232, 41), t_axis=GAxis(120, 24)).to_quaternion()
+          Quaternion(-0.41567, 0.85017, -0.31120, -0.08706)
+          >>> PTBAxes(p_axis=GAxis(51, 17), t_axis=GAxis(295, 55)).to_quaternion()
+          Quaternion(0.38380, 0.30459, 0.80853, -0.32588)
+        """
+
+        return Quaternion.from_rot_matr(self.to_matrix())
+
 
     def calculate_rotations(self, another):
         """

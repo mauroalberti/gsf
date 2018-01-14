@@ -6,7 +6,7 @@ from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
 from .mathematics import are_close
-from .arrays import point_solution
+from .arrays import point_solution, arrays_are_close
 
 
 MIN_SEPARATION_THRESHOLD = 1e-10
@@ -66,8 +66,8 @@ class Point(object):
         Return values as array
 
         Example:
-          >>> Point(1, 0, 0).v
-          array([ 1.,  0.,  0., nan])
+          >>> arrays_are_close(Point(1, 0, 0).v, np.array([ 1.,  0.,  0., np.nan]), equal_nan=True)
+          True
         """
 
         return self._p
@@ -338,8 +338,8 @@ class Vect(object):
         Return the vector values as array
 
         Example:
-          >>> Vect(1, 1, 0).v
-          array([1., 1., 0.])
+          >>> arrays_are_close(Vect(1, 1, 0).v, np.array([1., 1., 0.]))
+          True
         """
 
         return self._v
@@ -1218,24 +1218,24 @@ class GVect(object):
 
         return GAxis(*self.tp)
 
-    def vp(self, another):
+    def normal_gvect(self, another):
         """
         Calculate the GVect instance that is normal to the two provided sources.
         Angle between sources must be larger than MIN_ANGLE_DEGR_DISORIENTATION,
         otherwise a SubparallelLineationException will be raised.
         
         Example:
-          >>> GVect(0, 0).vp(GVect(4, 0))
+          >>> GVect(0, 0).normal_gvect(GVect(4, 0))
           Traceback (most recent call last):
           ...
           SubparallelLineationException: Sources must not be sub- or anti-parallel
-          >>> GVect(0, 0).vp(GVect(179, 0))
+          >>> GVect(0, 0).normal_gvect(GVect(179, 0))
           Traceback (most recent call last):
           ...
           SubparallelLineationException: Sources must not be sub- or anti-parallel
-          >>> GVect(0, 0).vp(GVect(5.1, 0))
+          >>> GVect(0, 0).normal_gvect(GVect(5.1, 0))
           GVect(000.00, +90.00)
-          >>> GVect(90, 45).vp(GVect(90, 0))
+          >>> GVect(90, 45).normal_gvect(GVect(90, 0))
           GVect(180.00, +00.00)
         """
 
@@ -1496,30 +1496,45 @@ class GAxis(GVect):
 
         return self.as_gvect().common_plane(another.as_gvect())
 
-    def vp(self, another):
+    def normal_vect(self, another):
+        """
+        Calculates the vector that is normal
+        to two GAxis instances.
+
+        :param another: GAxis instance
+        :return: a unit Vect instance.
+
+        Example:
+          >>> GAxis(90, 0).normal_vect(GAxis(0, 0))
+          Vect(0.0000, 0.0000, 1.0000)
+        """
+
+        return self.as_versor().vp(another.as_versor())
+
+    def normal_gaxis(self, another):
         """
         Calculate the GAxis instance that is perpendicular to the two provided.
         The two source GAxis must not be subparallel (threshold is MIN_ANGLE_DEGR_DISORIENTATION),
         otherwise a SubparallelLineationException will be raised.
         
         Example:
-          >>> GAxis(0, 0).vp(GAxis(4, 0))
+          >>> GAxis(0, 0).normal_gaxis(GAxis(4, 0))
           Traceback (most recent call last):
           ...
           SubparallelLineationException: Sources must not be sub- or anti-parallel
-          >>> GAxis(0, 0).vp(GAxis(180, 0))
+          >>> GAxis(0, 0).normal_gaxis(GAxis(180, 0))
           Traceback (most recent call last):
           ...
           SubparallelLineationException: Sources must not be sub- or anti-parallel
-          >>> GAxis(90, 0).vp(GAxis(180, 0))
+          >>> GAxis(90, 0).normal_gaxis(GAxis(180, 0))
           GAxis(000.00, +90.00)
-          >>> GAxis(90, 45).vp(GAxis(180, 0))
+          >>> GAxis(90, 45).normal_gaxis(GAxis(180, 0))
           GAxis(270.00, +45.00)
-          >>> GAxis(270, 45).vp(GAxis(180, 90)).almost_parallel(GAxis(180, 0))
+          >>> GAxis(270, 45).normal_gaxis(GAxis(180, 90)).almost_parallel(GAxis(180, 0))
           True
         """
 
-        return self.as_gvect().vp(another.as_gvect()).as_axis()
+        return self.as_gvect().normal_gvect(another.as_gvect()).as_axis()
 
 
 class Plane(object):

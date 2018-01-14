@@ -653,6 +653,12 @@ class Quaternion(object):
             rot_axis_tr = 0.0
             rot_axis_pl = 0.0
 
+        elif are_close(self.scalar, 1):
+
+            rot_ang = 0.0
+            rot_axis_tr = 0.0
+            rot_axis_pl = 0.0
+
         else:
 
             unit_quat = self.normalize()

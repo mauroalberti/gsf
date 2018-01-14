@@ -5,7 +5,7 @@ import unittest
 from ..geometry import *
 
 
-class TestGsf(unittest.TestCase):
+class TestGeometry(unittest.TestCase):
 
     def setUp(self):
 
