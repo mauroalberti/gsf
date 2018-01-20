@@ -1,6 +1,7 @@
 
 import unittest
 
+from ..mathematics import are_close
 from ..quaternions import Quaternion 
 
 
@@ -27,11 +28,8 @@ class TestQuaternions(unittest.TestCase):
         inv_norm = norm_quat.inverse
         assert cnj_norm.is_close_to(inv_norm)
 
-    def test_rotation_axis(self):
-
-        quat = Quaternion.identity()
-        print(quat)
-        print(quat.to_rotation_axis())
+        quat_1 = Quaternion(0.696, 0.322, -0.152, 0.624)
+        assert are_close(quat_1.normalize().norm, 1.0)
 
 
 if __name__ == '__main__':

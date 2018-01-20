@@ -595,6 +595,8 @@ class Quaternion(object):
           Quaternion(0.00000, 0.44721, 0.00000, 0.89443)
           >>> are_close(abs(Quaternion(0.2, 17.9, -2.7, 4.3).normalize()), 1.0)
           True
+          >>> Quaternion(0.696, 0.322, -0.152, 0.624).normalize()
+          Quaternion(0.69580, 0.32191, -0.15196, 0.62382)
         """
 
         return self / sqrt(self.sqrd_norm())
@@ -622,13 +624,18 @@ class Quaternion(object):
     def rotation_angle(self):
         """
         Calculate the rotation angle associated with a normalized quaternion.
-        Note: the quaternion has to be already normalized.
         Formula from p. 710 in Kagan, Y. Y., 1991. 3-D rotation of double-couple earthquake sources.
 
         :return: Float
+
+        Quaternion case for Kagan, 1991, p.712:
+          >>> are_close(Quaternion(0.696, 0.322, -0.152, 0.624).rotation_angle(), 91.8182771683)
+          True
+          >>> are_close(Quaternion(0.62471, 0.32267, 0.69465, 0.15195).rotation_angle(), 102.67846140868497)
+          True
         """
 
-        return (2 * degrees(acos(self.scalar))) % 360.0
+        return 2 * degrees(acos(self.normalize().scalar))
 
     def to_rotation_axis(self):
         """
@@ -640,9 +647,9 @@ class Quaternion(object):
 
         Examples:
           >>> Quaternion(0.5, 0.5, 0.5, 0.5).to_rotation_axis()
-          RotationAxis(225.0000, 35.2644, 240.0000)
+          RotationAxis(45.0000, -35.2644, 120.0000)
           >>> Quaternion(sqrt(2)/2, 0.0, 0.0, sqrt(2)/2).to_rotation_axis()
-          RotationAxis(180.0000, 90.0000, 270.0000)
+          RotationAxis(0.0000, -90.0000, 90.0000)
           >>> Quaternion(sqrt(2)/2, sqrt(2)/2, 0.0, 0.0).to_rotation_axis()
           RotationAxis(90.0000, 0.0000, 90.0000)
         """
@@ -664,9 +671,6 @@ class Quaternion(object):
             unit_quat = self.normalize()
             rot_ang = unit_quat.rotation_angle()
             rot_gvect = unit_quat.vector.gvect()
-            if rot_gvect.is_upward:
-                rot_gvect = rot_gvect.downward()
-                rot_ang = - rot_ang
             rot_axis_tr = rot_gvect.tr
             rot_axis_pl = rot_gvect.pl
 

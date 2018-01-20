@@ -5,6 +5,7 @@ import unittest
 
 from ..geometry import GAxis
 from ..ptbaxes import PTBAxes
+from ..quaternions import *
 from ..rotations import RotationAxis
 
 
@@ -14,7 +15,7 @@ class TestFocalMechamismRotations(unittest.TestCase):
     def test_kagan_examples(self):
         """
         Test of focal mechanims rotations examples
-        as described in Kaga Y.Y. 3-D rotation of double-couple earthquake sources
+        as described in Kagan Y.Y. 3-D rotation of double-couple earthquake sources
 
         :return:
         """
@@ -28,36 +29,39 @@ class TestFocalMechamismRotations(unittest.TestCase):
         fs_taxis = GAxis(*first_solution_T_axis_vals)
         fs_paxis = GAxis(*first_solution_P_axis_vals)
 
-        first_solution = PTBAxes(
+        fst_sol_ptbaxes = PTBAxes(
             p_axis=fs_paxis,
             t_axis=fs_taxis)
 
-        print(first_solution)
+        print(fst_sol_ptbaxes)
 
         ss_taxis = GAxis(*second_solution_T_axis_vals)
         ss_paxis = GAxis(*second_solution_P_axis_vals)
 
-        second_solution = PTBAxes(
+        snd_sol_ptbaxes = PTBAxes(
             p_axis=ss_paxis,
             t_axis=ss_taxis)
 
-        print(second_solution)
+        print(snd_sol_ptbaxes)
 
-        fs_quaternion = first_solution.to_quaternion()
+        fst_sol_quater = fst_sol_ptbaxes.to_quaternion()
+        snd_sol_quater = snd_sol_ptbaxes.to_quaternion()
 
-        print(fs_quaternion)
-        print(fs_quaternion.to_rotation_axis())
-        print(fs_quaternion.inverse)
-        print(fs_quaternion.inverse.to_rotation_axis())
-        print(fs_quaternion * (-1))
-        print((fs_quaternion * (-1)).to_rotation_axis())
+        qr_o = snd_sol_quater * (fst_sol_quater.inverse)
 
-        """
-        rotations = first_solution.calculate_rotations(second_solution)
+        a_i = snd_sol_quater * (Quaternion.i() * snd_sol_quater.inverse)
+        a_j = snd_sol_quater * (Quaternion.j() * snd_sol_quater.inverse)
+        a_k = snd_sol_quater * (Quaternion.k() * snd_sol_quater.inverse)
 
-        for rotation in rotations:
-            print(rotation)
-        """
+        qr_i = a_i * qr_o
+        qr_j = a_j * qr_o
+        qr_k = a_k * qr_o
+
+        print(qr_o, qr_o.to_rotation_axis())
+        print(qr_i, qr_i.to_rotation_axis())
+        print(qr_j, qr_j.to_rotation_axis())
+        print(qr_k, qr_k.to_rotation_axis())
+
 
 
 if __name__ == '__main__':

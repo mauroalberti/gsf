@@ -201,15 +201,9 @@ class PTBAxes(object):
         See Kagan Y.Y. papers for theoretical basis.
         Practical implementation derive from Alberti, 2010:
         Analysis of kinematic correlations in faults and focal mechanisms with GIS and Fortran programs.
-        Examples are from Kagan Y. Y., 1991. 3-D rotation of double-couple earthquake sources.
 
         :param another: a PTBAxes instance
-        :return:
-
-        Example:
-          >>> fm1 = PTBAxes(p_axis=GAxis(232, 41), t_axis=GAxis(120, 24))
-          >>> fm2 = PTBAxes(p_axis=GAxis(51, 17), t_axis=GAxis(295, 55))
-          >>> rots = fm1.calculate_rotations(fm2)
+        :return:a list of 4 rotation axes, sorted by increasing rotation angle
         """
 
         fm1 = self
@@ -252,8 +246,8 @@ class PTBAxes(object):
         rotations_quaternions = list(map(lambda quat: quat * base_rot_quater, suppl_prod2quat))
         rotations_quaternions.append(base_rot_quater)
         rotations_axes = map(lambda quat: quat.to_rotation_axis(), rotations_quaternions)
-
-        return sorted(rotations_axes, key=lambda rot_ax: rot_ax.a)
+        rotations_axes = map(lambda rot_ax: rot_ax if abs(rot_ax.rot_ang) <= 180 else rot_ax.specular(), rotations_axes)
+        return sorted(rotations_axes, key=lambda rot_ax: abs(rot_ax.rot_ang))
 
 
 if __name__ == "__main__":

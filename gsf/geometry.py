@@ -932,7 +932,12 @@ class GVect(object):
         negative value: upward pointing axis, positive values: downward axis;
             
         Example:
-          >>> a = GVect(120.2, -27.4)
+          >>> GVect(120.2, -27.4)
+          GVect(120.20, -27.40)
+          >>> GVect(315.0, -0.0)
+          GVect(315.00, -00.00)
+          >>> GVect(23, 40.0)
+          GVect(023.00, +40.00)
        """
 
         # assert -90.0 <= float(src_plunge) <= 90.0, "plunge must be between -90° and +90° (comprised)"
@@ -1003,6 +1008,8 @@ class GVect(object):
           GVect(180.00, -30.00)
           >>> GVect(315, 10).opposite()
           GVect(135.00, -10.00)
+          >>> GVect(135, 0).opposite()
+          GVect(315.00, -00.00)
         """
 
         trend = (self.tr + 180.) % 360.
