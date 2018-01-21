@@ -57,6 +57,77 @@ class PTBAxes(object):
 
         return obj
 
+    @classmethod
+    def from_vectors(cls, t_vector, p_vector):
+        """
+        Class method to create a PTBAxes instance from T and P axis vectors.
+        Vectors are not required to be normalized but are required to be
+        sub-orthogonal.
+
+        :param t_versor: the versor representing the T axis (Vect instance).
+        :param p_versor: the versor representing the P axis (Vect instance).
+        :return: a PTBAxes instance.
+
+        Example:
+          >>> PTBAxes.from_vectors(t_vector=Vect(1,0,0), p_vector=Vect(0,1,0))
+          PTBAxes(P: GAxis(000.00, +00.00), T: GAxis(090.00, +00.00))
+          >>> PTBAxes.from_vectors(t_vector=Vect(0,0,-1), p_vector=Vect(1,0,0))
+          PTBAxes(P: GAxis(090.00, +00.00), T: GAxis(000.00, +90.00))
+          >>> PTBAxes.from_vectors(t_vector=Vect(1,1,0), p_vector=Vect(-1,1,0))
+          PTBAxes(P: GAxis(315.00, +00.00), T: GAxis(045.00, +00.00))
+        """
+
+        assert t_vector.is_suborthogonal(p_vector)
+        t_versor = t_vector.versor()
+        p_versor = p_vector.versor()
+        b_versor = t_versor.vp(p_versor).versor()
+
+        obj = cls()
+        obj._p_versor = b_versor.vp(t_versor).versor()
+        obj._t_versor = t_versor
+
+        return obj
+
+    @classmethod
+    def from_quaternion(cls, quaternion):
+        """
+        Creates a PTBAxes instance from a given quaternion.
+        Formula extracted from eq. 10 in:
+        Kagan, Y.Y, 1991. 3-D rotation of double-couple earthquake sources.
+
+        :param quaternion: a Quaternion instance.
+        :return:a PTBAxes instance.
+        """
+
+        q0, q1, q2, q3 = quaternion.normalize().components()
+
+        q0q0 = q0*q0
+        q0q1 = q0*q1
+        q0q2 = q0*q2
+        q0q3 = q0*q3
+
+        q1q1 = q1*q1
+        q1q2 = q1*q2
+        q1q3 = q1*q3
+
+        q2q2 = q2*q2
+        q2q3 = q2*q3
+
+        q3q3 = q3*q3
+
+        t1 = q0q0 + q1q1 - q2q2 - q3q3
+        t2 = 2*(q1q2 + q0q3)
+        t3 = 2*(q1q3 - q0q2)
+
+        p1 = 2*(q1q2 - q0q3)
+        p2 = q0q0 - q1q1 + q2q2 - q3q3
+        p3 = 2*(q2q3 + q0q1)
+
+        t_vector = Vect(t1, t2, t3)
+        p_vector = Vect(p1, p2, p3)
+
+        return PTBAxes.from_vectors(t_vector=t_vector, p_vector=p_vector)
+
     @property
     def p_versor(self):
         """

@@ -33,16 +33,12 @@ class TestFocalMechamismRotations(unittest.TestCase):
             p_axis=fs_paxis,
             t_axis=fs_taxis)
 
-        print(fst_sol_ptbaxes)
-
         ss_taxis = GAxis(*second_solution_T_axis_vals)
         ss_paxis = GAxis(*second_solution_P_axis_vals)
 
         snd_sol_ptbaxes = PTBAxes(
             p_axis=ss_paxis,
             t_axis=ss_taxis)
-
-        print(snd_sol_ptbaxes)
 
         fst_sol_quater = fst_sol_ptbaxes.to_quaternion()
         snd_sol_quater = snd_sol_ptbaxes.to_quaternion()
@@ -56,12 +52,6 @@ class TestFocalMechamismRotations(unittest.TestCase):
         qr_i = a_i * qr_o
         qr_j = a_j * qr_o
         qr_k = a_k * qr_o
-
-        print(qr_o, qr_o.to_rotation_axis())
-        print(qr_i, qr_i.to_rotation_axis())
-        print(qr_j, qr_j.to_rotation_axis())
-        print(qr_k, qr_k.to_rotation_axis())
-
 
 
 if __name__ == '__main__':

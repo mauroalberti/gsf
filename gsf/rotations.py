@@ -122,8 +122,9 @@ class RotationAxis(object):
 
     def specular(self):
         """
-        Derives the rotation axis with opposite vector orientation
+        Derives the rotation axis with opposite vector direction
         and rotation angle that is the complement to 360°.
+        The resultant rotation is equivalent to the original one.
 
         :return: RotationAxis instance.
 
@@ -140,6 +141,24 @@ class RotationAxis(object):
         opposite_angle = (360.0 - self.rot_ang) % 360.0
 
         return RotationAxis.from_gvect(gvect_opp, opposite_angle)
+
+    def compl180(self):
+        """
+        Creates a new rotation axis that is a complement to 180 of the original.
+
+        :return: RotationAxis instance.
+
+        Example:
+          >>> RotationAxis(90, 45, 120).compl180()
+          RotationAxis(90.0000, 45.0000, 300.0000)
+          >>> RotationAxis(117, 34, 18).compl180()
+          RotationAxis(117.0000, 34.0000, 198.0000)
+          >>> RotationAxis(117, 34, -18).compl180()
+          RotationAxis(117.0000, 34.0000, 162.0000)
+        """
+
+        rot_ang = - (180.0 - self.rot_ang) % 360.0
+        return RotationAxis.from_gvect(self.gv, rot_ang)
 
     def to_rotation_matrix(self):
         """

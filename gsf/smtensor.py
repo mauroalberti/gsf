@@ -4,6 +4,7 @@ import numpy as np
 
 from .quaternions import Quaternion
 
+
 class SMTensor(object):
     """
     Class representing the seismic moment tensor
