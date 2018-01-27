@@ -9,7 +9,6 @@ from ..quaternions import *
 from ..rotations import RotationAxis
 
 
-
 class TestFocalMechamismRotations(unittest.TestCase):
 
     def test_kagan_examples(self):
@@ -20,38 +19,37 @@ class TestFocalMechamismRotations(unittest.TestCase):
         :return:
         """
 
-        first_solution_T_axis_vals = (120, 24)
-        first_solution_P_axis_vals = (232, 41)
+        fs_T_axis_vals, fs_P_axis_vals = (120, 24), (232, 41)
+        ss_T_axis_vals, ss_P_axis_vals = (295, 55), ( 51, 17)
 
-        second_solution_T_axis_vals = (295, 55)
-        second_solution_P_axis_vals = (51, 17)
+        fs_T_gaxis, fs_P_gaxis = GAxis(*fs_T_axis_vals), GAxis(*fs_P_axis_vals)
+        ss_T_gaxis, ss_P_gaxis = GAxis(*ss_T_axis_vals), GAxis(*ss_P_axis_vals)
 
-        fs_taxis = GAxis(*first_solution_T_axis_vals)
-        fs_paxis = GAxis(*first_solution_P_axis_vals)
+        fs_PTBaxes = PTBAxes(
+            p_axis=fs_P_gaxis,
+            t_axis=fs_T_gaxis)
 
-        fst_sol_ptbaxes = PTBAxes(
-            p_axis=fs_paxis,
-            t_axis=fs_taxis)
+        ss_PTBaxes = PTBAxes(
+            p_axis=ss_P_gaxis,
+            t_axis=ss_T_gaxis)
 
-        ss_taxis = GAxis(*second_solution_T_axis_vals)
-        ss_paxis = GAxis(*second_solution_P_axis_vals)
+        fs_quater = fs_PTBaxes.to_quaternion()
+        ss_quater = ss_PTBaxes.to_quaternion()
 
-        snd_sol_ptbaxes = PTBAxes(
-            p_axis=ss_paxis,
-            t_axis=ss_taxis)
+        qr_o = ss_quater * fs_quater.inverse
 
-        fst_sol_quater = fst_sol_ptbaxes.to_quaternion()
-        snd_sol_quater = snd_sol_ptbaxes.to_quaternion()
-
-        qr_o = snd_sol_quater * (fst_sol_quater.inverse)
-
-        a_i = snd_sol_quater * (Quaternion.i() * snd_sol_quater.inverse)
-        a_j = snd_sol_quater * (Quaternion.j() * snd_sol_quater.inverse)
-        a_k = snd_sol_quater * (Quaternion.k() * snd_sol_quater.inverse)
+        a_i = ss_quater * (Quaternion.i() * ss_quater.inverse)
+        a_j = ss_quater * (Quaternion.j() * ss_quater.inverse)
+        a_k = ss_quater * (Quaternion.k() * ss_quater.inverse)
 
         qr_i = a_i * qr_o
         qr_j = a_j * qr_o
         qr_k = a_k * qr_o
+
+        print(qr_o, qr_o.to_rotation_axis())
+        print(qr_i, qr_i.to_rotation_axis())
+        print(qr_j, qr_j.to_rotation_axis())
+        print(qr_k, qr_k.to_rotation_axis())
 
 
 if __name__ == '__main__':

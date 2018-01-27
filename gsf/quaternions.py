@@ -679,6 +679,16 @@ class Quaternion(object):
             rot_axis_pl,
             rot_ang)
 
+    def to_min_rotation_axis(self):
+        """
+        Calculates the minimum rotation axis from the given quaternion.
+
+        :return: RotationAxis instance.
+        """
+
+        rot_ax = self.to_rotation_axis()
+        return rot_ax if abs(rot_ax.rot_ang) <= 180 else rot_ax.specular()
+
     def to_rotation_matrix(self):
         """
         Computes the rotation matrix from the quaternion components.

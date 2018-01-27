@@ -4,6 +4,7 @@ from .arrays import arrays_are_close
 from .geometry import *
 from .faults import Slickenline, FaultSlick
 from .quaternions import Quaternion
+from .rotations import *
 
 
 class PTBAxes(object):
@@ -316,9 +317,9 @@ class PTBAxes(object):
 
         rotations_quaternions = list(map(lambda quat: quat * base_rot_quater, suppl_prod2quat))
         rotations_quaternions.append(base_rot_quater)
-        rotations_axes = map(lambda quat: quat.to_rotation_axis(), rotations_quaternions)
-        rotations_axes = map(lambda rot_ax: rot_ax if abs(rot_ax.rot_ang) <= 180 else rot_ax.specular(), rotations_axes)
-        return sorted(rotations_axes, key=lambda rot_ax: abs(rot_ax.rot_ang))
+        rotation_axes = map(lambda quat: quat.to_min_rotation_axis(), rotations_quaternions)
+
+        return sort_rotations(rotation_axes)
 
 
 if __name__ == "__main__":

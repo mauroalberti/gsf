@@ -144,7 +144,7 @@ class RotationAxis(object):
 
     def compl180(self):
         """
-        Creates a new rotation axis that is a complement to 180 of the original.
+        Creates a new rotation axis that is the complement to 180 of the original one.
 
         :return: RotationAxis instance.
 
@@ -194,6 +194,28 @@ class RotationAxis(object):
                          (a31, a32, a33)])
 
 
+def sort_rotations(rotation_axes):
+    """
+    Sorts a list or rotation axes, based on the rotation angle (absolute value),
+    in an increasing order.
+
+    :param rotation_axes: o list of RotationAxis objects.
+    :return: the sorted list of RotationAxis
+
+    Example:
+      >>> rotations = [RotationAxis(110, 14, -23), RotationAxis(42, 13, 17), RotationAxis(149, 87, 13)]
+      >>> sort_rotations(rotations)
+      [RotationAxis(149.0000, 87.0000, 13.0000), RotationAxis(42.0000, 13.0000, 17.0000), RotationAxis(110.0000, 14.0000, -23.0000)]
+    """
+
+    return sorted(rotation_axes, key=lambda rot_ax: abs(rot_ax.rot_ang))
+
+
+"""
+rotations_quaternions = list(map(lambda quat: quat * base_rot_quater, suppl_prod2quat))
+rotations_quaternions.append(base_rot_quater)
+
+"""
 
 if __name__ == "__main__":
 

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from pprint import pprint
 
 import unittest
 
@@ -22,7 +21,9 @@ class TestFocalMechamismRotations(unittest.TestCase):
 
         fm1 = PTBAxes(p_axis=GAxis(232, 41), t_axis=GAxis(120, 24))
         fm2 = PTBAxes(p_axis=GAxis(51, 17), t_axis=GAxis(295, 55))
+
         rots = fm1.calculate_rotations(fm2)
 
         for rot in rots:
             print(rot)
+
