@@ -2,9 +2,11 @@
 
 from math import radians, sin, cos
 
-import numpy as np
+from typing import List
 
-from .geometry import Vect, GVect, GAxis
+from .geometry import GVect
+from .ptbaxes import PTBAxes
+from .quaternions import *
 
 
 class RotationAxis(object):
@@ -33,7 +35,47 @@ class RotationAxis(object):
         self.a = float(rot_ang)
 
     @classmethod
-    def from_gvect(cls, gvector, angle):
+    def from_quaternion(cls, quat: Quaternion):
+        """
+        Calculates the Rotation Axis expressed by a quaternion.
+        The resulting rotation vector is set to point downward.
+        Examples are taken from Kuipers, 2002, chp. 5.
+
+        :return: RotationAxis instance.
+
+        Examples:
+          >>> RotationAxis.from_quaternion(Quaternion(0.5, 0.5, 0.5, 0.5))
+          RotationAxis(45.0000, -35.2644, 120.0000)
+          >>> RotationAxis.from_quaternion(Quaternion(sqrt(2)/2, 0.0, 0.0, sqrt(2)/2))
+          RotationAxis(0.0000, -90.0000, 90.0000)
+          >>> RotationAxis.from_quaternion(Quaternion(sqrt(2)/2, sqrt(2)/2, 0.0, 0.0))
+          RotationAxis(90.0000, 0.0000, 90.0000)
+        """
+
+        if abs(quat) < quat_magn_thresh:
+
+            rot_ang = 0.0
+            rot_gvect = GVect(0.0, 0.0)
+
+        elif are_close(quat.scalar, 1):
+
+            rot_ang = 0.0
+            rot_gvect = GVect(0.0, 0.0)
+
+        else:
+
+            unit_quat = quat.normalize()
+            rot_ang = unit_quat.rotation_angle()
+            rot_gvect = unit_quat.vector.gvect()
+
+        obj = cls()
+        obj.gv = rot_gvect
+        obj.a = rot_ang
+
+        return obj
+
+    @classmethod
+    def from_gvect(cls, gvector: GVect, angle: float):
         """
         Class constructor from a GVect instance and an angle value.
 
@@ -55,7 +97,7 @@ class RotationAxis(object):
         return obj
 
     @property
-    def rot_ang(self):
+    def rot_ang(self) -> float:
         """
         Returns the rotation angle of the rotation axis.
 
@@ -69,7 +111,7 @@ class RotationAxis(object):
         return self.a
 
     @property
-    def rot_vect(self):
+    def rot_vect(self) -> GVect:
         """
         Returns the rotation axis, expressed as a GVect.
 
@@ -87,7 +129,7 @@ class RotationAxis(object):
         return self.gv
 
     @classmethod
-    def from_vect(cls, vector, angle):
+    def from_vect(cls, vector: Vect, angle: float):
         """
         Class constructor from a Vect instance and an angle value.
 
@@ -111,7 +153,7 @@ class RotationAxis(object):
         return obj
 
     @property
-    def versor(self):
+    def versor(self) -> Vect:
         """
         Return the versor equivalent to the Rotation geological vector.
 
@@ -160,6 +202,7 @@ class RotationAxis(object):
         rot_ang = - (180.0 - self.rot_ang) % 360.0
         return RotationAxis.from_gvect(self.gv, rot_ang)
 
+    @property
     def to_rotation_matrix(self):
         """
         Derives the rotation matrix from the RotationAxis instance.
@@ -193,8 +236,17 @@ class RotationAxis(object):
                          (a21, a22, a23),
                          (a31, a32, a33)])
 
+    def to_min_rotation_axis(self):
+        """
+        Calculates the minimum rotation axis from the given quaternion.
 
-def sort_rotations(rotation_axes):
+        :return: RotationAxis instance.
+        """
+
+        return self if abs(self.rot_ang) <= 180.0 else self.specular()
+
+
+def sort_rotations(rotation_axes: List[RotationAxis]) -> List[RotationAxis]:
     """
     Sorts a list or rotation axes, based on the rotation angle (absolute value),
     in an increasing order.
@@ -211,13 +263,109 @@ def sort_rotations(rotation_axes):
     return sorted(rotation_axes, key=lambda rot_ax: abs(rot_ax.rot_ang))
 
 
-"""
-rotations_quaternions = list(map(lambda quat: quat * base_rot_quater, suppl_prod2quat))
-rotations_quaternions.append(base_rot_quater)
+def quat_rot_vect(quat: Quaternion, vect: Vect) -> Vect:
+    """
+    Calculates a rotated solution of a vector given a normalized quaternion.
+    Original formula in Ref. [1].
+    Eq.6: R(qv) = q qv q(-1)
 
-"""
+    :param quat: a Quaternion instance
+    :param vect: a Vect instance
+    :return: a rotated Vect instance
+
+    Example:
+      >>> q = Quaternion.i()  # rotation of 180° around the x axis
+      >>> quat_rot_vect(q, Vect(0, 1, 0))
+      Vect(0.0000, -1.0000, 0.0000)
+      >>> quat_rot_vect(q, Vect(0, 1, 1))
+      Vect(0.0000, -1.0000, -1.0000)
+      >>> q = Quaternion.k()  # rotation of 180° around the z axis
+      >>> quat_rot_vect(q, Vect(0, 1, 1))
+      Vect(0.0000, -1.0000, 1.0000)
+      >>> q = Quaternion.j()  # rotation of 180° around the y axis
+      >>> quat_rot_vect(q, Vect(1, 0, 1))
+      Vect(-1.0000, 0.0000, -1.0000)
+    """
+
+    q = quat.normalize()
+    qv = Quaternion.from_vect(vect)
+
+    rotated_v = q * (qv * q.inverse)
+
+    return rotated_v.vector
+
+
+def quat_rot_quat(q1: Quaternion, q2: Quaternion) -> Quaternion:
+    """
+    Calculates the rotated quaternion given by:
+    q_rot = q2 * q1
+    Formula (13) in Ref. [1].
+
+    :param q1: Quaternion instance.
+    :param q2: Quaternion instance.
+    :return: Quaternion instance.
+    """
+
+    return q2 * q1
+
+
+def focmechs_disorientations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
+    """
+    Calculate the rotations between two focal mechanisms, sensu Kagan.
+    See Kagan Y.Y. papers for theoretical basis.
+    Practical implementation derive from Alberti, 2010:
+    Analysis of kinematic correlations in faults and focal mechanisms with GIS and Fortran programs.
+
+    :param fm1: a PTBAxes instance
+    :param fm2: another PTBAxes instance
+    :return:a list of 4 rotation axes, sorted by increasing rotation angle
+    """
+
+    # processing of equal focal mechanisms
+
+    t_axes_angle = fm1.t_axis.angle(fm2.t_axis)
+    p_axes_angle = fm1.p_axis.angle(fm2.p_axis)
+
+    if t_axes_angle < 0.5 and p_axes_angle < 0.5:
+        return []
+
+    # transformation of XYZ axes cartesian components (fm1,2) into quaternions q1,2
+
+    focmec1_matrix = fm1.to_matrix()
+    focmec2_matrix = fm2.to_matrix()
+
+    fm1_quaternion = Quaternion.from_rot_matr(focmec1_matrix)
+    fm2_quaternion = Quaternion.from_rot_matr(focmec2_matrix)
+
+    # calculation of quaternion inverse q1,2[-1]
+
+    fm1_inversequatern = fm1_quaternion.inverse
+    fm2_inversequatern = fm2_quaternion.inverse
+
+    # calculation of rotation quaternion : q' = q2*q1[-1]
+
+    base_rot_quater = fm2_quaternion * fm1_inversequatern
+
+    # calculation of secondary rotation pure quaternions: a(i,j,k) = q2*(i,j,k)*q2[-1]
+
+    axes_quats = [
+        Quaternion.i(),
+        Quaternion.j(),
+        Quaternion.k()]
+
+    suppl_prod2quat = map(lambda ax_quat: fm2_quaternion * (ax_quat * fm2_inversequatern), axes_quats)
+
+    # calculation of the other 3 rotation quaternions: q'(i,j,k) = a(i,j,k)*q'
+
+    rotations_quaternions = list(map(lambda quat: quat * base_rot_quater, suppl_prod2quat))
+    rotations_quaternions.append(base_rot_quater)
+
+    rotation_axes = map(lambda quat: RotationAxis.from_quaternion(quat).to_min_rotation_axis(), rotations_quaternions)
+
+    return sort_rotations(rotation_axes)
+
 
 if __name__ == "__main__":
-
     import doctest
+
     doctest.testmod()

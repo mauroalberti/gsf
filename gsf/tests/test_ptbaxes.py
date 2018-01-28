@@ -3,27 +3,25 @@
 
 import unittest
 
-from ..geometry import GAxis
-from ..ptbaxes import PTBAxes
-from ..quaternions import *
-from ..rotations import RotationAxis
+
+from .test_datasets import *
+from ..ptbaxes import *
 
 
 class TestFocalMechamismRotations(unittest.TestCase):
 
-    def test_kagan_examples(self):
+    def test_quaternion_transformation(self):
         """
-        Test of focal mechanims rotations examples
-        as described in Kagan Y.Y. 3-D rotation of double-couple earthquake sources
+        Test forward and backward transformation from focal mechanism to quaternion.
 
         :return:
         """
 
-        fm1 = PTBAxes(p_axis=GAxis(232, 41), t_axis=GAxis(120, 24))
-        fm2 = PTBAxes(p_axis=GAxis(51, 17), t_axis=GAxis(295, 55))
+        k91_fs_backPTBaxes = PTBAxes.from_quaternion(k91_fs_quater)
+        k91_ss_backPTBaxes = PTBAxes.from_quaternion(k91_ss_quater)
 
-        rots = fm1.calculate_rotations(fm2)
+        assert k91_fs_backPTBaxes.almost_equal(k91_fs_PTBaxes)
+        assert k91_ss_backPTBaxes.almost_equal(k91_ss_PTBaxes)
 
-        for rot in rots:
-            print(rot)
+
 

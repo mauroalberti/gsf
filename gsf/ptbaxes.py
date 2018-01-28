@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
+
+from .default_parameters import *
 from .arrays import arrays_are_close
-from .geometry import *
+from .geometry import Vect, GAxis, GVect, GPlane
 from .faults import Slickenline, FaultSlick
 from .quaternions import Quaternion
-from .rotations import *
 
 
 class PTBAxes(object):
@@ -65,8 +67,8 @@ class PTBAxes(object):
         Vectors are not required to be normalized but are required to be
         sub-orthogonal.
 
-        :param t_versor: the versor representing the T axis (Vect instance).
-        :param p_versor: the versor representing the P axis (Vect instance).
+        :param t_vector: the vector representing the T axis (Vect instance).
+        :param p_vector: the vector representing the P axis (Vect instance).
         :return: a PTBAxes instance.
 
         Example:
@@ -227,6 +229,38 @@ class PTBAxes(object):
 
         return self.p_axis.common_plane(self.t_axis)
 
+    def almost_equal(self, another, tolerance_angle=VECTOR_ANGLE_THRESHOLD):
+        """
+        Checks for equivalence between two PTBAXes instances
+        within a given tolerance angle (default is VECTOR_ANGLE_THRESHOLD)
+
+        :param another: a PTBAXes instance.
+        :param tolerance_angle: the tolerance angle for the equality check (float)
+        :return: Boolean.
+
+        Examples:
+          >>> fm1 = PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0))
+          >>> fm2 = PTBAxes(p_axis=GAxis(0, 0.5), t_axis=GAxis(90, 0))
+          >>> fm1.almost_equal(fm2)
+          True
+          >>> fm3 = PTBAxes(p_axis=GAxis(180.5, 0), t_axis=GAxis(90.5, 0))
+          >>> fm1.almost_equal(fm3)
+          True
+          >>> fm3.almost_equal(fm2)
+          True
+          >>> fm4 = PTBAxes(p_axis=GAxis(181.5, 0), t_axis=GAxis(91.5, 0))
+          >>> fm1.almost_equal(fm4)
+          False
+        """
+
+        if not self.p_axis.almost_parallel(another.p_axis, tolerance_angle):
+            return False
+
+        if not self.t_axis.almost_parallel(another.t_axis, tolerance_angle):
+            return False
+
+        return True
+
     def to_matrix(self):
         """
         Creates a rotation matrix from the PTB vector components.
@@ -265,61 +299,6 @@ class PTBAxes(object):
         """
 
         return Quaternion.from_rot_matr(self.to_matrix())
-
-
-    def calculate_rotations(self, another):
-        """
-        Calculate the rotations between two focal mechanisms, sensu Kagan.
-        See Kagan Y.Y. papers for theoretical basis.
-        Practical implementation derive from Alberti, 2010:
-        Analysis of kinematic correlations in faults and focal mechanisms with GIS and Fortran programs.
-
-        :param another: a PTBAxes instance
-        :return:a list of 4 rotation axes, sorted by increasing rotation angle
-        """
-
-        fm1 = self
-        fm2 = another
-
-        # processing of equal focal mechanisms
-        t_axes_angle = fm1.t_axis.angle(fm2.t_axis)
-        p_axes_angle = fm1.p_axis.angle(fm2.p_axis)
-
-        if t_axes_angle < 0.5 and p_axes_angle < 0.5:
-          return []
-
-        # transformation of XYZ axes cartesian components (fm1,2) into quaternions q1,2
-
-        focmec1_matrix = fm1.to_matrix()
-        focmec2_matrix = fm2.to_matrix()
-
-        fm1_quaternion = Quaternion.from_rot_matr(focmec1_matrix)
-        fm2_quaternion = Quaternion.from_rot_matr(focmec2_matrix)
-
-        # calculation of quaternion inverse q1,2[-1]
-
-        fm1_inversequatern = fm1_quaternion.inverse
-        fm2_inversequatern = fm2_quaternion.inverse
-
-        # calculation of rotation quaternion : q' = q2*q1[-1]
-
-        base_rot_quater = fm2_quaternion * fm1_inversequatern
-
-        # calculation of secondary rotation pure quaternions: a(i,j,k) = q2*(i,j,k)*q2[-1]
-        axes_quats = [
-            Quaternion.i(),
-            Quaternion.j(),
-            Quaternion.k()]
-
-        suppl_prod2quat = map(lambda ax_quat: fm2_quaternion * (ax_quat * fm2_inversequatern), axes_quats)
-
-        # calculation of the other 3 rotation quaternions: q'(i,j,k) = a(i,j,k)*q'
-
-        rotations_quaternions = list(map(lambda quat: quat * base_rot_quater, suppl_prod2quat))
-        rotations_quaternions.append(base_rot_quater)
-        rotation_axes = map(lambda quat: quat.to_min_rotation_axis(), rotations_quaternions)
-
-        return sort_rotations(rotation_axes)
 
 
 if __name__ == "__main__":

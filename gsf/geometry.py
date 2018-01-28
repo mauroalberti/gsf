@@ -5,19 +5,9 @@ from __future__ import division
 from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
+from .default_parameters import *
 from .mathematics import are_close
 from .arrays import point_solution, arrays_are_close
-
-
-MIN_SEPARATION_THRESHOLD = 1e-10
-MIN_VECTOR_MAGNITUDE = 1e-9
-MIN_SCALAR_VALUE = 1e-12
-MIN_ANGLE_DEGR_VALUE = 1e-6
-MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
-MIN_ANGLE_DEGR_DISORIENTATION = 5.
-VECTOR_ANGLE_THRESHOLD = 1
-PLANE_ANGLE_THRESHOLD = 1
-DIP_ANGLE_THRESHOLD = 5
 
 
 class Point(object):
@@ -1322,12 +1312,12 @@ class GAxis(GVect):
         angle_vers = self.versor().angle(another.versor())
         return min(angle_vers, 180. - angle_vers)
 
-    def almost_parallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+    def almost_parallel(self, another, tolerance_angle=VECTOR_ANGLE_THRESHOLD):
         """
         Check that two GAxis are sub-parallel
 
         :param another: a GAxis instance
-        :param angle_tolerance: the maximum allowed divergence angle (in degrees)
+        :param tolerance_angle: the maximum allowed divergence angle (in degrees)
         :return: Boolean
 
          Examples:
@@ -1343,7 +1333,7 @@ class GAxis(GVect):
           True
         """
 
-        return self.angle(another) <= angle_tolerance
+        return self.angle(another) <= tolerance_angle
 
     def is_suborthogonal(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """

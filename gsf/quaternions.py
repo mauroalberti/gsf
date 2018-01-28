@@ -3,15 +3,10 @@
 from math import sqrt, degrees, acos
 import numpy as np
 
+from .default_parameters import *
 from .mathematics import are_close
 from .geometry import Vect
 from .arrays import arrays_are_close
-from .rotations import RotationAxis
-
-
-quat_normaliz_tolerance = 1.0e-6
-quat_division_tolerance = 1.0e-10
-quat_magn_thresh = 1.0e-6
 
 
 class Quaternion(object):
@@ -209,7 +204,6 @@ class Quaternion(object):
 
         return Quaternion.from_class(w, x, y, z)
 
-
     @classmethod
     def i(cls):
         """
@@ -270,7 +264,7 @@ class Quaternion(object):
           False
         """
 
-        return  ((self.q == another.q) | (np.isnan(self.q) & np.isnan(another.q))).all()
+        return ((self.q == another.q) | (np.isnan(self.q) & np.isnan(another.q))).all()
 
     def __ne__(self, another):
         """
@@ -421,8 +415,6 @@ class Quaternion(object):
             return self.vector_mult(another)
         elif isinstance(another, Quaternion):
             return self.quater_mult(another)
-        elif isinstance(another, long): # separated to accomodated Python 3
-            return self.scalar_mult(another)
         else:
             raise QuaternionException("Multiplicand is not number or quaternion")
 
@@ -529,7 +521,6 @@ class Quaternion(object):
 
         return abs(1.0 - sqrt(self.sqrd_norm())) < quat_normaliz_tolerance
 
-
     def scalar_div(self, denominator):
         """
         Division of a quaternion by a scalar.
@@ -577,8 +568,6 @@ class Quaternion(object):
             return self.scalar_div(another)
         elif isinstance(another, Quaternion):
             return self.quater_div(another)
-        elif isinstance(another, long): # separated for accomodating missing long in Python 3
-            return self.scalar_div(another)
         else:
             raise QuaternionException("Denominator is not number or quaternion")
 
@@ -606,6 +595,10 @@ class Quaternion(object):
         Check for quaternion equivalence.
 
         :param another: Quaternion instance
+        :param rtol: relative tolerance (float)
+        :param atol: absolute tolerance (float)
+        :param equal_nan: nan values are considered equal to themselves (boolean)
+        :param equal_inf: inf values are considered equal to themselves (boolean)
         :return: Boolean.
 
         Example:
@@ -636,58 +629,6 @@ class Quaternion(object):
         """
 
         return 2 * degrees(acos(self.normalize().scalar))
-
-    def to_rotation_axis(self):
-        """
-        Calculates the Rotation Axis expressed by a quaternion.
-        The resulting rotation vector is set to point downward.
-        Examples are taken from Kuipers, 2002, chp. 5.
-
-        :return: RotationAxis instance.
-
-        Examples:
-          >>> Quaternion(0.5, 0.5, 0.5, 0.5).to_rotation_axis()
-          RotationAxis(45.0000, -35.2644, 120.0000)
-          >>> Quaternion(sqrt(2)/2, 0.0, 0.0, sqrt(2)/2).to_rotation_axis()
-          RotationAxis(0.0000, -90.0000, 90.0000)
-          >>> Quaternion(sqrt(2)/2, sqrt(2)/2, 0.0, 0.0).to_rotation_axis()
-          RotationAxis(90.0000, 0.0000, 90.0000)
-        """
-
-        if abs(self) < quat_magn_thresh:
-
-            rot_ang = 0.0
-            rot_axis_tr = 0.0
-            rot_axis_pl = 0.0
-
-        elif are_close(self.scalar, 1):
-
-            rot_ang = 0.0
-            rot_axis_tr = 0.0
-            rot_axis_pl = 0.0
-
-        else:
-
-            unit_quat = self.normalize()
-            rot_ang = unit_quat.rotation_angle()
-            rot_gvect = unit_quat.vector.gvect()
-            rot_axis_tr = rot_gvect.tr
-            rot_axis_pl = rot_gvect.pl
-
-        return RotationAxis(
-            rot_axis_tr,
-            rot_axis_pl,
-            rot_ang)
-
-    def to_min_rotation_axis(self):
-        """
-        Calculates the minimum rotation axis from the given quaternion.
-
-        :return: RotationAxis instance.
-        """
-
-        rot_ax = self.to_rotation_axis()
-        return rot_ax if abs(rot_ax.rot_ang) <= 180 else rot_ax.specular()
 
     def to_rotation_matrix(self):
         """
@@ -732,36 +673,6 @@ class Quaternion(object):
                          (a21, a22, a23),
                          (a31, a32, a33)])
 
-    def rotate_vect(self, vect):
-        """
-        Calculates a rotated solution of a vector given a normalized quaternion.
-
-        :param vect: a Vect instance
-        :return: a rotated Vect instance
-
-        Example:
-          >>> q = Quaternion.i()  # rotation of 180° around the x axis
-          >>> q.rotate_vect(Vect(0, 1, 0))
-          Vect(0.0000, -1.0000, 0.0000)
-          >>> q.rotate_vect(Vect(0, 1, 1))
-          Vect(0.0000, -1.0000, -1.0000)
-          >>> q = Quaternion.k()  # rotation of 180° around the z axis
-          >>> q.rotate_vect(Vect(0, 1, 1))
-          Vect(0.0000, -1.0000, 1.0000)
-          >>> q = Quaternion.j()  # rotation of 180° around the y axis
-          >>> q.rotate_vect(Vect(1, 0, 1))
-          Vect(-1.0000, 0.0000, -1.0000)
-        """
-
-        assert self.is_normalized()
-
-        q = self
-        v = Quaternion.from_vect(vect)
-
-        rotated_v = q * (v * q.inverse)
-
-        return rotated_v.vector
-
 
 class QuaternionException(Exception):
     """
@@ -775,4 +686,3 @@ if __name__ == "__main__":
 
     import doctest
     doctest.testmod()
-

@@ -58,7 +58,7 @@ def deformation_matrices(deform_params):
         elif deform_param['type'] == 'rotation':
             rot_matr = RotationAxis(deform_param['parameters']['rotation axis trend'],
                                        deform_param['parameters']['rotation axis plunge'],
-                                       deform_param['parameters']['rotation angle']).to_rotation_matrix()
+                                       deform_param['parameters']['rotation angle']).to_rotation_matrix
             deformation = {'increment': 'multiplicative',
                            'matrix': rot_matr,
                            'shift_pt': np.array([deform_param['parameters']['center x'],
