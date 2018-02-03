@@ -202,6 +202,37 @@ class RotationAxis(object):
         rot_ang = - (180.0 - self.rot_ang) % 360.0
         return RotationAxis.from_gvect(self.gv, rot_ang)
 
+    def strictly_equival(self, another, angle_tolerance: float = VECTOR_ANGLE_THRESHOLD) -> bool:
+        """
+        Checks if two RotationAxis are almost equal, based on a strict checking
+        of the GVect component and of the rotation angle.
+
+        :param another: another RotationAxis instance, to be compared with
+        :type another: RotationAxis
+        :return: the equivalence (true/false) between the two compared RotationAxis
+        :rtype: bool
+
+        Examples:
+          >>> ra_1 = RotationAxis.from_gvect(GVect(180, 10), 10)
+          >>> ra_2 = RotationAxis.from_gvect(GVect(180, 10), 10.5)
+          >>> ra_1.strictly_equival(ra_2)
+          True
+          >>> ra_3 = RotationAxis.from_gvect(GVect(180.2, 10), 10.4)
+          >>> ra_1.strictly_equival(ra_3)
+          True
+          >>> ra_4 = RotationAxis.from_gvect(GVect(184.9, 10), 10.4)
+          >>> ra_1.strictly_equival(ra_4)
+          False
+        """
+
+        if not self.gv.almost_parallel(another.gv, angle_tolerance):
+            return False
+
+        if not are_close(self.a, another.a, atol = 1.0):
+            return False
+
+        return True
+
     @property
     def to_rotation_matrix(self):
         """

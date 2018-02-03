@@ -906,6 +906,56 @@ class Vect(object):
         return Vect.from_array(array3x3.dot(self.v))
 
 
+def pl2colN(plunge: float) -> float:
+    """
+    Calculates the colatitude angle from the North (top).
+
+    :param plunge: an angle from -90° (upward-pointing) to 90° (downward-pointing)
+    :type plunge: float
+    :return: the colatitude angle
+    :rtype: float
+
+    Examples:
+      >>> pl2colN(90)
+      180.0
+      >>> pl2colN(45)
+      135.0
+      >>> pl2colN(0)
+      90.0
+      >>> pl2colN(-45)
+      45.0
+      >>> pl2colN(-90)
+      0.0
+    """
+
+    return 90.0 + plunge
+
+
+def pl2colS(plunge: float) -> float:
+    """
+    Calculates the colatitude angle from the South (bottom).
+
+    :param plunge: an angle from -90° (upward-pointing) to 90° (downward-pointing)
+    :type plunge: float
+    :return: the colatitude angle
+    :rtype: float
+
+    Examples:
+      >>> pl2colS(90)
+      0.0
+      >>> pl2colS(45)
+      45.0
+      >>> pl2colS(0)
+      90.0
+      >>> pl2colS(-45)
+      135.0
+      >>> pl2colS(-90)
+      180.0
+    """
+
+    return 90.0 - plunge
+
+
 class GVect(object):
     """
     Geological vector.
@@ -977,6 +1027,52 @@ class GVect(object):
     def __repr__(self):
 
         return "GVect({:06.2f}, {:+06.2f})".format(*self.tp)
+
+    @property
+    def colatitude_north(self) -> float:
+        """
+        Calculates the colatitude from the North (top).
+
+        :return: an angle between 0 and 180 (in degrees).
+        :rtype: float
+
+        Examples:
+          >>> GVect(320, 90).colatitude_north
+          180.0
+          >>> GVect(320, 45).colatitude_north
+          135.0
+          >>> GVect(320, 0).colatitude_north
+          90.0
+          >>> GVect(320, -45).colatitude_north
+          45.0
+          >>> GVect(320, -90).colatitude_north
+          0.0
+        """
+
+        return pl2colN(self.pl)
+
+    @property
+    def colatitude_south(self) -> float:
+        """
+        Calculates the colatitude from the South (bottom).
+
+        :return: an angle between 0 and 180 (in degrees).
+        :rtype: float
+
+        Examples:
+          >>> GVect(320, 90).colatitude_south
+          0.0
+          >>> GVect(320, 45).colatitude_south
+          45.0
+          >>> GVect(320, 0).colatitude_south
+          90.0
+          >>> GVect(320, -45).colatitude_south
+          135.0
+          >>> GVect(320, -90).colatitude_south
+          180.0
+        """
+
+        return pl2colS(self.pl)
 
     def copy(self):
         """
