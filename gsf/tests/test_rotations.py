@@ -20,10 +20,10 @@ class TestFocalMechamismRotations(unittest.TestCase):
 
         def sols2rotaxis(rot_sol: dict) -> RotationAxis:
             az = rot_sol["az"]
-            colat = rot_sol["colat"]
+            colat = rot_sol["colat_b"]
             rot_ang = rot_sol["rot_ang"]
 
-            pl_from_N = pl2colS(colat)
+            pl_from_N = plng2colatBottom(colat)
 
             gv = GVect(az, pl_from_N)
             return RotationAxis.from_gvect(gv, rot_ang)
@@ -38,7 +38,7 @@ class TestFocalMechamismRotations(unittest.TestCase):
 
     def test_kagan_examples_2(self):
         """
-        Test of focal mechanims rotations examples
+        Test of focal mechanims rotations calculations
         as described in Kagan Y.Y. 3-D rotation of double-couple earthquake sources
 
         :return:

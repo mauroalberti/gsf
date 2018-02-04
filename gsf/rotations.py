@@ -234,6 +234,23 @@ class RotationAxis(object):
         return True
 
     @property
+    def to_rotation_quaternion(self) -> Quaternion:
+        """
+        Converts the RotationAxis instance to the corresponding rotation quaternion.
+
+        :return: the rotation quaternion.
+        :rtype: Quaternion
+        """
+
+        rotation_angle_rad = radians(self.a)
+        rotation_vector = self.gv.versor()
+
+        w = cos(rotation_angle_rad / 2.0)
+        x, y, z = rotation_vector.scale(sin(rotation_angle_rad / 2.0)).components()
+
+        return Quaternion(w, x, y, z).normalize()
+
+    @property
     def to_rotation_matrix(self):
         """
         Derives the rotation matrix from the RotationAxis instance.
@@ -391,7 +408,7 @@ def focmechs_disorientations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
     rotations_quaternions = list(map(lambda quat: quat * base_rot_quater, suppl_prod2quat))
     rotations_quaternions.append(base_rot_quater)
 
-    rotation_axes = map(lambda quat: RotationAxis.from_quaternion(quat).to_min_rotation_axis(), rotations_quaternions)
+    rotation_axes = list(map(lambda quat: RotationAxis.from_quaternion(quat).to_min_rotation_axis(), rotations_quaternions))
 
     return sort_rotations(rotation_axes)
 

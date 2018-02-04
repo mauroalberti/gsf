@@ -5,6 +5,8 @@ from __future__ import division
 from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
 import numpy as np
 
+from typing import Dict, Tuple, List
+
 from .default_parameters import *
 from .mathematics import are_close
 from .arrays import point_solution, arrays_are_close
@@ -335,7 +337,7 @@ class Vect(object):
         return self._v
 
     @property
-    def x(self):
+    def x(self) -> float:
         """
         Return x value
 
@@ -347,7 +349,7 @@ class Vect(object):
         return self.v[0]
 
     @property
-    def y(self):
+    def y(self) -> float:
         """
         Return y value
 
@@ -359,7 +361,7 @@ class Vect(object):
         return self.v[1]
 
     @property
-    def z(self):
+    def z(self) -> float:
         """
         Return z value
 
@@ -370,8 +372,22 @@ class Vect(object):
 
         return self.v[2]
 
+    def components(self) -> Tuple[float, float, float]:
+        """
+        Returns the vector components as a tuple of three values.
+
+        :return: the vector components (x, y, z).
+        :rtype: a tuple of three floats.
+
+        Examples:
+          >>> Vect(1, 0, 3).components()
+          (1.0, 0.0, 3.0)
+        """
+
+        return self.x, self.y, self.z
+
     @property
-    def valid(self):
+    def valid(self) -> bool:
         """
         Check if the Vect instance components are not all zero.
 
@@ -906,9 +922,9 @@ class Vect(object):
         return Vect.from_array(array3x3.dot(self.v))
 
 
-def pl2colN(plunge: float) -> float:
+def plng2colatTop(plunge: float) -> float:
     """
-    Calculates the colatitude angle from the North (top).
+    Calculates the colatitude angle from the top.
 
     :param plunge: an angle from -90° (upward-pointing) to 90° (downward-pointing)
     :type plunge: float
@@ -916,24 +932,24 @@ def pl2colN(plunge: float) -> float:
     :rtype: float
 
     Examples:
-      >>> pl2colN(90)
+      >>> plng2colatTop(90)
       180.0
-      >>> pl2colN(45)
+      >>> plng2colatTop(45)
       135.0
-      >>> pl2colN(0)
+      >>> plng2colatTop(0)
       90.0
-      >>> pl2colN(-45)
+      >>> plng2colatTop(-45)
       45.0
-      >>> pl2colN(-90)
+      >>> plng2colatTop(-90)
       0.0
     """
 
     return 90.0 + plunge
 
 
-def pl2colS(plunge: float) -> float:
+def plng2colatBottom(plunge: float) -> float:
     """
-    Calculates the colatitude angle from the South (bottom).
+    Calculates the colatitude angle from the bottom.
 
     :param plunge: an angle from -90° (upward-pointing) to 90° (downward-pointing)
     :type plunge: float
@@ -941,15 +957,15 @@ def pl2colS(plunge: float) -> float:
     :rtype: float
 
     Examples:
-      >>> pl2colS(90)
+      >>> plng2colatBottom(90)
       0.0
-      >>> pl2colS(45)
+      >>> plng2colatBottom(45)
       45.0
-      >>> pl2colS(0)
+      >>> plng2colatBottom(0)
       90.0
-      >>> pl2colS(-45)
+      >>> plng2colatBottom(-45)
       135.0
-      >>> pl2colS(-90)
+      >>> plng2colatBottom(-90)
       180.0
     """
 
@@ -1049,7 +1065,7 @@ class GVect(object):
           0.0
         """
 
-        return pl2colN(self.pl)
+        return plng2colatTop(self.pl)
 
     @property
     def colatitude_south(self) -> float:
@@ -1072,7 +1088,7 @@ class GVect(object):
           180.0
         """
 
-        return pl2colS(self.pl)
+        return plng2colatBottom(self.pl)
 
     def copy(self):
         """

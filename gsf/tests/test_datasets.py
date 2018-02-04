@@ -24,10 +24,10 @@ k91_ss_T_axis_vals, k91_ss_P_axis_vals = (295, 55), ( 51, 17)
 
 # provided values for each solution are azimuth, colatitude angle, rotation angle (all in degrees)
 
-k91_rot_sol_1 = dict(az=24.8, colat=101.2, rot_ang=102.8)
-k91_rot_sol_2 = dict(az=257.5, colat=79.7, rot_ang=104.3)
-k91_rot_sol_3 = dict(az=144.8, colat=105.2, rot_ang=124.1)
-k91_rot_sol_4 = dict(az=96.8, colat=16.7, rot_ang=165.9)
+k91_rot_sol_1 = dict(az=24.8, colat_b=101.2, rot_ang=102.8)
+k91_rot_sol_2 = dict(az=257.5, colat_b=79.7, rot_ang=104.3)
+k91_rot_sol_3 = dict(az=144.8, colat_b=105.2, rot_ang=124.1)
+k91_rot_sol_4 = dict(az=96.8, colat_b=16.7, rot_ang=165.9)
 
 k91_rot_sols = [
     k91_rot_sol_1,
