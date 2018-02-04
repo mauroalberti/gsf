@@ -35,6 +35,19 @@ k91_rot_sols = [
     k91_rot_sol_3,
     k91_rot_sol_4]
 
+
+def sols2rotaxis(rot_sol: dict) -> RotationAxis:
+    az = rot_sol["az"]
+    colat = rot_sol["colat_b"]
+    rot_ang = rot_sol["rot_ang"]
+
+    pl_from_N = plng2colatBottom(colat)
+
+    gv = GVect(az, pl_from_N)
+
+    return RotationAxis.from_gvect(gv, rot_ang)
+
+
 ##### gsf-scope derived parameters
 
 k91_fs_T_gaxis, k91_fs_P_gaxis = GAxis(*k91_fs_T_axis_vals), GAxis(*k91_fs_P_axis_vals)

@@ -233,7 +233,6 @@ class RotationAxis(object):
 
         return True
 
-    @property
     def to_rotation_quaternion(self) -> Quaternion:
         """
         Converts the RotationAxis instance to the corresponding rotation quaternion.
@@ -250,7 +249,6 @@ class RotationAxis(object):
 
         return Quaternion(w, x, y, z).normalize()
 
-    @property
     def to_rotation_matrix(self):
         """
         Derives the rotation matrix from the RotationAxis instance.
@@ -357,7 +355,28 @@ def quat_rot_quat(q1: Quaternion, q2: Quaternion) -> Quaternion:
     return q2 * q1
 
 
-def focmechs_disorientations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
+def focmech_rotate(fm: PTBAxes, ra: RotationAxis) -> PTBAxes:
+    """
+    Rotate a fochal mechanism (a PTBAxes instance) to a new orientation
+    via a rotation axis.
+
+    :param fm: the focal mechanism to rotate
+    :type fm: PTBAxes
+    :param ra: the rotation axis
+    :type ra: RotationAxis
+    :return: the rotated focal mechanism
+    :rtype: PTBAxes
+    """
+
+    qfm = fm.to_quaternion()
+    qra = ra.to_rotation_quaternion()
+
+    qrot = qra * qfm
+
+    return PTBAxes.from_quaternion(qrot)
+
+
+def focmechs_invert_rotations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
     """
     Calculate the rotations between two focal mechanisms, sensu Kagan.
     See Kagan Y.Y. papers for theoretical basis.
