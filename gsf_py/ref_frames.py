@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
 
-from .mathematics import almost_zero, are_close
 from .geometry import Vect
 
 

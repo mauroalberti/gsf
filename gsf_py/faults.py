@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from .geometry import *
-#from .errors import SlickelineTypeException, SlickelineSenseException
 from .mathematics import are_close
 
 
