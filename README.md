@@ -4,7 +4,7 @@
 # gsf 
 **gsf** is a library for the processing of structural geology data.
 
-It is developed in Python 3 (module *gsf_py*), and a Haskell version (module *gsf_hs*) is also in development (branch *dev_haskell*).
+It is developed in Python 3 (module *gsf_py*), and also as a preliminary and in-progress Haskell version (module *gsf_hs*).
 
 ### Summary
 
