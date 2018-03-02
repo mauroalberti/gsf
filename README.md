@@ -2,9 +2,9 @@
 [![Build Status](https://travis-ci.org/mauroalberti/gsf.svg?branch=master)](https://travis-ci.org/mauroalberti/gsf)
 
 # gsf 
-Python 3 module for processing geological surface/fault data with Python.
+**gsf** is a library for the processing of structural geology data.
 
-It is inspired by apsg by Ondrej Lexa. Requires Numpy.
+It is developed in Python 3, and a Haskell version is also in development.
 
 ### Summary
 
@@ -18,5 +18,5 @@ For the processing of fault data, it is possible to create slickenline-type obje
 
 A slickenline can be combined to a geological fault to create a fault - slickenline datum (**FaultSlick**), from which it is possible to derive P, T and B axes, and the M plane (**PTBAxes**). 
 
-Quaternions allow to rotate geological data.
+A quaternion module (**Quaternion** class) allows to rotate geological data.
 
