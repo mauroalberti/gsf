@@ -35,11 +35,12 @@ import gsf_py
 
 ## Usage examples (in progress) for the Python version 
 
+
 Since geological data can be expressed in terms of geometric and geographical parameters,
 the basics of this module are geometric concepts: points, planes and vectors. From these concepts, specialised geological concepts are derived: geological vectors and axes, and geological planes. From the fundamental side, geological vectors and axes are vectors, while geological planes are geometric planes. The difference in more in the way to express the values of these structures. In structural geology, orientations are expressed via angles from references directions (polar coordinates), such as the North or as the local horizontal plane. In the geometric realm, orientations are mainly expressed as Cartesian coordinates.
 We start by considering Cartesian points.
 
-### Points 
+## Cartesian points and planes 
 
 A point can be created in the usual way:
 
@@ -50,14 +51,14 @@ from gsf_py.geometry import *
 
 
 ```python
-p1 = Point(1.0, 2.4, 0.2)
+p1 = Point(1.0, 2.4, 0.2)  # definition of a Point instance
 ```
 
 Among other properties, we can calculate its distance from the reference frame origin via the method abs(): 
 
 
 ```python
-abs(p1)
+abs(p1)  # distance of a point from the origin
 ```
 
 
@@ -76,7 +77,7 @@ p2 = Point(0.9, 4.2, 10.5)
 
 
 ```python
-p1.dist_3d(p2)
+p1.dist_3d(p2)  # 3D distance between two points
 ```
 
 
@@ -88,7 +89,7 @@ p1.dist_3d(p2)
 
 
 ```python
-p1.dist_2d(p2)
+p1.dist_2d(p2)  # horizontal (2D) distance between two points
 ```
 
 
@@ -98,20 +99,73 @@ p1.dist_2d(p2)
 
 
 
-Other possibilities are to translate it via a triad of cartesian values or directly via a vector, to check if two points are within a given range and to convert a point to a vector
+Other possibilities are to translate the point via a triad of cartesian values or directly via a vector, to check if two points are within a given range and to convert a point to a vector.
 
-### Vector
-
-Also vector creation and manipulation are straightforward:
+A Cartesian plane can be defined in a few ways:
+    from three points:
 
 
 ```python
+pl1 = Plane.from_points(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))  # definition of a plane from three points
+```
+
+
+```python
+print(pl1)
+```
+
+    Plane(0.0000, 0.0000, 1.0000, 0.0000)
+
+
+Those returned are the four coefficient (a, b, c and d) defining the Cartesian plane, defined by the equation: 
+
+   *ax + by + cz = d*
+
+It can be seen that for the provided example the equation is satisfied for all *x* and *y* values when *z* is always zero, i.e. the Cartesian plane is a horizontal plane passing through the frame origin.
+    
+
+We calculate the versor normal to this plane:
+
+
+```python
+normal_versor = pl1.nversor()  # versor (unit vector) normal to the provided Cartesian plane
+```
+
+
+```python
+print(normal_versor)
+```
+
+    Vect(0.0000, 0.0000, 1.0000)
+
+
+And we see that the versor is the vertical axis, as expected.
+
+As another example, we calculate the intersection between two vectors, expressed by a versor.
+
+
+```python
+pl1, pl2 = Plane(1, 0, 0, 0), Plane(0, 0, 1, 0)
+inters_v = pl1.inters_versor(pl2)  # intersection versor between two Cartesian planes 
+print(inters_v)
+```
+
+    Vect(0.0000, -1.0000, 0.0000)
+
+
+## Vector
+
+Vector creation and manipulation are straightforward:
+
+
+```python
+from gsf_py.geometry import *
 v1, v2 = Vect(3.1, 7.2, 5.6), Vect(4.2, 9.17, 8.0)
 ```
 
 
 ```python
-v1 + v2
+v1 + v2  # vector addition
 ```
 
 
@@ -123,7 +177,7 @@ v1 + v2
 
 
 ```python
-v1 - v2
+v1 - v2  # vector subtraction
 ```
 
 
@@ -175,7 +229,7 @@ v1.angle(v2)  # angle in degrees bwtween two Cartesian vectors
 
 
 ```python
-v1.almost_parallel(v2)
+v1.almost_parallel(v2)  # is v1 sub-parallel to v2?
 ```
 
 
@@ -187,7 +241,7 @@ v1.almost_parallel(v2)
 
 
 ```python
-v1.is_suborthogonal(v2)
+v1.is_suborthogonal(v2)  # is v1 sub-orthogonal to v2?
 ```
 
 
@@ -201,7 +255,7 @@ A vector can be converted to a geological vector or axis by using the gvect() an
 
 
 ```python
-gv1 = v1.gvect()  # conversion of a Cartesian vector to a geological vector
+gv1 = v1.gvect()  # conversion from Cartesian vector to geological vector
 ```
 
 
@@ -214,7 +268,7 @@ print(gv1)
 
 
 ```python
-ga2 = v2.gaxis()
+ga2 = v2.gaxis()  # conversion from Cartesian vector to geological axis
 ```
 
 
@@ -225,7 +279,7 @@ print(ga2)
     GAxis(024.61, -38.42)
 
 
-### Geological vectors, axes and planes
+## Geological vectors, axes and planes
 
 A *geological vector* is a vector in the 3D space with unit length and a direction defined by a trend (from the North, 0°-360°) and a plunge (-90° to 90°, where positive values are downward-directed while negative ones are upward-directed).
 
@@ -245,7 +299,7 @@ ga1 = GAxis(219, 24)  # creating a geological axis given trend and plunge
 
 
 ```python
-ga2 = gv2.as_axis()  # converting a geological vector to axis
+ga2 = gv2.as_axis()  # converting a geological vector to a geological axis
 ```
 
 
@@ -260,7 +314,7 @@ A *geologic plane* is a plane with orientations expressed via geological convent
 
 
 ```python
-gpl1 = GPlane(112, 67)
+gpl1 = GPlane(112, 67)  # definition of a geological plane instance
 ```
 
 
@@ -275,7 +329,7 @@ As previously said, the main distinction between geological axes and vectors is 
 
 
 ```python
-vector_angle = gv1.angle(gv2)
+vector_angle = gv1.angle(gv2)  # angle (in degrees) between two geological vectors 
 ```
 
 
@@ -295,7 +349,7 @@ ga1, ga2 = gv1.as_axis(), gv2.as_axis()
 
 
 ```python
-axis_angle = ga1.angle(ga2)
+axis_angle = ga1.angle(ga2)  # angle (in degrees) between two geological axes
 ```
 
 
@@ -329,7 +383,7 @@ as well as the vector normal to both geological vectors:
 
 
 ```python
-ngv = gv1.normal_gvect(gv2)
+ngv = gv1.normal_gvect(gv2)  # geological vector normal to gv1 and gv2 geological vectors
 ```
 
 
@@ -346,7 +400,7 @@ Considering just a single geological vector, the geological plane normal to the 
 
 
 ```python
-ngp = gv1.normal_gplane()
+ngp = gv1.normal_gplane()  # geological plane normal to a given geological vector
 ```
 
 
@@ -355,5 +409,4 @@ print(ngp)
 ```
 
     GPlane(132.00, +45.00)
-
 
