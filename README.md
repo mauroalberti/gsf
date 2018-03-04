@@ -33,14 +33,15 @@ You can then check if the module is installed in Python3 by successfully importi
 import gsf_py
 ```
 
-## Usage examples (in progress) for the Python version 
+## Usage examples for the Python version 
 
+*(In progress, mirrors the content of the Jupyter notebook in the folder "Notebook")*
 
 Since geological data can be expressed in terms of geometric and geographical parameters,
 the basics of this module are geometric concepts: points, planes and vectors. From these concepts, specialised geological concepts are derived: geological vectors and axes, and geological planes. From the fundamental side, geological vectors and axes are vectors, while geological planes are geometric planes. The difference in more in the way to express the values of these structures. In structural geology, orientations are expressed via angles from references directions (polar coordinates), such as the North or as the local horizontal plane. In the geometric realm, orientations are mainly expressed as Cartesian coordinates.
 We start by considering Cartesian points.
 
-## Cartesian points and planes 
+### Cartesian points and planes 
 
 A point can be created in the usual way:
 
@@ -153,7 +154,7 @@ print(inters_v)
     Vect(0.0000, -1.0000, 0.0000)
 
 
-## Vector
+### Vector
 
 Vector creation and manipulation are straightforward:
 
@@ -279,7 +280,7 @@ print(ga2)
     GAxis(024.61, -38.42)
 
 
-## Geological vectors, axes and planes
+### Geological vectors, axes and planes
 
 A *geological vector* is a vector in the 3D space with unit length and a direction defined by a trend (from the North, 0°-360°) and a plunge (-90° to 90°, where positive values are downward-directed while negative ones are upward-directed).
 
