@@ -690,26 +690,29 @@ vToGVect v = let trend = vtrend v
 -- | Trend range: [0°, 360°[
 -- | Plunge range: [-90°, 90°], with negative values for upward-pointing
 -- | geological axes and positive values for downward-pointing axes.
-gaxis :: Vect -> Maybe GAxis
+vToGAxis :: Vect -> Maybe GAxis
 -- |
 -- | Examples:
--- | >>> gaxis (Vect 0 1 1)
+-- | >>> vToGAxis (Vect 0 1 1)
 -- | GAxis(000.00, -45.00)
--- | >>> gaxis (Vect 1 0 1)
+-- | >>> vToGAxis (Vect 1 0 1)
 -- | GAxis(090.00, -45.00)
--- | >>> gaxis (Vect 0 0 1)
+-- | >>> vToGAxis (Vect 0 0 1)
 -- | GAxis(000.00, -90.00)
--- | >>> gaxis (Vect 0 0 (-1))
+-- | >>> vToGAxis (Vect 0 0 (-1))
 -- | GAxis(000.00, +90.00)
--- | >>> gaxis (Vect (-1) 0, 0)
+-- | >>> vToGAxis (Vect (-1) 0, 0)
 -- | GAxis(270.00, +00.00)
--- | >>> gaxis (Vect 0 (-1) 0)
+-- | >>> vToGAxis (Vect 0 (-1) 0)
 -- | GAxis(180.00, +00.00)
--- | >>> gaxis (Vect (-1) (-1) 0)
+-- | >>> vToGAxis (Vect (-1) (-1) 0)
 -- | GAxis(225.00, +00.00)
--- | >>> gaxis (Vect 0 0 0)
+-- | >>> vToGAxis (Vect 0 0 0)
 -- | Nothing
-gaxis v = gvToGa $ vToGVect v
+vToGAxis v = let gv = vToGVect v
+              in case gv of
+               Nothing -> Nothing
+               Just val_gv -> Just (gvToGAxis val_gv)
 
 
 -- | Cosine of the angle between two versors.
@@ -967,7 +970,6 @@ gvToVersor (GVect trend plunge) =
 -- | Conversion to GPlane
 gvToGPlane :: GVect -> GPlane
 -- |
-
 -- Examples:
 -- >>> gvToGPlane (GVect 90 45)
 -- GPlane {az = 90.0, dip = 45.0}
@@ -1117,6 +1119,37 @@ gvCommonPlane gv1 gv2 = let v1 = gvToVersor gv1
                            Nothing -> Nothing
                            Just gv -> Just (gvNormalGPlane gv)
 
+-- | Converts a geological vector to a geological axis
+gvToGAxis :: GVect -> GAxis
+-- |
+-- >>> gvToGAxis (GVect 220 32)
+-- GAxis {t = 220.0, p = 32.0}
+gvToGAxis (GVect tr pl) = GAxis tr pl
+
+
+{- Calculate the GVect instance that is normal to the two provided sources.
+Angle between sources must be larger than v_angle_thresh,
+otherwise Nothing will be returned.
+-}
+gvNormalGVect :: GVect -> GVect -> Maybe GVect
+-- |
+-- Examples:
+-- >>> gvNormalGVect (GVect 0 0) (GVect 0 0.5)
+-- Nothing
+-- >>> gvNormalGVect (GVect 0 0) (GVect 179.1 0)
+-- Nothing
+-- >>> gvNormalGVect (GVect 0 0) (GVect 5.1 0)
+-- Just (GVect {tr = 0.0, pl = 90.0})
+-- >>> gvNormalGVect (GVect 90 45) (GVect 90 0)
+-- Just (GVect {tr = 180.0, pl = 0.0})
+gvNormalGVect gv1 gv2 = let angle = gvAngle gv1 gv2
+                            delta_angle = if (angle < v_angle_thresh) then False
+                                          else if (angle >= (180.0 - v_angle_thresh)) then False
+                                          else True
+                            in case delta_angle of
+                             False -> Nothing
+                             True  -> vToGVect $ vcross (gvToVersor gv1) (gvToVersor gv2)
+
 
 {- Geological axis. While GAxis is non-directional, the geological vector (GVect) is directional.
     Defined by trend and plunge (both in degrees):
@@ -1125,10 +1158,6 @@ gvCommonPlane gv1 gv2 = let v1 = gvToVersor gv1
 -}
 
 data GAxis = GAxis {t, p :: Double} deriving (Eq, Ord, Show)
-
-gvToGa gv = case gv of
-             Nothing -> Nothing
-             Just (GVect tr pl) -> Just (GAxis tr pl)
 
 
 {- Geological plane.
