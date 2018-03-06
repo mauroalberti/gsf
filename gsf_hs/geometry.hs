@@ -25,177 +25,177 @@ import Data.Fixed
 
 
 -- Constants
-p_dist_thresh = 1.0e-7
-v_angle_thresh = 1.0
-v_min_magn_thresh = 1.0e-9
-min_vector_magn_diff = 1.0e-9
+kPDistThresh = 1.0e-7
+kVAngleThresh = 1.0
+kVMinMagnThresh = 1.0e-9
+kVMinMagnDiff = 1.0e-9
 
 
 -- Utils
 --------
 
 -- | mod 360°
-m360 :: Double -> Double
+uM360 :: Double -> Double
 -- |
 -- Examples:
--- >>> m360 10
+-- >>> uM360 10
 -- 10.0
--- >>> m360 360
+-- >>> uM360 360
 -- 0.0
--- >>> m360 (-50)
+-- >>> uM360 (-50)
 -- 310.0
--- >>> m360 400
+-- >>> uM360 400
 -- 40.0
-m360 v = v `mod'` 360.0
+uM360 v = v `mod'` 360.0
 
--- | convert to degrees
-degrees :: Double -> Double
-degrees x = x * 180.0 / pi
+-- | convert to uDegrees
+uDegrees :: Double -> Double
+uDegrees x = x * 180.0 / pi
 
--- | convert to radians
-radians :: Double -> Double
-radians x = x * pi / 180.0
+-- | convert to uRadians
+uRadians :: Double -> Double
+uRadians x = x * pi / 180.0
 
--- | calculates the angle (in degrees, positive anti-clockwise) in the 2D plane
+-- | calculates the angle (in uDegrees, positive anti-clockwise) in the 2D plane
 -- given x (East) and y (North) Cartesian components
-angle_east_aclock :: Double -> Double -> Maybe Double
+uAngleEastAclock :: Double -> Double -> Maybe Double
 -- |
 -- Examples:
--- >>> angle_east_aclock 0 0
+-- >>> uAngleEastAclock 0 0
 -- Nothing
--- >>> angle_east_aclock 1 0
+-- >>> uAngleEastAclock 1 0
 -- Just 0.0
--- >>> angle_east_aclock 1 1
+-- >>> uAngleEastAclock 1 1
 -- Just 45.0
--- >>> angle_east_aclock 0 5
+-- >>> uAngleEastAclock 0 5
 -- Just 90.0
--- >>> angle_east_aclock (-1) 0
+-- >>> uAngleEastAclock (-1) 0
 -- Just 180.0
--- >>> angle_east_aclock 0 (-4)
+-- >>> uAngleEastAclock 0 (-4)
 -- Just 270.0
--- >>> angle_east_aclock 1 (-1)
+-- >>> uAngleEastAclock 1 (-1)
 -- Just 315.0
-angle_east_aclock x y = case (x, y) of
+uAngleEastAclock x y = case (x, y) of
                           (0.0, 0.0) -> Nothing
-                          (_,   _)   -> Just (m360 $ degrees $ atan2 y x)
+                          (_,   _)   -> Just (uM360 $ uDegrees $ atan2 y x)
 
--- | calculate the angle from East (in degrees, positive clockwise) in the 2D plane
+-- | calculate the angle from East (in uDegrees, positive clockwise) in the 2D plane
 -- given x (East) and y (North) Cartesian components
-angle_east_clock :: Double -> Double -> Maybe Double
+uAngleEastClock :: Double -> Double -> Maybe Double
 -- |
 -- Examples:
--- >>> angle_east_clock 0 0
+-- >>> uAngleEastClock 0 0
 -- Nothing
--- >>> angle_east_clock 1 0
+-- >>> uAngleEastClock 1 0
 -- Just 0.0
--- >>> angle_east_clock 1 (-1)
+-- >>> uAngleEastClock 1 (-1)
 -- Just 45.0
--- >>> angle_east_clock 0 (-4)
+-- >>> uAngleEastClock 0 (-4)
 -- Just 90.0
--- >>> angle_east_clock (-1) 0
+-- >>> uAngleEastClock (-1) 0
 -- Just 180.0
--- >>> angle_east_clock 0 5
+-- >>> uAngleEastClock 0 5
 -- Just 270.0
--- >>> angle_east_clock 1 1
+-- >>> uAngleEastClock 1 1
 -- Just 315.0
-angle_east_clock x y = let ang = angle_east_aclock x y
+uAngleEastClock x y = let ang = uAngleEastAclock x y
                         in case ang of
                            Nothing -> Nothing
-                           Just a  -> Just (m360 $ 360.0 - a)
+                           Just a  -> Just (uM360 $ 360.0 - a)
 
--- | calculate the angle from North (in degrees, positive clockwise) in the 2D plane
+-- | calculate the angle from North (in uDegrees, positive clockwise) in the 2D plane
 -- given x (East) and y (North) Cartesian components
-angle_north_clock :: Double -> Double -> Maybe Double
+uAngleNorthClock :: Double -> Double -> Maybe Double
 -- |
 -- Examples:
--- >>> angle_north_clock 0 0
+-- >>> uAngleNorthClock 0 0
 -- Nothing
--- >>> angle_north_clock 0 5
+-- >>> uAngleNorthClock 0 5
 -- Just 0.0
--- >>> angle_north_clock 1 1
+-- >>> uAngleNorthClock 1 1
 -- Just 45.0
--- >>> angle_north_clock 1 0
+-- >>> uAngleNorthClock 1 0
 -- Just 90.0
--- >>> angle_north_clock 1 (-1)
+-- >>> uAngleNorthClock 1 (-1)
 -- Just 135.0
--- >>> angle_north_clock 0 (-1)
+-- >>> uAngleNorthClock 0 (-1)
 -- Just 180.0
--- >>> angle_north_clock (-1) 0
+-- >>> uAngleNorthClock (-1) 0
 -- Just 270.0
--- >>> angle_north_clock 0 (-4)
+-- >>> uAngleNorthClock 0 (-4)
 -- Just 180.0
-angle_north_clock x y = let ang = angle_east_clock x y
+uAngleNorthClock x y = let ang = uAngleEastClock x y
                           in case ang of
                             Nothing -> Nothing
-                            Just a  -> Just (m360 $ 90.0 + a)
+                            Just a  -> Just (uM360 $ 90.0 + a)
 
 
 -- | opposite trend
-opposite_trend :: Double -> Double
+uOppositeTrend :: Double -> Double
 -- |
 -- Examples:
--- >>> opposite_trend 0
+-- >>> uOppositeTrend 0
 -- 180.0
--- >>> opposite_trend 45
+-- >>> uOppositeTrend 45
 -- 225.0
--- >>> opposite_trend 90
+-- >>> uOppositeTrend 90
 -- 270.0
--- >>> opposite_trend 180
+-- >>> uOppositeTrend 180
 -- 0.0
--- >>> opposite_trend 270
+-- >>> uOppositeTrend 270
 -- 90.0
-opposite_trend x = m360 $ 180.0 + x
+uOppositeTrend x = uM360 $ 180.0 + x
 
 
 -- |  Calculates the colatitude angle from the top
-plng2colatTop :: Double -> Double
+uPlngToColatTop :: Double -> Double
 -- |
 -- Examples:
--- >>> plng2colatTop 90
+-- >>> uPlngToColatTop 90
 -- 180.0
--- >>> plng2colatTop 45
+-- >>> uPlngToColatTop 45
 -- 135.0
--- >>> plng2colatTop 0
+-- >>> uPlngToColatTop 0
 -- 90.0
--- >>> plng2colatTop (-45)
+-- >>> uPlngToColatTop (-45)
 -- 45.0
--- >>> plng2colatTop (-90)
+-- >>> uPlngToColatTop (-90)
 -- 0.0
-plng2colatTop plng = 90.0 + plng
+uPlngToColatTop plng = 90.0 + plng
 
 
 -- |  Calculates the colatitude angle from the bottom
-plng2colatBottom :: Double -> Double
+uPlngToColatBottom :: Double -> Double
 -- |
 -- Examples:
--- >>> plng2colatBottom 90
+-- >>> uPlngToColatBottom 90
 -- 0.0
--- >>> plng2colatBottom 45
+-- >>> uPlngToColatBottom 45
 -- 45.0
--- >>> plng2colatBottom 0
+-- >>> uPlngToColatBottom 0
 -- 90.0
--- >>> plng2colatBottom (-45)
+-- >>> uPlngToColatBottom (-45)
 -- 135.0
--- >>> plng2colatBottom (-90)
+-- >>> uPlngToColatBottom (-90)
 -- 180.0
-plng2colatBottom plng = 90.0 - plng
+uPlngToColatBottom plng = 90.0 - plng
 
 
--- | slope (in degrees) given horizontal and vertical lengths
+-- | uSlope (in uDegrees) given horizontal and vertical lengths
 -- | both input are assumed positive
-slope :: Double -> Double -> Maybe Double
+uSlope :: Double -> Double -> Maybe Double
 -- |
 -- Examples:
--- >>> slope 0 0
+-- >>> uSlope 0 0
 -- Nothing
--- >>> slope 1 1
+-- >>> uSlope 1 1
 -- Just 45.0
--- >>> slope 1 0
+-- >>> uSlope 1 0
 -- Just 0.0
-slope h v = case (h, v) of
+uSlope h v = case (h, v) of
               (0.0, 0.0) -> Nothing
               (0.0, _)   -> Just 90.0
-              (_, _)     -> Just (degrees $ atan2 v h)
+              (_, _)     -> Just (uDegrees $ atan2 v h)
 
 
 -- Point
@@ -206,29 +206,29 @@ data Point = Point {px, py, pz :: Double} deriving (Show)
 
 
 -- | Mapping on point
-pmap :: (Double -> Double) -> Point -> Point
-pmap f (Point x y z) = Point (f x) (f y) (f z)
+pMap :: (Double -> Double) -> Point -> Point
+pMap f (Point x y z) = Point (f x) (f y) (f z)
 
 
 -- | Zipping on two points
-pzip :: (Double -> Double -> Double) -> Point -> Point -> Point
-pzip f (Point x1 y1 z1) (Point x2 y2 z2) = Point (f x1 x2) (f y1 y2) (f z1 z2)
+pZip :: (Double -> Double -> Double) -> Point -> Point -> Point
+pZip f (Point x1 y1 z1) (Point x2 y2 z2) = Point (f x1 x2) (f y1 y2) (f z1 z2)
 
 
 -- | Folding on point
-pfold :: (Double -> Double -> Double) -> Point -> Double
-pfold f (Point x y z) = f x (f y z)
+pFold :: (Double -> Double -> Double) -> Point -> Double
+pFold f (Point x y z) = f x (f y z)
 
 
 instance Num Point where
-  (+) = pzip (+)
-  (-) = pzip (-)
-  negate = pmap negate
+  (+) = pZip (+)
+  (-) = pZip (-)
+  negate = pMap negate
 
 
 -- | Conversion to array
-p2a :: Point -> A.Array Int Double
-p2a (Point x y z) = A.array (1, 3) [(1, x), (2, y), (3, z)]
+pToArray :: Point -> A.Array Int Double
+pToArray (Point x y z) = A.array (1, 3) [(1, x), (2, y), (3, z)]
 
 
 -- | Point on the origin
@@ -252,103 +252,103 @@ pZ = Point 0 0 1
 
 
 -- | Projection of point on the x-y plane
-p_xy :: Point -> Point
+pXY :: Point -> Point
 -- |
 -- Examples:
--- >>> p_xy (Point 2 3 4)
+-- >>> pXY (Point 2 3 4)
 -- Point {px = 2.0, py = 3.0, pz = 0.0}
-p_xy (Point x y z) = Point x y 0
+pXY (Point x y z) = Point x y 0
 
 
 -- | Projection of point on the x-z plane
-p_xz :: Point -> Point
+pXZ :: Point -> Point
 -- |
 -- Examples:
--- >>> p_xz (Point 2 3 4)
+-- >>> pXZ (Point 2 3 4)
 -- Point {px = 2.0, py = 0.0, pz = 4.0}
-p_xz (Point x y z) = Point x 0 z
+pXZ (Point x y z) = Point x 0 z
 
 
 -- | Projection of point on the y-z plane
-p_yz :: Point -> Point
+pYZ :: Point -> Point
 -- |
 -- Examples:
--- >>> p_yz (Point 2 3 4)
+-- >>> pYZ (Point 2 3 4)
 -- Point {px = 0.0, py = 3.0, pz = 4.0}
-p_yz (Point x y z) = Point 0 y z
+pYZ (Point x y z) = Point 0 y z
 
 
 -- | Length (magnitude) of a point
-plen :: Point -> Double
+pLen :: Point -> Double
 -- |
 -- Examples:
--- >>> plen (Point 1 1 1)
+-- >>> pLen (Point 1 1 1)
 -- 1.7320508075688772
-plen (Point x y z) = sqrt(x*x + y*y + z*z)
+pLen (Point x y z) = sqrt(x*x + y*y + z*z)
 
 
 -- | Invert point position 
-pinv :: Point -> Point
+pInvert :: Point -> Point
 -- |
 -- Examples:
--- >>> pinv (Point 1 0 4)
+-- >>> pInvert (Point 1 0 4)
 -- Point {px = -1.0, py = -0.0, pz = -4.0} 
-pinv = negate
+pInvert = negate
 
 
 -- | x delta between two points
-pdx :: Point -> Point -> Double
-pdx (Point x1 _ _) (Point x2 _ _) = x2 - x1
+pDeltaX :: Point -> Point -> Double
+pDeltaX (Point x1 _ _) (Point x2 _ _) = x2 - x1
 
 
 -- | y delta between two points
-pdy :: Point -> Point -> Double
-pdy (Point _ y1 _) (Point _ y2 _) = y2 - y1
+pDeltaY :: Point -> Point -> Double
+pDeltaY (Point _ y1 _) (Point _ y2 _) = y2 - y1
 
 
 -- | z delta between two points
-pdz :: Point -> Point -> Double
-pdz (Point _ _ z1) (Point _ _  z2) = z2 - z1
+pDeltaZ :: Point -> Point -> Double
+pDeltaZ (Point _ _ z1) (Point _ _  z2) = z2 - z1
 
 
 -- | 2D (horizontal) distance between two points
-pd2D :: Point -> Point -> Double
-pd2D (Point x1 y1 _) (Point x2 y2 _) = sqrt ((x2 - x1)^2 + (y2 - y1)^2)
+pDist2D :: Point -> Point -> Double
+pDist2D (Point x1 y1 _) (Point x2 y2 _) = sqrt ((x2 - x1)^2 + (y2 - y1)^2)
 
 
 -- | 3D distance between two points
-pd3D :: Point -> Point -> Double
-pd3D (Point x1 y1 z1) (Point x2 y2 z2) = sqrt ((x2 - x1)^2 + (y2 - y1)^2 + (z2 - z1)^2)
+pDist3D :: Point -> Point -> Double
+pDist3D (Point x1 y1 z1) (Point x2 y2 z2) = sqrt ((x2 - x1)^2 + (y2 - y1)^2 + (z2 - z1)^2)
 
 
 -- | Coincidence between two points
-p_coinc :: Point -> Point -> Bool
+pAreCoinc :: Point -> Point -> Bool
 -- |
 -- Examples:
--- p_coinc (Point 1 2 3) (Point 1 2 3)
+-- pAreCoinc (Point 1 2 3) (Point 1 2 3)
 -- True
--- p_coinc (Point 1 2 3) (Point 2 2 3)
+-- pAreCoinc (Point 1 2 3) (Point 2 2 3)
 -- False
-p_coinc p1 p2 = let pts_dist = pd3D p1 p2
-                  in (pts_dist < p_dist_thresh)
+pAreCoinc p1 p2 = let pts_dist = pDist3D p1 p2
+                  in (pts_dist < kPDistThresh)
 
 
 -- | Translate point by a given amount
-pshift :: Point -> Double -> Double -> Double -> Point
+pShift :: Point -> Double -> Double -> Double -> Point
 -- |
 -- Examples:
--- pshift (Point 1 0 3) 2 7 4
+-- pShift (Point 1 0 3) 2 7 4
 -- Point {px = 3.0, py = 7.0, pz = 7.0}
-pshift (Point x y z) sx sy sz = Point (x+sx) (y+sy) (z+sz)
+pShift (Point x y z) sx sy sz = Point (x+sx) (y+sy) (z+sz)
 
 
 -- | Conversion from point to vector
-p2v :: Point -> Vect
+pToVect :: Point -> Vect
 -- |
 -- Examples:
--- >>> p2v (Point 1 0 0)
+-- >>> pToVect (Point 1 0 0)
 -- Vect {x = 1.0, y = 0.0, z = 0.0}
-p2v (Point x y z) = Vect x y z
+pToVect (Point x y z) = Vect x y z
 
 
 -- Vector
@@ -361,61 +361,61 @@ data Vect = Vect {x, y, z :: Double} deriving (Eq, Ord, Show)
 
 
 -- | mapping on Vect
-vmap :: (Double -> Double) -> Vect -> Vect
-vmap f (Vect x y z) = Vect (f x) (f y) (f z)
+vMap :: (Double -> Double) -> Vect -> Vect
+vMap f (Vect x y z) = Vect (f x) (f y) (f z)
 
 
 -- | zipping on two Vects
-vzip :: (Double -> Double -> Double) -> Vect -> Vect -> Vect
-vzip f (Vect x1 y1 z1) (Vect x2 y2 z2) = Vect (f x1 x2) (f y1 y2) (f z1 z2)
+vZip :: (Double -> Double -> Double) -> Vect -> Vect -> Vect
+vZip f (Vect x1 y1 z1) (Vect x2 y2 z2) = Vect (f x1 x2) (f y1 y2) (f z1 z2)
 
 
 -- | folding on Vect
-vfold :: (Double -> Double -> Double) -> Vect -> Double
-vfold f (Vect x y z) = f x (f y z)
+vFold :: (Double -> Double -> Double) -> Vect -> Double
+vFold f (Vect x y z) = f x (f y z)
 
 
 -- | vector dot product
-vdot :: Vect -> Vect -> Double
+vDot :: Vect -> Vect -> Double
 -- |
 -- Examples:
--- >>> vdot (Vect 1 2 4) (Vect 0 3 15)
+-- >>> vDot (Vect 1 2 4) (Vect 0 3 15)
 -- 66.0
--- >>> vdot (Vect 2 0 3) (Vect 3 2 7)
+-- >>> vDot (Vect 2 0 3) (Vect 3 2 7)
 -- 27.0
--- >>> vdot (Vect 1 0 0) (Vect 1 0 0)
+-- >>> vDot (Vect 1 0 0) (Vect 1 0 0)
 -- 1.0
--- >>> vdot (Vect 1 0 0) (Vect 0 1 0)
+-- >>> vDot (Vect 1 0 0) (Vect 0 1 0)
 -- 0.0
--- >>> vdot (Vect 1 0 0) (Vect (-1) 0 0)
+-- >>> vDot (Vect 1 0 0) (Vect (-1) 0 0)
 -- -1.0
-vdot v1 v2 = vfold (+) $ vzip (*) v1 v2
+vDot v1 v2 = vFold (+) $ vZip (*) v1 v2
 
 
 -- | vector cross product
-vcross :: Vect -> Vect -> Vect
+vCross :: Vect -> Vect -> Vect
 -- |
 -- Examples:
--- >>> vcross (Vect 1 0 0) (Vect 0 1 0)
+-- >>> vCross (Vect 1 0 0) (Vect 0 1 0)
 -- Vect {x = 0.0, y = 0.0, z = 1.0}
--- >>> vcross vectZ vectX
+-- >>> vCross vectZ vectX
 -- Vect {x = 0.0, y = 1.0, z = 0.0}
-vcross (Vect x1 y1 z1) (Vect x2 y2 z2) = Vect {
+vCross (Vect x1 y1 z1) (Vect x2 y2 z2) = Vect {
   x = y1 * z2 - y2 * z1,
   y = z1 * x2 - z2 * x1,
   z = x1 * y2 - x2 * y1}
 
 
 instance Num Vect where
-  (+) = vzip (+)
-  (-) = vzip (-)
-  (*) = vcross
-  negate = vmap negate
+  (+) = vZip (+)
+  (-) = vZip (-)
+  (*) = vCross
+  negate = vMap negate
 
 
 -- | conversion to array
-v2a :: Vect -> A.Array Int Double
-v2a (Vect x y z) = A.array (1, 3) [(1, x), (2, y), (3, z)]
+vToArray :: Vect -> A.Array Int Double
+vToArray (Vect x y z) = A.array (1, 3) [(1, x), (2, y), (3, z)]
 
 
 -- | versor parallel to x axis
@@ -434,93 +434,93 @@ vectZ = Vect 0 0 1
 
 
 -- | horizontal length of a vector
-vlenh :: Vect -> Double
+vLenH :: Vect -> Double
 -- |
 -- Examples:
--- >>> vlenh (Vect 0 1 23)
+-- >>> vLenH (Vect 0 1 23)
 -- 1.0
--- >>> vlenh (Vect 1 1 1)
+-- >>> vLenH (Vect 1 1 1)
 -- 1.4142135623730951
--- >>> vlenh (Vect 3 4 2)
+-- >>> vLenH (Vect 3 4 2)
 -- 5.0
-vlenh (Vect x y _) = sqrt (x*x + y*y)
+vLenH (Vect x y _) = sqrt (x*x + y*y)
 
 
 -- | length (magnitude) of a vector
-vlen :: Vect -> Double
+vLen :: Vect -> Double
 -- |
 -- Examples:
--- >>> vlen (Vect 1 1 1)
+-- >>> vLen (Vect 1 1 1)
 -- 1.7320508075688772
-vlen (Vect x y z) = sqrt(x*x + y*y + z*z)
+vLen (Vect x y z) = sqrt(x*x + y*y + z*z)
 
 
 -- | is vector with almost zero components
-v_almost_zero :: Vect -> Bool
+vIsAlmostZero :: Vect -> Bool
 -- |
 -- Examples:
--- >>> v_almost_zero (Vect 1.0e-10 1.0e-10 1.0e-10)
+-- >>> vIsAlmostZero (Vect 1.0e-10 1.0e-10 1.0e-10)
 -- True
--- >>> v_almost_zero (Vect 1 0 2)
+-- >>> vIsAlmostZero (Vect 1 0 2)
 -- False
-v_almost_zero v = let l = vlen v
-                   in (l < v_min_magn_thresh)
+vIsAlmostZero v = let l = vLen v
+                   in (l < kVMinMagnThresh)
 
 
 -- | is regular vector
-v_notzero :: Vect -> Bool
+vIsNotZero :: Vect -> Bool
 -- |
 -- Examples:
--- >>> v_notzero (Vect 1 0 0)
+-- >>> vIsNotZero (Vect 1 0 0)
 -- True
--- >>> v_notzero (Vect 0 0 0)
+-- >>> vIsNotZero (Vect 0 0 0)
 -- False
-v_notzero v = not (v_almost_zero v)
+vIsNotZero v = not (vIsAlmostZero v)
 
 
 -- | is vector almost unitary
-v_almost_unit :: Vect -> Bool
+vIsAlmostUnit :: Vect -> Bool
 -- |
 -- Examples:
--- >>> v_almost_unit (Vect 1 0 0)
+-- >>> vIsAlmostUnit (Vect 1 0 0)
 -- True
--- >>> v_almost_unit (Vect 0 2 7)
+-- >>> vIsAlmostUnit (Vect 0 2 7)
 -- False
-v_almost_unit v = abs (1 - (vlen v)) < min_vector_magn_diff
+vIsAlmostUnit v = abs (1 - (vLen v)) < kVMinMagnDiff
 
 
 -- | are two vectors almost equal
-v_almost_equal :: Vect -> Vect -> Bool
+vAreAlmostEqual :: Vect -> Vect -> Bool
 -- |
 -- Examples:
--- >>> v_almost_equal (Vect 1 2 0) (Vect 1 2 1.0e-12)
+-- >>> vAreAlmostEqual (Vect 1 2 0) (Vect 1 2 1.0e-12)
 -- True
--- >>> v_almost_equal (Vect 0.1 3.4 0.7) (Vect 6.2 5.3 9.2)
+-- >>> vAreAlmostEqual (Vect 0.1 3.4 0.7) (Vect 6.2 5.3 9.2)
 -- False
-v_almost_equal v1 v2 = let l1 = vlen v1
-                           l2 = vlen v2
+vAreAlmostEqual v1 v2 = let l1 = vLen v1
+                            l2 = vLen v2
                         in
-                         (abs (l1 - l2)) < min_vector_magn_diff
+                         (abs (l1 - l2)) < kVMinMagnDiff
                          
 
 -- | invert vector direction 
-vinv :: Vect -> Vect
+vInvert :: Vect -> Vect
 -- |
 -- Examples:
--- >>> vinv (Vect 1 0 4)
+-- >>> vInvert (Vect 1 0 4)
 -- Vect {x = -1.0, y = -0.0, z = -4.0} 
-vinv = negate
+vInvert = negate
 
 
 -- | vector multiplication by scalar
-vmul :: Vect -> Double -> Vect
+vMul :: Vect -> Double -> Vect
 -- |
 -- Examples:
--- >>> vmul (Vect 1 0 3) 4
+-- >>> vMul (Vect 1 0 3) 4
 -- Vect {x = 4.0, y = 0.0, z = 12.0}
--- >>> vmul (Vect 1 3 2.5) 0.5
+-- >>> vMul (Vect 1 3 2.5) 0.5
 -- Vect {x = 0.5, y = 1.5, z = 1.25}
-vmul v s = vmap (*s) v
+vMul v s = vMap (*s) v
 
 
 -- | vector division by scalar
@@ -533,7 +533,7 @@ vmul v s = vmap (*s) v
 -- Nothing
 (//) v s = case s of
              0.0 -> Nothing
-             _   -> Just (vmap (/s) v)
+             _   -> Just (vMap (/s) v)
 
 
 -- | vector normalization
@@ -547,105 +547,105 @@ versor :: Vect -> Maybe Vect
 versor v = case l of
              0.0 -> Nothing
              _  -> v // l
-           where l = vlen v
+           where l = vLen v
 
 
 -- | check if upward-pointing vector
-v_is_upward :: Vect -> Bool
+vIsUpward :: Vect -> Bool
 -- |
 -- Examples:
--- >>> v_is_upward (Vect 1 0 3) 
+-- >>> vIsUpward (Vect 1 0 3) 
 -- True
--- >>> v_is_upward (Vect 0 (-2) (-3))
+-- >>> vIsUpward (Vect 0 (-2) (-3))
 -- False
-v_is_upward (Vect _ _ z) = z > 0.0
+vIsUpward (Vect _ _ z) = z > 0.0
 
 
 -- | check if downward-pointing vector
-v_is_downward :: Vect -> Bool
+vIsDownward :: Vect -> Bool
 -- |
 -- Examples:
--- >>> v_is_downward (Vect 1 0 (-3)) 
+-- >>> vIsDownward (Vect 1 0 (-3)) 
 -- True
--- >>> v_is_downward (Vect 0 (-2) 3)
+-- >>> vIsDownward (Vect 0 (-2) 3)
 -- False
-v_is_downward (Vect _ _ z) = z < 0.0
+vIsDownward (Vect _ _ z) = z < 0.0
 
 
 -- | upward-pointing vector
-vup :: Vect -> Vect
+vUpward :: Vect -> Vect
 -- |
 -- Examples:
--- >>> vup (Vect 1 1 1)
+-- >>> vUpward (Vect 1 1 1)
 -- Vect {x = 1.0, y = 1.0, z = 1.0}
--- >>> vup (Vect (-1) (-1) (-1))
+-- >>> vUpward (Vect (-1) (-1) (-1))
 -- Vect {x = 1.0, y = 1.0, z = 1.0}
-vup (Vect x y z) =
+vUpward (Vect x y z) =
   if (z < 0.0)
-    then vinv (Vect x y z)
+    then vInvert (Vect x y z)
     else Vect x y z
 
 
 -- | calculate a new downward-pointing vector
-vdown :: Vect -> Vect
+vDownward :: Vect -> Vect
 -- |
 -- Examples:
--- >>> vdown (Vect 1 1 1)
+-- >>> vDownward (Vect 1 1 1)
 -- Vect {x = -1.0, y = -1.0, z = -1.0}
--- >>> vdown (Vect 3 (-7) (-1))
+-- >>> vDownward (Vect 3 (-7) (-1))
 -- Vect {x = 3.0, y = -7.0, z = -1.0}
-vdown (Vect x y z) =
+vDownward (Vect x y z) =
   if (z > 0.0)
-    then vinv (Vect x y z)
+    then vInvert (Vect x y z)
     else Vect x y z
 
 
 -- | trend of a vector
---   (degrees, clockwise from North, range 0°-360°)
-vtrend :: Vect -> Maybe Double
+--   (uDegrees, clockwise from North, range 0°-360°)
+vTrend :: Vect -> Maybe Double
 -- |
 -- Examples:
--- >>> vtrend (Vect 1 0 0)
+-- >>> vTrend (Vect 1 0 0)
 -- Just 90.0
--- >>> vtrend (Vect 0 1 0)
+-- >>> vTrend (Vect 0 1 0)
 -- Just 0.0
--- >>> vtrend (Vect 1 1 0)
+-- >>> vTrend (Vect 1 1 0)
 -- Just 45.0
--- >>> vtrend (Vect 1 (-1) 0)
+-- >>> vTrend (Vect 1 (-1) 0)
 -- Just 135.0 
--- >>> vtrend (Vect 0 (-1) 0)
+-- >>> vTrend (Vect 0 (-1) 0)
 -- Just 180.0
--- >>> vtrend (Vect (-1) (-1) 0)
+-- >>> vTrend (Vect (-1) (-1) 0)
 -- Just 225.0
--- >>> vtrend (Vect (-1) 0 0)
+-- >>> vTrend (Vect (-1) 0 0)
 -- Just 270.0
--- >>> vtrend (Vect (-1) 1 0)
+-- >>> vTrend (Vect (-1) 1 0)
 -- Just 315.0
--- >>> vtrend (Vect 1 1 10)
+-- >>> vTrend (Vect 1 1 10)
 -- Just 45.0
-vtrend (Vect x y z) = angle_north_clock x y
+vTrend (Vect x y z) = uAngleNorthClock x y
 
 
--- | slope of vector
---   (degrees, positive: downward-directed, negative: upward-dir., range -90°/90°
-vslope :: Vect -> Maybe Double
+-- | uSlope of vector
+--   (uDegrees, positive: downward-directed, negative: upward-dir., range -90°/90°
+vSlope :: Vect -> Maybe Double
 -- |
 -- Examples:
--- >>> vslope (Vect 1 0 (-1))
+-- >>> vSlope (Vect 1 0 (-1))
 -- Just 45.0
--- >>> vslope (Vect 1 0 1)
+-- >>> vSlope (Vect 1 0 1)
 -- Just (-45.0)
--- >>> vslope (Vect 0 1 0)
+-- >>> vSlope (Vect 0 1 0)
 -- Just 0.0
--- >>> vslope (Vect 0 0 1)
+-- >>> vSlope (Vect 0 0 1)
 -- Just (-90.0)
--- >>> vslope (Vect 0 0 (-1))
+-- >>> vSlope (Vect 0 0 (-1))
 -- Just 90.0
--- >>> vslope (Vect 0 0 0)
+-- >>> vSlope (Vect 0 0 0)
 -- Nothing
-vslope v = let h = vlenh v
+vSlope v = let h = vLenH v
                zv = z v
-               sl = slope h (abs zv)
+               sl = uSlope h (abs zv)
             in case sl of
               Nothing -> Nothing
               Just slp   -> if (zv <= 0.0)
@@ -676,8 +676,8 @@ vToGVect :: Vect -> Maybe GVect
 -- Just (GVect {tr = 180.0, pl = 0.0})
 -- >>> vToGVect (Vect (-1) (-1) 0)
 -- Just (GVect {tr = 225.0, pl = 0.0})
-vToGVect v = let trend = vtrend v
-                 plunge = vslope v
+vToGVect v = let trend = vTrend v
+                 plunge = vSlope v
             in case (trend, plunge) of
                 (_,       Just    90.0)  -> Just (GVect 0.0   90.0 )
                 (_,       Just (-90.0))  -> Just (GVect 0.0 (-90.0))
@@ -716,16 +716,16 @@ vToGAxis v = let gv = vToGVect v
 
 
 -- | Cosine of the angle between two versors.
-versors_cos_angle :: Vect -> Vect -> Double
+versCosAngle :: Vect -> Vect -> Double
 -- |
 -- Examples:
--- >>> versors_cos_angle (Vect 1 0 0) (Vect 0 0 1)
+-- >>> versCosAngle (Vect 1 0 0) (Vect 0 0 1)
 -- 0.0
--- >>> versors_cos_angle (Vect 1 0 0) (Vect (-1) 0 0)
+-- >>> versCosAngle (Vect 1 0 0) (Vect (-1) 0 0)
 -- -1.0
--- >>> versors_cos_angle (Vect 1 0 0) (Vect 1 0 0)
+-- >>> versCosAngle (Vect 1 0 0) (Vect 1 0 0)
 -- 1.0
-versors_cos_angle v1 v2 = let  dp = vdot v1 v2 in
+versCosAngle v1 v2 = let  dp = vDot v1 v2 in
                             if (dp > 1.0)
                               then 1.0
                             else if (dp < (-1.0))
@@ -734,28 +734,28 @@ versors_cos_angle v1 v2 = let  dp = vdot v1 v2 in
                                              
 
 -- | Return the cosine of the angle between two vectors.
-cos_angle :: Vect -> Vect -> Maybe Double
+vCosAngle :: Vect -> Vect -> Maybe Double
 -- |
 -- Examples:
--- >>> cos_angle (Vect 1 0 0) (Vect 0 0 1)
+-- >>> vCosAngle (Vect 1 0 0) (Vect 0 0 1)
 -- Just 0.0
--- >>> cos_angle (Vect 1 0 0) (Vect (-1) 0 0)
+-- >>> vCosAngle (Vect 1 0 0) (Vect (-1) 0 0)
 -- Just (-1.0)
--- >>> cos_angle (Vect 1 0 0) (Vect 1 0 0)
+-- >>> vCosAngle (Vect 1 0 0) (Vect 1 0 0)
 -- Just 1.0
--- >>> cos_angle (Vect 0 0 0) (Vect 1 0 0)
+-- >>> vCosAngle (Vect 0 0 0) (Vect 1 0 0)
 -- Nothing
--- >>> cos_angle (Vect 1 0 0) (Vect 0 0 0)
+-- >>> vCosAngle (Vect 1 0 0) (Vect 0 0 0)
 -- Nothing
-cos_angle v1 v2 = let uv1 = versor v1
+vCosAngle v1 v2 = let uv1 = versor v1
                       uv2 = versor v2
                    in case (uv1, uv2) of
                      (Nothing, _)         -> Nothing
                      (_, Nothing)         -> Nothing
-                     (Just vv1, Just vv2) -> Just (versors_cos_angle vv1 vv2)
+                     (Just vv1, Just vv2) -> Just (versCosAngle vv1 vv2)
 
 
--- | Calculate angle between two vectors, as degrees
+-- | Calculate angle between two vectors, as uDegrees
 -- | in 0° - 180° range.
 vAngle :: Vect -> Vect -> Maybe Double
 -- |
@@ -772,50 +772,50 @@ vAngle :: Vect -> Vect -> Maybe Double
 -- Nothing
 -- >>> vAngle (Vect 1 0 0) (Vect 0 0 0)
 -- Nothing
-vAngle v1 v2 = let cos_ang = cos_angle v1 v2
+vAngle v1 v2 = let cos_ang = vCosAngle v1 v2
                in case cos_ang of
                  Nothing -> Nothing
-                 Just ca -> Just (degrees $ acos ca)
+                 Just ca -> Just (uDegrees $ acos ca)
 
 
 -- | Determine whether two vectors are sub-parallel
-v_subparallel :: Vect -> Vect -> Maybe Bool
+vAreSubParallel :: Vect -> Vect -> Maybe Bool
 -- |  
 -- Examples:
--- >>> v_subparallel (Vect 1 0 0) (Vect 1 0 0)
+-- >>> vAreSubParallel (Vect 1 0 0) (Vect 1 0 0)
 -- Just True
--- >>> v_subparallel (Vect 1 0 0) (Vect 0 0 1)
+-- >>> vAreSubParallel (Vect 1 0 0) (Vect 0 0 1)
 -- Just False
--- >>> v_subparallel (Vect 1 0 0) (Vect (-1) 0 0)
+-- >>> vAreSubParallel (Vect 1 0 0) (Vect (-1) 0 0)
 -- Just False
--- >>> v_subparallel (Vect 0 0 0) (Vect 1 0 0)
+-- >>> vAreSubParallel (Vect 0 0 0) (Vect 1 0 0)
 -- Nothing
--- >>> v_subparallel (Vect 1 0 0) (Vect 0 0 0)
+-- >>> vAreSubParallel (Vect 1 0 0) (Vect 0 0 0)
 -- Nothing
-v_subparallel v1 v2 = let ang = vAngle v1 v2
+vAreSubParallel v1 v2 = let ang = vAngle v1 v2
                        in case ang of
                          Nothing  -> Nothing
-                         Just a   -> Just (a < v_angle_thresh)
+                         Just a   -> Just (a < kVAngleThresh)
 
                                      
 -- | Check whether two vectors are sub-orhogonal
-v_is_suborthogonal :: Vect -> Vect -> Maybe Bool
+vAreSubOrthogonal :: Vect -> Vect -> Maybe Bool
 -- |
 -- Example:
--- >>> v_is_suborthogonal (Vect 1 0 0) (Vect 1 1 0)
+-- >>> vAreSubOrthogonal (Vect 1 0 0) (Vect 1 1 0)
 -- Just False
--- >>> v_is_suborthogonal (Vect 1 0 0) (Vect 0 1 0)
+-- >>> vAreSubOrthogonal (Vect 1 0 0) (Vect 0 1 0)
 -- Just True
--- >>> v_is_suborthogonal (Vect 1 0 0) (Vect 0 1 1)
+-- >>> vAreSubOrthogonal (Vect 1 0 0) (Vect 0 1 1)
 -- Just True
--- >>> v_is_suborthogonal (Vect 1 0 0) (Vect 0 0.9999999999999 0)
+-- >>> vAreSubOrthogonal (Vect 1 0 0) (Vect 0 0.9999999999999 0)
 -- Just True
--- >>> v_is_suborthogonal (Vect 1 0 0) (Vect 0 0 0)
+-- >>> vAreSubOrthogonal (Vect 1 0 0) (Vect 0 0 0)
 -- Nothing
-v_is_suborthogonal v1 v2 = let ang = vAngle v1 v2
+vAreSubOrthogonal v1 v2 = let ang = vAngle v1 v2
                             in case ang of
                               Nothing -> Nothing
-                              Just a  -> Just ((90.0 - a) < v_angle_thresh)
+                              Just a  -> Just ((90.0 - a) < kVAngleThresh)
 
 -- | Matrix multiplication of a vector
 -- TODO
@@ -825,7 +825,7 @@ v_is_suborthogonal v1 v2 = let ang = vAngle v1 v2
 {- | GVect
 
 Geological vector.
-Defined by trend and plunge (both in degrees):
+Defined by trend and plunge (both in uDegrees):
  - trend: [0.0, 360.0[ clockwise, from 0 (North):
  - plunge: [-90.0, 90.0] - negative value: upward pointing axis,
                            positive values: downward axis;
@@ -835,13 +835,13 @@ data GVect = GVect {tr, pl :: Double} deriving (Eq, Ord, Show)
 
 
 -- | mapping on GVect
-gvmap :: (Double -> Double) -> GVect -> GVect
-gvmap f (GVect tr pl) = GVect (f tr) (f pl)
+gvMap :: (Double -> Double) -> GVect -> GVect
+gvMap f (GVect tr pl) = GVect (f tr) (f pl)
 
 
 -- | zipping on GVect
-gvzip :: (Double -> Double -> Double) -> GVect -> GVect -> GVect
-gvzip f (GVect tr1 pl1) (GVect tr2 pl2) = GVect (f tr1 tr2) (f pl1 pl2)
+gvZip :: (Double -> Double -> Double) -> GVect -> GVect -> GVect
+gvZip f (GVect tr1 pl1) (GVect tr2 pl2) = GVect (f tr1 tr2) (f pl1 pl2)
 
 
 -- | Return trend of the geological direction
@@ -853,7 +853,7 @@ gvTr :: GVect -> Double
 -- 60.0
 -- >>> gvTr (GVect (-20) 49)
 -- 340.0
-gvTr (GVect tr _) = m360 tr
+gvTr (GVect tr _) = uM360 tr
 
 
 -- | Return plunge of the geological direction
@@ -869,48 +869,48 @@ gvPl (GVect _ pl) = pl
 
 
 -- | Return trend and plunge of the geological direction
-gvTp :: GVect -> (Double, Double)
+gvTrPl :: GVect -> (Double, Double)
 -- |
 -- Example:
--- >>> gvTp (GVect (-90) (-45))
+-- >>> gvTrPl (GVect (-90) (-45))
 -- (270.0,-45.0)
-gvTp (GVect tr pl) = (m360 tr, pl)
+gvTrPl (GVect tr pl) = (uM360 tr, pl)
 
 
 -- | Calculates the colatitude from the North (top)
--- | return an angle bewtween 0 and 180 (as degrees)
-gvColatitudeNorth :: GVect -> Double
+-- | return an angle bewtween 0 and 180 (as uDegrees)
+gvColatNorth :: GVect -> Double
 -- |
 -- Examples:
--- >>> gvColatitudeNorth (GVect 320 90)
+-- >>> gvColatNorth (GVect 320 90)
 -- 180.0
--- >>> gvColatitudeNorth (GVect 320 45)
+-- >>> gvColatNorth (GVect 320 45)
 -- 135.0
--- >>> gvColatitudeNorth (GVect 320 0)
+-- >>> gvColatNorth (GVect 320 0)
 -- 90.0
--- >>> gvColatitudeNorth (GVect 320 (-45))
+-- >>> gvColatNorth (GVect 320 (-45))
 -- 45.0
--- >>> gvColatitudeNorth (GVect 320 (-90))
+-- >>> gvColatNorth (GVect 320 (-90))
 -- 0.0
-gvColatitudeNorth (GVect _ pl) = plng2colatTop pl
+gvColatNorth (GVect _ pl) = uPlngToColatTop pl
 
 
 -- | Calculates the colatitude from the South (bottom)
--- | return an angle bewtween 0 and 180 (as degrees)
-gvColatitudeSouth :: GVect -> Double
+-- | return an angle bewtween 0 and 180 (as uDegrees)
+gvColatSouth :: GVect -> Double
 -- |
 -- Examples:
--- >>> gvColatitudeSouth (GVect 320 90)
+-- >>> gvColatSouth (GVect 320 90)
 -- 0.0
--- >>> gvColatitudeSouth (GVect 320 45)
+-- >>> gvColatSouth (GVect 320 45)
 -- 45.0
--- >>> gvColatitudeSouth (GVect 320 0)
+-- >>> gvColatSouth (GVect 320 0)
 -- 90.0
--- >>> gvColatitudeSouth (GVect 320 (-45))
+-- >>> gvColatSouth (GVect 320 (-45))
 -- 135.0
--- >>> gvColatitudeSouth (GVect 320 (-90))
+-- >>> gvColatSouth (GVect 320 (-90))
 -- 180.0
-gvColatitudeSouth (GVect _ pl) = plng2colatBottom pl
+gvColatSouth (GVect _ pl) = uPlngToColatBottom pl
 
 
 -- | Return a copy of the GVect instance
@@ -931,7 +931,7 @@ gvOpposite :: GVect -> GVect
 -- >>> gvOpposite (GVect 190 (-40))
 -- GVect {tr = 10.0, pl = 40.0}
 gvOpposite (GVect tr0 pl0) =
-  let tr1 = opposite_trend tr0
+  let tr1 = uOppositeTrend tr0
       pl1 = - pl0
    in GVect tr1 pl1
 
@@ -948,7 +948,7 @@ gvNormalDown :: GVect -> GVect
 -- >>> gvNormalDown (GVect 180 90)
 -- GVect {tr = 0.0, pl = 0.0}
 gvNormalDown (GVect tr pl) =
-  let dip_dir = opposite_trend tr
+  let dip_dir = uOppositeTrend tr
       dip_angle = 90.0 - pl
    in GVect dip_dir dip_angle
 
@@ -956,8 +956,8 @@ gvNormalDown (GVect tr pl) =
 -- | Unit vector from GVect instance
 gvToVersor :: GVect -> Vect
 gvToVersor (GVect trend plunge) =
-  let tr = radians trend
-      pl = radians plunge
+  let tr = uRadians trend
+      pl = uRadians plunge
       cos_tr = cos tr
       sin_tr = sin tr
       cos_pl = cos pl
@@ -1003,44 +1003,44 @@ gvIsDownward gv = (z $ gvToVersor gv) < 0.0
 
 
 -- | Return upward-point geological vector
-gvUp :: GVect -> GVect
+gvUpward :: GVect -> GVect
 -- |
 -- Examples:
--- >>> gvUp (GVect 90 (-45))
+-- >>> gvUpward (GVect 90 (-45))
 -- GVect {tr = 90.0, pl = -45.0}
--- >>> gvUp (GVect 180 45)
+-- >>> gvUpward (GVect 180 45)
 -- GVect {tr = 0.0, pl = -45.0}
--- >>> gvUp (GVect 0 0)
+-- >>> gvUpward (GVect 0 0)
 -- GVect {tr = 0.0, pl = 0.0}
--- >>> gvUp (GVect 0 90)
+-- >>> gvUpward (GVect 0 90)
 -- GVect {tr = 180.0, pl = -90.0}
--- >>> gvUp (GVect 0 (-90))
+-- >>> gvUpward (GVect 0 (-90))
 -- GVect {tr = 0.0, pl = -90.0}
-gvUp gv = if (gvIsDownward gv)
+gvUpward gv = if (gvIsDownward gv)
            then gvOpposite gv
            else gvCopy gv
                 
 
 -- | Return downward-point geological vector
-gvDown :: GVect -> GVect
+gvDownward :: GVect -> GVect
 -- |
 -- Examples:
--- >>> gvDown (GVect 90 (-45))
+-- >>> gvDownward (GVect 90 (-45))
 -- GVect {tr = 270.0, pl = 45.0}
--- >>> gvDown (GVect 180 45)
+-- >>> gvDownward (GVect 180 45)
 -- GVect {tr = 180.0, pl = 45.0}
--- >>> gvDown (GVect 0 0)
+-- >>> gvDownward (GVect 0 0)
 -- GVect {tr = 0.0, pl = 0.0}
--- >>> gvDown (GVect 0 90)
+-- >>> gvDownward (GVect 0 90)
 -- GVect {tr = 0.0, pl = 90.0}
--- >>> gvDown (GVect 0 (-90))
+-- >>> gvDownward (GVect 0 (-90))
 -- GVect {tr = 180.0, pl = 90.0}
-gvDown gv = if (gvIsUpward gv)
+gvDownward gv = if (gvIsUpward gv)
            then gvOpposite gv
            else gvCopy gv
 
 
--- |  Calculate angle (in degrees) between the two GVect instances.
+-- |  Calculate angle (in uDegrees) between the two GVect instances.
 -- |  Range is 0°-180°.
 gvAngle :: GVect -> GVect -> Double
 -- |
@@ -1055,22 +1055,22 @@ gvAngle :: GVect -> GVect -> Double
 -- 180.0
 -- >>> gvAngle (GVect 90 0) (GVect 270 0)
 -- 180.0
-gvAngle gv1 gv2 = degrees $ acos $ versors_cos_angle (gvToVersor gv1) (gvToVersor gv2)
+gvAngle gv1 gv2 = uDegrees $ acos $ versCosAngle (gvToVersor gv1) (gvToVersor gv2)
 
 
 -- |  Check that two GVect are sub-parallel
-gvAlmostParallel :: GVect -> GVect -> Bool
+gvAreAlmostParallel :: GVect -> GVect -> Bool
 -- |
 -- Examples:
--- >>> gvAlmostParallel (GVect 0 90) (GVect 90 0)
+-- >>> gvAreAlmostParallel (GVect 0 90) (GVect 90 0)
 -- False
--- >>> gvAlmostParallel (GVect 0 0) (GVect 0 1e-6)
+-- >>> gvAreAlmostParallel (GVect 0 0) (GVect 0 1e-6)
 -- True
--- >>> gvAlmostParallel (GVect 0 90) (GVect 180 0)
+-- >>> gvAreAlmostParallel (GVect 0 90) (GVect 180 0)
 -- False
--- >>> gvAlmostParallel (GVect 0 90) (GVect 0 (-90))
+-- >>> gvAreAlmostParallel (GVect 0 90) (GVect 0 (-90))
 -- False
-gvAlmostParallel gv1 gv2 = (gvAngle gv1 gv2) < v_angle_thresh
+gvAreAlmostParallel gv1 gv2 = (gvAngle gv1 gv2) < kVAngleThresh
 
 
 -- | Return the geological plane normal to the geological vector.
@@ -1084,7 +1084,7 @@ gvNormalGPlane :: GVect -> GPlane
 -- >>> gvNormalGPlane (GVect 0 90)
 -- GPlane {az = 180.0, dip = 0.0}
 gvNormalGPlane gv =
-  let down_axis = gvDown gv
+  let down_axis = gvDownward gv
       norm_down = gvNormalDown down_axis
    in gvToGPlane norm_down
        
@@ -1113,7 +1113,7 @@ gvCommonPlane :: GVect -> GVect -> Maybe GPlane
 -- Nothing
 gvCommonPlane gv1 gv2 = let v1 = gvToVersor gv1
                             v2 = gvToVersor gv2
-                            normal_v = vcross v1 v2
+                            normal_v = vCross v1 v2
                             normal_gv = vToGVect normal_v
                          in case normal_gv of
                            Nothing -> Nothing
@@ -1128,7 +1128,7 @@ gvToGAxis (GVect tr pl) = GAxis tr pl
 
 
 {- Calculate the GVect instance that is normal to the two provided sources.
-Angle between sources must be larger than v_angle_thresh,
+Angle between sources must be larger than kVAngleThresh,
 otherwise Nothing will be returned.
 -}
 gvNormalGVect :: GVect -> GVect -> Maybe GVect
@@ -1143,25 +1143,71 @@ gvNormalGVect :: GVect -> GVect -> Maybe GVect
 -- >>> gvNormalGVect (GVect 90 45) (GVect 90 0)
 -- Just (GVect {tr = 180.0, pl = 0.0})
 gvNormalGVect gv1 gv2 = let angle = gvAngle gv1 gv2
-                            delta_angle = if (angle < v_angle_thresh) then False
-                                          else if (angle >= (180.0 - v_angle_thresh)) then False
+                            delta_angle = if (angle < kVAngleThresh) then False
+                                          else if (angle >= (180.0 - kVAngleThresh)) then False
                                           else True
                             in case delta_angle of
                              False -> Nothing
-                             True  -> vToGVect $ vcross (gvToVersor gv1) (gvToVersor gv2)
+                             True  -> vToGVect $ vCross (gvToVersor gv1) (gvToVersor gv2)
 
 
 {- Geological axis. While GAxis is non-directional, the geological vector (GVect) is directional.
-    Defined by trend and plunge (both in degrees):
+    Defined by trend and plunge (both in uDegrees):
      - trend: [0.0, 360.0[ clockwise, from 0 (North):
      - plunge: [-90.0, 90.0].
 -}
 
 data GAxis = GAxis {t, p :: Double} deriving (Eq, Ord, Show)
 
+-- | Converts a geological axis to a geological vector
+gaToGVect :: GAxis -> GVect
+-- |
+-- Example:
+-- >>> gaToGVect (GAxis 220 32)
+-- GVect {tr = 220.0, pl = 32.0}
+gaToGVect (GAxis t p) = GVect t p
+
+
+-- | Converts a geological axis to a versor
+gaToVers :: GAxis -> Vect
+-- |
+-- Examples:
+-- >>> gaToVers (GAxis 90 0)
+-- Vect {x = 1.0, y = 6.123233995736766e-17, z = -0.0}
+-- >>> gaToVers (GAxis 0 45)
+-- Vect {x = 0.0, y = 0.7071067811865476, z = -0.7071067811865475}
+-- >>> gaToVers (GAxis 0 90)
+-- Vect {x = 0.0, y = 6.123233995736766e-17, z = -1.0}
+-- >>> gaToVers (GAxis 270 (-90))
+-- Vect {x = -6.123233995736766e-17, y = -1.1248198369963932e-32, z = 1.0}
+gaToVers ga = gvToVersor $ gaToGVect ga
+
+
+-- | Calculate angle (in uDegrees) between the two GAxis instances.
+-- | Range: 0.0 - 90.0
+gaAngle :: GAxis -> GAxis -> Double
+-- |
+-- Examples:
+-- >>> gaAngle (GAxis 0 90) (GAxis 90 0)
+-- 90.0
+-- >>> gaAngle (GAxis 0 0) (GAxis 270 0)
+-- 90.0
+-- >>> gaAngle (GAxis 0 0) (GAxis 0 0)
+-- 0.0
+-- >>> gaAngle (GAxis 0 0) (GAxis 180 0)
+-- 0.0
+-- >>> gaAngle (GAxis 0 0) (GAxis 179 0)
+-- 1.0
+-- >>> gaAngle (GAxis 0 (-90)) (GAxis 0 90)
+-- 0.0
+-- >>> gaAngle (GAxis 90 0) (GAxis 315 0)
+-- 45.0
+gaAngle ga1 ga2 = let angle_vers = uDegrees $ acos $ versCosAngle (gaToVers ga1) (gaToVers ga2)
+                   in min  angle_vers (180.0 - angle_vers)
+
 
 {- Geological plane.
-    Defined by dip direction azimuth and dip angle (both in degrees):
+    Defined by dip direction azimuth and dip angle (both in uDegrees):
      - dip direction azimuth: [0.0, 360.0[ clockwise, from 0 (North);
      - dip angle: [0, 90.0]: downward-pointing.
 -}
