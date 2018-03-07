@@ -1191,19 +1191,65 @@ gaAngle :: GAxis -> GAxis -> Double
 -- >>> gaAngle (GAxis 0 90) (GAxis 90 0)
 -- 90.0
 -- >>> gaAngle (GAxis 0 0) (GAxis 270 0)
--- 90.0
+-- 89.99999999999999
 -- >>> gaAngle (GAxis 0 0) (GAxis 0 0)
 -- 0.0
 -- >>> gaAngle (GAxis 0 0) (GAxis 180 0)
 -- 0.0
 -- >>> gaAngle (GAxis 0 0) (GAxis 179 0)
--- 1.0
+-- 0.9999999999998863
 -- >>> gaAngle (GAxis 0 (-90)) (GAxis 0 90)
 -- 0.0
 -- >>> gaAngle (GAxis 90 0) (GAxis 315 0)
--- 45.0
+-- 44.99999999999997
 gaAngle ga1 ga2 = let angle_vers = uDegrees $ acos $ versCosAngle (gaToVers ga1) (gaToVers ga2)
                    in min  angle_vers (180.0 - angle_vers)
+
+-- | Check that two GAxis are sub-parallel
+gaAreSubParallel :: GAxis -> GAxis -> Bool
+-- |
+-- Examples:
+-- >>> gaAreSubParallel (GAxis 0 90) (GAxis 90 0)
+-- False
+-- >>> gaAreSubParallel (GAxis 0 0) (GAxis 0 1.0e-6)
+-- True
+-- >>> gaAreSubParallel (GAxis 0 0) (GAxis 180 0)
+-- True
+-- >>> gaAreSubParallel (GAxis 90 0) (GAxis 270 0)
+-- True
+-- >>> gaAreSubParallel (GAxis 0 90) (GAxis 0 (-90))
+-- True
+gaAreSubParallel ga1 ga2 = (gaAngle ga1 ga2) <= kVAngleThresh
+  
+
+-- | Check that two GAxis are sub-orthogonal
+gaAreSubOrthogonal :: GAxis -> GAxis -> Bool
+-- |
+-- Examples:
+-- >>> gaAreSubOrthogonal (GAxis 0 90) (GAxis 90 0)
+-- True
+-- >>> gaAreSubOrthogonal (GAxis 0 0) (GAxis 0 1.0e-6)
+-- False
+-- >>> gaAreSubOrthogonal (GAxis 0 0) (GAxis 180 0)
+-- False
+-- >>> gaAreSubOrthogonal (GAxis 90 0) (GAxis 270 89.5)
+-- True
+-- >>> gaAreSubOrthogonal (GAxis 0 90) (GAxis 0 0.5)
+-- True
+gaAreSubOrthogonal ga1 ga2 = (90.0 - (gaAngle ga1 ga2)) < kVAngleThresh
+
+
+-- | Calculate the geological plane normal to a given GAxis instance.
+gaNormalGPlane :: GAxis -> GPlane
+-- |
+-- Example:
+-- >>> gaNormalGPlane (GAxis 0 90)
+-- GPlane {az = 180.0, dip = 0.0}
+-- >>> gaNormalGPlane (GAxis 0 0)
+-- GPlane {az = 180.0, dip = 90.0}
+-- >>> gaNormalGPlane (GAxis 45 45)
+-- GPlane {az = 225.0, dip = 45.0}
+gaNormalGPlane ga = gvNormalGPlane $ gaToGVect ga
 
 
 {- Geological plane.
