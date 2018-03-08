@@ -1169,18 +1169,18 @@ gaToGVect (GAxis t p) = GVect t p
 
 
 -- | Converts a geological axis to a versor
-gaToVers :: GAxis -> Vect
+gaToVersor :: GAxis -> Vect
 -- |
 -- Examples:
--- >>> gaToVers (GAxis 90 0)
+-- >>> gaToVersor (GAxis 90 0)
 -- Vect {x = 1.0, y = 6.123233995736766e-17, z = -0.0}
--- >>> gaToVers (GAxis 0 45)
+-- >>> gaToVersor (GAxis 0 45)
 -- Vect {x = 0.0, y = 0.7071067811865476, z = -0.7071067811865475}
--- >>> gaToVers (GAxis 0 90)
+-- >>> gaToVersor (GAxis 0 90)
 -- Vect {x = 0.0, y = 6.123233995736766e-17, z = -1.0}
--- >>> gaToVers (GAxis 270 (-90))
+-- >>> gaToVersor (GAxis 270 (-90))
 -- Vect {x = -6.123233995736766e-17, y = -1.1248198369963932e-32, z = 1.0}
-gaToVers ga = gvToVersor $ gaToGVect ga
+gaToVersor ga = gvToVersor $ gaToGVect ga
 
 
 -- | Calculate angle (in uDegrees) between the two GAxis instances.
@@ -1202,7 +1202,7 @@ gaAngle :: GAxis -> GAxis -> Double
 -- 0.0
 -- >>> gaAngle (GAxis 90 0) (GAxis 315 0)
 -- 44.99999999999997
-gaAngle ga1 ga2 = let angle_vers = uDegrees $ acos $ versCosAngle (gaToVers ga1) (gaToVers ga2)
+gaAngle ga1 ga2 = let angle_vers = uDegrees $ acos $ versCosAngle (gaToVersor ga1) (gaToVersor ga2)
                    in min  angle_vers (180.0 - angle_vers)
 
 -- | Check that two GAxis are sub-parallel
@@ -1250,6 +1250,45 @@ gaNormalGPlane :: GAxis -> GPlane
 -- >>> gaNormalGPlane (GAxis 45 45)
 -- GPlane {az = 225.0, dip = 45.0}
 gaNormalGPlane ga = gvNormalGPlane $ gaToGVect ga
+
+
+-- | Check whether the GAxis instance is pointing upward.
+gaIsUpward :: GAxis -> Bool
+-- |
+-- Examples:
+-- >>> gaIsUpward (GAxis 10 15)
+-- False
+-- >>> gaIsUpward (GAxis 257.4 0.0)
+-- False
+-- >>> gaIsUpward (GAxis 90 (-45))
+-- True
+gaIsUpward ga = gvIsUpward $ gaToGVect ga
+
+
+-- | Check whether the GAxis instance is pointing downward.
+gaIsDownward :: GAxis -> Bool
+-- |
+-- Examples:
+-- >>> gaIsDownward (GAxis 10 15)
+-- True
+-- >>> gaIsDownward (GAxis 257.4 0.0)
+-- False
+-- >>> gaIsDownward (GAxis 90 (-45))
+-- False
+gaIsDownward ga = gvIsDownward $ gaToGVect ga
+
+
+-- | Check whether the GAxis instance is almost horizontal
+gaIsSubHorizontal :: GAxis -> Bool
+-- |
+-- Examples:
+-- >>> gaIsSubHorizontal (GAxis 10 15)
+-- False
+-- >>> gaIsSubHorizontal (GAxis 257 0.5)
+-- True
+-- >>> gaIsSubHorizontal (GAxis 90 (-5))
+-- False
+gaIsSubHorizontal (GAxis tr pl) = (abs pl) < kVAngleThresh
 
 
 {- Geological plane.
