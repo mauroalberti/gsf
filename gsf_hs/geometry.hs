@@ -1291,6 +1291,55 @@ gaIsSubHorizontal :: GAxis -> Bool
 gaIsSubHorizontal (GAxis tr pl) = (abs pl) < kVAngleThresh
 
 
+-- | Return upward-point geological axis.
+gaUpward :: GAxis -> GAxis
+-- |
+-- Examples:
+-- >>> gaUpward (GAxis 90 (-45))
+-- GAxis {t = 90.0, p = -45.0}
+-- >>> gaUpward (GAxis 180 45)
+-- GAxis {t = 0.0, p = -45.0}
+-- >>> gaUpward (GAxis 0 0)
+-- GAxis {t = 0.0, p = 0.0}
+-- >>> gaUpward (GAxis 0 90)
+-- GAxis {t = 180.0, p = -90.0}
+gaUpward gv = gvToGAxis $ gvUpward $ gaToGVect gv
+
+
+-- | Return downward-point geological axis.
+gaDownward :: GAxis -> GAxis
+-- |
+-- Examples:
+-- >>> gaDownward (GAxis 90 (-45))
+-- GAxis {t = 270.0, p = 45.0}
+-- >>> gaDownward (GAxis 180 45)
+-- GAxis {t = 180.0, p = 45.0}
+-- >>> gaDownward (GAxis 0 0)
+-- GAxis {t = 0.0, p = 0.0}
+-- >>> gaDownward (GAxis 0 90)
+-- GAxis {t = 0.0, p = 90.0}
+gaDownward gv = gvToGAxis $ gvDownward $ gaToGVect gv
+
+
+-- | Calculate GPlane instance defined by the two GAxis instances.
+gaCommonPlane :: GAxis -> GAxis -> Maybe GPlane
+-- |
+-- Examples:
+-- >>> gaCommonPlane (GAxis 0 0) (GAxis 90 0)
+-- Just (GPlane {az = 180.0, dip = 0.0})
+-- >>> gaCommonPlane (GAxis 0 0) (GAxis 90 90)
+-- Just (GPlane {az = 90.0, dip = 90.0})
+-- >>> gaCommonPlane (GAxis 45 0) (GAxis 135 45)
+-- Just (GPlane {az = 135.0, dip = 44.99999999999999})
+-- >>> gaCommonPlane (GAxis 315 45) (GAxis 135 45)
+-- Just (GPlane {az = 225.0, dip = 90.0})
+-- >>> gaCommonPlane (GAxis 45 0) (GAxis 135 45)
+-- Just (GPlane {az = 135.0, dip = 44.99999999999999})
+-- >>> gaCommonPlane (GAxis 315 45) (GAxis 135 45)
+-- Just (GPlane {az = 225.0, dip = 90.0})
+gaCommonPlane ga1 ga2 = gvCommonPlane (gaToGVect ga1) (gaToGVect ga2)
+
+
 {- Geological plane.
     Defined by dip direction azimuth and dip angle (both in uDegrees):
      - dip direction azimuth: [0.0, 360.0[ clockwise, from 0 (North);
