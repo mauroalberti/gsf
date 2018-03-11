@@ -32,6 +32,7 @@ class Slickenline(object):
 
         if not isinstance(mov_lin, (GVect, GAxis)):
             raise SlickelineInputTypeException("Input movement is not of the correct type")
+
         self._mov_lin = mov_lin
 
     def has_known_sense(self):
