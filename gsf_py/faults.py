@@ -7,7 +7,7 @@ from .mathematics import are_close
 class Slickenline(object):
     """
     Slickeline.
-    It can be defined through a GVect instance, in which caseit has a movement sense,
+    It can be defined through a GVect instance, in which case it has a movement sense,
     or via a GAxis, when the movement sense is unknown or not sure.
     When the movement sense is known, the GVect instance indicates the displacement of the block that is:
     - for a horizontal or a dipping, non vertical fault: the upper block
