@@ -14,10 +14,11 @@ class RefFrame(object):
         :param versor_y: Vect instance, representing y axis orientation
         """
 
-        assert versor_x.is_near_unit
-        assert versor_y.is_near_unit
+        if not (versor_x.is_near_unit and versor_y.is_near_unit):
+            raise RefFrameInputException("Input vectors must be near unit")
 
-        assert versor_x.is_suborthogonal(versor_y)
+        if not versor_x.is_suborthogonal(versor_y):
+            raise RefFrameInputException("Input vectors must be sub-orthogonal")
 
         self._x = versor_x
         self._y = versor_y
@@ -63,6 +64,15 @@ class RefFrame(object):
         """
 
         return self.x.vp(self.y)
+
+
+class RefFrameInputException(Exception):
+    """
+    Exception for RefFrame input
+    """
+
+    pass
+
 
 if __name__ == "__main__":
 

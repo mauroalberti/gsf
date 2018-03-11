@@ -24,9 +24,14 @@ class Slickenline(object):
         Example:
           >>> Slickenline(GVect(90, 10))
           Slickenline(090.00, +10.00, True)
+          >>> Slickenline(GPlane(180,20))
+          Traceback (most recent call last):
+          ...
+          SlickelineInputTypeException: Input movement is not of the correct type
         """
 
-        assert isinstance(mov_lin, (GVect, GAxis)), "Movement is not of the correct type"
+        if not isinstance(mov_lin, (GVect, GAxis)):
+            raise SlickelineInputTypeException("Input movement is not of the correct type")
         self._mov_lin = mov_lin
 
     def has_known_sense(self):
@@ -45,7 +50,7 @@ class Slickenline(object):
         elif isinstance(self._mov_lin, GVect):
             return True
         else:
-            raise SlickelineTypeException("Error with provided slickeline type")
+            raise SlickelineInputTypeException("Error with provided slickeline type")
 
     def has_unknown_sense(self):
         """
@@ -145,11 +150,18 @@ class FaultSlick(object):
         Example:
           >>> FaultSlick(GPlane(90, 45), Slickenline(GAxis(90, 45)))
           FaultSlick(GPlane(090.00, +45.00), Slickenline(090.00, +45.00, False))
+          >>> FaultSlick(GPlane(90, 45), Slickenline(GAxis(80, 45)))
+          Traceback (most recent call last):
+          ...
+          FaultSlickInputTypeException: Slickenline is not within fault plane
         """
 
-        assert isinstance(fault_plane, GPlane), "Provided fault plane must be a GPlane instance"
-        assert isinstance(slickenline, Slickenline), "Provided slickenline must be a Slickenline instance"
-        assert are_close(fault_plane.normal().angle(slickenline.lin), 90.), "Slickenline is not within fault plane"
+        if not isinstance(fault_plane, GPlane):
+            raise FaultSlickInputTypeException("Provided fault plane must be a GPlane instance")
+        elif not isinstance(slickenline, Slickenline):
+            raise FaultSlickInputTypeException("Provided slickenline must be a Slickenline instance")
+        elif not are_close(fault_plane.normal().angle(slickenline.lin), 90.):
+            raise FaultSlickInputTypeException("Slickenline is not within fault plane")
 
         self._fltpln = fault_plane
         self._slick = slickenline
@@ -246,9 +258,17 @@ class SlickelineSenseException(Exception):
     pass
 
 
-class SlickelineTypeException(Exception):
+class SlickelineInputTypeException(Exception):
     """
     Exception for slickenline type.
+    """
+
+    pass
+
+
+class FaultSlickInputTypeException(Exception):
+    """
+    Exception for FaultSlick input type.
     """
 
     pass

@@ -38,9 +38,14 @@ class Point(object):
         Example:
           >>> Point.from_array(np.array([1, 0, 1]))
           Point(1.0000, 0.0000, 1.0000, nan)
+          >>> Point.from_array(np.array([1, 0]))
+          Traceback (most recent call last):
+          ...
+          PointInputException: Input array must have size of 3 or 4
         """
 
-        assert 3 <= a.size <= 4
+        if not (3 <= a.size <= 4):
+            raise PointInputException("Input array must have size of 3 or 4")
 
         obj = cls()
 
@@ -296,16 +301,18 @@ class Vect(object):
           >>> Vect(1, np.nan, 1)
           Traceback (most recent call last):
           ...
-          AssertionError: all vector components must be finite
+          VectInputException: All vector components must be finite
           >>> Vect(1, 0, np.inf)
           Traceback (most recent call last):
           ...
-          AssertionError: all vector components must be finite
+          VectInputException: All vector components must be finite
           >>> Vect(0, 0, 0)
           Vect(0.0000, 0.0000, 0.0000)
         """
 
-        assert np.isfinite(x) and np.isfinite(y) and np.isfinite(z), "all vector components must be finite"
+        if not (np.isfinite(x) and np.isfinite(y) and np.isfinite(z)):
+            raise VectInputException("All vector components must be finite")
+
         self._v = np.array([x, y, z], dtype=np.float64)
 
     @classmethod
@@ -318,11 +325,13 @@ class Vect(object):
           Vect(1.0000, 0.0000, 1.0000)
         """
 
-        obj = cls()
+        if a.size != 3:
+            raise VectInputException("Array size must be 3")
 
-        assert a.size == 3
+        obj = cls()
         b = a.astype(np.float64)
         obj._v = b
+
         return obj
 
     @property
@@ -530,19 +539,21 @@ class Vect(object):
         Create a scaled vector.
 
         Example;
-          >>> Vect(1,0,1).scale(2.5)
+          >>> Vect(1, 0, 1).scale(2.5)
           Vect(2.5000, 0.0000, 2.5000)
-          >>> Vect(1,0,1).scale(np.nan)
+          >>> Vect(1, 0, 1).scale(np.nan)
           Traceback (most recent call last):
           ...
-          AssertionError: scale factor for vector must be finite
-          >>> Vect(1,0,1).scale(np.inf)
+          VectInputException: Scale factor for vector must be finite
+          >>> Vect(1, 0, 1).scale(np.inf)
           Traceback (most recent call last):
           ...
-          AssertionError: scale factor for vector must be finite
+          VectInputException: Scale factor for vector must be finite
         """
 
-        assert np.isfinite(scale_factor), "scale factor for vector must be finite"
+        if not np.isfinite(scale_factor):
+            raise VectInputException("Scale factor for vector must be finite")
+
         return Vect.from_array(self.v * scale_factor)
 
     def versor(self):
@@ -557,10 +568,11 @@ class Vect(object):
           >>> Vect(0, 0, 0).versor()
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid (not zero-valued)
+          VectInvalidException: Vector must be valid (not zero-valued)
         """
 
-        assert self.valid, "vector must be valid (not zero-valued)"
+        if not self.valid:
+            raise VectInvalidException("Vector must be valid (not zero-valued)")
         return self.scale(1.0 / self.len_3d)
 
     def to_2d(self):
@@ -681,10 +693,11 @@ class Vect(object):
           >>> Vect(0, 0, 0).slope
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid (not zero-valued)
+          VectInvalidException: Vector must be valid (not zero-valued)
         """
 
-        assert self.valid, "vector must be valid (not zero-valued)"
+        if not self.valid:
+            raise VectInvalidException("Vector must be valid (not zero-valued)")
 
         hlen = self.len_2d
         if hlen == 0.0:
@@ -728,10 +741,11 @@ class Vect(object):
           >>> Vect(0, 0, 0).gvect()
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid (not zero-valued)
+          VectInvalidException: Vector must be valid (not zero-valued)
         """
 
-        assert self.valid, "vector must be valid (not zero-valued)"
+        if not self.valid:
+            raise VectInvalidException("Vector must be valid (not zero-valued)")
 
         plunge = self.slope  # upward pointing -> negative value, downward -> positive
 
@@ -768,10 +782,11 @@ class Vect(object):
           >>> Vect(0, 0, 0).gaxis()
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid (not zero-valued)
+          VectInvalidException: Vector must be valid (not zero-valued)
         """
 
-        assert self.valid, "vector must be valid (not zero-valued)"
+        if not self.valid:
+            raise VectInvalidException("Vector must be valid (not zero-valued)")
 
         return self.gvect().as_axis()
 
@@ -804,15 +819,15 @@ class Vect(object):
           >>> Vect(0, 0, 0).cos_angle(Vect(1,0,0))
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid (not zero-valued)
+          VectInvalidException: Vector must be valid (not zero-valued)
           >>> Vect(1, 0, 0).cos_angle(Vect(0,0,0))
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid (not zero-valued)
+          VectInvalidException: Vector must be valid (not zero-valued)
         """
 
-        assert self.valid, "vector must be valid (not zero-valued)"
-        assert another.valid, "vector must be valid (not zero-valued)"
+        if not (self.valid and another.valid):
+            raise VectInvalidException("Vector must be valid (not zero-valued)")
 
         val = self.sp(another) / (self.len_3d * another.len_3d)
         if val > 1.0:
@@ -839,15 +854,15 @@ class Vect(object):
           >>> Vect(0, 0, 0).angle(Vect(1,0,0))
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid (not zero-valued)
+          VectInvalidException: Vector must be valid (not zero-valued)
           >>> Vect(1, 0, 0).angle(Vect(0,0,0))
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid (not zero-valued)
+          VectInvalidException: Vector must be valid (not zero-valued)
         """
 
-        assert self.valid, "vector must be valid (not zero-valued)"
-        assert another.valid, "vector must be valid (not zero-valued)"
+        if not (self.valid and another.valid):
+            raise VectInvalidException("Vector must be valid (not zero-valued)")
 
         return degrees(acos(self.cos_angle(another)))
 
@@ -869,15 +884,15 @@ class Vect(object):
           >>> Vect(0, 0, 0).almost_parallel(Vect(1,0,0))
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid (not zero-valued)
+          VectInvalidException: Vector must be valid (not zero-valued)
           >>> Vect(1, 0, 0).almost_parallel(Vect(0,0,0))
           Traceback (most recent call last):
           ...
-          AssertionError: vector must be valid (not zero-valued)
+          VectInvalidException: Vector must be valid (not zero-valued)
         """
 
-        assert self.valid, "vector must be valid (not zero-valued)"
-        assert another.valid, "vector must be valid (not zero-valued)"
+        if not (self.valid and another.valid):
+            raise VectInvalidException("Vector must be valid (not zero-valued)")
 
         return self.angle(another) <= angle_tolerance
 
@@ -997,7 +1012,6 @@ class GVect(object):
           GVect(023.00, +40.00)
        """
 
-        # assert -90.0 <= float(src_plunge) <= 90.0, "plunge must be between -90° and +90° (comprised)"
         self._trend = float(src_trend) % 360.0
         self._plunge = float(src_plunge)
 
@@ -2108,6 +2122,28 @@ class GPlane(object):
         z = sin(rk) * sin(dip)
 
         return Vect(x, y, z).gvect()
+
+
+class PointInputException(Exception):
+    """
+    Exception for Point input.
+    """
+
+
+class VectInputException(Exception):
+    """
+    Exception for Vect input.
+    """
+
+    pass
+
+
+class VectInvalidException(Exception):
+    """
+    Exception for invalid Vect.
+    """
+
+    pass
 
 
 class SubparallelLineationException(Exception):

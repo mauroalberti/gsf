@@ -104,9 +104,14 @@ class Quaternion(object):
           Quaternion(1.00000, 0.00000, 1.00000, 0.00000)
           >>> Quaternion.from_array(np.array([7.65, -12.34, -1.0, 2.234]))
           Quaternion(7.65000, -12.34000, -1.00000, 2.23400)
+          >>> Quaternion.from_array(np.array([7.65, -12.34, -1.0]))
+          Traceback (most recent call last):
+          ...
+          QuaternionInputException: Input array for quaternion must have size of 4
         """
 
-        assert a.size == 4
+        if a.size != 4:
+            raise QuaternionInputException("Input array for quaternion must have size of 4")
 
         obj = cls()
         obj.q = a.astype(np.float64)
@@ -416,7 +421,7 @@ class Quaternion(object):
         elif isinstance(another, Quaternion):
             return self.quater_mult(another)
         else:
-            raise QuaternionException("Multiplicand is not number or quaternion")
+            raise QuaternionCalculationException("Multiplicand is not number or quaternion")
 
     @property
     def conjugate(self):
@@ -534,11 +539,11 @@ class Quaternion(object):
           >>> Quaternion(1, 1, 3, 0).scalar_div(1e-11)
           Traceback (most recent call last):
           ...
-          QuaternionException: Quaternion division by almost zero value
+          QuaternionCalculationException: Quaternion division by almost zero value
         """
 
         if abs(denominator) < quat_division_tolerance:
-            raise QuaternionException("Quaternion division by almost zero value")
+            raise QuaternionCalculationException("Quaternion division by almost zero value")
         else:
             return Quaternion.from_array(self.q / denominator)
 
@@ -569,7 +574,7 @@ class Quaternion(object):
         elif isinstance(another, Quaternion):
             return self.quater_div(another)
         else:
-            raise QuaternionException("Denominator is not number or quaternion")
+            raise QuaternionCalculationException("Denominator is not number or quaternion")
 
     def normalize(self):
         """
@@ -674,7 +679,15 @@ class Quaternion(object):
                          (a31, a32, a33)])
 
 
-class QuaternionException(Exception):
+class QuaternionInputException(Exception):
+    """
+    Exception for Quaternion input.
+    """
+
+    pass
+
+
+class QuaternionCalculationException(Exception):
     """
     Exception for Quaternion calculation.
     """

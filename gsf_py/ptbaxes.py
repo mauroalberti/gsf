@@ -30,9 +30,15 @@ class PTBAxes(object):
         Example:
           >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0))
           PTBAxes(P: GAxis(000.00, +00.00), T: GAxis(090.00, +00.00))
+          >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(80, 0))
+          Traceback (most recent call last):
+          ...
+          PTBAxesInputException: P and T axes must be sub-orthogonal
         """
 
-        assert p_axis.is_suborthogonal(t_axis)
+        if not p_axis.is_suborthogonal(t_axis):
+            raise PTBAxesInputException("P and T axes must be sub-orthogonal")
+
         b_vect = t_axis.normal_vect(p_axis)
 
         self._t_versor = t_axis.as_versor()
@@ -78,9 +84,15 @@ class PTBAxes(object):
           PTBAxes(P: GAxis(090.00, +00.00), T: GAxis(000.00, +90.00))
           >>> PTBAxes.from_vectors(t_vector=Vect(1,1,0), p_vector=Vect(-1,1,0))
           PTBAxes(P: GAxis(315.00, +00.00), T: GAxis(045.00, +00.00))
+          >>> PTBAxes.from_vectors(t_vector=Vect(1, 1, 0), p_vector=Vect(0.5, 1, 0))
+          Traceback (most recent call last):
+          ...
+          PTBAxesInputException: P and T vectors must be sub-orthogonal
         """
 
-        assert t_vector.is_suborthogonal(p_vector)
+        if not t_vector.is_suborthogonal(p_vector):
+            raise PTBAxesInputException("P and T vectors must be sub-orthogonal")
+
         t_versor = t_vector.versor()
         p_versor = p_vector.versor()
         b_versor = t_versor.vp(p_versor).versor()
@@ -299,6 +311,12 @@ class PTBAxes(object):
         """
 
         return Quaternion.from_rot_matr(self.to_matrix())
+
+
+class PTBAxesInputException(Exception):
+    """
+    Exception for PTBAxes input
+    """
 
 
 if __name__ == "__main__":

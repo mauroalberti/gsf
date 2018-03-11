@@ -48,7 +48,7 @@ def point_solution(a_array, b_array):
     """
 
     try:
-        return np.linalg.lstsq(a_array, b_array)[0]
+        return np.linalg.lstsq(a_array, b_array, rcond=None)[0]
     except:
         return None, None, None
 
