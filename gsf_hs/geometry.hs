@@ -1340,6 +1340,55 @@ gaCommonPlane :: GAxis -> GAxis -> Maybe GPlane
 gaCommonPlane ga1 ga2 = gvCommonPlane (gaToGVect ga1) (gaToGVect ga2)
 
 
+-- |  Calculates the vector that is normal to two GAxis instances.
+gaNormalVect :: GAxis -> GAxis -> Vect
+-- |
+-- Examples:
+-- >>> gaNormalVect (GAxis 90 0) (GAxis 0 0)
+-- Vect {x = 0.0, y = 0.0, z = 1.0}
+-- >>> gaNormalVect (GAxis 10 40) (GAxis 10 40)
+-- Vect {x = 0.0, y = 0.0, z = 0.0}
+gaNormalVect ga1 ga2 = vCross (gaToVersor ga1) (gaToVersor ga2)
+
+
+-- | Calculate the GAxis instance that is perpendicular to the two provided.
+-- | The two source GAxis must not be subparallel.
+gaNormalGAxis :: GAxis -> GAxis -> Maybe GAxis
+-- |       
+-- Example:
+-- >>> gaNormalGAxis (GAxis 0 0) (GAxis 4 0)
+-- Just (GAxis {t = 0.0, p = 90.0})
+-- >>> gaNormalGAxis (GAxis 0 0) (GAxis 180 0)
+-- Nothing
+-- >>> gaNormalGAxis (GAxis 0 0) (GAxis 0 0)
+-- Nothing
+-- >>> gaNormalGAxis (GAxis 90 0) (GAxis 180 0)
+-- Just (GAxis {t = 0.0, p = 90.0})
+-- >>> gaNormalGAxis (GAxis 90 45) (GAxis 180 0)
+-- Just (GAxis {t = 270.0, p = 45.00000000000001})
+-- >>> gaNormalGAxis (GAxis 270 45) (GAxis 180 90)
+-- Just (GAxis {t = 180.0, p = -3.5083546492674384e-15})
+gaNormalGAxis ga1 ga2 = let gv1 = gaToGVect ga1
+                            gv2 = gaToGVect ga2
+                            gv_norm = gvNormalGVect gv1 gv2
+                         in case gv_norm of
+                             Nothing -> Nothing
+                             Just gv -> Just (gvToGAxis gv)
+
+
+{-  Cartesian plane.
+    Expressed by equation:
+    ax + by + cz + d = 0
+
+    Note: Plane is locational - its position in space is defined.
+    This contrast with GPlane, defined just by its attitude, but with undefined position
+-}
+
+data Plane = Plane {a, b, c, d :: Double} deriving (Eq, Ord, Show)
+
+
+
+
 {- Geological plane.
     Defined by dip direction azimuth and dip angle (both in uDegrees):
      - dip direction azimuth: [0.0, 360.0[ clockwise, from 0 (North);
