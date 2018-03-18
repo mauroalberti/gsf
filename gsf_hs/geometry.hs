@@ -26,6 +26,8 @@ import Data.Fixed
 
 
 -- Constants
+------------
+
 kPDistThresh = 1.0e-7
 kVAngleThresh = 1.0
 kVMinMagnThresh = 1.0e-9
@@ -365,6 +367,15 @@ pToVect (Point x y z) = Vect x y z
 data Vect = Vect {x, y, z :: Double} deriving (Eq, Ord, Show)
 
 
+-- | Extract components from Vect
+vToXYZ :: Vect -> (Double, Double, Double)
+-- |
+-- Examples:
+-- >>> vToXYZ (Vect 1 2 3)
+-- (1.0,2.0,3.0)
+vToXYZ (Vect x y z) = (x, y, z)
+
+
 -- | mapping on Vect
 vMap :: (Double -> Double) -> Vect -> Vect
 vMap f (Vect x y z) = Vect (f x) (f y) (f z)
@@ -407,7 +418,7 @@ vCross :: Vect -> Vect -> Vect
 -- Examples:
 -- >>> vCross (Vect 1 0 0) (Vect 0 1 0)
 -- Vect {x = 0.0, y = 0.0, z = 1.0}
--- >>> vCross vectZ vectX
+-- >>> vCross vZ vX
 -- Vect {x = 0.0, y = 1.0, z = 0.0}
 vCross (Vect x1 y1 z1) (Vect x2 y2 z2) = Vect {
   x = y1 * z2 - y2 * z1,
@@ -427,19 +438,34 @@ vToArray :: Vect -> A.Array Int Double
 vToArray (Vect x y z) = A.array (1, 3) [(1, x), (2, y), (3, z)]
 
 
+-- | conversion to matrix
+vToMatrix :: Vect -> M.Matrix Double      
+vToMatrix (Vect x y z) = M.fromList 1 3 [x, y, z]
+
+
+-- | conversion from matrix
+vFromMatrix :: M.Matrix Double -> Vect
+-- |
+-- Examples:
+-- >>> vFromMatrix (M.fromLists [[1, 0, 4]])
+-- Vect {x = 1.0, y = 0.0, z = 4.0}
+vFromMatrix m = Vect x y z
+                 where
+                  [x, y, z] = M.toList m
+
 -- | versor parallel to x axis
-vectX :: Vect
-vectX = Vect 1 0 0
+vX :: Vect
+vX = Vect 1 0 0
 
 
 -- | versor parallel to y axis
-vectY :: Vect
-vectY = Vect 0 1 0
+vY :: Vect
+vY = Vect 0 1 0
 
 
 -- | versor parallel to z axis
-vectZ :: Vect
-vectZ = Vect 0 0 1
+vZ :: Vect
+vZ = Vect 0 0 1
 
 
 -- | horizontal length of a vector
@@ -826,10 +852,16 @@ vAreSubOrthogonal v1 v2 = let ang = vAngle v1 v2
                               Nothing -> Nothing
                               Just a  -> Just ((90.0 - a) < kVAngleThresh)
 
+
 -- | Matrix multiplication of a vector
--- TODO
-
-
+vMatrixMul :: Vect -> M.Matrix Double -> Vect
+-- |
+-- Examples:
+-- >>> vMatrixMul (Vect 1 2 1) (M.fromLists [[1, 3, 1],[3, 2, 0],[7, 2, 1]])
+-- Vect {x = 14.0, y = 9.0, z = 2.0}
+vMatrixMul v matr = let mv = vToMatrix v
+                        mmult = M.multStd mv matr
+                     in vFromMatrix mmult
 
 {- | GVect
 
