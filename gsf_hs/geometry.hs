@@ -5,8 +5,8 @@ This module is devoted to the processing of geological data.
 
 module Geometry (
   
-  -- * 4D point
-  Point,
+  -- * 3D point
+     Point,
 
   -- * 3D vector
     Vect,
@@ -21,6 +21,7 @@ module Geometry (
 
 
 import qualified Data.Array as A
+import qualified Data.Matrix as M
 import Data.Fixed
 
 
@@ -211,8 +212,12 @@ pMap f (Point x y z) = Point (f x) (f y) (f z)
 
 
 -- | Zipping on two points
-pZip :: (Double -> Double -> Double) -> Point -> Point -> Point
-pZip f (Point x1 y1 z1) (Point x2 y2 z2) = Point (f x1 x2) (f y1 y2) (f z1 z2)
+-- |
+-- Examples:
+-- >>> pZipWith (+) (Point 1 2 3) (Point 3 2 1)
+-- Point {px = 4.0, py = 4.0, pz = 4.0} 
+pZipWith :: (Double -> Double -> Double) -> Point -> Point -> Point
+pZipWith f (Point x1 y1 z1) (Point x2 y2 z2) = Point (f x1 x2) (f y1 y2) (f z1 z2)
 
 
 -- | Folding on point
@@ -221,8 +226,8 @@ pFold f (Point x y z) = f x (f y z)
 
 
 instance Num Point where
-  (+) = pZip (+)
-  (-) = pZip (-)
+  (+) = pZipWith (+)
+  (-) = pZipWith (-)
   negate = pMap negate
 
 
@@ -365,9 +370,13 @@ vMap :: (Double -> Double) -> Vect -> Vect
 vMap f (Vect x y z) = Vect (f x) (f y) (f z)
 
 
--- | zipping on two Vects
-vZip :: (Double -> Double -> Double) -> Vect -> Vect -> Vect
-vZip f (Vect x1 y1 z1) (Vect x2 y2 z2) = Vect (f x1 x2) (f y1 y2) (f z1 z2)
+-- | apply zipWith to two Vects
+-- |
+-- Examples:
+-- >>> vZipWith (+) (Vect 1 2 3) (Vect 3 2 1)
+-- Vect {x = 4.0, y = 4.0, z = 4.0} 
+vZipWith :: (Double -> Double -> Double) -> Vect -> Vect -> Vect
+vZipWith f (Vect x1 y1 z1) (Vect x2 y2 z2) = Vect (f x1 x2) (f y1 y2) (f z1 z2)
 
 
 -- | folding on Vect
@@ -389,7 +398,7 @@ vDot :: Vect -> Vect -> Double
 -- 0.0
 -- >>> vDot (Vect 1 0 0) (Vect (-1) 0 0)
 -- -1.0
-vDot v1 v2 = vFold (+) $ vZip (*) v1 v2
+vDot v1 v2 = vFold (+) $ vZipWith (*) v1 v2
 
 
 -- | vector cross product
@@ -407,8 +416,8 @@ vCross (Vect x1 y1 z1) (Vect x2 y2 z2) = Vect {
 
 
 instance Num Vect where
-  (+) = vZip (+)
-  (-) = vZip (-)
+  (+) = vZipWith (+)
+  (-) = vZipWith (-)
   (*) = vCross
   negate = vMap negate
 
@@ -626,8 +635,8 @@ vTrend :: Vect -> Maybe Double
 vTrend (Vect x y z) = uAngleNorthClock x y
 
 
--- | uSlope of vector
---   (uDegrees, positive: downward-directed, negative: upward-dir., range -90°/90°
+-- | slope of a vector
+-- | (uDegrees, positive: downward-directed, negative: upward-dir., range -90°/90°
 vSlope :: Vect -> Maybe Double
 -- |
 -- Examples:
@@ -682,7 +691,7 @@ vToGVect v = let trend = vTrend v
                 (_,       Just    90.0)  -> Just (GVect 0.0   90.0 )
                 (_,       Just (-90.0))  -> Just (GVect 0.0 (-90.0))
                 (_,       Nothing     )  -> Nothing
-                (Nothing,    _        )  -> Nothing               
+                (Nothing,  _          )  -> Nothing               
                 (Just t,  Just p      )  -> Just (GVect t p)
 
 
@@ -711,7 +720,7 @@ vToGAxis :: Vect -> Maybe GAxis
 -- | Nothing
 vToGAxis v = let gv = vToGVect v
               in case gv of
-               Nothing -> Nothing
+               Nothing     -> Nothing
                Just val_gv -> Just (gvToGAxis val_gv)
 
 
@@ -773,7 +782,7 @@ vAngle :: Vect -> Vect -> Maybe Double
 -- >>> vAngle (Vect 1 0 0) (Vect 0 0 0)
 -- Nothing
 vAngle v1 v2 = let cos_ang = vCosAngle v1 v2
-               in case cos_ang of
+                in case cos_ang of
                  Nothing -> Nothing
                  Just ca -> Just (uDegrees $ acos ca)
 
@@ -793,9 +802,9 @@ vAreSubParallel :: Vect -> Vect -> Maybe Bool
 -- >>> vAreSubParallel (Vect 1 0 0) (Vect 0 0 0)
 -- Nothing
 vAreSubParallel v1 v2 = let ang = vAngle v1 v2
-                       in case ang of
-                         Nothing  -> Nothing
-                         Just a   -> Just (a < kVAngleThresh)
+                         in case ang of
+                          Nothing  -> Nothing
+                          Just a   -> Just (a < kVAngleThresh)
 
                                      
 -- | Check whether two vectors are sub-orhogonal
