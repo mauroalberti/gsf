@@ -250,6 +250,9 @@ class FaultSlick(object):
 
         return FaultSlick(self.fp, self.sl.invert())
 
+    # TODO: create methods:
+    # rake, has_known_sense, has_unknown_sense, is_normal, is_right_lateral, is_left_lateral
+e
 
 class SlickelineSenseException(Exception):
     """
