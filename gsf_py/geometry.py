@@ -2011,6 +2011,72 @@ class GPlane(object):
 
         return "GPlane({:06.2f}, {:+06.2f})".format(*self.dda)
 
+    def strk_rhr_gv(self):
+        """
+        Creates a GVect instance that is parallel to the right-hand rule strike.
+
+        :return: GVect instance,
+
+        Examples:
+          >>> GPlane(90, 45).strk_rhr_gv()
+          GVect(000.00, +00.00)
+          >>> GPlane(45, 17).strk_rhr_gv()
+          GVect(315.00, +00.00)
+        """
+
+        return GVect(
+            src_trend=self.strike_rhr,
+            src_plunge=0.0)
+
+    def strk_lhr_gv(self):
+        """
+        Creates a GVect instance that is parallel to the left-hand rule strike.
+
+        :return: GVect instance.
+
+        Examples:
+          >>> GPlane(90, 45).strk_lhr_gv()
+          GVect(180.00, +00.00)
+          >>> GPlane(45, 17).strk_lhr_gv()
+          GVect(135.00, +00.00)
+        """
+
+        return GVect(
+            src_trend=self.strike_lhr,
+            src_plunge=0.0)
+
+    def dipdir_gv(self):
+        """
+        Creates a GVect instance that is parallel to the dip direction.
+
+        :return: GVect instance.
+
+        Examples:
+          >>> GPlane(90, 45).dipdir_gv()
+          GVect(090.00, +45.00)
+          >>> GPlane(45, 17).dipdir_gv()
+          GVect(045.00, +17.00)
+        """
+
+        return GVect(
+            src_trend=self.dd,
+            src_plunge=self.da)
+
+    def dipdir_opp_gv(self):
+        """
+        Creates a GVect instance that is anti-parallel to the dip direction.
+
+        :return: GVect instance.
+
+        Examples:
+          >>> GPlane(90, 45).dipdir_opp_gv()
+          GVect(270.00, -45.00)
+          >>> GPlane(45, 17).dipdir_opp_gv()
+          GVect(225.00, -17.00)
+        """
+
+        return self.dipdir_gv().opposite()
+
     def normal(self):
         """
         Return the geological vector normal to the geological plane,
@@ -2028,7 +2094,57 @@ class GPlane(object):
         trend = self.dd % 360.0
         plunge = self.da - 90.0
 
-        return GVect(trend, plunge)
+        return GVect(
+            src_trend=trend,
+            src_plunge=plunge)
+
+    def anti_normal(self):
+        """
+        Return the geological vector normal to the geological plane,
+        pointing in the opposite direction to the geological plane.
+
+        Example:
+            >>> GPlane(90, 55).anti_normal()
+            GVect(270.00, +35.00)
+            >>> GPlane(90, 90).anti_normal()
+            GVect(270.00, -00.00)
+            >>> GPlane(90, 0).anti_normal()
+            GVect(270.00, +90.00)
+        """
+
+        return self.normal().opposite()
+
+    def down_normal(self):
+        """
+        Return the geological vector normal to the geological plane,
+        pointing downward.
+
+        Example:
+            >>> GPlane(90, 55).down_normal()
+            GVect(270.00, +35.00)
+            >>> GPlane(90, 90).down_normal()
+            GVect(090.00, +00.00)
+            >>> GPlane(90, 0).down_normal()
+            GVect(270.00, +90.00)
+        """
+
+        return self.normal().downward()
+
+    def up_normal(self):
+        """
+        Return the geological vector normal to the geological plane,
+        pointing upward.
+
+        Example:
+            >>> GPlane(90, 55).up_normal()
+            GVect(090.00, -35.00)
+            >>> GPlane(90, 90).up_normal()
+            GVect(090.00, +00.00)
+            >>> GPlane(90, 0).up_normal()
+            GVect(090.00, -90.00)
+        """
+
+        return self.normal().upward()
 
     def plane(self, point):
         """
