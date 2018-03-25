@@ -320,6 +320,28 @@ class FaultSlick(object):
           Traceback (most recent call last):
           ...
           FaultSlickInputTypeException: Slickeline must have known movement sense
+          >>> fault_plane = GPlane(90, 90)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).rake()
+          0.0
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(90, 90)).rake()
+          -90.0
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(90, -90)).rake()
+          90.0
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(180, 1)).rake()
+          -179.0000000000001
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(180, -1)).rake()
+          179.0000000000001
+          >>> fault_plane = GPlane(90, 0)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).rake()
+          0.0
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(90, 0)).rake()
+          -90.0
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(135, 0)).rake()
+          -135.0
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(270, 0)).rake()
+          90.00000000000001
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(225, 0)).rake()
+          135.00000000000003
         """
 
         if not self.known_sense:
@@ -328,11 +350,141 @@ class FaultSlick(object):
         sl_gv = self.slick_geom()
         angle = sl_gv.angle(self.gplane.strk_rhr_gv())
 
-        return - angle if sl_gv.is_downward else angle
+        if self.gplane.dipdir_gv().angle(sl_gv) < 90.0:
+            return -angle
+        else:
+            return angle
 
+    def is_normal(self, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
+        """
+        Checks if a fault has normal movements.
 
-    # TODO: create methods:
-    # rake, has_known_sense, has_unknown_sense, is_normal, is_reverse, is_right_lateral, is_left_lateral
+        :param rk_threshold: the threshold, in degrees, for the rake angle
+        :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
+        :return: True if normal, False if not applicable
+
+        Examples:
+          >>> fault_plane = GPlane(90, 90)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).is_normal()
+          False
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(90, 90)).is_normal()
+          False
+          >>> fault_plane = GPlane(90, 45)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).is_normal()
+          False
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(90, 45)).is_normal()
+          True
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(270, -45)).is_normal()
+          False
+        """
+
+        if self.gplane.is_very_high_angle(dip_angle_threshold) or self.gplane.is_very_low_angle(dip_angle_threshold):
+            return False
+
+        if - rk_threshold >= self.rake() >= -(180.0 - rk_threshold):
+            return True
+        else:
+            return False
+
+    def is_reverse(self, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
+        """
+        Checks if a fault has reverse movements.
+
+        :param rk_threshold: the threshold, in degrees, for the rake angle
+        :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
+        :return: True if reverse, False if not applicable
+
+        Examples:
+          >>> fault_plane = GPlane(90, 90)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).is_reverse()
+          False
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(90, 90)).is_reverse()
+          False
+          >>> fault_plane = GPlane(90, 45)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).is_reverse()
+          False
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(270, -45)).is_reverse()
+          True
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(90, 45)).is_reverse()
+          False
+        """
+
+        if self.gplane.is_very_high_angle(dip_angle_threshold) or self.gplane.is_very_low_angle(dip_angle_threshold):
+            return False
+
+        if rk_threshold <= self.rake() <= (180.0 - rk_threshold):
+            return True
+        else:
+            return False
+
+    def is_right_lateral(self, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
+        """
+        Checks if a fault has right-lateral movements.
+
+        :param rk_threshold: the threshold, in degrees, for the rake angle
+        :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
+        :return: True if right-lateral, False if not applicable
+
+        Examples:
+          >>> fault_plane = GPlane(90, 90)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).is_right_lateral()
+          False
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(180, 0)).is_right_lateral()
+          True
+          >>> fault_plane = GPlane(90, 45)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).is_right_lateral()
+          False
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(180, 0)).is_right_lateral()
+          True
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(270, -45)).is_right_lateral()
+          False
+          >>> fault_plane = GPlane(90, 2)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(180, 0)).is_right_lateral()
+          False
+        """
+
+        if self.gplane.is_very_low_angle(dip_angle_threshold):
+            return False
+
+        rake = self.rake()
+        if rake >= (90.0 + rk_threshold) or rake <= (-90.0 - rk_threshold):
+            return True
+        else:
+            return False
+
+    def is_left_lateral(self, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
+        """
+        Checks if a fault has left-lateral movements.
+
+        :param rk_threshold: the threshold, in degrees, for the rake angle
+        :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
+        :return: True if left-lateral, False if not applicable
+
+        Examples:
+          >>> fault_plane = GPlane(90, 90)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).is_left_lateral()
+          True
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(180, 0)).is_left_lateral()
+          False
+          >>> fault_plane = GPlane(90, 45)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).is_left_lateral()
+          True
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(180, 0)).is_left_lateral()
+          False
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(270, -45)).is_left_lateral()
+          False
+          >>> fault_plane = GPlane(90, 2)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, 0)).is_left_lateral()
+          False
+        """
+
+        if self.gplane.is_very_low_angle(dip_angle_threshold):
+            return False
+
+        if (-90.0 + rk_threshold) <= self.rake() <= (90.0 - rk_threshold):
+            return True
+        else:
+            return False
 
 
 class SlickelineSenseException(Exception):

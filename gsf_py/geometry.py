@@ -1283,6 +1283,29 @@ class GVect(object):
 
         return self.angle(another) <= angle_tolerance
 
+    def almost_antiparallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+        """
+        Check that two GVect are almost anti-parallel,
+
+        :param another: a GVect instance
+        :param angle_tolerance: the maximum allowed divergence angle (in degrees)
+        :return: Boolean
+
+        Examples:
+          >>> GVect(0, 90).almost_antiparallel(GVect(90, -89.5))
+          True
+          >>> GVect(0, 0).almost_antiparallel(GVect(180, 1e-6))
+          True
+          >>> GVect(90, 45).almost_antiparallel(GVect(270, -45.5))
+          True
+          >>> GVect(45, 90).almost_antiparallel(GVect(0, -90))
+          True
+          >>> GVect(45, 72).almost_antiparallel(GVect(140, -38))
+          False
+        """
+
+        return self.angle(another) > (180.0 - angle_tolerance)
+
     def normal_gplane(self):
         """
         Return the geological plane that is normal to the geological vector.
@@ -1301,6 +1324,28 @@ class GVect(object):
         dipangle = 90.0 - down_axis.pl
 
         return GPlane(dipdir, dipangle)
+
+    def vect_prod(self, another):
+        """
+        Calculate GVect defined by the vector product of two GVect instances.
+
+        Examples:
+          >>> GVect(0, 0).vect_prod(GVect(90, 0))
+          GVect(000.00, +90.00)
+          >>> GVect(0, 0).vect_prod(GVect(90, 90))
+          GVect(270.00, +00.00)
+          >>> GVect(45, 0).vect_prod(GVect(135, 45))
+          GVect(315.00, +45.00)
+          >>> GVect(315, 45).vect_prod(GVect(135, 45))
+          GVect(225.00, +00.00)
+          >>> GVect(315, 45).vect_prod(GVect(315, 44.5)) is None
+          True
+        """
+
+        if self.almost_parallel(another) or self.almost_antiparallel(another):
+            return None
+        else:
+            return self.versor().vp(another.versor()).gvect()
 
     def common_plane(self, another):
         """
@@ -1886,6 +1931,7 @@ class Plane(object):
 
         return self.angle(another) < angle_tolerance
 
+
 class GPlane(object):
     """
     Geological plane.
@@ -1894,7 +1940,7 @@ class GPlane(object):
      - dip angle: [0, 90.0]: downward-pointing.
     """
 
-    def __init__(self, src_azimuth, src_dip_angle, is_rhr_strike=False):
+    def __init__(self, src_azimuth: float, src_dip_angle:float, is_rhr_strike=False):
         """
         Geological plane constructor.
 
@@ -1912,6 +1958,14 @@ class GPlane(object):
           GPlane(090.00, +90.00)
           >>> GPlane(0, 90, True)
           GPlane(090.00, +90.00)
+          >>> GPlane(0, "90", True)
+          Traceback (most recent call last):
+          ...
+          GPlaneInputException: Source dip angle must be number
+          >>> GPlane(0, 900)
+          Traceback (most recent call last):
+          ...
+          GPlaneInputException: Dip angle must be between 0° and 90°
         """
 
         def rhrstrk2dd(rhr_strk):
@@ -1923,6 +1977,16 @@ class GPlane(object):
             """
 
             return (rhr_strk + 90.0) % 360.0
+
+        if not isinstance(src_azimuth, (int, float)):
+            raise GPlaneInputException("Source azimuth must be number")
+        if not isinstance(src_dip_angle, (int, float)):
+            raise GPlaneInputException("Source dip angle must be number")
+        if not isinstance(is_rhr_strike, bool):
+            raise GPlaneInputException("Source azimuth type must be boolean")
+
+        if not (0.0 <= src_dip_angle <= 90.0):
+            raise GPlaneInputException("Dip angle must be between 0° and 90°")
 
         if is_rhr_strike:
             self._dipdir = rhrstrk2dd(src_azimuth)
@@ -2019,6 +2083,8 @@ class GPlane(object):
           GVect(000.00, +00.00)
           >>> GPlane(45, 17).strk_rhr_gv()
           GVect(315.00, +00.00)
+          >>> GPlane(90, 0).strk_rhr_gv()
+          GVect(000.00, +00.00)
         """
 
         return GVect(
@@ -2236,6 +2302,39 @@ class GPlane(object):
 
         return Vect(x, y, z).gvect()
 
+    def is_very_low_angle(self, dip_angle_threshold=angle_gplane_thrshld):
+        """
+        Checks if a geological plane is very low angle.
+
+        :param threshold: the limit for the plane angle, in degrees
+        :type threshold: float
+        :return: bool flag indicating if it is very low angle
+
+        Examples:
+          >>> GPlane(38.9, 1.2).is_very_low_angle()
+          True
+          >>> GPlane(38.9, 7.4).is_very_low_angle()
+          False
+        """
+
+        return self.da < dip_angle_threshold
+
+    def is_very_high_angle(self, dip_angle_threshold=angle_gplane_thrshld):
+        """
+        Checks if a geological plane is very high angle.
+
+        :param threshold: the limit for the plane angle, in degrees
+        :type threshold: float
+        :return: bool flag indicating if it is very high angle
+
+        Examples:
+          >>> GPlane(38.9, 11.2).is_very_high_angle()
+          False
+          >>> GPlane(38.9, 88.4).is_very_high_angle()
+          True
+        """
+
+        return self.da > (90.0 - dip_angle_threshold)
 
 class PointInputException(Exception):
     """
@@ -2262,6 +2361,14 @@ class VectInvalidException(Exception):
 class SubparallelLineationException(Exception):
     """
     Exception for subparallel GAxis/GVect instances.
+    """
+
+    pass
+
+
+class GPlaneInputException(Exception):
+    """
+    Exception for GPlane input.
     """
 
     pass
