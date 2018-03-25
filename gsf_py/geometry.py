@@ -1168,7 +1168,7 @@ class GVect(object):
           True
         """
 
-        return self.versor().z > 0.0
+        return self.pl < 0.0
 
     @property
     def is_downward(self):
@@ -1184,10 +1184,7 @@ class GVect(object):
           False
         """
 
-        if self.versor().z < 0.0:
-            return True
-        else:
-            return False
+        return self.pl > 0.0
 
     def upward(self):
         """

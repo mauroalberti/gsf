@@ -57,8 +57,8 @@ class PTBAxes(object):
           PTBAxes(P: GAxis(000.00, -90.00), T: GAxis(090.00, +00.00))
         """
 
-        s_versor = fault_slick.sl.lin.versor()
-        f_versor = fault_slick.fp.normal().versor()
+        s_versor = fault_slick.slick.geom.versor()
+        f_versor = fault_slick.gplane.normal().versor()
 
         obj = cls()
         obj._p_versor = (f_versor - s_versor).versor()

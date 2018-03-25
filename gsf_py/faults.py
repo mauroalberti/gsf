@@ -24,6 +24,8 @@ class Slickenline(object):
         Example:
           >>> Slickenline(GVect(90, 10))
           Slickenline(090.00, +10.00, True)
+          >>> Slickenline(GAxis(90, 10))
+          Slickenline(090.00, +10.00, False)
           >>> Slickenline(GPlane(180,20))
           Traceback (most recent call last):
           ...
@@ -34,6 +36,41 @@ class Slickenline(object):
             raise SlickelineInputTypeException("Input movement is not of the correct type")
 
         self._mov_lin = mov_lin
+
+    @classmethod
+    def from_trpl(cls, trend: float, plunge: float, known=True):
+        """
+        Class constructors from trend, plunge and optional known movement sense flag.
+
+        :param trend: the trend of the slickenline
+        :type trend: float
+        :param plunge: the slickenline plunge
+        :type plunge: float
+        :param known: the known movement sense flag
+        :type known: bool
+        :return: the Slickenline instance
+
+        Examples:
+          >>> Slickenline.from_trpl(90, 10)
+          Slickenline(090.00, +10.00, True)
+          >>> Slickenline.from_trpl(90, 10, False)
+          Slickenline(090.00, +10.00, False)
+          >>> Slickenline.from_trpl("90", 10, False)
+          Traceback (most recent call last):
+          ...
+          SlickelineInputTypeException: Trend must be a number
+        """
+
+        if not isinstance(trend, (int, float)):
+            raise SlickelineInputTypeException("Trend must be a number")
+        if not isinstance(plunge, (int, float)):
+            raise SlickelineInputTypeException("Plunge must be a number")
+        if not isinstance(known, bool):
+            raise SlickelineInputTypeException("Known movement sense must be a boolean")
+
+        val = GVect(trend, plunge) if known else GAxis(trend, plunge)
+
+        return cls(val)
 
     def has_known_sense(self):
         """
@@ -75,7 +112,7 @@ class Slickenline(object):
           Slickenline(180.00, -30.00, True)
         """
 
-        return Slickenline(self.lin.as_gvect())
+        return Slickenline(self.geom.as_gvect())
 
     def set_unknown_sense(self):
         """
@@ -86,19 +123,19 @@ class Slickenline(object):
           Slickenline(180.00, -30.00, False)
         """
 
-        return Slickenline(self.lin.as_axis())
+        return Slickenline(self.geom.as_axis())
 
     @property
-    def lin(self):
+    def geom(self):
         """
         Return the slickenline orientation value,
         as a GVect (known movement sense)
         or a GAxis instance (unknown movement sense).
 
         Example:
-          >>> Slickenline(GVect(90, 45)).lin
+          >>> Slickenline(GVect(90, 45)).geom
           GVect(090.00, +45.00)
-          >>> Slickenline(GAxis(90, 45)).lin
+          >>> Slickenline(GAxis(90, 45)).geom
           GAxis(090.00, +45.00)
         """
 
@@ -134,7 +171,7 @@ class Slickenline(object):
         if not self.has_known_sense():
             raise SlickelineSenseException("Slickenline must have know movement sense")
 
-        return Slickenline(self.lin.opposite())
+        return Slickenline(self.geom.opposite())
 
 
 class FaultSlick(object):
@@ -161,35 +198,46 @@ class FaultSlick(object):
             raise FaultSlickInputTypeException("Provided fault plane must be a GPlane instance")
         elif not isinstance(slickenline, Slickenline):
             raise FaultSlickInputTypeException("Provided slickenline must be a Slickenline instance")
-        elif not are_close(fault_plane.normal().angle(slickenline.lin), 90.):
+        elif not are_close(fault_plane.normal().angle(slickenline.geom), 90.):
             raise FaultSlickInputTypeException("Slickenline is not within fault plane")
 
         self._fltpln = fault_plane
         self._slick = slickenline
 
     @property
-    def fp(self):
+    def gplane(self):
         """
         Return fault plane, as a GPlane instance.
 
         Example:
-          >>> FaultSlick(GPlane(90, 45), Slickenline(GAxis(90, 45))).fp
+          >>> FaultSlick(GPlane(90, 45), Slickenline(GAxis(90, 45))).gplane
           GPlane(090.00, +45.00)
         """
 
         return self._fltpln
 
     @property
-    def sl(self):
+    def slick(self):
         """
         Return the slickenline associated with the fault. 
 
         Example:
-          >>> FaultSlick(GPlane(90, 45), Slickenline(GAxis(90, 45))).sl
+          >>> FaultSlick(GPlane(90, 45), Slickenline(GAxis(90, 45))).slick
           Slickenline(090.00, +45.00, False)
         """
 
         return self._slick
+
+    def slick_geom(self):
+        """
+        Return the geometric object (GVect or GAxis) associated with slickenline.
+
+        Example:
+          >>> FaultSlick(GPlane(90, 45), Slickenline(GAxis(90, 45))).slick_geom()
+          GAxis(090.00, +45.00)
+        """
+
+        return self.slick.geom
 
     @property
     def known_sense(self):
@@ -203,7 +251,7 @@ class FaultSlick(object):
           True
         """
 
-        return self.sl.has_known_sense()
+        return self.slick.has_known_sense()
 
     def set_known_sense(self):
         """
@@ -214,7 +262,7 @@ class FaultSlick(object):
           FaultSlick(GPlane(000.00, +45.00), Slickenline(000.00, +45.00, True))
         """
 
-        return FaultSlick(self.fp, self.sl.set_known_sense())
+        return FaultSlick(self.gplane, self.slick.set_known_sense())
 
     def set_unknown_sense(self):
         """
@@ -225,11 +273,11 @@ class FaultSlick(object):
           FaultSlick(GPlane(000.00, +45.00), Slickenline(000.00, +45.00, False))
         """
 
-        return FaultSlick(self.fp, self.sl.set_unknown_sense())
+        return FaultSlick(self.gplane, self.slick.set_unknown_sense())
 
     def __repr__(self):
 
-        return "FaultSlick({}, {})".format(self.fp, self.sl)
+        return "FaultSlick({}, {})".format(self.gplane, self.slick)
 
     def opposite_mov(self):
         """
@@ -248,7 +296,40 @@ class FaultSlick(object):
         if not self.known_sense:
             raise SlickelineSenseException("Fault slickenline must have known movement sense")
 
-        return FaultSlick(self.fp, self.sl.invert())
+        return FaultSlick(self.gplane, self.slick.invert())
+
+    def rake(self):
+        """
+        Calculates the rake (sensu Aki & Richards, 1980) of the slickenline.
+        The slickenlines must have known sense movement.
+
+        :return: the rake value
+        :rtype: double
+
+        Examples:
+          >>> fault_plane = GPlane(180, 45)
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(90, 0)).rake()
+          0.0
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(0, -45)).rake()
+          90.0
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(270, 0)).rake()
+          180.0
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(180, 45)).rake()
+          -90.0
+          >>> FaultSlick(fault_plane, Slickenline.from_trpl(180, 45, False)).rake()
+          Traceback (most recent call last):
+          ...
+          FaultSlickInputTypeException: Slickeline must have known movement sense
+        """
+
+        if not self.known_sense:
+            raise FaultSlickInputTypeException("Slickeline must have known movement sense")
+
+        sl_gv = self.slick_geom()
+        angle = sl_gv.angle(self.gplane.strk_rhr_gv())
+
+        return - angle if sl_gv.is_downward else angle
+
 
     # TODO: create methods:
     # rake, has_known_sense, has_unknown_sense, is_normal, is_reverse, is_right_lateral, is_left_lateral
