@@ -5,10 +5,10 @@ from setuptools import setup, find_packages
 
 setup(
     name='gsf_py',
-    version='1.0.2',
+    version='1.0.3',
     packages=find_packages(),
 
-    install_requires=['numpy'],
+    install_requires=['numpy', 'mplstereonet'],
 
     # metadata for upload to PyPI
     author="Mauro Alberti",

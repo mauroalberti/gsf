@@ -1055,6 +1055,18 @@ class GVect(object):
 
         return self.tr, self.pl
 
+    @property
+    def pt(self):
+        """
+        Return plunge and trend of the geological direction.
+
+        Example:
+          >>> GVect(-90, -45).pt
+          (-45.0, 270.0)
+        """
+
+        return self.pl, self.tr
+
     def __repr__(self):
 
         return "GVect({:06.2f}, {:+06.2f})".format(*self.tp)
@@ -1130,6 +1142,24 @@ class GVect(object):
         """
 
         trend = (self.tr + 180.) % 360.
+        plunge = -self.pl
+
+        return GVect(trend, plunge)
+
+    def mirror_horiz(self):
+        """
+        Return the mirror GVect using a horizontal plane.
+
+        Example:
+          >>> GVect(0, 30).mirror_horiz()
+          GVect(000.00, -30.00)
+          >>> GVect(315, 10).mirror_horiz()
+          GVect(315.00, -10.00)
+          >>> GVect(135, 0).mirror_horiz()
+          GVect(135.00, -00.00)
+        """
+
+        trend = self.tr
         plunge = -self.pl
 
         return GVect(trend, plunge)
