@@ -22,7 +22,7 @@ A quaternion module (**Quaternion** class) allows to rotate geological data.
 
 You should have *python-setuptools* already installed, if not you can install in a Linux Mint shell via apt or pip3, e.g.:
 ```
-sudo apt-get install -y python-setuptools
+sudo apt-get install python-setuptools
 ```
 To install *gsf*, from the shell you can run in Linux Mint:
 ```
