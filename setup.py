@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='pyGsf',
+    name='pygsf',
     version='1.0.3',
     packages=find_packages(),
 
