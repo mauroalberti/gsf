@@ -1292,6 +1292,21 @@ class GVect(object):
 
         return self.versor().angle(another.versor())
 
+    def is_subhorizontal(self, max_dip_angle=DIP_ANGLE_THRESHOLD):
+        """
+        Check whether the instance is almost horizontal.
+
+        Examples:
+          >>> GVect(10, 15).is_subhorizontal()
+          False
+          >>> GVect(257, 2).is_subhorizontal()
+          True
+          >>> GVect(90, -5).is_subhorizontal()
+          False
+        """
+
+        return abs(self.pl) < max_dip_angle
+    
     def almost_parallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """
         Check that two GVect are sub-parallel,
@@ -1336,6 +1351,29 @@ class GVect(object):
 
         return self.angle(another) > (180.0 - angle_tolerance)
 
+    def is_suborthogonal(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+        """
+        Check that two GVect instance are sub-orthogonal
+
+        :param another: a GVect instance
+        :param angle_tolerance: the maximum allowed divergence angle (in degrees) from orthogonality
+        :return: Boolean
+
+         Examples:
+          >>> GVect(0, 90).is_suborthogonal(GVect(90, 0))
+          True
+          >>> GVect(0, 0).is_suborthogonal(GVect(0, 1.e-6))
+          False
+          >>> GVect(0, 0).is_suborthogonal(GVect(180, 0))
+          False
+          >>> GVect(90, 0).is_suborthogonal(GVect(270, 89.5))
+          True
+          >>> GVect(0, 90).is_suborthogonal(GVect(0, 0.5))
+          True
+        """
+
+        return 90.0 - angle_tolerance <= self.angle(another) <= 90.0 + angle_tolerance
+    
     def normal_gplane(self):
         """
         Return the geological plane that is normal to the geological vector.
@@ -1355,27 +1393,23 @@ class GVect(object):
 
         return GPlane(dipdir, dipangle)
 
-    def vect_prod(self, another):
+    def normal_vect(self, another):
         """
-        Calculate GVect defined by the vector product of two GVect instances.
+        Calculate Vect defined by the vector product of two GVect instances.
 
         Examples:
-          >>> GVect(0, 0).vect_prod(GVect(90, 0))
-          GVect(000.00, +90.00)
-          >>> GVect(0, 0).vect_prod(GVect(90, 90))
-          GVect(270.00, +00.00)
-          >>> GVect(45, 0).vect_prod(GVect(135, 45))
-          GVect(315.00, +45.00)
-          >>> GVect(315, 45).vect_prod(GVect(135, 45))
-          GVect(225.00, +00.00)
-          >>> GVect(315, 45).vect_prod(GVect(315, 44.5)) is None
+          >>> GVect(0, 0).normal_vect(GVect(90, 0))
+          Vect(0.0000, 0.0000, -1.0000)
+          >>> GVect(0, 0).normal_vect(GVect(90, 90))
+          Vect(-1.0000, 0.0000, -0.0000)
+          >>> GVect(315, 45).normal_vect(GVect(315, 44.5)) is None
           True
         """
 
         if self.almost_parallel(another) or self.almost_antiparallel(another):
             return None
         else:
-            return self.versor().vp(another.versor()).gvect()
+            return self.versor().vp(another.versor())
 
     def common_plane(self, another):
         """
@@ -1421,24 +1455,20 @@ class GVect(object):
         otherwise a SubparallelLineationException will be raised.
         
         Example:
-          >>> GVect(0, 0).normal_gvect(GVect(4, 0))
-          Traceback (most recent call last):
-          ...
-          SubparallelLineationException: Sources must not be sub- or anti-parallel
-          >>> GVect(0, 0).normal_gvect(GVect(179, 0))
-          Traceback (most recent call last):
-          ...
-          SubparallelLineationException: Sources must not be sub- or anti-parallel
+          >>> GVect(0, 0).normal_gvect(GVect(0.5, 0)) is None
+          True
+          >>> GVect(0, 0).normal_gvect(GVect(179.5, 0)) is None
+          True
           >>> GVect(0, 0).normal_gvect(GVect(5.1, 0))
           GVect(000.00, +90.00)
           >>> GVect(90, 45).normal_gvect(GVect(90, 0))
           GVect(180.00, +00.00)
         """
 
-        if not MIN_ANGLE_DEGR_DISORIENTATION <= self.angle(another) <= 180. - MIN_ANGLE_DEGR_DISORIENTATION:
-            raise SubparallelLineationException("Sources must not be sub- or anti-parallel")
-
-        return self.versor().vp(another.versor()).gvect()
+        if self.almost_parallel(another) or self.almost_antiparallel(another):
+            return None
+        else:
+            return self.normal_vect(another).gvect()
 
 
 class GAxis(GVect):
@@ -1534,96 +1564,23 @@ class GAxis(GVect):
 
         return self.angle(another) <= tolerance_angle
 
-    def is_suborthogonal(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+    def opposite(self):
         """
-        Check that two GAxis are sub-orthogonal
+        Return the opposite orientation GAxis.
 
-        :param another: a GAxis instance
-        :param angle_tolerance: the maximum allowed divergence angle (in degrees) from orthogonality
-        :return: Boolean
-
-         Examples:
-          >>> GAxis(0, 90).is_suborthogonal(GAxis(90, 0))
-          True
-          >>> GAxis(0, 0).is_suborthogonal(GAxis(0, 1.e-6))
-          False
-          >>> GAxis(0, 0).is_suborthogonal(GAxis(180, 0))
-          False
-          >>> GAxis(90, 0).is_suborthogonal(GAxis(270, 89.5))
-          True
-          >>> GAxis(0, 90).is_suborthogonal(GAxis(0, 0.5))
-          True
-        """
-
-        return self.angle(another) >= 90.0 - angle_tolerance
-
-    def normal_gplane(self):
-        """
-        Calculate the geological plane that is normal to the given GAxis instance.
-        
         Example:
-          >>> GAxis(0, 90).normal_gplane().almost_parallel(GPlane(180.00, 0.00))
-          True
-          >>> GAxis(0, 0).normal_gplane().almost_parallel(GPlane(0.00, 90.00))
-          True
-          >>> GAxis(45, 45).normal_gplane().almost_parallel(GPlane(225.00, 45.00))
-          True
-          >>> GAxis(0, 90).normal_gplane().almost_parallel(GPlane(170.00, 10.00))
-          False
-          >>> GAxis(0, 0).normal_gplane().almost_parallel(GPlane(20.00, 90.00))
-          False
-          >>> GAxis(45, 45).normal_gplane().almost_parallel(GPlane(215.00, 45.00))
-          False
+          >>> GAxis(0, 30).opposite()
+          GAxis(180.00, -30.00)
+          >>> GAxis(315, 10).opposite()
+          GAxis(135.00, -10.00)
+          >>> GAxis(135, 0).opposite()
+          GAxis(315.00, -00.00)
         """
 
-        return self.as_gvect().normal_gplane()
+        trend = (self.tr + 180.) % 360.
+        plunge = -self.pl
 
-    @property
-    def is_upward(self):
-        """
-        Check whether the instance is pointing upward.
-
-        Examples:
-          >>> GAxis(10, 15).is_upward
-          False
-          >>> GAxis(257.4, 0.0).is_upward
-          False
-          >>> GAxis(90, -45).is_upward
-          True
-        """
-
-        return self.as_gvect().is_upward
-
-    @property
-    def is_downward(self):
-        """
-        Check whether the instance is pointing downward.
-
-        Examples:
-          >>> GAxis(10, 15).is_downward
-          True
-          >>> GAxis(257.4, 0.0).is_downward
-          False
-          >>> GAxis(90, -45).is_downward
-          False
-        """
-
-        return self.as_gvect().is_downward
-
-    def is_subhorizontal(self, max_dip_angle=DIP_ANGLE_THRESHOLD):
-        """
-        Check whether the instance is almost horizontal.
-
-        Examples:
-          >>> GAxis(10, 15).is_subhorizontal()
-          False
-          >>> GAxis(257, 2).is_subhorizontal()
-          True
-          >>> GAxis(90, -5).is_subhorizontal()
-          False
-        """
-
-        return abs(self.pl) < max_dip_angle
+        return GAxis(trend, plunge)
 
     def upward(self):
         """
@@ -1671,42 +1628,6 @@ class GAxis(GVect):
 
         return self.as_gvect().downward().as_axis()
 
-    def common_plane(self, another):
-        """
-        Calculate GPlane instance defined by the two GAxis instances.
-
-        Examples:
-          >>> GAxis(0, 0).common_plane(GAxis(90, 0)).almost_parallel(GPlane(180.0, 0.0))
-          True
-          >>> GAxis(0, 0).common_plane(GAxis(90, 90)).almost_parallel(GPlane(90.0, 90.0))
-          True
-          >>> GAxis(45, 0).common_plane(GAxis(135, 45)).almost_parallel(GPlane(135.0, 45.0))
-          True
-          >>> GAxis(315, 45).common_plane(GAxis(135, 45)).almost_parallel(GPlane(225.0, 90.0))
-          True
-          >>> GAxis(45, 0).common_plane(GAxis(135, 45)).almost_parallel(GPlane(135.0, 39.0))
-          False
-          >>> GAxis(315, 45).common_plane(GAxis(135, 45)).almost_parallel(GPlane(225.0, 80.0))
-          False
-        """
-
-        return self.as_gvect().common_plane(another.as_gvect())
-
-    def normal_vect(self, another):
-        """
-        Calculates the vector that is normal
-        to two GAxis instances.
-
-        :param another: GAxis instance
-        :return: a unit Vect instance.
-
-        Example:
-          >>> GAxis(90, 0).normal_vect(GAxis(0, 0))
-          Vect(0.0000, 0.0000, 1.0000)
-        """
-
-        return self.as_versor().vp(another.as_versor())
-
     def normal_gaxis(self, another):
         """
         Calculate the GAxis instance that is perpendicular to the two provided.
@@ -1714,14 +1635,10 @@ class GAxis(GVect):
         otherwise a SubparallelLineationException will be raised.
         
         Example:
-          >>> GAxis(0, 0).normal_gaxis(GAxis(4, 0))
-          Traceback (most recent call last):
-          ...
-          SubparallelLineationException: Sources must not be sub- or anti-parallel
-          >>> GAxis(0, 0).normal_gaxis(GAxis(180, 0))
-          Traceback (most recent call last):
-          ...
-          SubparallelLineationException: Sources must not be sub- or anti-parallel
+          >>> GAxis(0, 0).normal_gaxis(GAxis(0.5, 0)) is None
+          True
+          >>> GAxis(0, 0).normal_gaxis(GAxis(180, 0)) is None
+          True
           >>> GAxis(90, 0).normal_gaxis(GAxis(180, 0))
           GAxis(000.00, +90.00)
           >>> GAxis(90, 45).normal_gaxis(GAxis(180, 0))
@@ -1730,7 +1647,11 @@ class GAxis(GVect):
           True
         """
 
-        return self.as_gvect().normal_gvect(another.as_gvect()).as_axis()
+        norm_gvect = self.normal_gvect(another)
+        if norm_gvect is None:
+            return None
+        else:
+            return norm_gvect.as_axis()
 
 
 class Plane(object):
