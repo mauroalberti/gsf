@@ -43,3 +43,5 @@ def is_not_upward(obj: GVect) -> bool:
 
     return not obj.is_upward
 
+
+

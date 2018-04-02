@@ -1952,7 +1952,7 @@ class GPlane(object):
      - dip angle: [0, 90.0]: downward-pointing.
     """
 
-    def __init__(self, src_azimuth: float, src_dip_angle:float, is_rhr_strike=False):
+    def __init__(self, src_azimuth: float, src_dip_angle: float, is_rhr_strike=False):
         """
         Geological plane constructor.
 
@@ -2063,6 +2063,20 @@ class GPlane(object):
         return (self.dd - 90.0) % 360.0
 
     @property
+    def srda(self):
+        """
+        Return a tuple storing the right-hand-rule strike and dip angle values of a geological plane.
+
+        Example:
+          >>> GPlane(100, 17.2).srda
+          (10.0, 17.2)
+          >>> GPlane(10, 87).srda
+          (280.0, 87.0)
+        """
+
+        return self.strike_rhr, self.da
+
+    @property
     def strike_lhr(self):
         """
         Return the strike according to the left-hand-rule.
@@ -2079,6 +2093,20 @@ class GPlane(object):
         """
 
         return (self.dd + 90.0) % 360.0
+
+    @property
+    def slda(self):
+        """
+        Return a tuple storing the left-hand-rule strike and dip angle values of a geological plane.
+
+        Example:
+          >>> GPlane(100, 17.2).slda
+          (190.0, 17.2)
+          >>> GPlane(10, 87).slda
+          (100.0, 87.0)
+        """
+
+        return self.strike_lhr, self.da
 
     def __repr__(self):
 
