@@ -8,10 +8,13 @@ from ..geotype_checks import *
 from ..conversions.conversions import *
 
 
-default_upward_marker = "x"
-default_downward_marker = "o"
+default_gvect_marker_upward_symbol = "x"
+default_gvect_marker_downward_symbol = "o"
+default_gvect_marker_color = "blue"
 
-default_marker_color = "blue"
+default_gaxis_marker_upward_symbol = "+"
+default_gaxis_marker_downward_symbol = "s"
+default_gaxis_marker_color = "orange"
 
 
 def splot(data, force=''):
@@ -19,73 +22,60 @@ def splot(data, force=''):
     Plot geological data with matplotlib and mplstereonet
     """
 
-    def params_gvect(gvect, kwargs):
+    def params_gvect(gvect, kwargs, force_emisphere):
 
-        if (force == 'lower' and gvect.is_upward) or \
-           (force == 'upper' and gvect.is_downward):
-            plot_gvect = gvect.opposite()
-        else:
+        if force_emisphere == 'lower':
+            default_marker = default_gvect_marker_downward_symbol
+            if gvect.is_upward:
+                plot_gvect = gvect.opposite()
+            else:
+                plot_gvect = gvect
+        elif force_emisphere == 'upper':
+            default_marker = default_gvect_marker_upward_symbol
+            if gvect.is_downward:
+                plot_gvect = gvect.opposite()
+            else:
+                plot_gvect = gvect
+        elif not force_emisphere:
             plot_gvect = gvect
-
-        if force == 'lower':
-            default_marker = default_downward_marker
-        elif force == 'upper':
-            default_marker = default_upward_marker
-        elif plot_gvect.is_upward:
-            default_marker = default_upward_marker
+            default_marker = default_gvect_marker_downward_symbol if not plot_gvect.is_upward else default_gvect_marker_upward_symbol
         else:
-            default_marker = default_downward_marker
+            raise PlotException("Invalid force emisphere parameter")
 
         if plot_gvect.is_upward:  # apparently mplstereonet does not handle negative plunges
             plot_gvect = plot_gvect.mirror_horiz()
 
         plunge, bearing = plot_gvect.pt
         symbol = kwargs.get("m", default_marker)
-        color = kwargs.get("c", default_marker_color)
+        color = kwargs.get("c", default_gvect_marker_color)
 
         return plunge, bearing, symbol, color
 
-    def params_gvects(gvects, upward):
+    def params_gaxis(gaxis, kwargs, force_emisphere):
 
-        plunges = []
-        bearings = []
-        if upward:
-            for gvect in gvects:
-                plunge, bearing = gvect.mirror_horiz().pt
-                plunges.append(plunge)
-                bearings.append(bearing)
-            symbol = "x"
+        if (not force_emisphere) or (force_emisphere == 'lower'):
+            default_marker = default_gaxis_marker_downward_symbol
+            if gaxis.is_upward:
+                plot_gaxis = gaxis.opposite()
+            else:
+                plot_gaxis = gaxis
+        elif force_emisphere == 'upper':
+            default_marker = default_gaxis_marker_upward_symbol
+            if gaxis.is_downward:
+                plot_gaxis = gaxis.opposite()
+            else:
+                plot_gaxis = gaxis
         else:
-            for gvect in gvects:
-                plunge, bearing = gvect.pt
-                plunges.append(plunge)
-                bearings.append(bearing)
-            symbol = "o"
+            raise PlotException("Invalid force emisphere parameter")
 
-        color = "blue"
+        if plot_gaxis.is_upward:  # apparently mplstereonet does not handle negative plunges
+            plot_gaxis = plot_gaxis.mirror_horiz()
 
-        return np.array(plunges), np.array(bearings), symbol, color
+        plunge, bearing = plot_gaxis.pt
+        symbol = kwargs.get("m", default_marker)
+        color = kwargs.get("c", default_gaxis_marker_color)
 
-    def params_gaxes(gaxes, upward):
-
-        plunges = []
-        bearings = []
-
-        if upward:
-            for gaxis in gaxes:
-                plunge, bearing = gaxis.opposite().pt
-                plunges.append(plunge)
-                bearings.append(bearing)
-        else:
-            for gaxis in gaxes:
-                plunge, bearing = gaxis.pt
-                plunges.append(plunge)
-                bearings.append(bearing)
-
-        symbol = "s"
-        color = "orange"
-
-        return np.array(plunges), np.array(bearings), symbol, color
+        return plunge, bearing, symbol, color
 
     def params_gplanes(planes):
 
@@ -130,14 +120,21 @@ def splot(data, force=''):
 
         for obj in objs:
             if is_gvect(obj):
-                plunge, bearing, symbol, color = params_gvect(obj, kwargs)
+                plunge, bearing, symbol, color = params_gvect(obj, kwargs, force_emisphere=force)
                 ax.line(
                     plunge,
                     bearing,
                     marker=symbol,
                     markerfacecolor=color,
                     markeredgecolor=color)
-
+            elif is_gaxis(obj):
+                plunge, bearing, symbol, color = params_gaxis(obj, kwargs, force_emisphere=force)
+                ax.line(
+                    plunge,
+                    bearing,
+                    marker=symbol,
+                    markerfacecolor=color,
+                    markeredgecolor=color)
 
     """
 
