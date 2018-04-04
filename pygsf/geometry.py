@@ -10,6 +10,7 @@ from typing import Dict, Tuple, List
 
 from .default_parameters import *
 from .mathematics import are_close
+from .geometry_utils import *
 from .arrays import point_solution, arrays_are_close
 
 
@@ -936,56 +937,6 @@ class Vect(object):
         """
 
         return Vect.from_array(array3x3.dot(self.v))
-
-
-def plng2colatTop(plunge: float) -> float:
-    """
-    Calculates the colatitude angle from the top.
-
-    :param plunge: an angle from -90° (upward-pointing) to 90° (downward-pointing)
-    :type plunge: float
-    :return: the colatitude angle
-    :rtype: float
-
-    Examples:
-      >>> plng2colatTop(90)
-      180.0
-      >>> plng2colatTop(45)
-      135.0
-      >>> plng2colatTop(0)
-      90.0
-      >>> plng2colatTop(-45)
-      45.0
-      >>> plng2colatTop(-90)
-      0.0
-    """
-
-    return 90.0 + plunge
-
-
-def plng2colatBottom(plunge: float) -> float:
-    """
-    Calculates the colatitude angle from the bottom.
-
-    :param plunge: an angle from -90° (upward-pointing) to 90° (downward-pointing)
-    :type plunge: float
-    :return: the colatitude angle
-    :rtype: float
-
-    Examples:
-      >>> plng2colatBottom(90)
-      0.0
-      >>> plng2colatBottom(45)
-      45.0
-      >>> plng2colatBottom(0)
-      90.0
-      >>> plng2colatBottom(-45)
-      135.0
-      >>> plng2colatBottom(-90)
-      180.0
-    """
-
-    return 90.0 - plunge
 
 
 class GVect(object):
@@ -1952,16 +1903,17 @@ class GPlane(object):
      - dip angle: [0, 90.0]: downward-pointing.
     """
 
-    def __init__(self, src_azimuth: float, src_dip_angle: float, is_rhr_strike=False):
+    def __init__(self, azim: float, dip_ang: float, is_rhr_strike=False):
         """
         Geological plane constructor.
 
-        @param  src_azimuth:  Azimuth of the plane (RHR strike or dip direction).
-        @type  src_azimuth:  number or string convertible to float.
-        @param  src_dip_angle:  Dip angle of the plane (0-90°).
-        @type  src_dip_angle:  number or string convertible to float.
-           
-        @return:  GPlane.
+        :param  azim:  azimuth of the plane (RHR strike or dip direction).
+        :type  azim:  number or string convertible to float.
+        :param  dip_ang:  Dip angle of the plane (0-90°).
+        :type  dip_ang:  number or string convertible to float.
+        :param is_rhr_strike: if the source azimuth is RHR strike (default is False, i.e. it is dip direction)
+        :return: the instantiated geological plane.
+        :rtype: GPlane.
 
         Example:
           >>> GPlane(0, 90)
@@ -1990,21 +1942,21 @@ class GPlane(object):
 
             return (rhr_strk + 90.0) % 360.0
 
-        if not isinstance(src_azimuth, (int, float)):
+        if not isinstance(azim, (int, float)):
             raise GPlaneInputException("Source azimuth must be number")
-        if not isinstance(src_dip_angle, (int, float)):
+        if not isinstance(dip_ang, (int, float)):
             raise GPlaneInputException("Source dip angle must be number")
         if not isinstance(is_rhr_strike, bool):
             raise GPlaneInputException("Source azimuth type must be boolean")
 
-        if not (0.0 <= src_dip_angle <= 90.0):
+        if not (0.0 <= dip_ang <= 90.0):
             raise GPlaneInputException("Dip angle must be between 0° and 90°")
 
         if is_rhr_strike:
-            self._dipdir = rhrstrk2dd(src_azimuth)
+            self._dipdir = rhrstrk2dd(azim)
         else:
-            self._dipdir = src_azimuth % 360.0
-        self._dipangle = float(src_dip_angle)
+            self._dipdir = azim % 360.0
+        self._dipangle = float(dip_ang)
 
     @property
     def dd(self):
@@ -2179,6 +2131,30 @@ class GPlane(object):
         """
 
         return self.dipdir_gv().opposite()
+
+    def mirror_vertical(self):
+        """
+        Mirror a geological plane around a vertical plane
+        creating a new one that has a dip direction opposite
+        to the original one but with downward plunge.
+
+        :return: geological plane
+        :rtype: GPlane
+
+        Examples:
+          >>> GPlane(0, 45).mirror_vertical()
+          GPlane(180.00, +45.00)
+          >>> GPlane(225, 80).mirror_vertical()
+          GPlane(045.00, +80.00)
+          >>> GPlane(90, 90).mirror_vertical()
+          GPlane(270.00, +90.00)
+          >>> GPlane(270, 0).mirror_vertical()
+          GPlane(090.00, +00.00)
+        """
+
+        return GPlane(
+            azim=opposite_trend(self.dd),
+            dip_ang=self.da)
 
     def normal(self):
         """

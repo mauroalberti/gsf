@@ -16,6 +16,10 @@ default_gaxis_marker_upward_symbol = "+"
 default_gaxis_marker_downward_symbol = "s"
 default_gaxis_marker_color = "orange"
 
+default_gplane_downward_linestyle = "solid"
+default_gplane_upward_linestyle = "dashed"
+default_gplane_line_color = "blue"
+
 
 def splot(data, force=''):
     """
@@ -77,20 +81,23 @@ def splot(data, force=''):
 
         return plunge, bearing, symbol, color
 
-    def params_gplanes(planes):
+    def params_gplane(gplane, kwargs, force_emisphere):
 
-        strikes = []
-        dips = []
+        if (not force_emisphere) or (force_emisphere == 'lower'):
+            default_line_style = default_gplane_downward_linestyle
+            plot_gplane = gplane
+        elif force_emisphere == 'upper':
+            default_line_style = default_gplane_upward_linestyle
+            plot_gplane = gplane.mirror_vertical()
+        else:
+            raise PlotException("Invalid force emisphere parameter")
 
-        for gplane in gplanes:
+        strike, dip = plot_gplane.srda
 
-            strike, dip = gplane.srda
-            strikes.append(strike)
-            dips.append(dip)
+        line_style = kwargs.get("m", default_line_style)
+        color = kwargs.get("c", default_gplane_line_color)
 
-        color = "blue"
-
-        return np.array(strikes), np.array(dips), color
+        return strike, dip, line_style, color
 
     if force not in ('', 'upper', 'lower'):
         raise PlotException("Force parameter not valid")
@@ -135,16 +142,16 @@ def splot(data, force=''):
                     marker=symbol,
                     markerfacecolor=color,
                     markeredgecolor=color)
+            elif is_gplane(obj):
+                strike, dip, linestyle, color = params_gplane(obj, kwargs, force_emisphere=force)
+                ax.plane(
+                    strike,
+                    dip,
+                    linestyle=linestyle,
+                    color=color)
+
 
     """
-
-    gvects = list(filter(is_gvect, data))
-    gaxes = list(filter(is_gaxis, data))
-
-    gvects_notup = list(filter(is_not_upward, gvects))
-    gvects_up = list(filter(is_upward, gvects))
-    gaxes_notup = list(filter(is_not_upward, gaxes))
-    gaxes_up = list(filter(is_upward, gaxes))
 
     gplanes = filter(is_gplane, data)
 
