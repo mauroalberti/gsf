@@ -99,11 +99,11 @@ def splot(data, force=''):
 
         return strike, dip, line_style, color
 
-    if force not in ('', 'upper', 'lower'):
-        raise PlotException("Force parameter not valid")
-
     if not isinstance(data, list):
         data = [data]
+
+    if force not in ('', 'upper', 'lower'):
+        raise PlotException("Force parameter not valid")
 
     fig, ax = ms.subplots()
 
