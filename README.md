@@ -30,7 +30,7 @@ sudo python3 setup.py install
 ```
 You can then check if the module is installed in Python3 by successfully importing the module via:
 ```python
-import pyGsf
+import pygsf
 ```
 
 
