@@ -1035,6 +1035,20 @@ class GVect(object):
         return self.tr, self.pl, self.ax
 
     @property
+    def tpoa(self):
+        """
+        Return trend and plunge of the geological direction, as well as the opposite of the known/unknown movement sense..
+
+        Example:
+          >>> GVect(-90, -45).tpoa
+          (270.0, -45.0, True)
+          >>> GVect(-90, -45, is_axis=True).tpoa
+          (270.0, -45.0, False)
+        """
+
+        return self.tr, self.pl, not self.ax
+
+    @property
     def pt(self):
         """
         Return plunge and trend of the geological direction.
@@ -1162,7 +1176,7 @@ class GVect(object):
 
     def versor(self):
         """
-        Return the unit as_vect corresponding to the geological as_vect.
+        Return the unit as_vect corresponding to the geological vector.
 
         Examples:
           >>> GVect(0, 90).versor()
@@ -1339,7 +1353,7 @@ class GVect(object):
 
     def angle(self, another):
         """
-        Calculate angle (in degrees) between the two GVect instances.
+        Calculate angle (in degrees) between the two GVect instances or a GVect and a GAXis instances.
         Range is 0°-180°.
 
         Examples:
@@ -1371,16 +1385,16 @@ class GVect(object):
 
         angle_vers = self.versor().angle(another.versor())
 
-        if self.ax:
+        if self.ax or another.ax:
             return min(angle_vers, 180. - angle_vers)
         else:
             return angle_vers
 
     def almost_parallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """
-        Check that two GVect are sub-parallel,
+        Check that two GVect instances, or a GVect and a GPlane instances, are sub-parallel,
 
-        :param another: a GVect instance
+        :param another: a GVect or a GPlane instance
         :param angle_tolerance: the maximum allowed divergence angle (in degrees)
         :return: Boolean
 
@@ -1403,13 +1417,35 @@ class GVect(object):
           True
           >>> GVect(0, 90, True).almost_parallel(GVect(0, -90, True))
           True
+          >>> GVect(90, 90).almost_parallel(GPlane(315, 90))
+          True
+          >>> GVect(90, 45).almost_parallel(GPlane(312, 27))
+          False
+          >>> GVect(0, 10).almost_parallel(GPlane(359.5, 10))
+          True
+          >>> GVect(0, 10).almost_parallel(GPlane(0, 12))
+          False
         """
 
-        return self.angle(another) <= angle_tolerance
+        fst_gvect = self
+
+        if isinstance(another, GVect):
+            snd_geoelem = another
+        elif isinstance(another, GPlane):
+            snd_geoelem = another.normal_gaxis()
+        else:
+            raise GVectInputException("Argument must be GPlane or GVect")
+
+        angle = fst_gvect.angle(snd_geoelem)
+
+        if isinstance(another, GPlane):
+            return angle > (90.0 - angle_tolerance)
+        else:
+            return angle <= angle_tolerance
 
     def almost_antiparallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """
-        Check that two GVect are almost anti-parallel,
+        Check that two GVect instances are almost anti-parallel,
 
         :param another: a GVect instance
         :param angle_tolerance: the maximum allowed divergence angle (in degrees)
@@ -1427,6 +1463,9 @@ class GVect(object):
           >>> GVect(45, 72).almost_antiparallel(GVect(140, -38))
           False
         """
+
+        if self.ax or another.ax:
+            raise GVectInputException("Both elements must be GVect instances")
 
         return self.angle(another) > (180.0 - angle_tolerance)
 
@@ -1468,14 +1507,16 @@ class GVect(object):
           True
         """
 
-        if self.almost_parallel(another) or self.almost_antiparallel(another):
+        if not isinstance(self, GAxis) and not isinstance(self, GAxis) and self.almost_antiparallel(another):
+            return None
+        elif self.almost_parallel(another):
             return None
         else:
             return self.versor().vp(another.versor()).versor()
 
     def normal_gplane(self):
         """
-        Return the geological plane that is _normal_gv_frwrd to the geological as_vect.
+        Return the geological plane that is normal to the geological as_vect.
 
         Examples:
           >>> GVect(0, 45).normal_gplane()
@@ -1536,7 +1577,7 @@ class GVect(object):
 
     def normal_gvect(self, another):
         """
-        Calculate the GVect instance that is _normal_gv_frwrd to the two provided sources.
+        Calculate the GVect instance that is normal to the two provided sources.
         Angle between sources must be larger than MIN_ANGLE_DEGR_DISORIENTATION,
         otherwise a SubparallelLineationException will be raised.
         
@@ -1551,7 +1592,9 @@ class GVect(object):
           GVect(180.00, +00.00)
         """
 
-        if self.almost_parallel(another) or self.almost_antiparallel(another):
+        if not isinstance(self, GAxis) and not isinstance(self, GAxis) and self.almost_antiparallel(another):
+            return None
+        elif self.almost_parallel(another):
             return None
         else:
             return self.normal_versor(another).as_gvect()
@@ -1584,8 +1627,6 @@ class GAxis(GVect):
         """
 
         return GVect(self.tr, self.pl, is_axis=False)
-
-
 
     def normal_gaxis(self, another):
         """
@@ -1729,7 +1770,7 @@ class Plane(object):
 
     def nversor(self):
         """
-        Return the versor _normal_gv_frwrd to the cartesian plane.
+        Return the versor normal to the cartesian plane.
 
         Examples:
           >>> Plane(0, 0, 5, -2).nversor()
@@ -2105,7 +2146,7 @@ class GPlane(object):
 
     def _normal_gv_frwrd(self):
         """
-        Return the geological as_vect normal to the geological plane,
+        Return the geological as_vect normal_gvect to the geological plane,
         pointing in the same direction as the geological plane.
 
         Example:
@@ -2126,7 +2167,7 @@ class GPlane(object):
 
     def _normal_gv_anti(self):
         """
-        Return the geological as_vect _normal_gv_frwrd to the geological plane,
+        Return the geological as_vect normal to the geological plane,
         pointing in the opposite direction to the geological plane.
 
         Example:
@@ -2140,47 +2181,56 @@ class GPlane(object):
 
         return self._normal_gv_frwrd().opposite()
 
-    def down_normal(self):
+    def down_normal_gv(self):
         """
-        Return the geological as_vect normal to the geological plane,
+        Return the geological as_vect normal_gvect to the geological plane,
         pointing downward.
 
         Example:
-            >>> GPlane(90, 55).down_normal()
+            >>> GPlane(90, 55).down_normal_gv()
             GVect(270.00, +35.00)
-            >>> GPlane(90, 90).down_normal()
+            >>> GPlane(90, 90).down_normal_gv()
             GVect(090.00, +00.00)
-            >>> GPlane(90, 0).down_normal()
+            >>> GPlane(90, 0).down_normal_gv()
             GVect(270.00, +90.00)
         """
 
         return self._normal_gv_frwrd().downward()
 
-    def up_normal(self):
+    def up_normal_gv(self):
         """
-        Return the geological as_vect normal to the geological plane,
+        Return the geological as_vect normal_gvect to the geological plane,
         pointing upward.
 
         Example:
-            >>> GPlane(90, 55).up_normal()
+            >>> GPlane(90, 55).up_normal_gv()
             GVect(090.00, -35.00)
-            >>> GPlane(90, 90).up_normal()
+            >>> GPlane(90, 90).up_normal_gv()
             GVect(090.00, +00.00)
-            >>> GPlane(90, 0).up_normal()
+            >>> GPlane(90, 0).up_normal_gv()
             GVect(090.00, -90.00)
         """
 
         return self._normal_gv_frwrd().upward()
 
 
-    def normal(self):
+    def normal_gvect(self):
         """
-        Wrapper to down_normal.
+        Wrapper to down_normal_gv.
 
-        :return: GVect normal to the GPlane self instance
+        :return: GVect normal_gvect to the GPlane self instance
         """
 
-        return self.down_normal()
+        return self.down_normal_gv()
+
+    def normal_gaxis(self):
+        """
+        Normal GAxis.
+
+        :return: GAxis normal to the GPlane self instance
+        """
+
+        return self.down_normal_gv().as_gaxis()
 
     def plane(self, point):
         """
@@ -2266,6 +2316,57 @@ class GPlane(object):
 
         return self.angle(another) < angle_tolerance
 
+    def almost_orthogonal(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD):
+        """
+        Check that two GPlanes, or the Gplane instances and a GVect/GAxis, are sub-orthogonal.
+
+        :param another: a GPlane instance
+        :param angle_tolerance: the maximum allowed divergence angle (in degrees)
+        :return: Boolean
+
+         Examples:
+          >>> GPlane(0, 90).almost_orthogonal(GPlane(270, 90))
+          True
+          >>> GPlane(0, 90).almost_orthogonal(GPlane(180, 90))
+          False
+          >>> GPlane(0, 90).almost_orthogonal(GPlane(0, 0))
+          True
+          >>> GPlane(0, 0).almost_orthogonal(GPlane(0, 88))
+          False
+          >>> GPlane(0, 0).almost_orthogonal(GPlane(0, 45))
+          False
+          >>> GPlane(0, 0).almost_orthogonal(GVect(0, 90))
+          True
+          >>> GPlane(0, 0).almost_orthogonal(GVect(0, 45))
+          False
+          >>> GPlane(0, 0).almost_orthogonal(GVect(0, 0))
+          False
+          >>> GPlane(0, 0).almost_orthogonal(GAxis(0, -90))
+          True
+          >>> GPlane(0, 0).almost_orthogonal(GAxis(0, 45))
+          False
+          >>> GPlane(90, 90).almost_orthogonal(GAxis(90, 0.5))
+          True
+        """
+
+        fst_gaxis = self.normal_gvect().as_gaxis()
+
+        if isinstance(another, GPlane):
+            snd_gaxis = another.normal_gvect().as_gaxis()
+        elif isinstance(another, GAxis):
+            snd_gaxis = another
+        elif isinstance(another, GVect):
+            snd_gaxis = another.as_gaxis()
+        else:
+            raise GPlaneInputException("Not accepted argument type for almost_orthogonal method")
+
+        angle = fst_gaxis.angle(snd_gaxis)
+
+        if isinstance(another, GPlane):
+            return angle > 90.0 - angle_tolerance
+        else:
+            return angle < angle_tolerance
+
     def rake_to_gvect(self, rake):
         """
         Calculate GVect given a GPlane instance and a rake value.
@@ -2273,7 +2374,7 @@ class GPlane(object):
         rake = 0° -> left-lateral
         rake = 90° -> reverse
         rake = +/- 180° -> right-lateral
-        rake = -90° -> _normal_gv_frwrd
+        rake = -90° -> normal
 
         Examples:
           >>> GPlane(180, 45).rake_to_gvect(0.0)
@@ -2357,6 +2458,22 @@ class VectInvalidException(Exception):
 class SubparallelLineationException(Exception):
     """
     Exception for subparallel GAxis/GVect instances.
+    """
+
+    pass
+
+
+class GVectInputException(Exception):
+    """
+    Exception for GVect input.
+    """
+
+    pass
+
+
+class GAxisInputException(Exception):
+    """
+    Exception for GAxis input.
     """
 
     pass

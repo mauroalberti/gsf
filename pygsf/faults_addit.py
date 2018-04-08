@@ -1,137 +1,15 @@
 
-    @classmethod
-    def from_trpl(cls, trend: float, plunge: float, known=True):
-        """
-        Class constructors from trend, plunge and optional known movement sense flag.
-
-        :param trend: the trend of the slickenline
-        :type trend: float
-        :param plunge: the slickenline plunge
-        :type plunge: float
-        :param known: the known movement sense flag
-        :type known: bool
-        :return: the Slick instance
-
-        Examples:
-          >>> Slick.from_trpl(90, 10)
-          Slick(090.00, +10.00, True)
-          >>> Slick.from_trpl(90, 10, False)
-          Slick(090.00, +10.00, False)
-          >>> Slick.from_trpl("90", 10, False)
-          Traceback (most recent call last):
-          ...
-          SlickInputTypeException: Trend must be a number
-        """
-
-        if not isinstance(trend, (int, float)):
-            raise SlickInputTypeException("Trend must be a number")
-        if not isinstance(plunge, (int, float)):
-            raise SlickInputTypeException("Plunge must be a number")
-        if not isinstance(known, bool):
-            raise SlickInputTypeException("Known movement sense must be a boolean")
-
-        val = GVect(trend, plunge) if known else GAxis(trend, plunge)
-
-        return cls(val)
-
-    def has_known_sense(self):
-        """
-        Check whether the slickenline has known movement sense.
-
-        Example:
-          >>> Slick(GVect(90, 45)).has_known_sense()
-          True
-          >>> Slick(GAxis(90, 45)).has_known_sense()
-          False
-        """
-
-        if isinstance(self._mov_lin, GAxis):
-            return False
-        elif isinstance(self._mov_lin, GVect):
-            return True
-        else:
-            raise SlickInputTypeException("Error with provided slickeline type")
-
-    def has_unknown_sense(self):
-        """
-        Check whether the slickenline has unknown/uncertain movement sense.
-
-        Example:
-          >>> Slick(GAxis(90, 45)).has_unknown_sense()
-          True
-          >>> Slick(GVect(90, 45)).has_unknown_sense()
-          False
-        """
-
-        return not self.has_known_sense()
-
-    def set_known_sense(self):
-        """
-        Set (formal) movement sense to Slickline instance without known/certain movement sense.
-
-        Example:
-          >>> Slick(GAxis(180, -30)).set_known_sense()
-          Slick(180.00, -30.00, True)
-        """
-
-        return Slick(self.geom.as_gvect())
-
-    def set_unknown_sense(self):
-        """
-        Set to unknown/uncertain the movement sense for the current Slickline instance.
-
-        Example:
-          >>> Slick(GVect(180, -30)).set_unknown_sense()
-          Slick(180.00, -30.00, False)
-        """
-
-        return Slick(self.geom.as_gaxis())
-
-    @property
-    def geom(self):
-        """
-        Return the slickenline orientation value,
-        as a GVect (known movement sense)
-        or a GAxis instance (unknown movement sense).
-
-        Example:
-          >>> Slick(GVect(90, 45)).geom
-          GVect(090.00, +45.00)
-          >>> Slick(GAxis(90, 45)).geom
-          GAxis(090.00, +45.00)
-        """
-
-        return self._mov_lin
-
-    @property
-    def vals(self):
-        """
-        The slickenline parameters.
-        """
-
-        known_mov = self.has_known_sense()
-
-        return self._mov_lin.tr, self._mov_lin.pl, known_mov
 
 
 
-    def invert(self):
-        """
-        Invert the slickenline sense, when known, otherwise raise SlickSenseException.
 
-        Example:
-         >>> Slick(GAxis(30, 45)).invert()
-         Traceback (most recent call last):
-         ...
-         SlickSenseException: Slick must have know movement sense
-         >>> Slick(GVect(30, 45)).invert()
-         Slick(210.00, -45.00, True)
-        """
 
-        if not self.has_known_sense():
-            raise SlickSenseException("Slick must have know movement sense")
 
-        return Slick(self.geom.opposite())
+
+
+
+
+
 
 
 class GFault(object):
@@ -447,25 +325,4 @@ class GFault(object):
             return False
 
 
-class SlickSenseException(Exception):
-    """
-    Exception for slickenline movement sense.
-    """
 
-    pass
-
-
-class SlickInputTypeException(Exception):
-    """
-    Exception for slickenline type.
-    """
-
-    pass
-
-
-class GFaultInputTypeException(Exception):
-    """
-    Exception for GFault input type.
-    """
-
-    pass
