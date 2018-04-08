@@ -11,7 +11,7 @@ from .quaternions import *
 
 class RotationAxis(object):
     """
-    Rotation axis, expressed by a geological vector and a rotation angle.
+    Rotation axis, expressed by a geological as_vect and a rotation angle.
     """
 
     def __repr__(self):
@@ -38,7 +38,7 @@ class RotationAxis(object):
     def from_quaternion(cls, quat: Quaternion):
         """
         Calculates the Rotation Axis expressed by a quaternion.
-        The resulting rotation vector is set to point downward.
+        The resulting rotation as_vect is set to point downward.
         Examples are taken from Kuipers, 2002, chp. 5.
 
         :return: RotationAxis instance.
@@ -66,7 +66,7 @@ class RotationAxis(object):
 
             unit_quat = quat.normalize()
             rot_ang = unit_quat.rotation_angle()
-            rot_gvect = unit_quat.vector.gvect()
+            rot_gvect = unit_quat.vector.as_gvect()
 
         obj = cls()
         obj.gv = rot_gvect
@@ -147,7 +147,7 @@ class RotationAxis(object):
         """
 
         obj = cls()
-        obj.gv = vector.gvect()
+        obj.gv = vector.as_gvect()
         obj.a = angle
 
         return obj
@@ -155,7 +155,7 @@ class RotationAxis(object):
     @property
     def versor(self) -> Vect:
         """
-        Return the versor equivalent to the Rotation geological vector.
+        Return the versor equivalent to the Rotation geological as_vect.
 
         :return: Vect
         """
@@ -164,7 +164,7 @@ class RotationAxis(object):
 
     def specular(self):
         """
-        Derives the rotation axis with opposite vector direction
+        Derives the rotation axis with opposite as_vect direction
         and rotation angle that is the complement to 360°.
         The resultant rotation is equivalent to the original one.
 
@@ -311,7 +311,7 @@ def sort_rotations(rotation_axes: List[RotationAxis]) -> List[RotationAxis]:
 
 def quat_rot_vect(quat: Quaternion, vect: Vect) -> Vect:
     """
-    Calculates a rotated solution of a vector given a normalized quaternion.
+    Calculates a rotated solution of a as_vect given a normalized quaternion.
     Original formula in Ref. [1].
     Eq.6: R(qv) = q qv q(-1)
 

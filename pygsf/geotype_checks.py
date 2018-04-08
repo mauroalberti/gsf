@@ -21,12 +21,12 @@ def is_gplane(obj) -> bool:
 
 def is_slickln(obj) -> bool:
 
-    return isinstance(obj, Slickenline)
+    return isinstance(obj, Slick)
 
 
 def is_faultslck(obj) -> bool:
 
-    return isinstance(obj, FaultSlick)
+    return isinstance(obj, GFault)
 
 
 def is_ptbaxes(obj) -> bool:

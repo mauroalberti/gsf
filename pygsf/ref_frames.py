@@ -26,7 +26,7 @@ class RefFrame(object):
     @property
     def x(self):
         """
-        Return the x vector,
+        Return the x as_vector,
 
         :return: Vect instance
 
@@ -40,7 +40,7 @@ class RefFrame(object):
     @property
     def y(self):
         """
-        Return the y vector.
+        Return the y as_vector.
 
         :return: Vect instance
 
@@ -54,7 +54,7 @@ class RefFrame(object):
     @property
     def z(self):
         """
-        Return the z vector.
+        Return the z as_vector.
 
         :return: Vect instance
 

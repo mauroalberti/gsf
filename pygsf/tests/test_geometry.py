@@ -37,7 +37,7 @@ class TestGeometry(unittest.TestCase):
 
     def test_gplane_normal(self):
 
-        assert are_close(GPlane(90, 45).normal().angle(GVect(90, -45)), 0.)
+        assert are_close(GPlane(90, 45)._normal_gv_frwrd().angle(GVect(90, -45)), 0.)
 
     def test_gplane_plane(self):
 

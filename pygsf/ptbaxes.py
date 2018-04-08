@@ -5,7 +5,7 @@ import numpy as np
 from .default_parameters import *
 from .arrays import arrays_are_close
 from .geometry import Vect, GAxis, GVect, GPlane
-from .faults import Slickenline, FaultSlick
+from .faults import Slick, GFault
 from .quaternions import Quaternion
 
 
@@ -17,8 +17,8 @@ class PTBAxes(object):
 
     def __repr__(self):
         return "PTBAxes(P: {}, T: {})".format(
-            self._p_versor.gaxis(),
-            self._t_versor.gaxis())
+            self._p_versor.as_gaxis(),
+            self._t_versor.as_gaxis())
 
     def __init__(self, p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)):
         """
@@ -53,12 +53,12 @@ class PTBAxes(object):
         or with unknown/uncertain movement sense (False).
 
         Example:
-          >>> PTBAxes.from_faultslick(FaultSlick(GPlane(90, 45), Slickenline(GVect(90, 45))))
+          >>> PTBAxes.from_faultslick(GFault(GPlane(90, 45), Slick(GVect(90, 45))))
           PTBAxes(P: GAxis(000.00, -90.00), T: GAxis(090.00, +00.00))
         """
 
         s_versor = fault_slick.slick.geom.versor()
-        f_versor = fault_slick.gplane.normal().versor()
+        f_versor = fault_slick.gplane._normal_gv_frwrd().versor()
 
         obj = cls()
         obj._p_versor = (f_versor - s_versor).versor()
@@ -73,8 +73,8 @@ class PTBAxes(object):
         Vectors are not required to be normalized but are required to be
         sub-orthogonal.
 
-        :param t_vector: the vector representing the T axis (Vect instance).
-        :param p_vector: the vector representing the P axis (Vect instance).
+        :param t_vector: the as_vect representing the T axis (Vect instance).
+        :param p_vector: the as_vect representing the P axis (Vect instance).
         :return: a PTBAxes instance.
 
         Example:
@@ -197,7 +197,7 @@ class PTBAxes(object):
           GAxis(000.00, +90.00)
         """
 
-        return self.p_versor.gaxis()
+        return self.p_versor.as_gaxis()
 
     @property
     def t_axis(self):
@@ -211,7 +211,7 @@ class PTBAxes(object):
           GAxis(090.00, +00.00)
         """
 
-        return self.t_versor.gaxis()
+        return self.t_versor.as_gaxis()
 
     @property
     def b_axis(self):
@@ -225,7 +225,7 @@ class PTBAxes(object):
           GAxis(270.00, +00.00)
         """
 
-        return self.b_versor.gaxis()
+        return self.b_versor.as_gaxis()
 
     @property
     def m_plane(self):
@@ -275,7 +275,7 @@ class PTBAxes(object):
 
     def to_matrix(self):
         """
-        Creates a rotation matrix from the PTB vector components.
+        Creates a rotation matrix from the PTB as_vect components.
         Formula as in:
         - eq. 3 in Kagan, Y. Y., 2007. Simplified algorithms for calculating double-couple rotation.
         - eq. 31 in Kagan, Y. Y., 2008. On geometric complexity of earthquake focal zone and fault system.
