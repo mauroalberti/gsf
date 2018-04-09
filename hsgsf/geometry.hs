@@ -59,7 +59,7 @@ uDegrees x = x * 180.0 / pi
 uRadians :: Double -> Double
 uRadians x = x * pi / 180.0
 
--- | calculates the angle (in uDegrees, positive anti-clockwise) in the 2D plane
+-- | calculates the angle (in decimal degrees, positive anti-clockwise) in the 2D plane
 -- given x (East) and y (North) Cartesian components
 uAngleEastAclock :: Double -> Double -> Maybe Double
 -- |
@@ -82,7 +82,7 @@ uAngleEastAclock x y = case (x, y) of
                           (0.0, 0.0) -> Nothing
                           (_,   _)   -> Just (uM360 $ uDegrees $ atan2 y x)
 
--- | calculate the angle from East (in uDegrees, positive clockwise) in the 2D plane
+-- | calculate the angle from East (in decimal degrees, positive clockwise) in the 2D plane
 -- given x (East) and y (North) Cartesian components
 uAngleEastClock :: Double -> Double -> Maybe Double
 -- |
@@ -106,7 +106,7 @@ uAngleEastClock x y = let ang = uAngleEastAclock x y
                            Nothing -> Nothing
                            Just a  -> Just (uM360 $ 360.0 - a)
 
--- | calculate the angle from North (in uDegrees, positive clockwise) in the 2D plane
+-- | calculate the angle from North (in decimal degrees, positive clockwise) in the 2D plane
 -- given x (East) and y (North) Cartesian components
 uAngleNorthClock :: Double -> Double -> Maybe Double
 -- |
@@ -184,7 +184,7 @@ uPlngToColatBottom :: Double -> Double
 uPlngToColatBottom plng = 90.0 - plng
 
 
--- | uSlope (in uDegrees) given horizontal and vertical lengths
+-- | Slope (in decimal degrees) given horizontal and vertical lengths
 -- | both input are assumed positive
 uSlope :: Double -> Double -> Maybe Double
 -- |

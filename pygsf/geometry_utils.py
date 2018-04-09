@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+from math import degrees, atan2
+from typing import Optional
 
 
 def mod360(val: float) -> float:
@@ -44,6 +48,100 @@ def opposite_trend(tr: float) -> float:
     """
     
     return mod360(tr + 180.0)
+
+
+def angle_east_anticlock(x: float, y: float) -> Optional[float]:
+    """
+    Calculates the angle (in uDegrees, positive anti-clockwise) in the 2D plane
+    given x (East) and y (North) Cartesian components.
+
+    :param x: x component
+    :param y: y component
+    :return: angle (in decimal degrees) or None
+
+    Examples:
+      >>> angle_east_anticlock(0, 0) is None
+      True
+      >>> angle_east_anticlock(1, 0)
+      0.0
+      >>> angle_east_anticlock(1, 1)
+      45.0
+      >>> angle_east_anticlock(0, 5)
+      90.0
+      >>> angle_east_anticlock(-1, 0)
+      180.0
+      >>> angle_east_anticlock(0, -4)
+      270.0
+      >>> angle_east_anticlock(1, -1)
+      315.0
+    """
+    if x == 0.0 and y == 0.0:
+        return None
+    else:
+        return mod360(degrees(atan2(y, x)))
+
+
+def angle_east_clock(x: float, y: float) -> Optional[float]:
+    """
+    Calculate the angle from East (in uDegrees, positive clockwise) in the 2D plane
+    given x (East) and y (North) Cartesian components.
+
+    :param x: x component
+    :param y: y component
+    :return: angle (in decimal degrees) or None
+    
+    Examples:
+      >>> angle_east_clock(0, 0) is None
+      True
+      >>> angle_east_clock(1, 0)
+      0.0
+      >>> angle_east_clock(1, -1)
+      45.0
+      >>> angle_east_clock(0, -4)
+      90.0
+      >>> angle_east_clock(-1, 0)
+      180.0
+      >>> angle_east_clock(0, 5)
+      270.0
+      >>> angle_east_clock(1, 1)
+      315.0
+    """
+
+    ang = angle_east_anticlock(x, y)
+    if ang is None:
+        return None
+    else:
+        return mod360(360.0 - ang)
+
+def angle_north_clock(x: float, y: float) -> Optional[float]:
+    """
+    Calculate the angle from North (in uDegrees, positive clockwise) in the 2D plane
+    given x (East) and y (North) Cartesian components.
+
+    Examples:
+      >>> angle_north_clock(0, 0) is None
+      True
+      >>> angle_north_clock(0, 5)
+      0.0
+      >>> angle_north_clock(1, 1)
+      45.0
+      >>> angle_north_clock(1, 0)
+      90.0
+      >>> angle_north_clock(1, -1)
+      135.0
+      >>> angle_north_clock(0, -1)
+      180.0
+      >>> angle_north_clock(-1, 0)
+      270.0
+      >>> angle_north_clock(0, -4)
+      180.0
+    """
+
+    ang = angle_east_clock(x, y)
+    if ang is None:
+        return None
+    else:
+        return mod360(90.0 + ang)
 
 
 def plng2colatTop(plunge: float) -> float:
@@ -95,6 +193,31 @@ def plng2colatBottom(plunge: float) -> float:
 
     return 90.0 - plunge
 
+
+def slope(h: float, v: float) -> Optional[float]:
+    """
+    Slope (in decimal degrees) given horizontal and vertical lengths
+    both input are assumed positive.
+
+    :param h: the horizontal distance
+    :param v: the vertical offset
+    :return: the slope in decimal degrees or None
+    
+    Examples:
+      >>> slope(0, 0) is None
+      True
+      >>> slope(1, 1)
+      45.0
+      >>> slope(1, 0)
+      0.0
+    """
+
+    if h == 0.0 and v == 0.0:
+        return None
+    elif h == 0.0:
+        return 90.0
+    else:
+        return degrees(atan2(v, h))
 
 
 if __name__ == "__main__":
