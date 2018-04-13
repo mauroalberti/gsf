@@ -1,17 +1,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 class GFault(object):
     """
     Represent a couple of geological observations,

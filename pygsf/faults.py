@@ -152,7 +152,8 @@ class GFault(GPlane):
             slickenlines = []
         temp_gplane = GPlane(azim, dip_ang, is_rhr_strike)
         for slickenline in slickenlines:
-            if not temp_gplane.almost_parallel(slickenline)
+            if not temp_gplane.almost_parallel(slickenline):
+                raise GFaultInputTypeException("All slickenlines must lie on the plane")
 
         super().__init__(azim, dip_ang, is_rhr_strike)
 

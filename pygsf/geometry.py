@@ -137,6 +137,8 @@ class Point(object):
           Point(0.0000, 0.0000, 0.0000, nan)
           >>> Point(1., 1.) - Point(1., 1.)
           Point(0.0000, 0.0000, nan, nan)
+          >>> Point(1., 1., 3., 0.2) - Point(1., 1., 2.2, 7.4)
+          Point(0.0000, 0.0000, 0.8000, -7.2000)
         """
 
         return Point.from_array(self.v - another.v)
@@ -195,6 +197,8 @@ class Point(object):
           True
           >>> Point(1., 0., 0.).space_coincident(Point(1., 0., np.nan))
           False
+          >>> Point(1.2, 7.4, 1.4, 0.9).space_coincident(Point(1.2, 7.4, 1.4, 0.85))
+          True
         """
 
         distance_2d = self.dist_2d(another)
@@ -214,17 +218,21 @@ class Point(object):
         Example:
           >>> Point(1, 1, 1).translate(0.5, 1., 1.5)
           Point(1.5000, 2.0000, 2.5000, nan)
+          >>> Point(1, 2, -1, 4.3).translate(0.5, 1., 1.5, 2.4)
+          Point(1.5000, 3.0000, 0.5000, 6.7000)
        """
 
         return Point(self.x + sx, self.y + sy, self.z + sz, self.t + st)
 
     def vect_offset(self, displ_vect):
         """
-        Create a new point from the self, with offsets defined by a as_vect.
+        Create a new point from the self, with offsets defined by a vector.
 
         Example:
           >>> Point(1, 2, 0).vect_offset(Vect(10, 5, 0))
           Point(11.0000, 7.0000, 0.0000, nan)
+          >>> Point(3, 1, 0.2, 4.3).vect_offset(Vect(7, 5, 0))
+          Point(10.0000, 6.0000, 0.2000, 4.3000)
         """
 
         return Point(self.x + displ_vect.x,
@@ -239,6 +247,8 @@ class Point(object):
         Example:
           >>> Point(1, 1, 0, 5).as_vect()
           Vect(1.0000, 1.0000, 0.0000)
+          >>> Point(0.2, 1, 6, 3).as_vect()
+          Vect(0.2000, 1.0000, 6.0000)
         """
 
         return Vect(self.x, self.y, self.z)
@@ -284,7 +294,7 @@ class Point(object):
 
 class Vect(object):
     """
-    Cartesian as_vect, 3D
+    Cartesian 3D vector.
     Right-handed rectangular Cartesian coordinate system (ENU):
     x axis -> East
     y axis -> North
@@ -301,24 +311,24 @@ class Vect(object):
           >>> Vect(1, np.nan, 1)
           Traceback (most recent call last):
           ...
-          VectInputException: All as_vect components must be finite
+          VectInputException: All vector components must be finite
           >>> Vect(1, 0, np.inf)
           Traceback (most recent call last):
           ...
-          VectInputException: All as_vect components must be finite
+          VectInputException: All vector components must be finite
           >>> Vect(0, 0, 0)
           Vect(0.0000, 0.0000, 0.0000)
         """
 
         if not (np.isfinite(x) and np.isfinite(y) and np.isfinite(z)):
-            raise VectInputException("All as_vect components must be finite")
+            raise VectInputException("All vector components must be finite")
 
         self._v = np.array([x, y, z], dtype=np.float64)
 
     @classmethod
     def from_array(cls, a):
         """
-        Class method to construct a as_vect from a numpy 1x3 array.
+        Class method to construct a vector from a numpy 1x3 array.
 
         Example:
           >>> Vect.from_array(np.array([1, 0, 1]))
@@ -337,7 +347,7 @@ class Vect(object):
     @property
     def v(self):
         """
-        Return the as_vect values as array
+        Return the vector values as array
 
         Example:
           >>> arrays_are_close(Vect(1, 1, 0).v, np.array([1., 1., 0.]))
@@ -384,9 +394,9 @@ class Vect(object):
 
     def components(self) -> Tuple[float, float, float]:
         """
-        Returns the as_vect components as a tuple of three values.
+        Returns the vector components as a tuple of three values.
 
-        :return: the as_vect components (x, y, z).
+        :return: the vector components (x, y, z).
         :rtype: a tuple of three floats.
 
         Examples:
@@ -399,7 +409,7 @@ class Vect(object):
     @property
     def valid(self) -> bool:
         """
-        Check if the Vect instance components are not all zero.
+        Check if the Vect instance components are not all zero-valued.
 
         :return: Boolean
 
@@ -408,6 +418,10 @@ class Vect(object):
           True
           >>> Vect(0.0, 0.0, 0.0).valid
           False
+          >>> Vect(np.nan, 1, 1).valid
+          Traceback (most recent call last):
+          ...
+          VectInputException: All vector components must be finite
         """
 
         return not self.is_near_zero
@@ -474,7 +488,7 @@ class Vect(object):
 
     def __sub__(self, another):
         """
-        Return as_vect difference.
+        Return vector difference.
 
         Example:
           >>> Vect(1., 1., 1.) - Vect(1., 1., 1.)
@@ -526,7 +540,7 @@ class Vect(object):
 
     def clone(self):
         """
-        Clone the as_vect.
+        Clone the vector.
 
         Example:
           >>> Vect(1, 1, 1).clone()
@@ -536,7 +550,7 @@ class Vect(object):
 
     def scale(self, scale_factor):
         """
-        Create a scaled as_vect.
+        Create a scaled vector.
 
         Example;
           >>> Vect(1, 0, 1).scale(2.5)
@@ -544,15 +558,15 @@ class Vect(object):
           >>> Vect(1, 0, 1).scale(np.nan)
           Traceback (most recent call last):
           ...
-          VectInputException: Scale factor for as_vect must be finite
+          VectInputException: Scale factor for vector must be finite
           >>> Vect(1, 0, 1).scale(np.inf)
           Traceback (most recent call last):
           ...
-          VectInputException: Scale factor for as_vect must be finite
+          VectInputException: Scale factor for vector must be finite
         """
 
         if not np.isfinite(scale_factor):
-            raise VectInputException("Scale factor for as_vect must be finite")
+            raise VectInputException("Scale factor for vector must be finite")
 
         return Vect.from_array(self.v * scale_factor)
 
@@ -577,7 +591,7 @@ class Vect(object):
 
     def flatten_2d(self):
         """
-        Create equivalent as_vect in xy space.
+        Create equivalent vector in xy space.
 
         Example:
           >>> Vect(5, 16, 43).flatten_2d()
@@ -588,7 +602,7 @@ class Vect(object):
 
     def versor_2d(self):
         """
-        Create 2D versor equivalent of the current as_vect
+        Create 2D versor equivalent of the current vector
 
         :return: Vector
 
@@ -601,7 +615,7 @@ class Vect(object):
 
     def invert(self):
         """
-        Create a new as_vect with inverted direction.
+        Create a new vector with inverted direction.
 
         Examples:
           >>> Vect(1, 1, 1).invert()
@@ -615,7 +629,7 @@ class Vect(object):
     @property
     def is_upward(self):
         """
-        Check that a as_vect is upward-directed.
+        Check that a vector is upward-directed.
          
         Example:
           >>> Vect(0,0,1).is_upward
@@ -629,7 +643,7 @@ class Vect(object):
     @property
     def is_downward(self):
         """
-        Check that a as_vect is downward-directed.
+        Check that a vector is downward-directed.
 
         Example:
           >>> Vect(0,0,1).is_downward
@@ -642,7 +656,7 @@ class Vect(object):
 
     def upward(self):
         """
-        Calculate a new upward-pointing as_vect.
+        Calculate a new upward-pointing vector.
 
         Example:
           >>> Vect(1, 1, 1).upward()
@@ -658,7 +672,7 @@ class Vect(object):
 
     def downward(self):
         """
-        Calculate a new as_vect downward-pointing.
+        Calculate a new vector downward-pointing.
 
         Example:
           >>> Vect(1, 1, 1).downward()
@@ -675,8 +689,8 @@ class Vect(object):
     @property
     def slope(self):
         """
-        Slope of a as_vect expressed as degrees.
-        Positive when as_vect is downward pointing or horizontal,
+        Slope of a vector expressed as degrees.
+        Positive when vector is downward pointing or horizontal,
         negative when upward pointing.
 
         Example:
@@ -706,7 +720,7 @@ class Vect(object):
             elif self.z < 0.:
                 return 90.
             else:
-                raise Exception("Zero-valued as_vect")
+                raise Exception("Zero-valued vector")
         else:
             slope = - degrees(atan(self.z / self.len_2d))
             if abs(slope) > MIN_SCALAR_VALUE:
@@ -716,7 +730,7 @@ class Vect(object):
 
     def as_gvect(self):
         """
-        Calculate the geological as_vect parallel to the Vect instance.
+        Calculate the geological vector parallel to the Vect instance.
         Trend range: [0°, 360°[
         Plunge range: [-90°, 90°], with negative values for upward-pointing
         geological axes and positive values for downward-pointing axes.
@@ -931,7 +945,7 @@ class Vect(object):
 
     def by_matrix(self, array3x3):
         """
-        Matrix multiplication of a as_vect.
+        Matrix multiplication of a vector.
 
         """
 
@@ -940,7 +954,7 @@ class Vect(object):
 
 class GVect(object):
     """
-    Geological as_vect.
+    Geological vector.
     Defined by trend and plunge (both in degrees):
      - trend: [0.0, 360.0[ clockwise, from 0 (North):
      - plunge: [-90.0, 90.0].
@@ -948,7 +962,7 @@ class GVect(object):
 
     def __init__(self, trend, plunge, is_axis=False):
         """
-        Geological as_vect constructor.
+        Geological vector constructor.
         trend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
         plunge: Plunge: [-90.0, 90.0],
         negative value: upward pointing is_axis, positive values: downward is_axis;
@@ -1176,7 +1190,7 @@ class GVect(object):
 
     def versor(self):
         """
-        Return the unit as_vect corresponding to the geological vector.
+        Return the unit vector corresponding to the geological vector.
 
         Examples:
           >>> GVect(0, 90).versor()
@@ -1228,7 +1242,7 @@ class GVect(object):
 
     def upward(self):
         """
-        Return upward-point geological as_vect.
+        Return upward-point geological vector.
 
         Examples:
           >>> GVect(90, -45).upward().almost_parallel(GVect(90.0, -45.0))
@@ -1256,7 +1270,7 @@ class GVect(object):
 
     def downward(self):
         """
-        Return downward-pointing geological as_vect.
+        Return downward-pointing geological vector.
 
         Examples:
           >>> GVect(90, -45).downward().almost_parallel(GVect(270.0, 45.0))
@@ -1494,7 +1508,7 @@ class GVect(object):
 
     def normal_versor(self, another):
         """
-        Calculate the versor (GVect) defined by the as_vect product of two GVect instances.
+        Calculate the versor (GVect) defined by the vector product of two GVect instances.
 
         Examples:
           >>> GVect(0, 0).normal_versor(GVect(90, 0))
@@ -1516,7 +1530,7 @@ class GVect(object):
 
     def normal_gplane(self):
         """
-        Return the geological plane that is normal to the geological as_vect.
+        Return the geological plane that is normal to the geological vector.
 
         Examples:
           >>> GVect(0, 45).normal_gplane()
@@ -1603,7 +1617,7 @@ class GVect(object):
 class GAxis(GVect):
     """
     Convenience class wrapping geological axis with unknown movement sense.
-    While GAxis is non-directional, the geological as_vect (GVect) is directional.
+    While GAxis is non-directional, the geological vector (GVect) is directional.
     Defined by trend and plunge (both in degrees):
      - trend: [0.0, 360.0[ clockwise, from 0 (North):
      - plunge: [-90.0, 90.0].
@@ -1654,7 +1668,7 @@ class GAxis(GVect):
             return norm_gvect.as_gaxis()
 
 
-class Plane(object):
+class CPlane(object):
     """
     Cartesian plane.
     Expressed by equation:
@@ -1678,7 +1692,7 @@ class Plane(object):
         Return a coefficient of a Plane instance.
 
         Example:
-          >>> Plane(1, 0, 0, 2).a
+          >>> CPlane(1, 0, 0, 2).a
           1.0
         """
 
@@ -1690,7 +1704,7 @@ class Plane(object):
         Return b coefficient of a Plane instance.
 
         Example:
-          >>> Plane(1, 4, 0, 2).b
+          >>> CPlane(1, 4, 0, 2).b
           4.0
         """
 
@@ -1702,7 +1716,7 @@ class Plane(object):
         Return a coefficient of a Plane instance.
 
         Example:
-          >>> Plane(1, 0, 5.4, 2).c
+          >>> CPlane(1, 0, 5.4, 2).c
           5.4
         """
 
@@ -1714,7 +1728,7 @@ class Plane(object):
         Return a coefficient of a Plane instance.
 
         Example:
-          >>> Plane(1, 0, 0, 2).d
+          >>> CPlane(1, 0, 0, 2).d
           2.0
         """
 
@@ -1726,7 +1740,7 @@ class Plane(object):
         Return coefficients of a Plane instance.
 
         Example:
-          >>> Plane(1, 1, 7, -4).v
+          >>> CPlane(1, 1, 7, -4).v
           (1.0, 1.0, 7.0, -4.0)
         """
         return self.a, self.b, self.c, self.d
@@ -1737,9 +1751,9 @@ class Plane(object):
         Create a Plane from three given Point instances.
 
         Example:
-          >>> Plane.from_points(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
+          >>> CPlane.from_points(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
           Plane(0.0000, 0.0000, 1.0000, 0.0000)
-          >>> Plane.from_points(Point(0, 0, 0), Point(0, 1, 0), Point(0, 0, 1))
+          >>> CPlane.from_points(Point(0, 0, 0), Point(0, 1, 0), Point(0, 0, 1))
           Plane(1.0000, 0.0000, 0.0000, 0.0000)
         """
 
@@ -1773,9 +1787,9 @@ class Plane(object):
         Return the versor normal to the cartesian plane.
 
         Examples:
-          >>> Plane(0, 0, 5, -2).nversor()
+          >>> CPlane(0, 0, 5, -2).nversor()
           Vect(0.0000, 0.0000, 1.0000)
-          >>> Plane(0, 7, 0, 5).nversor()
+          >>> CPlane(0, 7, 0, 5).nversor()
           Vect(0.0000, 1.0000, 0.0000)
         """
 
@@ -1787,7 +1801,7 @@ class Plane(object):
         and a point lying in the plane (non-unique solution).
 
         Examples:
-          >>> gpl, pt = Plane(0, 0, 1, -1).gplane_point()
+          >>> gpl, pt = CPlane(0, 0, 1, -1).gplane_point()
           >>> gpl
           GPlane(000.00, +00.00)
           >>> pt
@@ -1803,8 +1817,8 @@ class Plane(object):
         """
         Return intersection versor for two intersecting planes.
 
-        >>> a = Plane(1, 0, 0, 0)
-        >>> b = Plane(0, 0, 1, 0)
+        >>> a = CPlane(1, 0, 0, 0)
+        >>> b = CPlane(0, 0, 1, 0)
         >>> a.inters_versor(b)
         Vect(0.0000, -1.0000, 0.0000)
         """
@@ -1816,8 +1830,8 @@ class Plane(object):
         Return point on intersection line (obviously non-unique solution)
         for two planes.
 
-        >>> a = Plane(1, 0, 0, 0)
-        >>> b = Plane(0, 0, 1, 0)
+        >>> a = CPlane(1, 0, 0, 0)
+        >>> b = CPlane(0, 0, 1, 0)
         >>> a.inters_point(b)
         Point(0.0000, 0.0000, 0.0000, nan)
         """
@@ -1833,7 +1847,7 @@ class Plane(object):
         """
           Check whether a point lie in a plane.
 
-          >>> pl = Plane(0, 0, 1, 0)
+          >>> pl = CPlane(0, 0, 1, 0)
           >>> pt = Point(0, 1, 0)
           >>> pl.is_point_in_plane(pt)
           True
@@ -1849,11 +1863,11 @@ class Plane(object):
         Calculate angle (in degrees) between two planes.
 
         Examples:
-          >>> Plane(1,0,0,0).angle(Plane(0,1,0,0))
+          >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0))
           90.0
-          >>> Plane(1,0,0,0).angle(Plane(1,0,1,0))
+          >>> CPlane(1,0,0,0).angle(CPlane(1,0,1,0))
           45.0
-          >>> Plane(1,0,0,0).angle(Plane(1,0,0,0))
+          >>> CPlane(1,0,0,0).angle(CPlane(1,0,0,0))
           0.0
         """
 
@@ -1874,9 +1888,9 @@ class Plane(object):
         :return: Boolean
 
          Examples:
-          >>> Plane(1,0,0,0).almost_parallel(Plane(1,0,0,0))
+          >>> CPlane(1,0,0,0).almost_parallel(CPlane(1,0,0,0))
           True
-          >>> Plane(1,0,0,0).almost_parallel(Plane(1,0,1,0))
+          >>> CPlane(1,0,0,0).almost_parallel(CPlane(1,0,1,0))
           False
         """
 
@@ -2146,7 +2160,7 @@ class GPlane(object):
 
     def _normal_gv_frwrd(self):
         """
-        Return the geological as_vect normal_gvect to the geological plane,
+        Return the geological vector normal_gvect to the geological plane,
         pointing in the same direction as the geological plane.
 
         Example:
@@ -2167,7 +2181,7 @@ class GPlane(object):
 
     def _normal_gv_anti(self):
         """
-        Return the geological as_vect normal to the geological plane,
+        Return the geological vector normal to the geological plane,
         pointing in the opposite direction to the geological plane.
 
         Example:
@@ -2183,7 +2197,7 @@ class GPlane(object):
 
     def down_normal_gv(self):
         """
-        Return the geological as_vect normal_gvect to the geological plane,
+        Return the geological vector normal_gvect to the geological plane,
         pointing downward.
 
         Example:
@@ -2199,7 +2213,7 @@ class GPlane(object):
 
     def up_normal_gv(self):
         """
-        Return the geological as_vect normal_gvect to the geological plane,
+        Return the geological vector normal_gvect to the geological plane,
         pointing upward.
 
         Example:
@@ -2249,7 +2263,7 @@ class GPlane(object):
         normal_versor = self._normal_gv_frwrd().versor()
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * point.x + b * point.y + c * point.z)
-        return Plane(a, b, c, d)
+        return CPlane(a, b, c, d)
 
     def angle(self, another):
         """

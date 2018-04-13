@@ -42,7 +42,7 @@ class TestGeometry(unittest.TestCase):
     def test_gplane_plane(self):
 
         pl = GPlane(90, 45).plane(Point(0, 0, 0))
-        assert are_close(pl.angle(Plane(1, 0, 1, 0)), 0.)
+        assert are_close(pl.angle(CPlane(1, 0, 1, 0)), 0.)
 
     def test_gplane_angle(self):
 
