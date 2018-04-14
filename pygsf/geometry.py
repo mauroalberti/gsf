@@ -3,7 +3,7 @@
 
 from __future__ import division
 
-from math import sqrt, sin, cos, radians, acos, atan, atan2, degrees
+from math import sqrt, sin, cos, radians, acos, atan, isnan
 import numpy as np
 
 from typing import Dict, Tuple, List
@@ -22,10 +22,10 @@ class Point(object):
 
     def __init__(self, x=np.nan, y=np.nan, z=np.nan, t=np.nan):
         """
-        Construct a Point instance given 2, 3 or 4 float values.
+        Construct a Point instance.
         """
 
-        self._p = np.array([x, y, z, t], dtype=np.float64)
+        self._a = np.array([x, y, z, t], dtype=np.float64)
 
     def __repr__(self):
 
@@ -55,7 +55,7 @@ class Point(object):
             c = np.append(b, [np.nan])
         else:
             c = b
-        obj._p = c
+        obj._a = c
 
         return obj
 
@@ -69,7 +69,7 @@ class Point(object):
           True
         """
 
-        return self._p
+        return self._a
 
     @property
     def x(self):
@@ -127,7 +127,7 @@ class Point(object):
           Point(1.0000, 1.0000, 1.0000, nan)
         """
 
-        return Point.from_array(self.v)
+        return self.__class__.from_array(self.v)
 
     def __sub__(self, another):
         """Return point difference
@@ -141,7 +141,7 @@ class Point(object):
           Point(0.0000, 0.0000, 0.8000, -7.2000)
         """
 
-        return Point.from_array(self.v - another.v)
+        return self.__class__.from_array(self.v - another.v)
 
     def __abs__(self):
         """
@@ -292,7 +292,7 @@ class Point(object):
             return delta_s / delta_t
 
 
-class Vect(object):
+class Vect(Point):
     """
     Cartesian 3D vector.
     Right-handed rectangular Cartesian coordinate system (ENU):
@@ -309,88 +309,14 @@ class Vect(object):
           >>> Vect(1, 0, 1)
           Vect(1.0000, 0.0000, 1.0000)
           >>> Vect(1, np.nan, 1)
-          Traceback (most recent call last):
-          ...
-          VectInputException: All vector components must be finite
+          Vect(1.0000, nan, 1.0000)
           >>> Vect(1, 0, np.inf)
-          Traceback (most recent call last):
-          ...
-          VectInputException: All vector components must be finite
+          Vect(1.0000, 0.0000, inf)
           >>> Vect(0, 0, 0)
           Vect(0.0000, 0.0000, 0.0000)
         """
 
-        if not (np.isfinite(x) and np.isfinite(y) and np.isfinite(z)):
-            raise VectInputException("All vector components must be finite")
-
-        self._v = np.array([x, y, z], dtype=np.float64)
-
-    @classmethod
-    def from_array(cls, a):
-        """
-        Class method to construct a vector from a numpy 1x3 array.
-
-        Example:
-          >>> Vect.from_array(np.array([1, 0, 1]))
-          Vect(1.0000, 0.0000, 1.0000)
-        """
-
-        if a.size != 3:
-            raise VectInputException("Array size must be 3")
-
-        obj = cls()
-        b = a.astype(np.float64)
-        obj._v = b
-
-        return obj
-
-    @property
-    def v(self):
-        """
-        Return the vector values as array
-
-        Example:
-          >>> arrays_are_close(Vect(1, 1, 0).v, np.array([1., 1., 0.]))
-          True
-        """
-
-        return self._v
-
-    @property
-    def x(self) -> float:
-        """
-        Return x value
-
-        Example:
-          >>> Vect(1, 2, 0).x
-          1.0
-        """
-
-        return self.v[0]
-
-    @property
-    def y(self) -> float:
-        """
-        Return y value
-
-        Example:
-          >>> Vect(1, 2, 0).y
-          2.0
-        """
-
-        return self.v[1]
-
-    @property
-    def z(self) -> float:
-        """
-        Return z value
-
-        Example:
-          >>> Vect(1, 2, 0).z
-          0.0
-        """
-
-        return self.v[2]
+        super().__init__(x, y, z)
 
     def components(self) -> Tuple[float, float, float]:
         """
@@ -409,7 +335,7 @@ class Vect(object):
     @property
     def valid(self) -> bool:
         """
-        Check if the Vect instance components are not all zero-valued.
+        Check if the Vect instance components are not all valid and the components not all zero-valued.
 
         :return: Boolean
 
@@ -419,10 +345,16 @@ class Vect(object):
           >>> Vect(0.0, 0.0, 0.0).valid
           False
           >>> Vect(np.nan, 1, 1).valid
-          Traceback (most recent call last):
-          ...
-          VectInputException: All vector components must be finite
+          False
+          >>> Vect(np.inf, 1, 1).valid
+          False
         """
+
+        if any(map(isnan, self.components())):
+            return False
+
+        if np.inf in self.components():
+            return False
 
         return not self.is_near_zero
 
@@ -486,19 +418,6 @@ class Vect(object):
 
         return are_close(self.len_3d, 1)
 
-    def __sub__(self, another):
-        """
-        Return vector difference.
-
-        Example:
-          >>> Vect(1., 1., 1.) - Vect(1., 1., 1.)
-          Vect(0.0000, 0.0000, 0.0000)
-          >>> Vect(0., 1., 4.) - Vect(7., 3., 1.)
-          Vect(-7.0000, -2.0000, 3.0000)
-        """
-
-        return Vect.from_array(self.v - another.v)
-
     def __eq__(self, another):
         """
         Return True if vectors are equal.
@@ -537,16 +456,6 @@ class Vect(object):
         """
 
         return Vect.from_array(self.v + another.v)
-
-    def clone(self):
-        """
-        Clone the vector.
-
-        Example:
-          >>> Vect(1, 1, 1).clone()
-          Vect(1.0000, 1.0000, 1.0000)
-        """
-        return Vect.from_array(self.v)
 
     def scale(self, scale_factor):
         """
@@ -941,7 +850,7 @@ class Vect(object):
           True
         """
 
-        return Vect.from_array(np.cross(self.v, another.v))
+        return Vect.from_array(np.cross(self.v[:3], another.v[:3]))
 
     def by_matrix(self, array3x3):
         """
