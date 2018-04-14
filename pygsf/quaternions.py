@@ -33,12 +33,12 @@ class Quaternion(object):
 
     def components(self):
         """
-        Returns the quaternion components as a float tuple.
+        Returns the quaternion xyz as a float tuple.
 
         :return: tuple of 4 float values
 
         Example:
-          >>> Quaternion(0, 1, 0, 0).components()
+          >>> Quaternion(0, 1, 0, 0).xyz()
           (0.0, 1.0, 0.0, 0.0)
         """
 
@@ -637,7 +637,7 @@ class Quaternion(object):
 
     def to_rotation_matrix(self):
         """
-        Computes the rotation matrix from the quaternion components.
+        Computes the rotation matrix from the quaternion xyz.
         Formula as in:
         - Eq. 3.5 in Salamin, E., 1979. Application of quaternions to computation with rotations.
         - Eq. 10 in Kagan, Y. Y., 1991. 3-D rotation of double-couple earthquake sources.

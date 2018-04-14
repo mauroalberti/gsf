@@ -53,7 +53,7 @@ def opposite_trend(tr: float) -> float:
 def angle_east_anticlock(x: float, y: float) -> Optional[float]:
     """
     Calculates the angle (in uDegrees, positive anti-clockwise) in the 2D plane
-    given x (East) and y (North) Cartesian components.
+    given x (East) and y (North) Cartesian xyz.
 
     :param x: x component
     :param y: y component
@@ -84,7 +84,7 @@ def angle_east_anticlock(x: float, y: float) -> Optional[float]:
 def angle_east_clock(x: float, y: float) -> Optional[float]:
     """
     Calculate the angle from East (in uDegrees, positive clockwise) in the 2D plane
-    given x (East) and y (North) Cartesian components.
+    given x (East) and y (North) Cartesian xyz.
 
     :param x: x component
     :param y: y component
@@ -116,7 +116,7 @@ def angle_east_clock(x: float, y: float) -> Optional[float]:
 def angle_north_clock(x: float, y: float) -> Optional[float]:
     """
     Calculate the angle from North (in uDegrees, positive clockwise) in the 2D plane
-    given x (East) and y (North) Cartesian components.
+    given x (East) and y (North) Cartesian xyz.
 
     Examples:
       >>> angle_north_clock(0, 0) is None

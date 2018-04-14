@@ -21,7 +21,7 @@ class SMTensor(object):
                        m21=float('nan'), m22=float('nan'), m23=float('nan'),
                        m31=float('nan'), m32=float('nan'), m33=float('nan')):
         """
-        Constructor from scalar components.
+        Constructor from scalar xyz.
 
         :param m11: float
         :param m12: float
@@ -54,7 +54,7 @@ class SMTensor(object):
         :return: SMTensor instance
         """
 
-        q0, q1, q2, q3 = quater.normalize().components()
+        q0, q1, q2, q3 = quater.normalize().xyz()
 
         q0q0 = q0 * q0
         q0q1 = q0 * q1

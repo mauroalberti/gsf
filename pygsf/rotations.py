@@ -245,7 +245,7 @@ class RotationAxis(object):
         rotation_vector = self.gv.versor()
 
         w = cos(rotation_angle_rad / 2.0)
-        x, y, z = rotation_vector.scale(sin(rotation_angle_rad / 2.0)).components()
+        x, y, z = rotation_vector.scale(sin(rotation_angle_rad / 2.0)).xyz()
 
         return Quaternion(w, x, y, z).normalize()
 
@@ -396,7 +396,7 @@ def focmechs_invert_rotations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
     if t_axes_angle < 0.5 and p_axes_angle < 0.5:
         return []
 
-    # transformation of XYZ axes cartesian components (fm1,2) into quaternions q1,2
+    # transformation of XYZ axes cartesian xyz (fm1,2) into quaternions q1,2
 
     focmec1_matrix = fm1.to_matrix()
     focmec2_matrix = fm2.to_matrix()

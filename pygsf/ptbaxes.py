@@ -114,7 +114,7 @@ class PTBAxes(object):
         :return:a PTBAxes instance.
         """
 
-        q0, q1, q2, q3 = quaternion.normalize().components()
+        q0, q1, q2, q3 = quaternion.normalize().xyz()
 
         q0q0 = q0*q0
         q0q1 = q0*q1
@@ -275,7 +275,7 @@ class PTBAxes(object):
 
     def to_matrix(self):
         """
-        Creates a rotation matrix from the PTB as_vect components.
+        Creates a rotation matrix from the PTB as_vect xyz.
         Formula as in:
         - eq. 3 in Kagan, Y. Y., 2007. Simplified algorithms for calculating double-couple rotation.
         - eq. 31 in Kagan, Y. Y., 2008. On geometric complexity of earthquake focal zone and fault system.

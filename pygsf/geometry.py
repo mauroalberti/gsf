@@ -42,11 +42,11 @@ class Point(object):
           >>> Point.from_array(np.array([1, 0]))
           Traceback (most recent call last):
           ...
-          PointInputException: Input array must have size of 3 or 4
+          GeomInputException: Input array must have size of 3 or 4
         """
 
         if not (3 <= a.size <= 4):
-            raise PointInputException("Input array must have size of 3 or 4")
+            raise GeomInputException("Input array must have size of 3 or 4")
 
         obj = cls()
 
@@ -59,13 +59,14 @@ class Point(object):
 
         return obj
 
+
     @property
-    def v(self):
+    def a(self):
         """
         Return values as array
 
         Example:
-          >>> arrays_are_close(Point(1, 0, 0).v, np.array([ 1.,  0.,  0., np.nan]), equal_nan=True)
+          >>> arrays_are_close(Point(1, 0, 0).a, np.array([ 1.,  0.,  0., np.nan]), equal_nan=True)
           True
         """
 
@@ -81,7 +82,7 @@ class Point(object):
           1.5
         """
 
-        return self.v[0]
+        return self.a[0]
 
     @property
     def y(self):
@@ -92,7 +93,7 @@ class Point(object):
           >>> Point(1.5, 3.0, 1).y
           3.0
         """
-        return self.v[1]
+        return self.a[1]
 
     @property
     def z(self):
@@ -103,7 +104,7 @@ class Point(object):
           >>> Point(1.5, 3.2, 41.).z
           41.0
         """
-        return self.v[2]
+        return self.a[2]
 
     @property
     def t(self):
@@ -116,7 +117,21 @@ class Point(object):
           >>> Point(1, 0, 0).t
           nan
         """
-        return self.v[3]
+        return self.a[3]
+
+    def xyz(self) -> Tuple[float, float, float]:
+        """
+        Returns the spatial components as a tuple of three values.
+
+        :return: the spatial components (x, y, z).
+        :rtype: a tuple of three floats.
+
+        Examples:
+          >>> Point(1, 0, 3).xyz()
+          (1.0, 0.0, 3.0)
+        """
+
+        return self.x, self.y, self.z
 
     def clone(self):
         """
@@ -127,7 +142,73 @@ class Point(object):
           Point(1.0000, 1.0000, 1.0000, nan)
         """
 
-        return self.__class__.from_array(self.v)
+        return self.__class__.from_array(self.a)
+
+    def pXY(self):
+        """
+        Projection of point on the x-y plane
+
+        :return: projected Point instance
+
+        Examples:
+          >>> Point(2, 3, 4).pXY()
+          Point(2.0000, 3.0000, 0.0000, nan)
+        """
+
+        return Point(self.x, self.y, 0.0, self.t)
+
+    def pXY(self):
+        """
+        Projection of point on the x-y plane
+
+        :return: projected Point instance
+
+        Examples:
+          >>> Point(2, 3, 4).pXY()
+          Point(2.0000, 3.0000, 0.0000, nan)
+        """
+
+        return Point(self.x, self.y, 0.0, self.t)
+
+    def pXZ(self):
+        """
+        Projection of point on the x-z plane
+
+        :return: projected Point instance
+
+        Examples:
+          >>> Point(2, 3, 4).pXZ()
+          Point(2.0000, 0.0000, 4.0000, nan)
+        """
+
+        return Point(self.x, 0.0, self.z, self.t)
+
+    def pYZ(self):
+        """
+        Projection of point on the y-z plane
+
+        :return: projected Point instance
+
+        Examples:
+          >>> Point(2, 3, 4).pYZ()
+          Point(0.0000, 3.0000, 4.0000, nan)
+        """
+
+        return Point(0.0, self.y, self.z, self.t)
+
+    def len(self):
+        """
+        Spatial distance of the point form the axis origin.
+
+        :return: distance
+        :rtype: float
+
+        Examples:
+          >>> Point(4.0, 3.0, 0.0).len()
+          5.0
+        """
+
+        return sqrt(self.x*self.x + self.y*self.y + self.z*self.z)
 
     def __sub__(self, another):
         """Return point difference
@@ -141,22 +222,7 @@ class Point(object):
           Point(0.0000, 0.0000, 0.8000, -7.2000)
         """
 
-        return self.__class__.from_array(self.v - another.v)
-
-    def __abs__(self):
-        """
-        Point distance from frame origin.
-
-        Example:
-          >>> abs(Point(3, 4, 0))
-          5.0
-          >>> abs(Point(0, 12, 5))
-          13.0
-          >>> abs(Point(0, 12, np.nan))
-          nan
-        """
-
-        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+        return self.__class__.from_array(self.a - another.a)
 
     def dist_3d(self, another):
         """
@@ -171,7 +237,7 @@ class Point(object):
           nan
         """
 
-        return abs(self - another)
+        return (self - another).len()
 
     def dist_2d(self, another):
         """
@@ -185,6 +251,41 @@ class Point(object):
         """
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
+
+    def scale(self, scale_factor):
+        """
+        Create a scaled point.
+
+        Example;
+          >>> Point(1, 0, 1).scale(2.5)
+          Point(2.5000, 0.0000, 2.5000, nan)
+          >>> Point(1, 0, 1).scale(np.nan)
+          Traceback (most recent call last):
+          ...
+          GeomInputException: Scale factor for vector must be finite
+          >>> Point(1, 0, 1).scale(np.inf)
+          Traceback (most recent call last):
+          ...
+          GeomInputException: Scale factor for vector must be finite
+        """
+
+        if not np.isfinite(scale_factor):
+            raise GeomInputException("Scale factor for vector must be finite")
+
+        return self.__class__.from_array(self.a * scale_factor)
+
+    def invert(self):
+        """
+        Create a new vector with inverted direction.
+
+        Examples:
+          >>> Point(1, 1, 1).invert()
+          Point(-1.0000, -1.0000, -1.0000, nan)
+          >>> Point(2, -1, 4).invert()
+          Point(-2.0000, 1.0000, -4.0000, nan)
+        """
+
+        return self.scale(-1)
 
     def space_coincident(self, another, tolerance=MIN_SEPARATION_THRESHOLD):
         """
@@ -291,6 +392,17 @@ class Point(object):
         else:
             return delta_s / delta_t
 
+# Point on the origin
+pt0 = Point(0, 0, 0)
+
+# Point on the x axis
+ptX = Point(1, 0, 0)
+
+# Point on the y axis
+ptY = Point(0, 1, 0)
+
+# Point on the z axis
+ptZ = Point(0, 0, 1)
 
 class Vect(Point):
     """
@@ -318,24 +430,12 @@ class Vect(Point):
 
         super().__init__(x, y, z)
 
-    def components(self) -> Tuple[float, float, float]:
-        """
-        Returns the vector components as a tuple of three values.
 
-        :return: the vector components (x, y, z).
-        :rtype: a tuple of three floats.
-
-        Examples:
-          >>> Vect(1, 0, 3).components()
-          (1.0, 0.0, 3.0)
-        """
-
-        return self.x, self.y, self.z
 
     @property
     def valid(self) -> bool:
         """
-        Check if the Vect instance components are not all valid and the components not all zero-valued.
+        Check if the Vect instance components are not all valid and the xyz not all zero-valued.
 
         :return: Boolean
 
@@ -350,10 +450,10 @@ class Vect(Point):
           False
         """
 
-        if any(map(isnan, self.components())):
+        if any(map(isnan, self.xyz())):
             return False
 
-        if np.inf in self.components():
+        if np.inf in self.xyz():
             return False
 
         return not self.is_near_zero
@@ -384,7 +484,7 @@ class Vect(Point):
           5.0
         """
 
-        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+        return abs(self)
 
     @property
     def is_near_zero(self):
@@ -417,6 +517,21 @@ class Vect(Point):
         """
 
         return are_close(self.len_3d, 1)
+
+    def __abs__(self):
+        """
+        Vector magnitude
+
+        Example:
+          >>> abs(Vect(3, 4, 0))
+          5.0
+          >>> abs(Vect(0, 12, 5))
+          13.0
+          >>> abs(Vect(0, 12, np.nan))
+          nan
+        """
+
+        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     def __eq__(self, another):
         """
@@ -455,29 +570,7 @@ class Vect(Point):
           Vect(0.0000, 0.0000, 0.0000)
         """
 
-        return Vect.from_array(self.v + another.v)
-
-    def scale(self, scale_factor):
-        """
-        Create a scaled vector.
-
-        Example;
-          >>> Vect(1, 0, 1).scale(2.5)
-          Vect(2.5000, 0.0000, 2.5000)
-          >>> Vect(1, 0, 1).scale(np.nan)
-          Traceback (most recent call last):
-          ...
-          VectInputException: Scale factor for vector must be finite
-          >>> Vect(1, 0, 1).scale(np.inf)
-          Traceback (most recent call last):
-          ...
-          VectInputException: Scale factor for vector must be finite
-        """
-
-        if not np.isfinite(scale_factor):
-            raise VectInputException("Scale factor for vector must be finite")
-
-        return Vect.from_array(self.v * scale_factor)
+        return Vect.from_array(self.a + another.a)
 
     def versor(self):
         """
@@ -521,19 +614,6 @@ class Vect(Point):
         """
 
         return self.flatten_2d().versor()
-
-    def invert(self):
-        """
-        Create a new vector with inverted direction.
-
-        Examples:
-          >>> Vect(1, 1, 1).invert()
-          Vect(-1.0000, -1.0000, -1.0000)
-          >>> Vect(2, -1, 4).invert()
-          Vect(-2.0000, 1.0000, -4.0000)
-        """
-
-        return self.scale(-1)
 
     @property
     def is_upward(self):
@@ -850,7 +930,7 @@ class Vect(Point):
           True
         """
 
-        return Vect.from_array(np.cross(self.v[:3], another.v[:3]))
+        return Vect.from_array(np.cross(self.a[:3], another.a[:3]))
 
     def by_matrix(self, array3x3):
         """
@@ -858,7 +938,7 @@ class Vect(Point):
 
         """
 
-        return Vect.from_array(array3x3.dot(self.v))
+        return Vect.from_array(array3x3.dot(self.a))
 
 
 class GVect(object):
@@ -1357,7 +1437,7 @@ class GVect(object):
         elif isinstance(another, GPlane):
             snd_geoelem = another.normal_gaxis()
         else:
-            raise GVectInputException("Argument must be GPlane or GVect")
+            raise GeomInputException("Argument must be GPlane or GVect")
 
         angle = fst_gvect.angle(snd_geoelem)
 
@@ -1388,7 +1468,7 @@ class GVect(object):
         """
 
         if self.ax or another.ax:
-            raise GVectInputException("Both elements must be GVect instances")
+            raise GeomInputException("Both elements must be GVect instances")
 
         return self.angle(another) > (180.0 - angle_tolerance)
 
@@ -1836,11 +1916,11 @@ class GPlane(object):
           >>> GPlane(0, "90", True)
           Traceback (most recent call last):
           ...
-          GPlaneInputException: Source dip angle must be number
+          GeomInputException: Source dip angle must be number
           >>> GPlane(0, 900)
           Traceback (most recent call last):
           ...
-          GPlaneInputException: Dip angle must be between 0° and 90°
+          GeomInputException: Dip angle must be between 0° and 90°
         """
 
         def rhrstrk2dd(rhr_strk):
@@ -1854,14 +1934,14 @@ class GPlane(object):
             return (rhr_strk + 90.0) % 360.0
 
         if not isinstance(azim, (int, float)):
-            raise GPlaneInputException("Source azimuth must be number")
+            raise GeomInputException("Source azimuth must be number")
         if not isinstance(dip_ang, (int, float)):
-            raise GPlaneInputException("Source dip angle must be number")
+            raise GeomInputException("Source dip angle must be number")
         if not isinstance(is_rhr_strike, bool):
-            raise GPlaneInputException("Source azimuth type must be boolean")
+            raise GeomInputException("Source azimuth type must be boolean")
 
         if not (0.0 <= dip_ang <= 90.0):
-            raise GPlaneInputException("Dip angle must be between 0° and 90°")
+            raise GeomInputException("Dip angle must be between 0° and 90°")
 
         if is_rhr_strike:
             self._dipdir = rhrstrk2dd(azim)
@@ -2207,7 +2287,7 @@ class GPlane(object):
         elif isinstance(another, GVect):
             an_axis = another.as_gaxis()
         else:
-            raise GPlaneInputException("Provided another instance for angle is of {} type".format(type(another)))
+            raise GeomInputException("Provided another instance for angle is of {} type".format(type(another)))
 
         angle = gpl_axis.angle(an_axis)
 
@@ -2281,7 +2361,7 @@ class GPlane(object):
         elif isinstance(another, GVect):
             snd_gaxis = another.as_gaxis()
         else:
-            raise GPlaneInputException("Not accepted argument type for almost_orthogonal method")
+            raise GeomInputException("Not accepted argument type for almost_orthogonal method")
 
         angle = fst_gaxis.angle(snd_gaxis)
 
@@ -2356,15 +2436,10 @@ class GPlane(object):
 
         return self.da > (90.0 - dip_angle_threshold)
 
-class PointInputException(Exception):
-    """
-    Exception for Point input.
-    """
 
-
-class VectInputException(Exception):
+class GeomInputException(Exception):
     """
-    Exception for Vect input.
+    Exception for geometric input.
     """
 
     pass
@@ -2381,30 +2456,6 @@ class VectInvalidException(Exception):
 class SubparallelLineationException(Exception):
     """
     Exception for subparallel GAxis/GVect instances.
-    """
-
-    pass
-
-
-class GVectInputException(Exception):
-    """
-    Exception for GVect input.
-    """
-
-    pass
-
-
-class GAxisInputException(Exception):
-    """
-    Exception for GAxis input.
-    """
-
-    pass
-
-
-class GPlaneInputException(Exception):
-    """
-    Exception for GPlane input.
     """
 
     pass
