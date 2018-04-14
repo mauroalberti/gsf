@@ -11,54 +11,63 @@ from typing import Dict, Tuple, List
 from .default_parameters import *
 from .mathematics import are_close
 from .geometry_utils import *
-from .arrays import point_solution, arrays_are_close
+from .arrays import point_solution, arrays_are_close, arr2tuple
 
 
 class Point(object):
     """
     Cartesian point.
-    Dimensions: 3D (space) + time
+    Dimensions: 3D (space)
     """
 
-    def __init__(self, x=np.nan, y=np.nan, z=np.nan, t=np.nan):
+    def __init__(self, x, y, z):
         """
         Construct a Point instance.
         """
 
-        self._a = np.array([x, y, z, t], dtype=np.float64)
+        if any(map(lambda val: not np.isfinite(val), [x, y, z])):
+            raise GeomInputException("All spatial coordinates must be finite")
+
+        self._a = np.array([x, y, z], dtype=np.float64)
 
     def __repr__(self):
 
-        return "Point({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z, self.t)
+        return "Point({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
 
-    @classmethod
-    def from_array(cls, a):
-        """
-        Class method to construct a point from a numpy 1x4 array.
+    def __sub__(self, another):
+        """Return point difference
 
         Example:
-          >>> Point.from_array(np.array([1, 0, 1]))
-          Point(1.0000, 0.0000, 1.0000, nan)
-          >>> Point.from_array(np.array([1, 0]))
-          Traceback (most recent call last):
-          ...
-          GeomInputException: Input array must have size of 3 or 4
+          >>> Point(1., 1., 1.) - Point(1., 1., 1.)
+          Point(0.0000, 0.0000, 0.0000)
+          >>> Point(1., 1., 3.) - Point(1., 1., 2.2)
+          Point(0.0000, 0.0000, 0.8000)
         """
 
-        if not (3 <= a.size <= 4):
-            raise GeomInputException("Input array must have size of 3 or 4")
+        x, y, z = arr2tuple(self.a - another.a)
+        return self.__class__(x, y, z)
 
-        obj = cls()
+    def __eq__(self, another):
+        """
+        Return True if points are equal.
 
-        b = a.astype(np.float64)
-        if b.size == 3:
-            c = np.append(b, [np.nan])
-        else:
-            c = b
-        obj._a = c
+        Example:
+          >>> Point(1., 1., 1.) == Point(1, 1, 1)
+          True
+        """
 
-        return obj
+        return self.dist_3d(another) < MIN_POINT_POS_DIFF
 
+    def __ne__(self, another):
+        """
+        Return False if vectors are equal.
+
+        Example:
+          >>> Point(1., 1., 1.) != Point(0., 0., 0.)
+          True
+        """
+
+        return not (self == another)
 
     @property
     def a(self):
@@ -66,7 +75,7 @@ class Point(object):
         Return values as array
 
         Example:
-          >>> arrays_are_close(Point(1, 0, 0).a, np.array([ 1.,  0.,  0., np.nan]), equal_nan=True)
+          >>> arrays_are_close(Point(1, 0, 0).a, np.array([ 1.,  0.,  0.]), equal_nan=True)
           True
         """
 
@@ -106,19 +115,6 @@ class Point(object):
         """
         return self.a[2]
 
-    @property
-    def t(self):
-        """
-        Return time value
-
-        Example:
-          >>> Point(1.5, 3.2, 41., 22.).t
-          22.0
-          >>> Point(1, 0, 0).t
-          nan
-        """
-        return self.a[3]
-
     def xyz(self) -> Tuple[float, float, float]:
         """
         Returns the spatial components as a tuple of three values.
@@ -133,17 +129,6 @@ class Point(object):
 
         return self.x, self.y, self.z
 
-    def clone(self):
-        """
-        Clone the point.
-
-        Example:
-          >>> Point(1, 1, 1).clone()
-          Point(1.0000, 1.0000, 1.0000, nan)
-        """
-
-        return self.__class__.from_array(self.a)
-
     def pXY(self):
         """
         Projection of point on the x-y plane
@@ -152,23 +137,10 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pXY()
-          Point(2.0000, 3.0000, 0.0000, nan)
+          Point(2.0000, 3.0000, 0.0000)
         """
 
-        return Point(self.x, self.y, 0.0, self.t)
-
-    def pXY(self):
-        """
-        Projection of point on the x-y plane
-
-        :return: projected Point instance
-
-        Examples:
-          >>> Point(2, 3, 4).pXY()
-          Point(2.0000, 3.0000, 0.0000, nan)
-        """
-
-        return Point(self.x, self.y, 0.0, self.t)
+        return Point(self.x, self.y, 0.0)
 
     def pXZ(self):
         """
@@ -178,10 +150,10 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pXZ()
-          Point(2.0000, 0.0000, 4.0000, nan)
+          Point(2.0000, 0.0000, 4.0000)
         """
 
-        return Point(self.x, 0.0, self.z, self.t)
+        return Point(self.x, 0.0, self.z)
 
     def pYZ(self):
         """
@@ -191,12 +163,12 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pYZ()
-          Point(0.0000, 3.0000, 4.0000, nan)
+          Point(0.0000, 3.0000, 4.0000)
         """
 
-        return Point(0.0, self.y, self.z, self.t)
+        return Point(0.0, self.y, self.z)
 
-    def len(self):
+    def len(self) -> float:
         """
         Spatial distance of the point form the axis origin.
 
@@ -208,21 +180,49 @@ class Point(object):
           5.0
         """
 
-        return sqrt(self.x*self.x + self.y*self.y + self.z*self.z)
+        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
-    def __sub__(self, another):
-        """Return point difference
+    def delta_x(self, another) -> float:
+        """
+        Delta between x components of two Point Instances.
 
-        Example:
-          >>> Point(1., 1., 1.) - Point(1., 1., 1.)
-          Point(0.0000, 0.0000, 0.0000, nan)
-          >>> Point(1., 1.) - Point(1., 1.)
-          Point(0.0000, 0.0000, nan, nan)
-          >>> Point(1., 1., 3., 0.2) - Point(1., 1., 2.2, 7.4)
-          Point(0.0000, 0.0000, 0.8000, -7.2000)
+        :return: difference value
+        :rtype: float
+
+        Examples:
+          >>> Point(1, 2, 3).delta_x(Point(4, 7, 1))
+          3.0
         """
 
-        return self.__class__.from_array(self.a - another.a)
+        return another.x - self.x
+
+    def delta_y(self, another) -> float:
+        """
+        Delta between y components of two Point Instances.
+
+        :return: difference value
+        :rtype: float
+
+        Examples:
+          >>> Point(1, 2, 3).delta_y(Point(4, 7, 1))
+          5.0
+        """
+
+        return another.y - self.y
+
+    def delta_z(self, another) -> float:
+        """
+        Delta between x components of two Point Instances.
+
+        :return: difference value
+        :rtype: float
+
+        Examples:
+          >>> Point(1, 2, 3).delta_z(Point(4, 7, 1))
+          -2.0
+        """
+
+        return another.z - self.z
 
     def dist_3d(self, another):
         """
@@ -231,10 +231,8 @@ class Point(object):
         Examples:
           >>> Point(1., 1., 1.).dist_3d(Point(4., 5., 1,))
           5.0
-          >>> Point(1, 1, 1, 4).dist_3d(Point(4, 5, 1, 14))
+          >>> Point(1, 1, 1).dist_3d(Point(4, 5, 1))
           5.0
-          >>> Point(1, np.nan, 1, 4).dist_3d(Point(4, 5, 1, 14))
-          nan
         """
 
         return (self - another).len()
@@ -246,19 +244,17 @@ class Point(object):
         Examples:
           >>> Point(1., 1., 1.).dist_2d(Point(4., 5., 7.))
           5.0
-          >>> Point(1., np.nan, 1.).dist_2d(Point(4., np.nan, 7.))
-          nan
         """
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
-    def scale(self, scale_factor):
+    def scale(self, scale_factor: float):
         """
         Create a scaled point.
 
         Example;
           >>> Point(1, 0, 1).scale(2.5)
-          Point(2.5000, 0.0000, 2.5000, nan)
+          Point(2.5000, 0.0000, 2.5000)
           >>> Point(1, 0, 1).scale(np.nan)
           Traceback (most recent call last):
           ...
@@ -272,7 +268,8 @@ class Point(object):
         if not np.isfinite(scale_factor):
             raise GeomInputException("Scale factor for vector must be finite")
 
-        return self.__class__.from_array(self.a * scale_factor)
+        x, y, z = arr2tuple(self.a * scale_factor)
+        return self.__class__(x, y, z)
 
     def invert(self):
         """
@@ -280,9 +277,9 @@ class Point(object):
 
         Examples:
           >>> Point(1, 1, 1).invert()
-          Point(-1.0000, -1.0000, -1.0000, nan)
+          Point(-1.0000, -1.0000, -1.0000)
           >>> Point(2, -1, 4).invert()
-          Point(-2.0000, 1.0000, -4.0000, nan)
+          Point(-2.0000, 1.0000, -4.0000)
         """
 
         return self.scale(-1)
@@ -296,9 +293,7 @@ class Point(object):
           False
           >>> Point(1., 0., 0.).space_coincident(Point(1., 0., 0.))
           True
-          >>> Point(1., 0., 0.).space_coincident(Point(1., 0., np.nan))
-          False
-          >>> Point(1.2, 7.4, 1.4, 0.9).space_coincident(Point(1.2, 7.4, 1.4, 0.85))
+          >>> Point(1.2, 7.4, 1.4).space_coincident(Point(1.2, 7.4, 1.4))
           True
         """
 
@@ -312,18 +307,18 @@ class Point(object):
 
         return True
 
-    def translate(self, sx=0.0, sy=0.0, sz=0.0, st=0.0):
+    def translate(self, sx=0.0, sy=0.0, sz=0.0):
         """
         Create a new point shifted by given amount from the self instance.
 
         Example:
           >>> Point(1, 1, 1).translate(0.5, 1., 1.5)
-          Point(1.5000, 2.0000, 2.5000, nan)
-          >>> Point(1, 2, -1, 4.3).translate(0.5, 1., 1.5, 2.4)
-          Point(1.5000, 3.0000, 0.5000, 6.7000)
+          Point(1.5000, 2.0000, 2.5000)
+          >>> Point(1, 2, -1).translate(0.5, 1., 1.5)
+          Point(1.5000, 3.0000, 0.5000)
        """
 
-        return Point(self.x + sx, self.y + sy, self.z + sz, self.t + st)
+        return Point(self.x + sx, self.y + sy, self.z + sz)
 
     def vect_offset(self, displ_vect):
         """
@@ -331,66 +326,27 @@ class Point(object):
 
         Example:
           >>> Point(1, 2, 0).vect_offset(Vect(10, 5, 0))
-          Point(11.0000, 7.0000, 0.0000, nan)
-          >>> Point(3, 1, 0.2, 4.3).vect_offset(Vect(7, 5, 0))
-          Point(10.0000, 6.0000, 0.2000, 4.3000)
+          Point(11.0000, 7.0000, 0.0000)
+          >>> Point(3, 1, 0.2).vect_offset(Vect(7, 5, 0))
+          Point(10.0000, 6.0000, 0.2000)
         """
 
         return Point(self.x + displ_vect.x,
                      self.y + displ_vect.y,
-                     self.z + displ_vect.z,
-                     self.t)
+                     self.z + displ_vect.z)
 
     def as_vect(self):
         """
         Create a vector based on the point coordinates
 
         Example:
-          >>> Point(1, 1, 0, 5).as_vect()
+          >>> Point(1, 1, 0).as_vect()
           Vect(1.0000, 1.0000, 0.0000)
-          >>> Point(0.2, 1, 6, 3).as_vect()
+          >>> Point(0.2, 1, 6).as_vect()
           Vect(0.2000, 1.0000, 6.0000)
         """
 
         return Vect(self.x, self.y, self.z)
-
-    def delta_time(self, another):
-        """
-        Calculate the time difference between two points
-
-        Example:
-          >>> Point(1,1,1,4).delta_time(Point(1,1,2,5))
-          1.0
-          >>> Point(1,1,1,4).delta_time(Point(1,1,2,np.nan))
-          nan
-        """
-
-        return another.t - self.t
-
-    def speed(self, another):
-        """
-        Calculate the speed required to displace self to another.
-
-        Example:
-          >>> Point(1, 1, 1, 4).speed(Point(4, 5, 1, 14))
-          0.5
-          >>> Point(1, 1, 1, 4).speed(Point(4, 5, 1, 4))
-          inf
-          >>> Point(1, 1, 1, 4).speed(Point(1, 1, 1, 4))
-          nan
-          >>> Point(1, 1, 1, 4).speed(Point(4, 5, 1))
-          nan
-        """
-
-        delta_s = self.dist_3d(another)
-        delta_t = self.delta_time(another)
-        if delta_t == 0.0:
-            if delta_s == 0.0:
-                return np.nan
-            else:
-                return np.Infinity
-        else:
-            return delta_s / delta_t
 
 # Point on the origin
 pt0 = Point(0, 0, 0)
@@ -403,6 +359,7 @@ ptY = Point(0, 1, 0)
 
 # Point on the z axis
 ptZ = Point(0, 0, 1)
+
 
 class Vect(Point):
     """
@@ -421,16 +378,18 @@ class Vect(Point):
           >>> Vect(1, 0, 1)
           Vect(1.0000, 0.0000, 1.0000)
           >>> Vect(1, np.nan, 1)
-          Vect(1.0000, nan, 1.0000)
+          Traceback (most recent call last):
+          ...
+          GeomInputException: All spatial coordinates must be finite
           >>> Vect(1, 0, np.inf)
-          Vect(1.0000, 0.0000, inf)
+          Traceback (most recent call last):
+          ...
+          GeomInputException: All spatial coordinates must be finite
           >>> Vect(0, 0, 0)
           Vect(0.0000, 0.0000, 0.0000)
         """
 
         super().__init__(x, y, z)
-
-
 
     @property
     def valid(self) -> bool:
@@ -444,22 +403,12 @@ class Vect(Point):
           True
           >>> Vect(0.0, 0.0, 0.0).valid
           False
-          >>> Vect(np.nan, 1, 1).valid
-          False
-          >>> Vect(np.inf, 1, 1).valid
-          False
         """
-
-        if any(map(isnan, self.xyz())):
-            return False
-
-        if np.inf in self.xyz():
-            return False
 
         return not self.is_near_zero
 
     @property
-    def len_2d(self):
+    def len_2d(self) -> float:
         """
         2D Vector magnitude.
 
@@ -473,7 +422,7 @@ class Vect(Point):
         return sqrt(self.x * self.x + self.y * self.y)
 
     @property
-    def len_3d(self):
+    def len_3d(self) -> float:
         """
         3D Vector magnitude.
 
@@ -484,10 +433,10 @@ class Vect(Point):
           5.0
         """
 
-        return abs(self)
+        return self.len()
 
     @property
-    def is_near_zero(self):
+    def is_near_zero(self) -> bool:
         """
         Check if the Vect instance lenght is near zero.
 
@@ -503,7 +452,7 @@ class Vect(Point):
         return are_close(self.len_3d, 0)
 
     @property
-    def is_near_unit(self):
+    def is_near_unit(self) -> bool:
         """
         Check if the Vect instance lenght is near unit.
 
@@ -517,43 +466,6 @@ class Vect(Point):
         """
 
         return are_close(self.len_3d, 1)
-
-    def __abs__(self):
-        """
-        Vector magnitude
-
-        Example:
-          >>> abs(Vect(3, 4, 0))
-          5.0
-          >>> abs(Vect(0, 12, 5))
-          13.0
-          >>> abs(Vect(0, 12, np.nan))
-          nan
-        """
-
-        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
-
-    def __eq__(self, another):
-        """
-        Return True if vectors are equal.
-
-        Example:
-          >>> Vect(1., 1., 1.) == Vect(1, 1, 1)
-          True
-        """
-
-        return (self - another).len_3d < MIN_VECTOR_MAGN_DIFF
-
-    def __ne__(self, another):
-        """
-        Return False if vectors are equal.
-
-        Example:
-          >>> Vect(1., 1., 1.) != Vect(0., 0., 0.)
-          True
-        """
-
-        return not (self == another)
 
     def __repr__(self):
 
@@ -570,7 +482,8 @@ class Vect(Point):
           Vect(0.0000, 0.0000, 0.0000)
         """
 
-        return Vect.from_array(self.a + another.a)
+        x, y, z = arr2tuple(self.a + another.a)
+        return Vect(x, y, z)
 
     def versor(self):
         """
@@ -657,7 +570,7 @@ class Vect(Point):
         if self.z < 0.0:
             return self.scale(-1.0)
         else:
-            return self.clone()
+            return self.scale(1.0)
 
     def downward(self):
         """
@@ -673,7 +586,7 @@ class Vect(Point):
         if self.z > 0.0:
             return self.scale(-1.0)
         else:
-            return self.clone()
+            return self.scale(1.0)
 
     @property
     def slope(self):
@@ -919,7 +832,7 @@ class Vect(Point):
 
     def vp(self, another):
         """
-        Vector __mul__.
+        Vector product (cross product).
 
         Examples:
           >>> Vect(1, 0, 0).vp(Vect(0, 1, 0))
@@ -930,7 +843,8 @@ class Vect(Point):
           True
         """
 
-        return Vect.from_array(np.cross(self.a[:3], another.a[:3]))
+        x, y, z = arr2tuple(np.cross(self.a[:3], another.a[:3]))
+        return Vect(x, y, z)
 
     def by_matrix(self, array3x3):
         """
@@ -938,7 +852,8 @@ class Vect(Point):
 
         """
 
-        return Vect.from_array(array3x3.dot(self.a))
+        x, y, z = arr2tuple(array3x3.dot(self.a))
+        return Vect(x, y, z)
 
 
 class GVect(object):
@@ -1794,7 +1709,7 @@ class CPlane(object):
           >>> gpl
           GPlane(000.00, +00.00)
           >>> pt
-          Point(0.0000, 0.0000, 1.0000, nan)
+          Point(0.0000, 0.0000, 1.0000)
         """
 
         geol_plane = self.nversor().as_gvect().normal_gplane()
@@ -1822,7 +1737,7 @@ class CPlane(object):
         >>> a = CPlane(1, 0, 0, 0)
         >>> b = CPlane(0, 0, 1, 0)
         >>> a.inters_point(b)
-        Point(0.0000, 0.0000, 0.0000, nan)
+        Point(0.0000, 0.0000, 0.0000)
         """
 
         # find a point lying on the intersection line (this is a non-unique solution)

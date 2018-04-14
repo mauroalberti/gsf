@@ -7,6 +7,38 @@ import numpy as np
 from .mathematics import are_close
 
 
+def arr2tuple(arr1D) -> tuple:
+    """
+    Modified from: https://stackoverflow.com/questions/10016352/convert-numpy-array-to-tuple
+    Works just for 1D arrays
+
+    :param arr1D:
+    :return: tuple of float values
+
+    Examples:
+      >>> arr = np.array([1,2,3,4,5])
+      >>> arr2tuple(arr)
+      (1.0, 2.0, 3.0, 4.0, 5.0)
+    """
+
+    return tuple(map(float, arr1D))
+
+
+def to_floats(iterable_obj):
+    """
+    Converts an iterable object storing float-compatible values to a list of floats.
+
+    :param iterable_obj:
+    :return: list of Floats
+
+    Example:
+      >>> to_floats([1, 2, 3])
+      [1.0, 2.0, 3.0]
+    """
+
+    return [float(item) for item in iterable_obj]
+
+
 def arrays_are_close(a_array, b_array, rtol=1e-012, atol=1e-12, equal_nan=False, equal_inf=False):
     """
     Check for equivalence between two numpy arrays.
@@ -67,21 +99,6 @@ def xyz_svd(xyz_array):
         result = None
 
     return dict(result=result)
-
-
-def to_floats(iterable_obj):
-    """
-    Converts an iterable object storing float-compatible values to a list of floats.
-
-    :param iterable_obj:
-    :return: list of Floats
-
-    Example:
-      >>> to_floats([1, 2, 3])
-      [1.0, 2.0, 3.0]
-    """
-
-    return [float(item) for item in iterable_obj]
 
 
 if __name__ == "__main__":
