@@ -30,24 +30,24 @@ def splot(data, force=''):
 
         if force_emisphere == 'lower':
             default_marker = default_gvect_marker_downward_symbol
-            if gvect.is_upward:
+            if gvect.isUpward:
                 plot_gvect = gvect.opposite()
             else:
                 plot_gvect = gvect
         elif force_emisphere == 'upper':
             default_marker = default_gvect_marker_upward_symbol
-            if gvect.is_downward:
+            if gvect.isDownward:
                 plot_gvect = gvect.opposite()
             else:
                 plot_gvect = gvect
         elif not force_emisphere:
             plot_gvect = gvect
-            default_marker = default_gvect_marker_downward_symbol if not plot_gvect.is_upward else default_gvect_marker_upward_symbol
+            default_marker = default_gvect_marker_downward_symbol if not plot_gvect.isUpward else default_gvect_marker_upward_symbol
         else:
             raise PlotException("Invalid force emisphere parameter")
 
-        if plot_gvect.is_upward:  # apparently mplstereonet does not handle negative plunges
-            plot_gvect = plot_gvect.mirror_horiz()
+        if plot_gvect.isUpward:  # apparently mplstereonet does not handle negative plunges
+            plot_gvect = plot_gvect.mirrorHoriz()
 
         plunge, bearing = plot_gvect.pt
         symbol = kwargs.get("m", default_marker)
@@ -59,21 +59,21 @@ def splot(data, force=''):
 
         if (not force_emisphere) or (force_emisphere == 'lower'):
             default_marker = default_gaxis_marker_downward_symbol
-            if gaxis.is_upward:
+            if gaxis.isUpward:
                 plot_gaxis = gaxis.opposite()
             else:
                 plot_gaxis = gaxis
         elif force_emisphere == 'upper':
             default_marker = default_gaxis_marker_upward_symbol
-            if gaxis.is_downward:
+            if gaxis.isDownward:
                 plot_gaxis = gaxis.opposite()
             else:
                 plot_gaxis = gaxis
         else:
             raise PlotException("Invalid force emisphere parameter")
 
-        if plot_gaxis.is_upward:  # apparently mplstereonet does not handle negative plunges
-            plot_gaxis = plot_gaxis.mirror_horiz()
+        if plot_gaxis.isUpward:  # apparently mplstereonet does not handle negative plunges
+            plot_gaxis = plot_gaxis.mirrorHoriz()
 
         plunge, bearing = plot_gaxis.pt
         symbol = kwargs.get("m", default_marker)
@@ -103,7 +103,7 @@ def splot(data, force=''):
         data = [data]
 
     if force not in ('', 'upper', 'lower'):
-        raise PlotException("Force parameter not valid")
+        raise PlotException("Force parameter not isValid")
 
     fig, ax = ms.subplots()
 
@@ -208,8 +208,8 @@ def splot(data, force=''):
 
 def splot_gvect(gvect):
 
-    if gvect.is_upward:
-        plunge, bearing = gvect.mirror_horiz().pt
+    if gvect.isUpward:
+        plunge, bearing = gvect.mirrorHoriz().pt
         symbol = "x"
     else:
         plunge, bearing = gvect.pt

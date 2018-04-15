@@ -36,12 +36,12 @@ def is_ptbaxes(obj) -> bool:
 
 def is_upward(obj: GVect) -> bool:
 
-    return obj.is_upward
+    return obj.isUpward
 
 
 def is_not_upward(obj: GVect) -> bool:
 
-    return not obj.is_upward
+    return not obj.isUpward
 
 
 

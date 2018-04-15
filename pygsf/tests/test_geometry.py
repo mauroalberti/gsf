@@ -16,8 +16,8 @@ class TestGeometry(unittest.TestCase):
         Check expected GVect results for downward dip.
         """
 
-        assert GVect(90, 90).is_downward
-        assert GVect(90, -45).is_upward
+        assert GVect(90, 90).isDownward
+        assert GVect(90, -45).isUpward
         assert are_close(GVect(90, 90).versor().z, -1.0)
         assert are_close(GVect(90, -90).versor().z, 1.0)
         assert are_close(GVect(0, 90).upward().versor().z, 1.0)

@@ -17,8 +17,8 @@ class PTBAxes(object):
 
     def __repr__(self):
         return "PTBAxes(P: {}, T: {})".format(
-            self._p_versor.as_gaxis(),
-            self._t_versor.as_gaxis())
+            self._p_versor.asGAxis(),
+            self._t_versor.asGAxis())
 
     def __init__(self, p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)):
         """
@@ -36,13 +36,13 @@ class PTBAxes(object):
           PTBAxesInputException: P and T axes must be sub-orthogonal
         """
 
-        if not p_axis.is_suborthogonal(t_axis):
+        if not p_axis.isSubOrthogonal(t_axis):
             raise PTBAxesInputException("P and T axes must be sub-orthogonal")
 
-        b_vect = t_axis.normal_versor(p_axis)
+        b_vect = t_axis.normVersor(p_axis)
 
         self._t_versor = t_axis.as_versor()
-        self._p_versor = b_vect.vp(self._t_versor).versor()
+        self._p_versor = b_vect.vCross(self._t_versor).versor()
 
     @classmethod
     def from_faultslick(cls, fault_slick):
@@ -73,8 +73,8 @@ class PTBAxes(object):
         Vectors are not required to be normalized but are required to be
         sub-orthogonal.
 
-        :param t_vector: the as_vect representing the T axis (Vect instance).
-        :param p_vector: the as_vect representing the P axis (Vect instance).
+        :param t_vector: the asVect representing the T axis (Vect instance).
+        :param p_vector: the asVect representing the P axis (Vect instance).
         :return: a PTBAxes instance.
 
         Example:
@@ -90,15 +90,15 @@ class PTBAxes(object):
           PTBAxesInputException: P and T vectors must be sub-orthogonal
         """
 
-        if not t_vector.is_suborthogonal(p_vector):
+        if not t_vector.isSubOrthogonal(p_vector):
             raise PTBAxesInputException("P and T vectors must be sub-orthogonal")
 
         t_versor = t_vector.versor()
         p_versor = p_vector.versor()
-        b_versor = t_versor.vp(p_versor).versor()
+        b_versor = t_versor.vCross(p_versor).versor()
 
         obj = cls()
-        obj._p_versor = b_versor.vp(t_versor).versor()
+        obj._p_versor = b_versor.vCross(t_versor).versor()
         obj._t_versor = t_versor
 
         return obj
@@ -183,7 +183,7 @@ class PTBAxes(object):
           Vect(0.0000, 0.0000, 1.0000)
         """
 
-        return self.t_versor.vp(self.p_versor)
+        return self.t_versor.vCross(self.p_versor)
 
     @property
     def p_axis(self):
@@ -197,7 +197,7 @@ class PTBAxes(object):
           GAxis(000.00, +90.00)
         """
 
-        return self.p_versor.as_gaxis()
+        return self.p_versor.asGAxis()
 
     @property
     def t_axis(self):
@@ -211,7 +211,7 @@ class PTBAxes(object):
           GAxis(090.00, +00.00)
         """
 
-        return self.t_versor.as_gaxis()
+        return self.t_versor.asGAxis()
 
     @property
     def b_axis(self):
@@ -225,7 +225,7 @@ class PTBAxes(object):
           GAxis(270.00, +00.00)
         """
 
-        return self.b_versor.as_gaxis()
+        return self.b_versor.asGAxis()
 
     @property
     def m_plane(self):
@@ -233,13 +233,13 @@ class PTBAxes(object):
         Calculate M plane.
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(0, 90), t_axis=GAxis(90, 0)).m_plane.almost_parallel(GPlane(0.0, 90.0))
+          >>> PTBAxes(p_axis=GAxis(0, 90), t_axis=GAxis(90, 0)).m_plane.isAlmostParallel(GPlane(0.0, 90.0))
           True
-          >>> (PTBAxes(p_axis=GAxis(45, 45), t_axis=GAxis(225, 45)).m_plane).almost_parallel(GPlane(315.00, 90.00))
+          >>> (PTBAxes(p_axis=GAxis(45, 45), t_axis=GAxis(225, 45)).m_plane).isAlmostParallel(GPlane(315.00, 90.00))
           True
         """
 
-        return self.p_axis.common_plane(self.t_axis)
+        return self.p_axis.commonGPlane(self.t_axis)
 
     def almost_equal(self, another, tolerance_angle=VECTOR_ANGLE_THRESHOLD):
         """
@@ -265,10 +265,10 @@ class PTBAxes(object):
           False
         """
 
-        if not self.p_axis.almost_parallel(another.p_axis, tolerance_angle):
+        if not self.p_axis.isAlmostParallel(another.p_axis, tolerance_angle):
             return False
 
-        if not self.t_axis.almost_parallel(another.t_axis, tolerance_angle):
+        if not self.t_axis.isAlmostParallel(another.t_axis, tolerance_angle):
             return False
 
         return True

@@ -121,7 +121,7 @@ class Quaternion(object):
     @classmethod
     def from_vect(cls, vect):
         """
-        Class method to construct a quaternion from a as_vect.
+        Class method to construct a quaternion from a asVect.
 
         :param vect: Vector instance
         :return: Quaternion instance
@@ -387,7 +387,7 @@ class Quaternion(object):
 
     def vector_mult(self, vect):
         """
-        Quaternion multiplication by a as_vect.
+        Quaternion multiplication by a asVect.
 
         :param vect: Vect instance .
         :return: Quaternion instance.

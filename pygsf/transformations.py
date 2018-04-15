@@ -50,9 +50,9 @@ def deformation_matrices(deform_params):
 
     for deform_param in deform_params:
         if deform_param['type'] == 'displacement':
-            displ_x = deform_param['parameters']['delta_x']
-            displ_y = deform_param['parameters']['delta_y']
-            displ_z = deform_param['parameters']['delta_z']
+            displ_x = deform_param['parameters']['deltaX']
+            displ_y = deform_param['parameters']['deltaY']
+            displ_z = deform_param['parameters']['deltaZ']
             deformation = {'increment': 'additive',
                            'matrix': np.array([displ_x, displ_y, displ_z])}
         elif deform_param['type'] == 'rotation':
