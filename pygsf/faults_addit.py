@@ -175,9 +175,9 @@ class GFault(object):
             raise GFaultInputTypeException("Slickeline must have known movement sense")
 
         sl_gv = self.slick_geom()
-        angle = sl_gv.angle(self.gplane.strk_rhr_gv())
+        angle = sl_gv.angle(self.gplane.rhrStrikeGVect())
 
-        if self.gplane.dipdir_gv().angle(sl_gv) < 90.0:
+        if self.gplane.dipDirGVect().angle(sl_gv) < 90.0:
             return -angle
         else:
             return angle
@@ -205,7 +205,7 @@ class GFault(object):
           False
         """
 
-        if self.gplane.is_vhigh_angle(dip_angle_threshold) or self.gplane.is_vlow_angle(dip_angle_threshold):
+        if self.gplane.isVHighAngle(dip_angle_threshold) or self.gplane.isVLowAngle(dip_angle_threshold):
             return False
 
         if - rk_threshold >= self.rake() >= -(180.0 - rk_threshold):
@@ -236,7 +236,7 @@ class GFault(object):
           False
         """
 
-        if self.gplane.is_vhigh_angle(dip_angle_threshold) or self.gplane.is_vlow_angle(dip_angle_threshold):
+        if self.gplane.isVHighAngle(dip_angle_threshold) or self.gplane.isVLowAngle(dip_angle_threshold):
             return False
 
         if rk_threshold <= self.rake() <= (180.0 - rk_threshold):
@@ -270,7 +270,7 @@ class GFault(object):
           False
         """
 
-        if self.gplane.is_vlow_angle(dip_angle_threshold):
+        if self.gplane.isVLowAngle(dip_angle_threshold):
             return False
 
         rake = self.rake()
@@ -305,7 +305,7 @@ class GFault(object):
           False
         """
 
-        if self.gplane.is_vlow_angle(dip_angle_threshold):
+        if self.gplane.isVLowAngle(dip_angle_threshold):
             return False
 
         if (-90.0 + rk_threshold) <= self.rake() <= (90.0 - rk_threshold):

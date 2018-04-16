@@ -532,6 +532,71 @@ class Vect(Point):
 
         return self.flatten2D().versor()
 
+    def trend(self) -> Optional[float]:
+        """
+        Trend of a vector
+        (degrees, clockwise from North, range 0°-360°)
+
+        :return: an optional float value, representing trend, in decimal degrees.
+
+        Examples:
+          >>> Vect(1, 0, 0).trend()
+          90.0
+          >>> Vect(0, 1, 0).trend()
+          0.0
+          >>> Vect(1, 1, 0).trend()
+          45.0
+          >>> Vect(1, -1, 0).trend()
+          135.0
+          >>> Vect(0, -1, 0).trend()
+          180.0
+          >>> Vect(-1, -1, 0).trend()
+          225.0
+          >>> Vect(-1, 0, 0).trend()
+          270.0
+          >>> Vect(-1, 1, 0).trend()
+          315.0
+          >>> Vect(1, 1, 10).trend()
+          45.0
+          >>> Vect(0, 0, 0).trend() is None
+          True
+         """
+
+        return angle_north_clock(self.x, self.y)
+
+    def slope(self) -> Optional[float]:
+        """
+        Slope of a vector.
+        Degrees, positive: downward-directed, negative: upward-dir., range -90°/90°
+
+        :return: an optional float, representing the vector slope, in decimal degrees.
+
+        Examples:
+          >>> Vect(1, 0, -1).slope()
+          45.0
+          >>> Vect(1, 0, 1).slope()
+          -45.0
+          >>> Vect(0, 1, 0).slope()
+          0.0
+          >>> Vect(0, 0, 1).slope()
+          -90.0
+          >>> Vect(0, 0, -1).slope()
+          90.0
+          >>> Vect(0, 0, 0).slope() is None
+          True
+         """
+        h = self.len2D()
+        zv = self.z
+        sl = slope(h, abs(zv))
+
+        if sl is None:
+            return None
+        else:
+            if zv <= 0.0:
+                return sl
+            else:
+                return -sl
+
     @property
     def isUpward(self):
         """
@@ -1245,29 +1310,29 @@ class GVect(object):
         else:
             return True
 
-    def isSubhorizontal(self, max_dip_angle=DIP_ANGLE_THRESHOLD):
+    def isSubHorizontal(self, max_dip_angle=DIP_ANGLE_THRESHOLD):
         """
         Check whether the instance is almost horizontal.
 
         Examples:
-          >>> GVect(10, 15).isSubhorizontal()
+          >>> GVect(10, 15).isSubHorizontal()
           False
-          >>> GVect(257, 2).isSubhorizontal()
+          >>> GVect(257, 2).isSubHorizontal()
           True
-          >>> GVect(90, -5).isSubhorizontal()
+          >>> GVect(90, -5).isSubHorizontal()
           False
         """
 
         return abs(self.pl) < max_dip_angle
 
-    def isSubvertical(self, min_dip_angle=90.0 - DIP_ANGLE_THRESHOLD):
+    def isSubVertical(self, min_dip_angle=90.0 - DIP_ANGLE_THRESHOLD):
         """
         Check whether the instance is almost vertical.
 
         Examples:
-          >>> GVect(10, 15).isSubvertical()
+          >>> GVect(10, 15).isSubVertical()
           False
-          >>> GVect(257, 89).isSubvertical()
+          >>> GVect(257, 89).isSubVertical()
           True
         """
 
@@ -1354,7 +1419,7 @@ class GVect(object):
         if isinstance(another, GVect):
             snd_geoelem = another
         elif isinstance(another, GPlane):
-            snd_geoelem = another.normal_gaxis()
+            snd_geoelem = another.normGAxis()
         else:
             raise GeomInputException("Argument must be GPlane or GVect")
 
@@ -1974,18 +2039,18 @@ class GPlane(object):
 
         return "GPlane({:06.2f}, {:+06.2f})".format(*self.dda)
 
-    def strk_rhr_gv(self):
+    def rhrStrikeGVect(self):
         """
         Creates a GVect instance that is parallel to the right-hand rule strike.
 
         :return: GVect instance,
 
         Examples:
-          >>> GPlane(90, 45).strk_rhr_gv()
+          >>> GPlane(90, 45).rhrStrikeGVect()
           GVect(000.00, +00.00)
-          >>> GPlane(45, 17).strk_rhr_gv()
+          >>> GPlane(45, 17).rhrStrikeGVect()
           GVect(315.00, +00.00)
-          >>> GPlane(90, 0).strk_rhr_gv()
+          >>> GPlane(90, 0).rhrStrikeGVect()
           GVect(000.00, +00.00)
         """
 
@@ -1993,16 +2058,16 @@ class GPlane(object):
             trend=self.rhrStrike,
             plunge=0.0)
 
-    def strk_lhr_gv(self):
+    def lhrStrikeGVect(self):
         """
         Creates a GVect instance that is parallel to the left-hand rule strike.
 
         :return: GVect instance.
 
         Examples:
-          >>> GPlane(90, 45).strk_lhr_gv()
+          >>> GPlane(90, 45).lhrStrikeGVect()
           GVect(180.00, +00.00)
-          >>> GPlane(45, 17).strk_lhr_gv()
+          >>> GPlane(45, 17).lhrStrikeGVect()
           GVect(135.00, +00.00)
         """
 
@@ -2010,16 +2075,16 @@ class GPlane(object):
             trend=self.lhrStrike,
             plunge=0.0)
 
-    def dipdir_gv(self):
+    def dipDirGVect(self):
         """
         Creates a GVect instance that is parallel to the dip direction.
 
         :return: GVect instance.
 
         Examples:
-          >>> GPlane(90, 45).dipdir_gv()
+          >>> GPlane(90, 45).dipDirGVect()
           GVect(090.00, +45.00)
-          >>> GPlane(45, 17).dipdir_gv()
+          >>> GPlane(45, 17).dipDirGVect()
           GVect(045.00, +17.00)
         """
 
@@ -2027,22 +2092,22 @@ class GPlane(object):
             trend=self.dd,
             plunge=self.da)
 
-    def dipdir_opp_gv(self):
+    def dipDirOppGVect(self):
         """
         Creates a GVect instance that is anti-parallel to the dip direction.
 
         :return: GVect instance.
 
         Examples:
-          >>> GPlane(90, 45).dipdir_opp_gv()
+          >>> GPlane(90, 45).dipDirOppGVect()
           GVect(270.00, -45.00)
-          >>> GPlane(45, 17).dipdir_opp_gv()
+          >>> GPlane(45, 17).dipDirOppGVect()
           GVect(225.00, -17.00)
         """
 
-        return self.dipdir_gv().opposite()
+        return self.dipDirGVect().opposite()
 
-    def mirror_vertical(self):
+    def mirrorVertGPlane(self):
         """
         Mirror a geological plane around a vertical plane
         creating a new one that has a dip direction opposite
@@ -2052,13 +2117,13 @@ class GPlane(object):
         :rtype: GPlane
 
         Examples:
-          >>> GPlane(0, 45).mirror_vertical()
+          >>> GPlane(0, 45).mirrorVertGPlane()
           GPlane(180.00, +45.00)
-          >>> GPlane(225, 80).mirror_vertical()
+          >>> GPlane(225, 80).mirrorVertGPlane()
           GPlane(045.00, +80.00)
-          >>> GPlane(90, 90).mirror_vertical()
+          >>> GPlane(90, 90).mirrorVertGPlane()
           GPlane(270.00, +90.00)
-          >>> GPlane(270, 0).mirror_vertical()
+          >>> GPlane(270, 0).mirrorVertGPlane()
           GPlane(090.00, +00.00)
         """
 
@@ -2103,56 +2168,56 @@ class GPlane(object):
 
         return self._normal_gv_frwrd().opposite()
 
-    def down_normal_gv(self):
+    def downNormGVect(self):
         """
         Return the geological vector normGVect to the geological plane,
         pointing downward.
 
         Example:
-            >>> GPlane(90, 55).down_normal_gv()
+            >>> GPlane(90, 55).downNormGVect()
             GVect(270.00, +35.00)
-            >>> GPlane(90, 90).down_normal_gv()
+            >>> GPlane(90, 90).downNormGVect()
             GVect(090.00, +00.00)
-            >>> GPlane(90, 0).down_normal_gv()
+            >>> GPlane(90, 0).downNormGVect()
             GVect(270.00, +90.00)
         """
 
         return self._normal_gv_frwrd().downward()
 
-    def up_normal_gv(self):
+    def upNormGVect(self):
         """
         Return the geological vector normGVect to the geological plane,
         pointing upward.
 
         Example:
-            >>> GPlane(90, 55).up_normal_gv()
+            >>> GPlane(90, 55).upNormGVect()
             GVect(090.00, -35.00)
-            >>> GPlane(90, 90).up_normal_gv()
+            >>> GPlane(90, 90).upNormGVect()
             GVect(090.00, +00.00)
-            >>> GPlane(90, 0).up_normal_gv()
+            >>> GPlane(90, 0).upNormGVect()
             GVect(090.00, -90.00)
         """
 
         return self._normal_gv_frwrd().upward()
 
 
-    def normal_gvect(self):
+    def normGVect(self):
         """
         Wrapper to down_normal_gv.
 
         :return: GVect normGVect to the GPlane self instance
         """
 
-        return self.down_normal_gv()
+        return self.downNormGVect()
 
-    def normal_gaxis(self):
+    def normGAxis(self):
         """
         Normal GAxis.
 
         :return: GAxis normal to the GPlane self instance
         """
 
-        return self.down_normal_gv().asGAxis()
+        return self.downNormGVect().asGAxis()
 
     def plane(self, point):
         """
@@ -2271,10 +2336,10 @@ class GPlane(object):
           True
         """
 
-        fst_gaxis = self.normal_gvect().asGAxis()
+        fst_gaxis = self.normGVect().asGAxis()
 
         if isinstance(another, GPlane):
-            snd_gaxis = another.normal_gvect().asGAxis()
+            snd_gaxis = another.normGVect().asGAxis()
         elif isinstance(another, GAxis):
             snd_gaxis = another
         elif isinstance(another, GVect):
@@ -2289,7 +2354,7 @@ class GPlane(object):
         else:
             return angle < angle_tolerance
 
-    def rake_to_gvect(self, rake):
+    def rakeToGVect(self, rake):
         """
         Calculate GVect given a GPlane instance and a rake value.
         The rake is defined according to the Aki and Richards, 1980 conventions:
@@ -2299,15 +2364,15 @@ class GPlane(object):
         rake = -90° -> normal
 
         Examples:
-          >>> GPlane(180, 45).rake_to_gvect(0.0)
+          >>> GPlane(180, 45).rakeToGVect(0.0)
           GVect(090.00, +00.00)
-          >>> GPlane(180, 45).rake_to_gvect(90.0)
+          >>> GPlane(180, 45).rakeToGVect(90.0)
           GVect(000.00, -45.00)
-          >>> GPlane(180, 45).rake_to_gvect(-90.0)
+          >>> GPlane(180, 45).rakeToGVect(-90.0)
           GVect(180.00, +45.00)
-          >>> GPlane(180, 45).rake_to_gvect(180.0).isAlmostParallel(GVect(270.00, -00.00))
+          >>> GPlane(180, 45).rakeToGVect(180.0).isAlmostParallel(GVect(270.00, -00.00))
           True
-          >>> GPlane(180, 45).rake_to_gvect(-180.0)
+          >>> GPlane(180, 45).rakeToGVect(-180.0)
           GVect(270.00, +00.00)
         """
 
@@ -2321,7 +2386,7 @@ class GPlane(object):
 
         return Vect(x, y, z).asGVect()
 
-    def is_vlow_angle(self, dip_angle_threshold=angle_gplane_thrshld):
+    def isVLowAngle(self, dip_angle_threshold=angle_gplane_thrshld):
         """
         Checks if a geological plane is very low angle.
 
@@ -2330,15 +2395,15 @@ class GPlane(object):
         :return: bool flag indicating if it is very low angle
 
         Examples:
-          >>> GPlane(38.9, 1.2).is_vlow_angle()
+          >>> GPlane(38.9, 1.2).isVLowAngle()
           True
-          >>> GPlane(38.9, 7.4).is_vlow_angle()
+          >>> GPlane(38.9, 7.4).isVLowAngle()
           False
         """
 
         return self.da < dip_angle_threshold
 
-    def is_vhigh_angle(self, dip_angle_threshold=angle_gplane_thrshld):
+    def isVHighAngle(self, dip_angle_threshold=angle_gplane_thrshld):
         """
         Checks if a geological plane is very high angle.
 
@@ -2347,9 +2412,9 @@ class GPlane(object):
         :return: bool flag indicating if it is very high angle
 
         Examples:
-          >>> GPlane(38.9, 11.2).is_vhigh_angle()
+          >>> GPlane(38.9, 11.2).isVHighAngle()
           False
-          >>> GPlane(38.9, 88.4).is_vhigh_angle()
+          >>> GPlane(38.9, 88.4).isVHighAngle()
           True
         """
 

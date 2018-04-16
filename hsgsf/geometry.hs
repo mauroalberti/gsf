@@ -636,7 +636,7 @@ vDownward (Vect x y z) =
 
 
 -- | trend of a vector
---   (uDegrees, clockwise from North, range 0°-360°)
+--   (degrees, clockwise from North, range 0°-360°)
 vTrend :: Vect -> Maybe Double
 -- |
 -- Examples:
@@ -658,11 +658,13 @@ vTrend :: Vect -> Maybe Double
 -- Just 315.0
 -- >>> vTrend (Vect 1 1 10)
 -- Just 45.0
+-- >>> vTrend (Vect 0 0 0)
+-- Nothing
 vTrend (Vect x y z) = uAngleNorthClock x y
 
 
 -- | slope of a vector
--- | (uDegrees, positive: downward-directed, negative: upward-dir., range -90°/90°
+-- | (degrees, positive: downward-directed, negative: upward-dir., range -90°/90°
 vSlope :: Vect -> Maybe Double
 -- |
 -- Examples:

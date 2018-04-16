@@ -88,7 +88,7 @@ def splot(data, force=''):
             plot_gplane = gplane
         elif force_emisphere == 'upper':
             default_line_style = default_gplane_upward_linestyle
-            plot_gplane = gplane.mirror_vertical()
+            plot_gplane = gplane.mirrorVertGPlane()
         else:
             raise PlotException("Invalid force emisphere parameter")
 
