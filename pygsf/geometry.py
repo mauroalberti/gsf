@@ -34,22 +34,9 @@ class Point(object):
 
         return "Point({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
 
-    def __sub__(self, another):
-        """Return point difference
-
-        Example:
-          >>> Point(1., 1., 1.) - Point(1., 1., 1.)
-          Point(0.0000, 0.0000, 0.0000)
-          >>> Point(1., 1., 3.) - Point(1., 1., 2.2)
-          Point(0.0000, 0.0000, 0.8000)
-        """
-
-        x, y, z = arr2tuple(self.a - another.a)
-        return self.__class__(x, y, z)
-
     def __eq__(self, another):
         """
-        Return True if points are equal.
+        Return True if objects are equal.
 
         Example:
           >>> Point(1., 1., 1.) == Point(1, 1, 1)
@@ -63,7 +50,7 @@ class Point(object):
 
     def __ne__(self, another):
         """
-        Return False if vectors are equal.
+        Return False if objects are equal.
 
         Example:
           >>> Point(1., 1., 1.) != Point(0., 0., 0.)
@@ -75,14 +62,16 @@ class Point(object):
     @property
     def a(self):
         """
-        Return values as array
+        Return a copy of the object inner array.
 
-        Example:
-          >>> arrays_are_close(Point(1, 0, 0).a, np.array([ 1.,  0.,  0.]), equal_nan=True)
-          True
+        :return: double array of x, y, z values
+
+        Examples:
+          >>> Point(4, 3, 7).a
+          array([4., 3., 7.])
         """
 
-        return self._a
+        return np.copy(self._a)
 
     @property
     def x(self):
@@ -118,7 +107,7 @@ class Point(object):
         """
         return self.a[2]
 
-    def xyz(self) -> Tuple[float, float, float]:
+    def toXYZ(self) -> Tuple[float, float, float]:
         """
         Returns the spatial components as a tuple of three values.
 
@@ -126,64 +115,92 @@ class Point(object):
         :rtype: a tuple of three floats.
 
         Examples:
-          >>> Point(1, 0, 3).xyz()
+          >>> Point(1, 0, 3).toXYZ()
           (1.0, 0.0, 3.0)
         """
 
         return self.x, self.y, self.z
 
+    def toArray(self):
+        """
+        Return a double Numpy array representing the point values.
+
+        :return: Numpy array
+
+        Examples:
+          >>> Point(1, 2, 3).toArray()
+          array([1., 2., 3.])
+        """
+
+        return self.a
+
     def pXY(self):
         """
-        Projection of point on the x-y plane
+        Projection on the x-y plane
 
-        :return: projected Point instance
+        :return: projected object instance
 
         Examples:
           >>> Point(2, 3, 4).pXY()
           Point(2.0000, 3.0000, 0.0000)
         """
 
-        return Point(self.x, self.y, 0.0)
+        return self.__class__(self.x, self.y, 0.0)
 
     def pXZ(self):
         """
-        Projection of point on the x-z plane
+        Projection on the x-z plane
 
-        :return: projected Point instance
+        :return: projected object instance
 
         Examples:
           >>> Point(2, 3, 4).pXZ()
           Point(2.0000, 0.0000, 4.0000)
         """
 
-        return Point(self.x, 0.0, self.z)
+        return self.__class__(self.x, 0.0, self.z)
 
     def pYZ(self):
         """
-        Projection of point on the y-z plane
+        Projection on the y-z plane
 
-        :return: projected Point instance
+        :return: projected object instance
 
         Examples:
           >>> Point(2, 3, 4).pYZ()
           Point(0.0000, 3.0000, 4.0000)
         """
 
-        return Point(0.0, self.y, self.z)
+        return self.__class__(0.0, self.y, self.z)
 
-    def len(self) -> float:
+    @property
+    def len3D(self) -> float:
         """
-        Spatial distance of the point form the axis origin.
+        Spatial distance of the point from the axis origin.
 
         :return: distance
         :rtype: float
 
         Examples:
-          >>> Point(4.0, 3.0, 0.0).len()
+          >>> Point(4.0, 3.0, 0.0).len3D
           5.0
         """
 
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+
+    @property
+    def len2D(self) -> float:
+        """
+        2D distance of the point from the axis origin.
+
+        Example:
+          >>> Vect(3, 4, 0).len2D
+          5.0
+          >>> Vect(12, 5, 3).len2D
+          13.0
+        """
+
+        return sqrt(self.x * self.x + self.y * self.y)
 
     def deltaX(self, another) -> float:
         """
@@ -227,25 +244,25 @@ class Point(object):
 
         return another.z - self.z
 
-    def dist3D(self, another):
+    def dist3DWith(self, another):
         """
         Calculate Euclidean spatial distance between two points.
 
         Examples:
-          >>> Point(1., 1., 1.).dist3D(Point(4., 5., 1,))
+          >>> Point(1., 1., 1.).dist3DWith(Point(4., 5., 1,))
           5.0
-          >>> Point(1, 1, 1).dist3D(Point(4, 5, 1))
+          >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1))
           5.0
         """
 
-        return (self - another).len()
+        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
-    def dist2D(self, another):
+    def dist2DWith(self, another):
         """
         Calculate horizontal (2D) distance between two points.
 
         Examples:
-          >>> Point(1., 1., 1.).dist2D(Point(4., 5., 7.))
+          >>> Point(1., 1., 1.).dist2DWith(Point(4., 5., 7.))
           5.0
         """
 
@@ -253,7 +270,7 @@ class Point(object):
 
     def scale(self, scale_factor: float):
         """
-        Create a scaled point.
+        Create a scaled object.
 
         Example;
           >>> Point(1, 0, 1).scale(2.5)
@@ -276,7 +293,7 @@ class Point(object):
 
     def invert(self):
         """
-        Create a new point with inverted direction.
+        Create a new object with inverted direction.
 
         Examples:
           >>> Point(1, 1, 1).invert()
@@ -300,11 +317,11 @@ class Point(object):
           True
         """
 
-        distance_2d = self.dist2D(another)
+        distance_2d = self.dist2DWith(another)
         if np.isnan(distance_2d) or distance_2d > tolerance:
             return False
 
-        distance_3d = self.dist3D(another)
+        distance_3d = self.dist3DWith(another)
         if np.isnan(distance_3d) or distance_3d > tolerance:
             return False
 
@@ -312,7 +329,7 @@ class Point(object):
 
     def shift(self, sx=0.0, sy=0.0, sz=0.0):
         """
-        Create a new point shifted by given amount from the self instance.
+        Create a new object shifted by given amount from the self instance.
 
         Example:
           >>> Point(1, 1, 1).shift(0.5, 1., 1.5)
@@ -321,35 +338,7 @@ class Point(object):
           Point(1.5000, 3.0000, 0.5000)
        """
 
-        return Point(self.x + sx, self.y + sy, self.z + sz)
-
-    def shiftWithVect(self, displ_vect):
-        """
-        Create a new point from the self, with offsets defined by a vector.
-
-        Example:
-          >>> Point(1, 2, 0).shiftWithVect(Vect(10, 5, 0))
-          Point(11.0000, 7.0000, 0.0000)
-          >>> Point(3, 1, 0.2).shiftWithVect(Vect(7, 5, 0))
-          Point(10.0000, 6.0000, 0.2000)
-        """
-
-        return Point(self.x + displ_vect.x,
-                     self.y + displ_vect.y,
-                     self.z + displ_vect.z)
-
-    def toArray(self):
-        """
-        Return a double Numpy array representing the point values.
-
-        :return: Numpy array
-
-        Examples:
-          >>> Point(1, 2, 3).toArray()
-          array([1., 2., 3.])
-        """
-
-        return self.a
+        return self.__class__(self.x + sx, self.y + sy, self.z + sz)
 
     def asVect(self):
         """
@@ -374,7 +363,7 @@ class Vect(Point):
     z axis -> Up
     """
 
-    def __init__(self, x=0, y=0, z=0):
+    def __init__(self, x, y, z):
         """
         Vect constructor.
 
@@ -395,82 +384,6 @@ class Vect(Point):
 
         super().__init__(x, y, z)
 
-    @property
-    def isValid(self) -> bool:
-        """
-        Check if the Vect instance components are not all valid and the xyz not all zero-valued.
-
-        :return: Boolean
-
-        Example:
-          >>> Vect(1, 2, 0).isValid
-          True
-          >>> Vect(0.0, 0.0, 0.0).isValid
-          False
-        """
-
-        return not self.isAlmostZero
-
-    @property
-    def len2D(self) -> float:
-        """
-        2D Vector magnitude.
-
-        Example:
-          >>> Vect(3, 4).len2D
-          5.0
-          >>> Vect(12, 5, 3).len2D
-          13.0
-        """
-
-        return sqrt(self.x * self.x + self.y * self.y)
-
-    @property
-    def len3D(self) -> float:
-        """
-        3D Vector magnitude.
-
-        Example:
-          >>> Vect(12, 0, 5).len3D
-          13.0
-          >>> Vect(3, 0, 4).len3D
-          5.0
-        """
-
-        return self.len()
-
-    @property
-    def isAlmostZero(self) -> bool:
-        """
-        Check if the Vect instance lenght is near zero.
-
-        :return: Boolean
-
-        Example:
-          >>> Vect(1, 2, 0).isAlmostZero
-          False
-          >>> Vect(0.0, 0.0, 0.0).isAlmostZero
-          True
-        """
-
-        return are_close(self.len3D, 0)
-
-    @property
-    def isAlmostUnit(self) -> bool:
-        """
-        Check if the Vect instance lenght is near unit.
-
-        :return: Boolean
-
-        Example:
-          >>> Vect(1, 2, 0).isAlmostUnit
-          False
-          >>> Vect(0.0, 1.0, 0.0).isAlmostUnit
-          True
-        """
-
-        return are_close(self.len3D, 1)
-
     def __repr__(self):
 
         return "Vect({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
@@ -487,7 +400,68 @@ class Vect(Point):
         """
 
         x, y, z = arr2tuple(self.a + another.a)
-        return Vect(x, y, z)
+        return self.__class__(x, y, z)
+
+    def __sub__(self, another):
+        """Return object difference
+
+        Example:
+          >>> Vect(1., 1., 1.) - Vect(1., 1., 1.)
+          Vect(0.0000, 0.0000, 0.0000)
+          >>> Vect(1., 1., 3.) - Vect(1., 1., 2.2)
+          Vect(0.0000, 0.0000, 0.8000)
+        """
+
+        x, y, z = arr2tuple(self.a - another.a)
+        return self.__class__(x, y, z)
+
+    @property
+    def isAlmostZero(self) -> bool:
+        """
+        Check if the Vect instance length is near zero.
+
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 2, 0).isAlmostZero
+          False
+          >>> Vect(0.0, 0.0, 0.0).isAlmostZero
+          True
+        """
+
+        return are_close(self.len3D, 0)
+
+    @property
+    def isAlmostUnit(self) -> bool:
+        """
+        Check if the Vect instance length is near unit.
+
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 2, 0).isAlmostUnit
+          False
+          >>> Vect(0.0, 1.0, 0.0).isAlmostUnit
+          True
+        """
+
+        return are_close(self.len3D, 1)
+
+    @property
+    def isValid(self) -> bool:
+        """
+        Check if the Vect instance components are not all valid and the xyz not all zero-valued.
+
+        :return: Boolean
+
+        Example:
+          >>> Vect(1, 2, 0).isValid
+          True
+          >>> Vect(0.0, 0.0, 0.0).isValid
+          False
+        """
+
+        return not self.isAlmostZero
 
     def versor(self):
         """
@@ -508,29 +482,18 @@ class Vect(Point):
             raise VectInvalidException("Vector must be isValid (not zero-valued)")
         return self.scale(1.0 / self.len3D)
 
-    def flatten2D(self):
-        """
-        Create equivalent vector in xy space.
-
-        Example:
-          >>> Vect(5, 16, 43).flatten2D()
-          Vect(5.0000, 16.0000, 0.0000)
-        """
-
-        return Vect(self.x, self.y, 0.0)
-
     def versor2D(self):
         """
-        Create 2D versor equivalent of the current vector
+        Create 2D versor version of the current vector
 
-        :return: Vector
+        :return: unit vector
 
         Example:
           >>> Vect(7, 0, 10).versor2D()
           Vect(1.0000, 0.0000, 0.0000)
         """
 
-        return self.flatten2D().versor()
+        return self.pXY().versor()
 
     def trend(self) -> Optional[float]:
         """
@@ -585,7 +548,7 @@ class Vect(Point):
           >>> Vect(0, 0, 0).slope() is None
           True
          """
-        h = self.len2D()
+        h = self.len2D
         zv = self.z
         sl = slope(h, abs(zv))
 
@@ -597,10 +560,38 @@ class Vect(Point):
             else:
                 return -sl
 
+    def absSlope(self) -> Optional[float]:
+        """
+        Return the absolute value of the slope.
+
+        :return: optional float, slope in decimal degrees.
+
+          >>> Vect(1, 0, -1).absSlope()
+          45.0
+          >>> Vect(1, 0, 1).absSlope()
+          45.0
+          >>> Vect(0, 1, 0).absSlope()
+          0.0
+          >>> Vect(0, 0, 1).absSlope()
+          90.0
+          >>> Vect(0, 0, -1).absSlope()
+          90.0
+          >>> Vect(0, 0, 0).absSlope() is None
+          True
+        """
+
+        sl = self.slope()
+        if sl is None:
+            return None
+        else:
+            return abs(sl)
+
     @property
-    def isUpward(self):
+    def isUpward(self) -> bool:
         """
         Check that a vector is upward-directed.
+
+        :return: boolean
          
         Example:
           >>> Vect(0,0,1).isUpward
@@ -612,9 +603,11 @@ class Vect(Point):
         return self.z > 0.0
 
     @property
-    def isDownward(self):
+    def isDownward(self) -> bool:
         """
         Check that a vector is downward-directed.
+
+        :return: boolean
 
         Example:
           >>> Vect(0,0,1).isDownward
@@ -657,48 +650,6 @@ class Vect(Point):
         else:
             return self.scale(1.0)
 
-    @property
-    def slope(self):
-        """
-        Slope of a vector expressed as degrees.
-        Positive when vector is downward pointing or horizontal,
-        negative when upward pointing.
-
-        Example:
-          >>> Vect(1, 0, -1).slope
-          45.0
-          >>> Vect(1, 0, 1).slope
-          -45.0
-          >>> Vect(0, 1, 0).slope
-          0.0
-          >>> Vect(0, 0, 1).slope
-          -90.0
-          >>> Vect(0, 0, -1).slope
-          90.0
-          >>> Vect(0, 0, 0).slope
-          Traceback (most recent call last):
-          ...
-          VectInvalidException: Vector must be isValid (not zero-valued)
-        """
-
-        if not self.isValid:
-            raise VectInvalidException("Vector must be isValid (not zero-valued)")
-
-        hlen = self.len2D
-        if hlen == 0.0:
-            if self.z > 0.:
-                return -90.
-            elif self.z < 0.:
-                return 90.
-            else:
-                raise Exception("Zero-valued vector")
-        else:
-            slope = - degrees(atan(self.z / self.len2D))
-            if abs(slope) > MIN_SCALAR_VALUE:
-                return slope
-            else:
-                return 0.
-
     def asGVect(self):
         """
         Calculate the geological vector parallel to the Vect instance.
@@ -732,15 +683,15 @@ class Vect(Point):
         if not self.isValid:
             raise VectInvalidException("Vector must be isValid (not zero-valued)")
 
-        plunge = self.slope  # upward pointing -> negative value, downward -> positive
+        pl = self.slope()  # upward pointing -> negative value, downward -> positive
 
         unit_vect = self.versor()
         if unit_vect.y == 0. and unit_vect.x == 0:
-            trend = 0.
+            tr = 0.
         else:
-            trend = (90. - degrees(atan2(unit_vect.y, unit_vect.x))) % 360.
+            tr = (90. - degrees(atan2(unit_vect.y, unit_vect.x))) % 360.
 
-        return GVect(trend, plunge)
+        return GVect(tr, pl)
 
     def asGAxis(self):
         """
@@ -929,15 +880,15 @@ class GVect(object):
     """
     Geological vector.
     Defined by trend and plunge (both in degrees):
-     - trend: [0.0, 360.0[ clockwise, from 0 (North):
-     - plunge: [-90.0, 90.0].
+     - tr: [0.0, 360.0[ clockwise, from 0 (North):
+     - pl: [-90.0, 90.0].
     """
 
-    def __init__(self, trend, plunge, is_axis=False):
+    def __init__(self, tr, pl, is_axis=False):
         """
         Geological vector constructor.
-        trend: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
-        plunge: Plunge: [-90.0, 90.0],
+        tr: Trend range: [0.0, 360.0[ clockwise, from 0 (North)
+        pl: Plunge: [-90.0, 90.0],
         negative value: upward pointing is_axis, positive values: downward is_axis;
             
         Example:
@@ -949,8 +900,8 @@ class GVect(object):
           GVect(023.00, +40.00)
        """
 
-        self._trend = float(trend) % 360.0
-        self._plunge = float(plunge)
+        self._trend = float(tr) % 360.0
+        self._plunge = float(pl)
         self._axis = is_axis
 
     @property
@@ -1138,10 +1089,10 @@ class GVect(object):
           GAxis(315.00, -00.00)
         """
 
-        trend = (self.tr + 180.) % 360.
-        plunge = -self.pl
+        tr = (self.tr + 180.) % 360.
+        pl = -self.pl
 
-        return GVect(trend, plunge, self.ax)
+        return GVect(tr, pl, self.ax)
 
     def mirrorHoriz(self):
         """
@@ -1156,10 +1107,10 @@ class GVect(object):
           GVect(135.00, -00.00)
         """
 
-        trend = self.tr
-        plunge = -self.pl
+        tr = self.tr
+        pl = -self.pl
 
-        return GVect(trend, plunge, self.ax)
+        return GVect(tr, pl, self.ax)
 
     def versor(self):
         """
@@ -1592,13 +1543,13 @@ class GAxis(GVect):
     Convenience class wrapping geological axis with unknown movement sense.
     While GAxis is non-directional, the geological vector (GVect) is directional.
     Defined by trend and plunge (both in degrees):
-     - trend: [0.0, 360.0[ clockwise, from 0 (North):
-     - plunge: [-90.0, 90.0].
+     - tr: [0.0, 360.0[ clockwise, from 0 (North):
+     - pl: [-90.0, 90.0].
     """
 
-    def __init__(self, trend, plunge):
+    def __init__(self, tr, pl):
 
-        super().__init__(trend, plunge, is_axis=True)
+        super().__init__(tr, pl, is_axis=True)
 
     def __repr__(self):
 
@@ -2055,8 +2006,8 @@ class GPlane(object):
         """
 
         return GVect(
-            trend=self.rhrStrike,
-            plunge=0.0)
+            tr=self.rhrStrike,
+            pl=0.0)
 
     def lhrStrikeGVect(self):
         """
@@ -2072,8 +2023,8 @@ class GPlane(object):
         """
 
         return GVect(
-            trend=self.lhrStrike,
-            plunge=0.0)
+            tr=self.lhrStrike,
+            pl=0.0)
 
     def dipDirGVect(self):
         """
@@ -2089,8 +2040,8 @@ class GPlane(object):
         """
 
         return GVect(
-            trend=self.dd,
-            plunge=self.da)
+            tr=self.dd,
+            pl=self.da)
 
     def dipDirOppGVect(self):
         """
@@ -2145,12 +2096,12 @@ class GPlane(object):
             GVect(090.00, -90.00)
         """
         
-        trend = self.dd % 360.0
-        plunge = self.da - 90.0
+        tr = self.dd % 360.0
+        pl = self.da - 90.0
 
         return GVect(
-            trend=trend,
-            plunge=plunge)
+            tr=tr,
+            pl=pl)
 
     def _normal_gv_anti(self):
         """

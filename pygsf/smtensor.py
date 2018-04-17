@@ -54,7 +54,7 @@ class SMTensor(object):
         :return: SMTensor instance
         """
 
-        q0, q1, q2, q3 = quater.normalize().xyz()
+        q0, q1, q2, q3 = quater.normalize().toXYZ()
 
         q0q0 = q0 * q0
         q0q1 = q0 * q1

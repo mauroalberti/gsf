@@ -114,7 +114,7 @@ class PTBAxes(object):
         :return:a PTBAxes instance.
         """
 
-        q0, q1, q2, q3 = quaternion.normalize().xyz()
+        q0, q1, q2, q3 = quaternion.normalize().toXYZ()
 
         q0q0 = q0*q0
         q0q1 = q0*q1

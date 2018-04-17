@@ -245,7 +245,7 @@ class RotationAxis(object):
         rotation_vector = self.gv.versor()
 
         w = cos(rotation_angle_rad / 2.0)
-        x, y, z = rotation_vector.scale(sin(rotation_angle_rad / 2.0)).xyz()
+        x, y, z = rotation_vector.scale(sin(rotation_angle_rad / 2.0)).toXYZ()
 
         return Quaternion(w, x, y, z).normalize()
 
