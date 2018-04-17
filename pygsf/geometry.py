@@ -2,6 +2,7 @@
 
 
 from __future__ import division
+#from __future__ import annotations
 
 from math import sqrt, sin, cos, radians, acos, atan, isnan
 import numpy as np
@@ -14,27 +15,30 @@ from .geometry_utils import *
 from .arrays import point_solution, arrays_are_close, arr2tuple
 
 
+isfinite = np.isfinite
+
+
 class Point(object):
     """
     Cartesian point.
     Dimensions: 3D (space)
     """
 
-    def __init__(self, x, y, z):
+    def __new__(cls, x: float, y: float, z: float) -> Optional['Point']:
         """
         Construct a Point instance.
         """
 
-        if any(map(lambda val: not np.isfinite(val), [x, y, z])):
-            raise GeomInputException("All spatial coordinates must be finite")
+        if all(map(isfinite, [x, y, z])):
+            instance = super(Point, cls).__new__(cls)
+            instance._a = np.array([x, y, z], dtype=np.float64)
+            return instance
 
-        self._a = np.array([x, y, z], dtype=np.float64)
-
-    def __repr__(self):
+    def __repr__(self) -> str:
 
         return "Point({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
 
-    def __eq__(self, another):
+    def __eq__(self, another: 'Point') -> Optional[bool]:
         """
         Return True if objects are equal.
 
@@ -43,12 +47,15 @@ class Point(object):
           True
         """
 
-        return all([
-            self.x == another.x,
-            self.y == another.y,
-            self.z == another.z])
+        if not isinstance(another, Point):
+            return None
+        else:
+            return all([
+                self.x == another.x,
+                self.y == another.y,
+                self.z == another.z])
 
-    def __ne__(self, another):
+    def __ne__(self, another: 'Point') -> Optional[bool]:
         """
         Return False if objects are equal.
 
@@ -57,10 +64,13 @@ class Point(object):
           True
         """
 
-        return not (self == another)
+        if not isinstance(another, Point):
+            return None
+        else:
+            return not (self == another)
 
     @property
-    def a(self):
+    def a(self) -> 'numpy.array':
         """
         Return a copy of the object inner array.
 
@@ -74,7 +84,7 @@ class Point(object):
         return np.copy(self._a)
 
     @property
-    def x(self):
+    def x(self) -> float:
         """
         Return x value
 
@@ -86,7 +96,7 @@ class Point(object):
         return self.a[0]
 
     @property
-    def y(self):
+    def y(self) -> float:
         """
         Return y value
 
@@ -97,7 +107,7 @@ class Point(object):
         return self.a[1]
 
     @property
-    def z(self):
+    def z(self) -> float:
         """
         Return z value
 
@@ -121,7 +131,7 @@ class Point(object):
 
         return self.x, self.y, self.z
 
-    def toArray(self):
+    def toArray(self) -> 'numpy.array':
         """
         Return a double Numpy array representing the point values.
 
@@ -134,7 +144,7 @@ class Point(object):
 
         return self.a
 
-    def pXY(self):
+    def pXY(self) -> 'Point':
         """
         Projection on the x-y plane
 
@@ -147,7 +157,7 @@ class Point(object):
 
         return self.__class__(self.x, self.y, 0.0)
 
-    def pXZ(self):
+    def pXZ(self) -> 'Point':
         """
         Projection on the x-z plane
 
@@ -160,7 +170,7 @@ class Point(object):
 
         return self.__class__(self.x, 0.0, self.z)
 
-    def pYZ(self):
+    def pYZ(self) -> 'Point':
         """
         Projection on the y-z plane
 
@@ -202,7 +212,7 @@ class Point(object):
 
         return sqrt(self.x * self.x + self.y * self.y)
 
-    def deltaX(self, another) -> float:
+    def deltaX(self, another: 'Point') -> Optional[float]:
         """
         Delta between x components of two Point Instances.
 
@@ -214,9 +224,12 @@ class Point(object):
           3.0
         """
 
-        return another.x - self.x
+        if not isinstance(another, Point):
+            return None
+        else:
+            return another.x - self.x
 
-    def deltaY(self, another) -> float:
+    def deltaY(self, another: 'Point') -> Optional[float]:
         """
         Delta between y components of two Point Instances.
 
@@ -228,9 +241,12 @@ class Point(object):
           5.0
         """
 
-        return another.y - self.y
+        if not isinstance(another, Point):
+            return None
+        else:
+            return another.y - self.y
 
-    def deltaZ(self, another) -> float:
+    def deltaZ(self, another: 'Point') -> Optional[float]:
         """
         Delta between x components of two Point Instances.
 
@@ -242,9 +258,12 @@ class Point(object):
           -2.0
         """
 
-        return another.z - self.z
+        if not isinstance(another, Point):
+            return None
+        else:
+            return another.z - self.z
 
-    def dist3DWith(self, another):
+    def dist3DWith(self, another: 'Point') -> Optional[float]:
         """
         Calculate Euclidean spatial distance between two points.
 
@@ -255,9 +274,12 @@ class Point(object):
           5.0
         """
 
-        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
+        if not isinstance(another, Point):
+            return None
+        else:
+            return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
-    def dist2DWith(self, another):
+    def dist2DWith(self, another: 'Point') -> Optional[float]:
         """
         Calculate horizontal (2D) distance between two points.
 
@@ -266,32 +288,31 @@ class Point(object):
           5.0
         """
 
-        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
+        if not isinstance(another, Point):
+            return None
+        else:
+            return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
-    def scale(self, scale_factor: float):
+    def scale(self, scale_factor: float) -> Optional['Point']:
         """
         Create a scaled object.
 
         Example;
           >>> Point(1, 0, 1).scale(2.5)
           Point(2.5000, 0.0000, 2.5000)
-          >>> Point(1, 0, 1).scale(np.nan)
-          Traceback (most recent call last):
-          ...
-          GeomInputException: Scale factor for vector must be finite
-          >>> Point(1, 0, 1).scale(np.inf)
-          Traceback (most recent call last):
-          ...
-          GeomInputException: Scale factor for vector must be finite
+          >>> Point(1, 0, 1).scale(np.nan) is None
+          True
+          >>> Point(1, 0, 1).scale(np.inf) is None
+          True
         """
 
         if not np.isfinite(scale_factor):
-            raise GeomInputException("Scale factor for vector must be finite")
+            return None
+        else:
+            x, y, z = arr2tuple(self.a * scale_factor)
+            return self.__class__(x, y, z)
 
-        x, y, z = arr2tuple(self.a * scale_factor)
-        return self.__class__(x, y, z)
-
-    def invert(self):
+    def invert(self) -> 'Point':
         """
         Create a new object with inverted direction.
 
@@ -304,7 +325,7 @@ class Point(object):
 
         return self.scale(-1)
 
-    def isCoinc(self, another, tolerance=MIN_SEPARATION_THRESHOLD):
+    def isCoinc(self, another: 'Point', tolerance: float=MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
         """
         Check spatial coincidence of two points
 
@@ -315,19 +336,26 @@ class Point(object):
           True
           >>> Point(1.2, 7.4, 1.4).isCoinc(Point(1.2, 7.4, 1.4))
           True
+          >>> Point(1.2, 7.4, 1.4).isCoinc(Point(1.2, 7.4, 1.4), tolerance=np.nan) is None
+          True
         """
 
-        distance_2d = self.dist2DWith(another)
-        if np.isnan(distance_2d) or distance_2d > tolerance:
-            return False
+        if not isinstance(another, Point):
+            return None
+        elif not np.isfinite(tolerance):
+            return None
+        else:
+            distance_2d = self.dist2DWith(another)
+            if np.isnan(distance_2d) or distance_2d > tolerance:
+                return False
+            else:
+                distance_3d = self.dist3DWith(another)
+                if np.isnan(distance_3d) or distance_3d > tolerance:
+                    return False
+                else:
+                    return True
 
-        distance_3d = self.dist3DWith(another)
-        if np.isnan(distance_3d) or distance_3d > tolerance:
-            return False
-
-        return True
-
-    def shift(self, sx=0.0, sy=0.0, sz=0.0):
+    def shift(self, sx: float, sy: float, sz: float) -> Optional['Point']:
         """
         Create a new object shifted by given amount from the self instance.
 
@@ -336,11 +364,16 @@ class Point(object):
           Point(1.5000, 2.0000, 2.5000)
           >>> Point(1, 2, -1).shift(0.5, 1., 1.5)
           Point(1.5000, 3.0000, 0.5000)
+          >>> Point(1, 2, -1).shift(0.5, np.nan, 1.5) is None
+          True
        """
 
-        return self.__class__(self.x + sx, self.y + sy, self.z + sz)
+        if not all(map(np.isfinite, [sx, sy, sz])):
+            return None
+        else:
+            return self.__class__(self.x + sx, self.y + sy, self.z + sz)
 
-    def asVect(self):
+    def asVect(self) -> 'Vect':
         """
         Create a vector based on the point coordinates
 
@@ -363,32 +396,28 @@ class Vect(Point):
     z axis -> Up
     """
 
-    def __init__(self, x, y, z):
+    def __new__(cls, x, y, z) -> Optional['Vect']:
         """
         Vect constructor.
 
         Example;
           >>> Vect(1, 0, 1)
           Vect(1.0000, 0.0000, 1.0000)
-          >>> Vect(1, np.nan, 1)
-          Traceback (most recent call last):
-          ...
-          GeomInputException: All spatial coordinates must be finite
-          >>> Vect(1, 0, np.inf)
-          Traceback (most recent call last):
-          ...
-          GeomInputException: All spatial coordinates must be finite
+          >>> Vect(1, np.nan, 1) is None
+          True
+          >>> Vect(1, 0, np.inf) is None
+          True
           >>> Vect(0, 0, 0)
           Vect(0.0000, 0.0000, 0.0000)
         """
 
-        super().__init__(x, y, z)
+        return super().__new__(cls, x, y, z)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
 
         return "Vect({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
 
-    def __add__(self, another):
+    def __add__(self, another) -> 'Vect':
         """
         Sum of two vectors.
 
@@ -402,7 +431,7 @@ class Vect(Point):
         x, y, z = arr2tuple(self.a + another.a)
         return self.__class__(x, y, z)
 
-    def __sub__(self, another):
+    def __sub__(self, another) -> 'Vect':
         """Return object difference
 
         Example:
@@ -463,7 +492,7 @@ class Vect(Point):
 
         return not self.isAlmostZero
 
-    def versor(self):
+    def versor(self) -> Optional['Vect']:
         """
         Calculate versor in xyz space.
 
@@ -472,17 +501,16 @@ class Vect(Point):
           Vect(1.0000, 0.0000, 0.0000)
           >>> Vect(0, 0, -1).versor()
           Vect(0.0000, 0.0000, -1.0000)
-          >>> Vect(0, 0, 0).versor()
-          Traceback (most recent call last):
-          ...
-          VectInvalidException: Vector must be isValid (not zero-valued)
+          >>> Vect(0, 0, 0).versor() is None
+          True
         """
 
         if not self.isValid:
-            raise VectInvalidException("Vector must be isValid (not zero-valued)")
-        return self.scale(1.0 / self.len3D)
+            return None
+        else:
+            return self.scale(1.0 / self.len3D)
 
-    def versor2D(self):
+    def versor2D(self) -> Optional['Vect']:
         """
         Create 2D versor version of the current vector
 
@@ -491,9 +519,15 @@ class Vect(Point):
         Example:
           >>> Vect(7, 0, 10).versor2D()
           Vect(1.0000, 0.0000, 0.0000)
+          >>> Vect(0, 0, 10).versor2D() is None
+          True
         """
 
-        return self.pXY().versor()
+        vXY = self.pXY()
+        if vXY.isValid:
+            return self.pXY().versor()
+        else:
+            return None
 
     def trend(self) -> Optional[float]:
         """
@@ -598,6 +632,8 @@ class Vect(Point):
           True
           >>> Vect(0,0,-0.5).isUpward
           False
+          >>> Vect(1, 3, 0).isUpward
+          False
         """
 
         return self.z > 0.0
@@ -614,11 +650,13 @@ class Vect(Point):
           False
           >>> Vect(0,0,-0.5).isDownward
           True
+          >>> Vect(1, 3, 0).isDownward
+          False
         """
 
         return self.z < 0.0
 
-    def upward(self):
+    def upward(self) -> 'Vect':
         """
         Calculate a new upward-pointing vector.
 
@@ -634,7 +672,7 @@ class Vect(Point):
         else:
             return self.scale(1.0)
 
-    def downward(self):
+    def downward(self) -> 'Vect':
         """
         Calculate a new vector downward-pointing.
 
@@ -650,7 +688,7 @@ class Vect(Point):
         else:
             return self.scale(1.0)
 
-    def asGVect(self):
+    def asGVect(self) -> Optional['GVect']:
         """
         Calculate the geological vector parallel to the Vect instance.
         Trend range: [0°, 360°[
@@ -674,26 +712,27 @@ class Vect(Point):
           GVect(180.00, +00.00)
           >>> Vect(-1, -1, 0).asGVect()
           GVect(225.00, +00.00)
-          >>> Vect(0, 0, 0).asGVect()
-          Traceback (most recent call last):
-          ...
-          VectInvalidException: Vector must be isValid (not zero-valued)
+          >>> Vect(0, 0, 0).asGVect() is None
+          True
         """
 
-        if not self.isValid:
-            raise VectInvalidException("Vector must be isValid (not zero-valued)")
+        if self.isValid:
 
-        pl = self.slope()  # upward pointing -> negative value, downward -> positive
+            pl = self.slope()  # upward pointing -> negative value, downward -> positive
 
-        unit_vect = self.versor()
-        if unit_vect.y == 0. and unit_vect.x == 0:
-            tr = 0.
+            unit_vect = self.versor()
+            if unit_vect.y == 0. and unit_vect.x == 0:
+                tr = 0.
+            else:
+                tr = (90. - degrees(atan2(unit_vect.y, unit_vect.x))) % 360.
+
+            return GVect(tr, pl)
+
         else:
-            tr = (90. - degrees(atan2(unit_vect.y, unit_vect.x))) % 360.
 
-        return GVect(tr, pl)
+            return None
 
-    def asGAxis(self):
+    def asGAxis(self) -> Optional['GAxis']:
         """
         Calculate the geological axis parallel to the Vect instance.
         Trend range: [0°, 360°[
@@ -715,18 +754,16 @@ class Vect(Point):
           GAxis(180.00, +00.00)
           >>> Vect(-1, -1, 0).asGAxis()
           GAxis(225.00, +00.00)
-          >>> Vect(0, 0, 0).asGAxis()
-          Traceback (most recent call last):
-          ...
-          VectInvalidException: Vector must be isValid (not zero-valued)
+          >>> Vect(0, 0, 0).asGAxis() is None
+          True
         """
 
-        if not self.isValid:
-            raise VectInvalidException("Vector must be isValid (not zero-valued)")
+        if self.isValid:
+            return self.asGVect().asGAxis()
+        else:
+            return None
 
-        return self.asGVect().asGAxis()
-
-    def vDot(self, another):
+    def vDot(self, another) -> float:
         """
         Vector scalar multiplication.
 
@@ -741,7 +778,7 @@ class Vect(Point):
 
         return self.x * another.x + self.y * another.y + self.z * another.z
 
-    def angleCos(self, another):
+    def angleCos(self, another) -> Optional[float]:
         """
         Return the cosine of the angle between two vectors.
 
@@ -752,28 +789,24 @@ class Vect(Point):
           -1.0
           >>> Vect(1,0,0).angleCos(Vect(1,0,0))
           1.0
-          >>> Vect(0, 0, 0).angleCos(Vect(1,0,0))
-          Traceback (most recent call last):
-          ...
-          VectInvalidException: Vector must be isValid (not zero-valued)
-          >>> Vect(1, 0, 0).angleCos(Vect(0,0,0))
-          Traceback (most recent call last):
-          ...
-          VectInvalidException: Vector must be isValid (not zero-valued)
+          >>> Vect(0, 0, 0).angleCos(Vect(1,0,0)) is None
+          True
+          >>> Vect(1, 0, 0).angleCos(Vect(0,0,0)) is None
+          True
         """
 
         if not (self.isValid and another.isValid):
-            raise VectInvalidException("Vector must be isValid (not zero-valued)")
-
-        val = self.vDot(another) / (self.len3D * another.len3D)
-        if val > 1.0:
-            return 1.0
-        elif val < -1.0:
-            return -1.0
+            return  None
         else:
-            return val
+            val = self.vDot(another) / (self.len3D * another.len3D)
+            if val > 1.0:
+                return 1.0
+            elif val < -1.0:
+                return -1.0
+            else:
+                return val
 
-    def angle(self, another):
+    def angle(self, another) -> Optional[float]:
         """
         Calculate angle between two vectors, as degrees
         in 0° - 180° range.
@@ -787,22 +820,18 @@ class Vect(Point):
           180.0
           >>> Vect(1, 1, 1).angle(Vect(1, 1,1 ))
           0.0
-          >>> Vect(0, 0, 0).angle(Vect(1,0,0))
-          Traceback (most recent call last):
-          ...
-          VectInvalidException: Vector must be isValid (not zero-valued)
-          >>> Vect(1, 0, 0).angle(Vect(0,0,0))
-          Traceback (most recent call last):
-          ...
-          VectInvalidException: Vector must be isValid (not zero-valued)
+          >>> Vect(0, 0, 0).angle(Vect(1,0,0)) is None
+          True
+          >>> Vect(1, 0, 0).angle(Vect(0,0,0)) is None
+          True
         """
 
         if not (self.isValid and another.isValid):
-            raise VectInvalidException("Vector must be isValid (not zero-valued)")
+            return None
+        else:
+            return degrees(acos(self.angleCos(another)))
 
-        return degrees(acos(self.angleCos(another)))
-
-    def isAlmostParallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+    def isAlmostParallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD) -> Optional[bool]:
         """
         Check that two Vect are sub-parallel,
 
@@ -817,22 +846,18 @@ class Vect(Point):
           False
           >>> Vect(1, 0, 0).isAlmostParallel(Vect(-1, 0, 0))
           False
-          >>> Vect(0, 0, 0).isAlmostParallel(Vect(1,0,0))
-          Traceback (most recent call last):
-          ...
-          VectInvalidException: Vector must be isValid (not zero-valued)
-          >>> Vect(1, 0, 0).isAlmostParallel(Vect(0,0,0))
-          Traceback (most recent call last):
-          ...
-          VectInvalidException: Vector must be isValid (not zero-valued)
+          >>> Vect(0, 0, 0).isAlmostParallel(Vect(1,0,0)) is None
+          True
+          >>> Vect(1, 0, 0).isAlmostParallel(Vect(0,0,0)) is None
+          True
         """
 
         if not (self.isValid and another.isValid):
-            raise VectInvalidException("Vector must be isValid (not zero-valued)")
+            return None
+        else:
+            return self.angle(another) <= angle_tolerance
 
-        return self.angle(another) <= angle_tolerance
-
-    def isSubOrthogonal(self, another):
+    def isSubOrthogonal(self, another) -> Optional[bool]:
         """
         Check whether two vectors are sub-orhogonal.
 
@@ -846,11 +871,16 @@ class Vect(Point):
           True
           >>> Vect(1, 0, 0).isSubOrthogonal(Vect(0, 0.9999999999999, 0))
           True
+          >>> Vect(1, 0, 0).isSubOrthogonal((Vect(0, 0, 0))) is None
+          True
         """
 
-        return are_close(0, self.angleCos(another))
+        if not (self.isValid and another.isValid):
+            return None
+        else:
+            return are_close(0, self.angleCos(another))
 
-    def vCross(self, another):
+    def vCross(self, another) -> 'Vect':
         """
         Vector product (cross product).
 
@@ -866,7 +896,7 @@ class Vect(Point):
         x, y, z = arr2tuple(np.cross(self.a[:3], another.a[:3]))
         return Vect(x, y, z)
 
-    def byMatrix(self, array3x3):
+    def byMatrix(self, array3x3) -> 'Vect':
         """
         Matrix multiplication of a vector.
 
