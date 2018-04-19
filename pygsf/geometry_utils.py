@@ -115,7 +115,7 @@ def angle_east_clock(x: float, y: float) -> Optional[float]:
 
 def angle_north_clock(x: float, y: float) -> Optional[float]:
     """
-    Calculate the angle from North (in uDegrees, positive clockwise) in the 2D plane
+    Calculate the angle from North (in degrees, positive clockwise) in the 2D plane
     given x (East) and y (North) Cartesian xyz.
 
     Examples:
