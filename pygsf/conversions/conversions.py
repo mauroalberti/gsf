@@ -17,3 +17,5 @@ def string2dict(str, valsep=",", kvsep="="):
     vals = str.split(valsep)
     kv_vals = map(lambda kvstr: kvstr.strip().split(kvsep), vals)
     return dict(kv_vals)
+
+

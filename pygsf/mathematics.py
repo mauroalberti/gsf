@@ -111,10 +111,47 @@ def are_close(a: float, b: float, rtol: float = 1e-012, atol: float = 1e-12, equ
     return abs(a - b) <= max(rtol * max(abs(a), abs(b)), atol)
 
 
-def _test():
-    import doctest
-    return doctest.testmod()
+def apprFloat(val: [int, float], ndec: int=1):
+    """
+    Rounds a numeric value to ndec.
+
+    :param val: value to round
+    :param ndec: number of decimals used
+    :return: rounded float value
+
+    Examples:
+      >>> apprFloat(0.00001)
+      0.0
+      >>> apprFloat(1.425324e-7)
+      0.0
+    """
+
+    rval = round(val, ndec)
+    if rval == 0.0:
+        rval = round(0.0, ndec)
+
+    return rval
+
+
+def apprFTuple(tup: tuple, ndec=1):
+    """
+    Rounds numeric values inside a tuple to ndec decimals
+
+    :param tup: tuple of int/float/exp values
+    :param ndec: number of decimals used
+    :return: tuple with rounded numbers
+
+    Examples:
+      >>> apprFTuple((-2.4492935982947064e-16, 1.0))
+      (0.0, 1.0)
+      >>> apprFTuple(((-1.0, -1.8369701987210297e-16)))
+      (-1.0, 0.0)
+    """
+
+    return tuple(map(lambda val: apprFloat(val, ndec), tup))
 
 
 if __name__ == '__main__':
-    _test()
+
+    import doctest
+    doctest.testmod()
