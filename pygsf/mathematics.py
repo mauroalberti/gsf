@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from math import isnan, isinf
+from math import isnan, isinf, sqrt
+import numpy as np
+
+from typing import Dict, Tuple, List
+
+
+isfinite = np.isfinite
+array = np.array
 
 
 def is_number(s: str) -> bool:
@@ -149,6 +156,40 @@ def apprFTuple(tup: tuple, ndec=1):
     """
 
     return tuple(map(lambda val: apprFloat(val, ndec), tup))
+
+
+
+
+def normalizeXYZ(x: [int, float], y: [int, float], z: [int, float]) -> Tuple[float, float, float]:
+    """
+    Normalize numeric values.
+
+    :param x: x numeric value
+    :param y: y numeric value
+    :param z: z numeric value
+    :return: a tuple of three float values
+    """
+
+    # input vals checks
+    vals = [x, y, z]
+    if not all(map(lambda val: isinstance(val, (int, float)), vals)):
+        raise InputValuesException("Input values must be integer or float")
+    elif not all(map(isfinite, vals)):
+        raise InputValuesException("Input values must be finite")
+    elif x == 0.0 and y == 0.0 and z == 0.0:
+        raise InputValuesException("Input values cannot be all zero")
+
+    nv = sqrt(x*x + y*y + z*z)
+
+    return x/nv, y/nv, z/nv
+
+
+class InputValuesException(Exception):
+    """
+    Exception for values input.
+    """
+
+    pass
 
 
 if __name__ == '__main__':
