@@ -5,6 +5,8 @@ import numpy as np
 
 from typing import Dict, Tuple, List
 
+from .default_parameters import *
+
 
 isfinite = np.isfinite
 array = np.array
@@ -158,9 +160,7 @@ def apprFTuple(tup: tuple, ndec=1):
     return tuple(map(lambda val: apprFloat(val, ndec), tup))
 
 
-
-
-def normalizeXYZ(x: [int, float], y: [int, float], z: [int, float]) -> Tuple[float, float, float]:
+def normXYZ(x: [int, float], y: [int, float], z: [int, float]):
     """
     Normalize numeric values.
 
@@ -176,12 +176,15 @@ def normalizeXYZ(x: [int, float], y: [int, float], z: [int, float]) -> Tuple[flo
         raise InputValuesException("Input values must be integer or float")
     elif not all(map(isfinite, vals)):
         raise InputValuesException("Input values must be finite")
-    elif x == 0.0 and y == 0.0 and z == 0.0:
-        raise InputValuesException("Input values cannot be all zero")
 
-    nv = sqrt(x*x + y*y + z*z)
+    mag = sqrt(x*x + y*y + z*z)
 
-    return x/nv, y/nv, z/nv
+    if mag <= MIN_VECTOR_MAGNITUDE:
+        norm_xyz = None
+    else:
+        norm_xyz = x/mag, y/mag, z/mag
+
+    return mag, norm_xyz
 
 
 class InputValuesException(Exception):
