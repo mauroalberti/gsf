@@ -4,7 +4,7 @@ import numpy as np
 
 from .default_parameters import *
 from .arrays import arrays_are_close
-from .geometry import Vect, GAxis, GVect, GPlane
+from .geography import Vect, GAxis, GVect, GPlane
 from .faults import Slick, GFault
 from .quaternions import Quaternion
 
@@ -17,8 +17,8 @@ class PTBAxes(object):
 
     def __repr__(self):
         return "PTBAxes(P: {}, T: {})".format(
-            self._p_versor.asGAxis(),
-            self._t_versor.asGAxis())
+            self._p_versor.asAxis(),
+            self._t_versor.asAxis())
 
     def __init__(self, p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)):
         """
@@ -53,12 +53,12 @@ class PTBAxes(object):
         or with unknown/uncertain movement sense (False).
 
         Example:
-          >>> PTBAxes.from_faultslick(GFault(GPlane(90, 45), Slick(GVect(90, 45))))
+          >>> PTBAxes.from_faultslick(GFault(PPlane(90, 45), Slick(GVect(90, 45))))
           PTBAxes(P: GAxis(000.00, -90.00), T: GAxis(090.00, +00.00))
         """
 
         s_versor = fault_slick.slick.geom.versor()
-        f_versor = fault_slick.gplane._normal_gv_frwrd().versor()
+        f_versor = fault_slick.gplane._normal_orien_frwrd().versor()
 
         obj = cls()
         obj._p_versor = (f_versor - s_versor).versor()
@@ -197,7 +197,7 @@ class PTBAxes(object):
           GAxis(000.00, +90.00)
         """
 
-        return self.p_versor.asGAxis()
+        return self.p_versor.asAxis()
 
     @property
     def t_axis(self):
@@ -211,7 +211,7 @@ class PTBAxes(object):
           GAxis(090.00, +00.00)
         """
 
-        return self.t_versor.asGAxis()
+        return self.t_versor.asAxis()
 
     @property
     def b_axis(self):
@@ -225,7 +225,7 @@ class PTBAxes(object):
           GAxis(270.00, +00.00)
         """
 
-        return self.b_versor.asGAxis()
+        return self.b_versor.asAxis()
 
     @property
     def m_plane(self):
@@ -233,9 +233,9 @@ class PTBAxes(object):
         Calculate M plane.
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(0, 90), t_axis=GAxis(90, 0)).m_plane.isAlmostParallel(GPlane(0.0, 90.0))
+          >>> PTBAxes(p_axis=GAxis(0, 90), t_axis=GAxis(90, 0)).m_plane.isAlmostParallel(PPlane(0.0, 90.0))
           True
-          >>> (PTBAxes(p_axis=GAxis(45, 45), t_axis=GAxis(225, 45)).m_plane).isAlmostParallel(GPlane(315.00, 90.00))
+          >>> (PTBAxes(p_axis=GAxis(45, 45), t_axis=GAxis(225, 45)).m_plane).isAlmostParallel(PPlane(315.00, 90.00))
           True
         """
 

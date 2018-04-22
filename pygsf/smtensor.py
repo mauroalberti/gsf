@@ -1,107 +1,115 @@
 # -*- coding: utf-8 -*-
 
+
+from __future__ import division
+#from __future__ import annotations
+
+from math import sqrt, sin, cos, radians, acos, atan, isnan, pi
 import numpy as np
 
-from .quaternions import Quaternion
+from typing import Dict, Tuple, List
+
+from .default_parameters import *
+from .mathematics import *
+from .geometry_utils import *
+from .arrays import point_solution, arrays_are_close, arr2tuple
 
 
-class SMTensor(object):
+isfinite = np.isfinite
+array = np.array
+
+
+class Azimuth(object):
     """
-    Class representing the seismic moment tensor
+    Azim class
     """
 
-    def __repr__(self):
+    def __init__(self, val: [int, float], unit: str="d"):
 
-        return "SMTensor(\n {:.4f}, {:.4f}, {:.4f}\n {:.4f}, {:.4f}, {:.4f}\n {:.4f}, {:.4f}, {:.4f})".format(
-            self.t[0, 0], self.t[0, 1], self.t[0, 2],
-            self.t[1, 0], self.t[1, 1], self.t[1, 2],
-            self.t[2, 0], self.t[2, 1], self.t[2, 2],)
+        # unit check
+        if unit not in ("d", "r"):
+            raise GeomInputException("Unit input must be d or r")
 
-    def __init__(self, m11=float('nan'), m12=float('nan'), m13=float('nan'),
-                       m21=float('nan'), m22=float('nan'), m23=float('nan'),
-                       m31=float('nan'), m32=float('nan'), m33=float('nan')):
+        # val check
+        if not isinstance(val, (int, float)):
+            raise GeomInputException("Input value must be integer or float")
+        elif not isfinite(val):
+            raise GeomInputException("Input value must be finite")
+
+        if unit == "d":
+            val = radians(val)
+
+        self.a = val % (2*pi)
+
+    def __repr__(self) -> str:
+
+        return "Azim({:.2f})".format(degrees(self.a))
+
+    def toXY(self):
         """
-        Constructor from scalar xyz.
+        Converts an azimuth to x-y components.
 
-        :param m11: float
-        :param m12: float
-        :param m13: float
-        :param m21: float
-        :param m22: float
-        :param m23: float
-        :param m31: float
-        :param m32: float
-        :param m33: float
+        :return: a tuple storing x and y values:
+        :type: tuple of two floats
 
-        Example:
-          >>> SMTensor(1, 0, 0, 0, 1, 0, 0, 0, 1)
-          SMTensor(
-           1.0000, 0.0000, 0.0000
-           0.0000, 1.0000, 0.0000
-           0.0000, 0.0000, 1.0000)
+        Examples:
+          >>> apprFTuple(Azim(0).toXY())
+          (0.0, 1.0)
+          >>> apprFTuple(Azim(90).toXY())
+          (1.0, 0.0)
+          >>> apprFTuple(Azim(180).toXY())
+          (0.0, -1.0)
+          >>> apprFTuple(Azim(270).toXY())
+          (-1.0, 0.0)
+          >>> apprFTuple(Azim(360).toXY())
+          (0.0, 1.0)
         """
 
-        self.t = np.array([[m11, m12, m13], [m21, m22, m23], [m31, m32, m33]])
+        return sin(self.a), cos(self.a)
 
     @classmethod
-    def from_quater(cls, quater):
+    def fromXY(cls, x: [int, float], y: [int, float]) -> 'Azim':
         """
-        Class constructor from a Quaternion instance.
-        Formula 34 in Kagan, Y., 2008. On geometric complexity of earthquake focal zone and fault zone.
-        Cited from Kagan & Jackson, 1994.
+        Calculates azimuth given cartesian components.
 
-        :param quater: a Quaternion instance
-        :return: SMTensor instance
+        :param cls: class
+        :param x: x component
+        :param y: y component
+        :return: Azim instance
+
+        Examples:
+          >>> Azim.fromXY(1, 1)
+          Azim(45.00)
+          >>> Azim.fromXY(1, -1)
+          Azim(135.00)
+          >>> Azim.fromXY(-1, -1)
+          Azim(225.00)
+          >>> Azim.fromXY(-1, 1)
+          Azim(315.00)
+          >>> Azim.fromXY(0, 0)
+          Traceback (most recent call last):
+          ...
+          GeomInputException: Input values cannot be both zero
+
         """
 
-        q0, q1, q2, q3 = quater.normalize().toXYZ()
+        # input vals check
+        vals = [x, y]
+        if not all(map(lambda val: isinstance(val, (int, float)), vals)):
+            raise GeomInputException("Input values must be integer or float")
+        elif not all(map(isfinite, vals)):
+            raise GeomInputException("Input values must be finite")
+        elif x == 0.0 and y == 0.0:
+            raise GeomInputException("Input values cannot be both zero")
 
-        q0q0 = q0 * q0
-        q0q1 = q0 * q1
-        q0q2 = q0 * q2
-        q0q3 = q0 * q3
+        angle = atan2(x, y)
 
-        q1q1 = q1 * q1
-        q1q2 = q1 * q2
-        q1q3 = q1 * q3
+        return cls(angle, unit="r")
 
-        q2q2 = q2 * q2
-        q2q3 = q2 * q3
 
-        q3q3 = q3 * q3
+class Plunge(object):
+    """
+    Class representing a plunge
+    """
 
-        m11 = q1q1*q1q1 - 6*q1q2*q1q2  - 2*q1q3*q1q3 + 2*q0q1*q0q1 + 8*q0q1*q2q3 + q2q2*q2q2 \
-             + 2*q2q3*q2q3 - 2*q0q2*q0q2 + q3q3*q3q3  - 6*q0q3*q0q3 + q0q0*q0q0
-
-        m12 = 4*(q1q1*q1q2 - q1q2*q2q2 - q0q3*q3q3 + q0q0*q0q3)
-
-        m13 = 2*(q1q1*q1q3 - 3*q0q1*q1q2 -3*q1q2*q2q3 - q1q3*q3q3
-                 + 3*q0q0*q1q3 + q0q2*q2q2 + 3*q0q2*q3q3 - q0q0*q0q2)
-
-        m21 = m12
-
-        m22 = - q1q1*q1q1 + 6*q1q2*q1q2 - 2*q1q3*q1q3 + 2*q0q1*q0q1 + 8*q0q1*q2q3 \
-               -q2q2*q2q2 + 2*q2q3*q2q3 - 2*q0q2*q0q2 - q3q3*q3q3 + 6*q0q3*q0q3 - q0q0*q0q0
-
-        m23 = 2*(q0q1*q1q1 + 3*q1q1*q2q3 - 3*q0q1*q2q2 + 3*q0q1*q3q3
-                 - q0q0*q0q1 - q2q2*q2q3 + q2q3*q3q3 -3*q0q0*q2q3)
-
-        m31 = m13
-
-        m32 = m23
-
-        m33 = 4*(q1q3*q1q3 - q0q1*q0q1 - 4*q0q1*q2q3 - q2q3*q2q3 + q0q2*q0q2)
-
-        obj = cls()
-        obj.t = np.array(
-            [m11, m12, m13],
-            [m21, m22, m23],
-            [m31, m32, m33])
-
-        return obj
-
-if __name__ == "__main__":
-
-    import doctest
-    doctest.testmod()
-
+    def __init__(self, val: [int, float], 

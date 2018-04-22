@@ -1,6 +1,6 @@
 
 
-from pygsf.geometry import *
+from pygsf.geography import *
 
 gv1 = GVect(100, 23)
 

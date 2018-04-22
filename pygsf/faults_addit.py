@@ -4,7 +4,7 @@
 class GFault(object):
     """
     Represent a couple of geological observations,
-    made up by a fault plane, represented by a GPlane instance,
+    made up by a fault plane, represented by a PPlane instance,
     and a slickenline observation, represented by a Slick instance.
     """
 
@@ -13,19 +13,19 @@ class GFault(object):
         Create an instance of a GFault.
 
         Example:
-          >>> GFault(GPlane(90, 45), Slick(GAxis(90, 45)))
-          GFault(GPlane(090.00, +45.00), Slick(090.00, +45.00, False))
-          >>> GFault(GPlane(90, 45), Slick(GAxis(80, 45)))
+          >>> GFault(PPlane(90, 45), Slick(GAxis(90, 45)))
+          GFault(PPlane(090.00, +45.00), Slick(090.00, +45.00, False))
+          >>> GFault(PPlane(90, 45), Slick(GAxis(80, 45)))
           Traceback (most recent call last):
           ...
           GFaultInputTypeException: Slick is not within fault plane
         """
 
         if not isinstance(fault_plane, GPlane):
-            raise GFaultInputTypeException("Provided fault plane must be a GPlane instance")
+            raise GFaultInputTypeException("Provided fault plane must be a PPlane instance")
         elif not isinstance(slickenline, Slick):
             raise GFaultInputTypeException("Provided slickenline must be a Slick instance")
-        elif not are_close(fault_plane._normal_gv_frwrd().angle(slickenline.geom), 90.):
+        elif not are_close(fault_plane._normal_orien_frwrd().angle(slickenline.geom), 90.):
             raise GFaultInputTypeException("Slick is not within fault plane")
 
         self._fltpln = fault_plane
@@ -34,11 +34,11 @@ class GFault(object):
     @property
     def gplane(self):
         """
-        Return fault plane, as a GPlane instance.
+        Return fault plane, as a PPlane instance.
 
         Example:
-          >>> GFault(GPlane(90, 45), Slick(GAxis(90, 45))).gplane
-          GPlane(090.00, +45.00)
+          >>> GFault(PPlane(90, 45), Slick(GAxis(90, 45))).gplane
+          PPlane(090.00, +45.00)
         """
 
         return self._fltpln
@@ -49,7 +49,7 @@ class GFault(object):
         Return the slickenline associated with the fault.
 
         Example:
-          >>> GFault(GPlane(90, 45), Slick(GAxis(90, 45))).slick
+          >>> GFault(PPlane(90, 45), Slick(GAxis(90, 45))).slick
           Slick(090.00, +45.00, False)
         """
 
@@ -60,7 +60,7 @@ class GFault(object):
         Return the geometric object (GVect or GAxis) associated with slickenline.
 
         Example:
-          >>> GFault(GPlane(90, 45), Slick(GAxis(90, 45))).slick_geom()
+          >>> GFault(PPlane(90, 45), Slick(GAxis(90, 45))).slick_geom()
           GAxis(090.00, +45.00)
         """
 
@@ -72,9 +72,9 @@ class GFault(object):
         Check if the Slick instance in the GFault instance has a known movement sense.
 
         Example:
-          >>> GFault(GPlane(90, 45), Slick(GAxis(90, 45))).known_sense
+          >>> GFault(PPlane(90, 45), Slick(GAxis(90, 45))).known_sense
           False
-          >>> GFault(GPlane(90, 45), Slick(GVect(90, 45))).known_sense
+          >>> GFault(PPlane(90, 45), Slick(GVect(90, 45))).known_sense
           True
         """
 
@@ -85,8 +85,8 @@ class GFault(object):
         Create GFault instance with known movement sense from another instance.
 
         Example:
-          >>> GFault(GPlane(0, 45), Slick(GAxis(0, 45))).set_known_sense()
-          GFault(GPlane(000.00, +45.00), Slick(000.00, +45.00, True))
+          >>> GFault(PPlane(0, 45), Slick(GAxis(0, 45))).set_known_sense()
+          GFault(PPlane(000.00, +45.00), Slick(000.00, +45.00, True))
         """
 
         return GFault(self.gplane, self.slick.set_known_sense())
@@ -96,8 +96,8 @@ class GFault(object):
         Create GFault instance with unknown/uncertain movement sense.
 
         Example:
-          >>> GFault(GPlane(0, 45), Slick(GVect(0, 45))).set_unknown_sense()
-          GFault(GPlane(000.00, +45.00), Slick(000.00, +45.00, False))
+          >>> GFault(PPlane(0, 45), Slick(GVect(0, 45))).set_unknown_sense()
+          GFault(PPlane(000.00, +45.00), Slick(000.00, +45.00, False))
         """
 
         return GFault(self.gplane, self.slick.set_unknown_sense())
@@ -112,12 +112,12 @@ class GFault(object):
         has defined movement sense, otherwise raise SlickSenseException.
 
         Example:
-          >>> GFault(GPlane(90, 45), Slick(GAxis(90, 45))).opposite_mov()
+          >>> GFault(PPlane(90, 45), Slick(GAxis(90, 45))).opposite_mov()
           Traceback (most recent call last):
           ...
           SlickSenseException: Fault slickenline must have known movement sense
-          >>> GFault(GPlane(90, 45), Slick(GVect(90, 45))).opposite_mov()
-          GFault(GPlane(090.00, +45.00), Slick(270.00, -45.00, True))
+          >>> GFault(PPlane(90, 45), Slick(GVect(90, 45))).opposite_mov()
+          GFault(PPlane(090.00, +45.00), Slick(270.00, -45.00, True))
         """
 
         if not self.known_sense:
@@ -134,7 +134,7 @@ class GFault(object):
         :rtype: double
 
         Examples:
-          >>> fault_plane = GPlane(180, 45)
+          >>> fault_plane = PPlane(180, 45)
           >>> GFault(fault_plane, Slick.from_trpl(90, 0)).rake()
           0.0
           >>> GFault(fault_plane, Slick.from_trpl(0, -45)).rake()
@@ -147,7 +147,7 @@ class GFault(object):
           Traceback (most recent call last):
           ...
           GFaultInputTypeException: Slickeline must have known movement sense
-          >>> fault_plane = GPlane(90, 90)
+          >>> fault_plane = PPlane(90, 90)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).rake()
           0.0
           >>> GFault(fault_plane, Slick.from_trpl(90, 90)).rake()
@@ -158,7 +158,7 @@ class GFault(object):
           -179.0000000000001
           >>> GFault(fault_plane, Slick.from_trpl(180, -1)).rake()
           179.0000000000001
-          >>> fault_plane = GPlane(90, 0)
+          >>> fault_plane = PPlane(90, 0)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).rake()
           0.0
           >>> GFault(fault_plane, Slick.from_trpl(90, 0)).rake()
@@ -175,28 +175,28 @@ class GFault(object):
             raise GFaultInputTypeException("Slickeline must have known movement sense")
 
         sl_gv = self.slick_geom()
-        angle = sl_gv.angle(self.gplane.rhrStrikeGVect())
+        angle = sl_gv.angle(self.gplane.rhrStrikeOrien())
 
-        if self.gplane.dipDirGVect().angle(sl_gv) < 90.0:
+        if self.gplane.dipDirOrien().angle(sl_gv) < 90.0:
             return -angle
         else:
             return angle
 
     def is_normal(self, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
         """
-        Checks if a fault has _normal_gv_frwrd movements.
+        Checks if a fault has _normal_orien_frwrd movements.
 
         :param rk_threshold: the threshold, in degrees, for the rake angle
         :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
-        :return: True if _normal_gv_frwrd, False if not applicable
+        :return: True if _normal_orien_frwrd, False if not applicable
 
         Examples:
-          >>> fault_plane = GPlane(90, 90)
+          >>> fault_plane = PPlane(90, 90)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).is_normal()
           False
           >>> GFault(fault_plane, Slick.from_trpl(90, 90)).is_normal()
           False
-          >>> fault_plane = GPlane(90, 45)
+          >>> fault_plane = PPlane(90, 45)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).is_normal()
           False
           >>> GFault(fault_plane, Slick.from_trpl(90, 45)).is_normal()
@@ -222,12 +222,12 @@ class GFault(object):
         :return: True if reverse, False if not applicable
 
         Examples:
-          >>> fault_plane = GPlane(90, 90)
+          >>> fault_plane = PPlane(90, 90)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).is_reverse()
           False
           >>> GFault(fault_plane, Slick.from_trpl(90, 90)).is_reverse()
           False
-          >>> fault_plane = GPlane(90, 45)
+          >>> fault_plane = PPlane(90, 45)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).is_reverse()
           False
           >>> GFault(fault_plane, Slick.from_trpl(270, -45)).is_reverse()
@@ -253,19 +253,19 @@ class GFault(object):
         :return: True if right-lateral, False if not applicable
 
         Examples:
-          >>> fault_plane = GPlane(90, 90)
+          >>> fault_plane = PPlane(90, 90)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).is_right_lateral()
           False
           >>> GFault(fault_plane, Slick.from_trpl(180, 0)).is_right_lateral()
           True
-          >>> fault_plane = GPlane(90, 45)
+          >>> fault_plane = PPlane(90, 45)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).is_right_lateral()
           False
           >>> GFault(fault_plane, Slick.from_trpl(180, 0)).is_right_lateral()
           True
           >>> GFault(fault_plane, Slick.from_trpl(270, -45)).is_right_lateral()
           False
-          >>> fault_plane = GPlane(90, 2)
+          >>> fault_plane = PPlane(90, 2)
           >>> GFault(fault_plane, Slick.from_trpl(180, 0)).is_right_lateral()
           False
         """
@@ -288,19 +288,19 @@ class GFault(object):
         :return: True if left-lateral, False if not applicable
 
         Examples:
-          >>> fault_plane = GPlane(90, 90)
+          >>> fault_plane = PPlane(90, 90)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).is_left_lateral()
           True
           >>> GFault(fault_plane, Slick.from_trpl(180, 0)).is_left_lateral()
           False
-          >>> fault_plane = GPlane(90, 45)
+          >>> fault_plane = PPlane(90, 45)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).is_left_lateral()
           True
           >>> GFault(fault_plane, Slick.from_trpl(180, 0)).is_left_lateral()
           False
           >>> GFault(fault_plane, Slick.from_trpl(270, -45)).is_left_lateral()
           False
-          >>> fault_plane = GPlane(90, 2)
+          >>> fault_plane = PPlane(90, 2)
           >>> GFault(fault_plane, Slick.from_trpl(0, 0)).is_left_lateral()
           False
         """

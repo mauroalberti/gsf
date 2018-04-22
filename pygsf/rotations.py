@@ -4,7 +4,7 @@ from math import radians, sin, cos
 
 from typing import List
 
-from .geometry import GVect
+from .geography import GVect
 from .ptbaxes import PTBAxes
 from .quaternions import *
 
@@ -66,7 +66,7 @@ class RotationAxis(object):
 
             unit_quat = quat.normalize()
             rot_ang = unit_quat.rotation_angle()
-            rot_gvect = unit_quat.vector.asGVect()
+            rot_gvect = unit_quat.vector.asOrien()
 
         obj = cls()
         obj.gv = rot_gvect
@@ -147,7 +147,7 @@ class RotationAxis(object):
         """
 
         obj = cls()
-        obj.gv = vector.asGVect()
+        obj.gv = vector.asOrien()
         obj.a = angle
 
         return obj

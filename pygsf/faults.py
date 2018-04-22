@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from .geometry import *
+from .geography import *
 from .mathematics import are_close
 
 
 class Slick(GVect):
     """
     Slickeline.
-    It can be defined through a GVect instance, in which case it has a movement sense,
+    It can be defined through a OrienM instance, in which case it has a movement sense,
     or via a GAxis, when the movement sense is unknown or not sure.
-    When the movement sense is known, the GVect instance indicates the displacement of the block that is:
+    When the movement sense is known, the OrienM instance indicates the displacement of the block that is:
     - for a horizontal or a dipping, non vertical fault: the upper block
     - for a vertical fault: the block individuated by the (formal) dip direction.
     """
@@ -119,7 +119,7 @@ class Slick(GVect):
 
 class GFault(GPlane):
     """
-    Represent a fault plane, represented by a GPlane instance,
+    Represent a fault plane, represented by a PPlane instance,
     and zero, one or more slickenlines, represented by a list of Slick instances (None when no slickenlines).
     """
 
@@ -144,7 +144,7 @@ class GFault(GPlane):
         """
 
         if not isinstance(azim, (int, float)):
-            raise GFaultInputTypeException("Azimuth must be a number")
+            raise GFaultInputTypeException("Azim must be a number")
         if not isinstance(dip_ang, (int, float)):
             raise GFaultInputTypeException("Dip angle must be a number")
 

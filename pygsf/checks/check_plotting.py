@@ -1,5 +1,5 @@
 
-from pygsf.geometry import *
+from pygsf.geography import *
 from pygsf.geotype_checks import *
 from pygsf.plotting.stereonets import splot
 

@@ -8,9 +8,9 @@
 
 Currently the module allows to create several geometric and geological "objects" and to process them.
 
-Geometric classes comprise cartesian points (**Point**), vectors (**Vect**) and planes (**Plane**).
+Geometric classes comprise cartesian points (**Point**), vectors (**Vect**) and planes (**CPlane**).
 
-Geological direction and axes (**GVect** and **GAxis**), as well geological planes (**GPlane**), are expressed via usual geological notation, i.e., dip direction and dip angle.
+Geological direction and axes (**Orien** and **Axis**), as well geological planes (**PPlane**), are expressed via usual geological notation, i.e., dip direction and dip angle.
 
 For the processing of fault data, it is possible to create slickenline-type objects (**Slick**), with or without known movement sense. 
 

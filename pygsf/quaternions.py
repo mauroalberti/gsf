@@ -5,7 +5,7 @@ import numpy as np
 
 from .default_parameters import *
 from .mathematics import are_close
-from .geometry import Vect
+from .geography import Vect
 from .arrays import arrays_are_close
 
 
@@ -65,13 +65,13 @@ class Quaternion(object):
         """
         Return the vector component of the quaternion.
 
-        :return: Vect
+        :return: OrienM
 
         Example:
           >>> Quaternion(0.1, 1.2, 3.1, 0.9).vector
-          Vect(1.2000, 3.1000, 0.9000)
+          OrienM(1.2000, 3.1000, 0.9000)
           >>> Quaternion(6.1, 4.9, 1.03, 5.12).vector
-          Vect(4.9000, 1.0300, 5.1200)
+          OrienM(4.9000, 1.0300, 5.1200)
         """
 
         return Vect.from_array(self.q[1:])
@@ -127,7 +127,7 @@ class Quaternion(object):
         :return: Quaternion instance
 
         Example:
-          >>> Quaternion.from_vect(Vect(1, 0, 3))
+          >>> Quaternion.from_vect(OrienM(1, 0, 3))
           Quaternion(0.00000, 1.00000, 0.00000, 3.00000)
         """
 
@@ -389,7 +389,7 @@ class Quaternion(object):
         """
         Quaternion multiplication by a asVect.
 
-        :param vect: Vect instance .
+        :param vect: OrienM instance .
         :return: Quaternion instance.
         """
 
@@ -410,7 +410,7 @@ class Quaternion(object):
           Quaternion(8.00000, -9.00000, -2.00000, 11.00000)
           >>> Quaternion(1, 1, 3, 0) * Quaternion(1, 0, 0, 0)
           Quaternion(1.00000, 1.00000, 3.00000, 0.00000)
-          >>> Quaternion.identity() * Vect(1, 3, 2)
+          >>> Quaternion.identity() * OrienM(1, 3, 2)
           Quaternion(0.00000, 1.00000, 3.00000, 2.00000)
         """
 

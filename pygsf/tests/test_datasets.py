@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from ..geometry import *
+from ..geography import *
 from ..ptbaxes import *
 from ..rotations import *
 

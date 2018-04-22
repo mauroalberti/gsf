@@ -2,7 +2,7 @@
 
 import unittest
 
-from ..geometry import *
+from ..geography import *
 
 
 class TestGeometry(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestGeometry(unittest.TestCase):
 
     def test_gvect_general(self):
         """
-        Check expected GVect results for downward dip.
+        Check expected OrienM results for downward dip.
         """
 
         assert GVect(90, 90).isDownward
@@ -37,7 +37,7 @@ class TestGeometry(unittest.TestCase):
 
     def test_gplane_normal(self):
 
-        assert are_close(GPlane(90, 45)._normal_gv_frwrd().angle(GVect(90, -45)), 0.)
+        assert are_close(GPlane(90, 45)._normal_orien_frwrd().angle(GVect(90, -45)), 0.)
 
     def test_gplane_plane(self):
 
