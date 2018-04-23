@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-
-from .default_parameters import *
-from .arrays import arrays_are_close
-from .geometry import *
-from .faults import *
-from .quaternions import Quaternion
+from pygsf.geology.structural.faults import *
+from pygsf.spatial.transformations.quaternions import Quaternion
 
 
 class PTBAxes(object):
@@ -23,14 +18,14 @@ class PTBAxes(object):
     def __init__(self, p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)):
         """
         Create a new PTBAxes instances, given the two
-        P and T axes (provided as GAxis instances).
+        P and T axes (provided as Axis instances).
         T and P axes are recalculated to be strictly orthogonal,
         based on fixed T orientation.
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0))
-          PTBAxes(P: GAxis(000.00, +00.00), T: GAxis(090.00, +00.00))
-          >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(80, 0))
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0))
+          PTBAxes(P: Axis(000.00, +00.00), T: Axis(090.00, +00.00))
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(80, 0))
           Traceback (most recent call last):
           ...
           PTBAxesInputException: P and T axes must be sub-orthogonal
@@ -41,7 +36,7 @@ class PTBAxes(object):
 
         b_vect = t_axis.normVersor(p_axis)
 
-        self._t_versor = t_axis.as_versor()
+        self._t_versor = t_axis.asVersor()
         self._p_versor = b_vect.vCross(self._t_versor).versor()
 
     @classmethod
@@ -54,7 +49,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes.from_faultslick(GFault(PPlane(90, 45), Slick(GVect(90, 45))))
-          PTBAxes(P: GAxis(000.00, -90.00), T: GAxis(090.00, +00.00))
+          PTBAxes(P: Axis(000.00, -90.00), T: Axis(090.00, +00.00))
         """
 
         s_versor = fault_slick.slick.geom.versor()
@@ -79,11 +74,11 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes.from_vectors(t_vector=Vect(1,0,0), p_vector=Vect(0,1,0))
-          PTBAxes(P: GAxis(000.00, +00.00), T: GAxis(090.00, +00.00))
+          PTBAxes(P: Axis(000.00, +00.00), T: Axis(090.00, +00.00))
           >>> PTBAxes.from_vectors(t_vector=Vect(0,0,-1), p_vector=Vect(1,0,0))
-          PTBAxes(P: GAxis(090.00, +00.00), T: GAxis(000.00, +90.00))
+          PTBAxes(P: Axis(090.00, +00.00), T: Axis(000.00, +90.00))
           >>> PTBAxes.from_vectors(t_vector=Vect(1,1,0), p_vector=Vect(-1,1,0))
-          PTBAxes(P: GAxis(315.00, +00.00), T: GAxis(045.00, +00.00))
+          PTBAxes(P: Axis(315.00, +00.00), T: Axis(045.00, +00.00))
           >>> PTBAxes.from_vectors(t_vector=Vect(1, 1, 0), p_vector=Vect(0.5, 1, 0))
           Traceback (most recent call last):
           ...
@@ -151,7 +146,7 @@ class PTBAxes(object):
         :return: P versor instance
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)).p_versor
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).p_versor
           Vect(-0.0000, 1.0000, 0.0000)
         """
 
@@ -165,7 +160,7 @@ class PTBAxes(object):
         :return: T versor instance
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)).t_versor
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).t_versor
           Vect(1.0000, 0.0000, -0.0000)
         """
 
@@ -179,7 +174,7 @@ class PTBAxes(object):
         :return: B versor instance
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)).b_versor
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).b_versor
           Vect(0.0000, 0.0000, 1.0000)
         """
 
@@ -191,10 +186,10 @@ class PTBAxes(object):
         Return the P axis.
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)).p_axis
-          GAxis(000.00, +00.00)
-          >>> PTBAxes(p_axis=GAxis(0, 90), t_axis=GAxis(90, 0)).p_axis
-          GAxis(000.00, +90.00)
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).p_axis
+          Axis(000.00, +00.00)
+          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis(90, 0)).p_axis
+          Axis(000.00, +90.00)
         """
 
         return self.p_versor.asAxis()
@@ -205,10 +200,10 @@ class PTBAxes(object):
         Return the T axis.
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)).t_axis
-          GAxis(090.00, +00.00)
-          >>> PTBAxes(p_axis=GAxis(0, -90), t_axis=GAxis(90, 0)).t_axis
-          GAxis(090.00, +00.00)
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).t_axis
+          Axis(090.00, +00.00)
+          >>> PTBAxes(p_axis=Axis(0, -90), t_axis=Axis(90, 0)).t_axis
+          Axis(090.00, +00.00)
         """
 
         return self.t_versor.asAxis()
@@ -219,10 +214,10 @@ class PTBAxes(object):
         Calculate the B axis.
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)).b_axis
-          GAxis(000.00, -90.00)
-          >>> PTBAxes(p_axis=GAxis(0, 90), t_axis=GAxis(0, 0)).b_axis
-          GAxis(270.00, +00.00)
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).b_axis
+          Axis(000.00, -90.00)
+          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis(0, 0)).b_axis
+          Axis(270.00, +00.00)
         """
 
         return self.b_versor.asAxis()
@@ -233,9 +228,9 @@ class PTBAxes(object):
         Calculate M plane.
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(0, 90), t_axis=GAxis(90, 0)).m_plane.isAlmostParallel(PPlane(0.0, 90.0))
+          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis(90, 0)).m_plane.isAlmostParallel(PPlane(0.0, 90.0))
           True
-          >>> (PTBAxes(p_axis=GAxis(45, 45), t_axis=GAxis(225, 45)).m_plane).isAlmostParallel(PPlane(315.00, 90.00))
+          >>> (PTBAxes(p_axis=Axis(45, 45), t_axis=Axis(225, 45)).m_plane).isAlmostParallel(PPlane(315.00, 90.00))
           True
         """
 
@@ -251,16 +246,16 @@ class PTBAxes(object):
         :return: Boolean.
 
         Examples:
-          >>> fm1 = PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0))
-          >>> fm2 = PTBAxes(p_axis=GAxis(0, 0.5), t_axis=GAxis(90, 0))
+          >>> fm1 = PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0))
+          >>> fm2 = PTBAxes(p_axis=Axis(0, 0.5), t_axis=Axis(90, 0))
           >>> fm1.almost_equal(fm2)
           True
-          >>> fm3 = PTBAxes(p_axis=GAxis(180.5, 0), t_axis=GAxis(90.5, 0))
+          >>> fm3 = PTBAxes(p_axis=Axis(180.5, 0), t_axis=Axis(90.5, 0))
           >>> fm1.almost_equal(fm3)
           True
           >>> fm3.almost_equal(fm2)
           True
-          >>> fm4 = PTBAxes(p_axis=GAxis(181.5, 0), t_axis=GAxis(91.5, 0))
+          >>> fm4 = PTBAxes(p_axis=Axis(181.5, 0), t_axis=Axis(91.5, 0))
           >>> fm1.almost_equal(fm4)
           False
         """
@@ -283,7 +278,7 @@ class PTBAxes(object):
         :return: a 3x3 numpy arrays fo floats.
 
         Example:
-          >>> arrays_are_close(PTBAxes(p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)).to_matrix(), np.identity(3))
+          >>> arrays_are_close(PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).to_matrix(), np.identity(3))
           True
         """
 
@@ -304,9 +299,9 @@ class PTBAxes(object):
         :return: a Quaternion instance.
 
         Example:
-          >>> PTBAxes(p_axis=GAxis(232, 41), t_axis=GAxis(120, 24)).to_quaternion()
+          >>> PTBAxes(p_axis=Axis(232, 41), t_axis=Axis(120, 24)).to_quaternion()
           Quaternion(-0.41567, 0.85017, -0.31120, -0.08706)
-          >>> PTBAxes(p_axis=GAxis(51, 17), t_axis=GAxis(295, 55)).to_quaternion()
+          >>> PTBAxes(p_axis=Axis(51, 17), t_axis=Axis(295, 55)).to_quaternion()
           Quaternion(0.38380, 0.30459, 0.80853, -0.32588)
         """
 

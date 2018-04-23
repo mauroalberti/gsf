@@ -6,7 +6,7 @@ from math import radians, sin, cos, tan
 import numpy as np
 
 
-from .rotations import RotationAxis
+from pygsf.orientations.rotations import RotationAxis
 
 
 def scaling_matrix(scale_factor_x, scale_factor_y, scale_factor_z):

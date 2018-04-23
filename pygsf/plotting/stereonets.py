@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import mplstereonet as ms
 
 
-from ..geotype_checks import *
-from ..conversions.conversions import *
+from pygsf.orientations.geotype_checks import *
+from ..utils.conversions import *
 
 
 default_gvect_marker_upward_symbol = "x"

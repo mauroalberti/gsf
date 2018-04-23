@@ -2,9 +2,7 @@
 
 from __future__ import division
 
-import numpy as np
-
-from .mathematics import are_close
+from pygsf.mathematics.mathematics import *
 
 
 def arr2tuple(arr1D) -> tuple:

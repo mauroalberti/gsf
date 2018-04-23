@@ -5,7 +5,7 @@ import unittest
 
 from .test_datasets import *
 
-from ..rotations import *
+from pygsf.orientations.rotations import *
 
 
 class TestFocalMechamismRotations(unittest.TestCase):

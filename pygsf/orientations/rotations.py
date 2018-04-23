@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from math import radians, sin, cos
-
 from typing import List
 
-from .geography import GVect
-from .ptbaxes import PTBAxes
-from .quaternions import *
+from pygsf.geology.structural.ptbaxes import PTBAxes
+from pygsf.spatial.transformations.quaternions import *
 
 
 class RotationAxis(object):
     """
-    Rotation axis, expressed by a geological asVect and a rotation angle.
+    Rotation axis, expressed by an Orientation and a rotation angle.
     """
 
     def __repr__(self):
@@ -31,7 +28,7 @@ class RotationAxis(object):
         RotationAxis(0.0000, 90.0000, 120.0000)
         """
 
-        self.gv = GVect(trend, plunge)
+        self.gv = Orien(trend, plunge)
         self.a = float(rot_ang)
 
     @classmethod

@@ -57,6 +57,7 @@ def ij_transfer_func(i, j, transfer_funcs):
 
     return transfer_func_z(transfer_func_x(j), transfer_func_y(i))
 
+
 def array_from_function(row_num, col_num, x_transfer_func, y_transfer_func, z_transfer_func):
     """
     Creates an array of p_z values based on functions that map (i,j) indices (to be created)

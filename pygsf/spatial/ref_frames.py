@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from .geography import Vect
+from .vector.vector import Vect
 
 
 class RefFrame(object):
@@ -10,8 +10,8 @@ class RefFrame(object):
         """
         Constructor.
 
-        :param versor_x: OrienM instance, representing x axis orientation
-        :param versor_y: OrienM instance, representing y axis orientation
+        :param versor_x: Vect instance, representing x axis orientation
+        :param versor_y: Vect instance, representing y axis orientation
         """
 
         if not (versor_x.isAlmostUnit and versor_y.isAlmostUnit):
@@ -28,11 +28,11 @@ class RefFrame(object):
         """
         Return the x as_vector,
 
-        :return: OrienM instance
+        :return: Vect instance
 
         Example:
-          >>> RefFrame(OrienM(1,0,0), OrienM(0,1,0)).x
-          OrienM(1.0000, 0.0000, 0.0000)
+          >>> RefFrame(Vect(1,0,0), Vect(0,1,0)).x
+          Vect(1.0000, 0.0000, 0.0000)
         """
 
         return self._x
@@ -42,11 +42,11 @@ class RefFrame(object):
         """
         Return the y as_vector.
 
-        :return: OrienM instance
+        :return: Vect instance
 
         Example:
-          >>> RefFrame(OrienM(1,0,0), OrienM(0,1,0)).y
-          OrienM(0.0000, 1.0000, 0.0000)
+          >>> RefFrame(Vect(1,0,0), Vect(0,1,0)).y
+          Vect(0.0000, 1.0000, 0.0000)
         """
 
         return self._y
@@ -56,11 +56,11 @@ class RefFrame(object):
         """
         Return the z as_vector.
 
-        :return: OrienM instance
+        :return: Vect instance
 
         Example:
-          >>> RefFrame(OrienM(1,0,0), OrienM(0,1,0)).z
-          OrienM(0.0000, 0.0000, 1.0000)
+          >>> RefFrame(Vect(1,0,0), Vect(0,1,0)).z
+          Vect(0.0000, 0.0000, 1.0000)
         """
 
         return self.x.vCross(self.y)

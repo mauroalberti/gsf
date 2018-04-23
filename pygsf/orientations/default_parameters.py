@@ -18,10 +18,3 @@ DIP_ANGLE_THRESHOLD = 5
 angle_gplane_thrshld = 2.5  # dip angle threshold, degrees
 rake_threshold = 5.0  # rake, degrees
 
-"""
-Quaternion parameters
-"""
-
-quat_normaliz_tolerance = 1.0e-6
-quat_division_tolerance = 1.0e-10
-quat_magn_thresh = 1.0e-6

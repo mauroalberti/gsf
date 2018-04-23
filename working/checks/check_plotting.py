@@ -1,6 +1,5 @@
 
 from pygsf.geography import *
-from pygsf.geotype_checks import *
 from pygsf.plotting.stereonets import splot
 
 ga1 = GAxis(312, -45)

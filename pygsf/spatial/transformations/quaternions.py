@@ -3,10 +3,10 @@
 from math import sqrt, degrees, acos
 import numpy as np
 
-from .default_parameters import *
-from .mathematics import are_close
-from .geometry import *
-from .arrays import arrays_are_close
+from .defaults import *
+from pygsf.mathematics.mathematics import are_close
+from pygsf.mathematics.arrays import arrays_are_close
+from pygsf.spatial.vector.vector import Vect
 
 
 class Quaternion(object):
@@ -38,7 +38,7 @@ class Quaternion(object):
         :return: tuple of 4 float values
 
         Example:
-          >>> Quaternion(0, 1, 0, 0).xyz()
+          >>> Quaternion(0, 1, 0, 0).components()
           (0.0, 1.0, 0.0, 0.0)
         """
 
@@ -65,16 +65,16 @@ class Quaternion(object):
         """
         Return the vector component of the quaternion.
 
-        :return: OrienM
+        :return: Vect
 
         Example:
           >>> Quaternion(0.1, 1.2, 3.1, 0.9).vector
-          OrienM(1.2000, 3.1000, 0.9000)
+          Vect(1.2000, 3.1000, 0.9000)
           >>> Quaternion(6.1, 4.9, 1.03, 5.12).vector
-          OrienM(4.9000, 1.0300, 5.1200)
+          Vect(4.9000, 1.0300, 5.1200)
         """
 
-        return Vect.from_array(self.q[1:])
+        return Vect(*self.components[1:])
 
     @classmethod
     def from_class(cls, w, x, y, z):
@@ -127,7 +127,7 @@ class Quaternion(object):
         :return: Quaternion instance
 
         Example:
-          >>> Quaternion.from_vect(OrienM(1, 0, 3))
+          >>> Quaternion.from_vect(Vect(1, 0, 3))
           Quaternion(0.00000, 1.00000, 0.00000, 3.00000)
         """
 
@@ -389,7 +389,7 @@ class Quaternion(object):
         """
         Quaternion multiplication by a asVect.
 
-        :param vect: OrienM instance .
+        :param vect: Vect instance .
         :return: Quaternion instance.
         """
 
@@ -410,7 +410,7 @@ class Quaternion(object):
           Quaternion(8.00000, -9.00000, -2.00000, 11.00000)
           >>> Quaternion(1, 1, 3, 0) * Quaternion(1, 0, 0, 0)
           Quaternion(1.00000, 1.00000, 3.00000, 0.00000)
-          >>> Quaternion.identity() * OrienM(1, 3, 2)
+          >>> Quaternion.identity() * Vect(1, 3, 2)
           Quaternion(0.00000, 1.00000, 3.00000, 2.00000)
         """
 

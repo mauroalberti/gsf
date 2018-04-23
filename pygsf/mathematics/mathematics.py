@@ -3,9 +3,7 @@
 from math import isnan, isinf, sqrt
 import numpy as np
 
-from typing import Dict, Tuple, List
-
-from .default_parameters import *
+from pygsf.orientations.default_parameters import *
 
 
 isfinite = np.isfinite

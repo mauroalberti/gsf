@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .geometry import *
-from .mathematics import are_close
+from pygsf.orientations.orientations import *
 
 
 class Slick(Orien):
@@ -150,7 +149,7 @@ class GFault(PPlane):
 
         if slickenlines is None:
             slickenlines = []
-        temp_gplane = GPlane(azim, dip_ang, is_rhr_strike)
+        temp_gplane = PPlane(azim, dip_ang, is_rhr_strike)
         for slickenline in slickenlines:
             if not temp_gplane.isAlmostParallel(slickenline):
                 raise GFaultInputTypeException("All slickenlines must lie on the plane")
