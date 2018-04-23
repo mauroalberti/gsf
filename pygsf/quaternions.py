@@ -5,7 +5,7 @@ import numpy as np
 
 from .default_parameters import *
 from .mathematics import are_close
-from .geography import Vect
+from .geometry import *
 from .arrays import arrays_are_close
 
 

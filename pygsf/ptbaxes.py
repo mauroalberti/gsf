@@ -4,8 +4,8 @@ import numpy as np
 
 from .default_parameters import *
 from .arrays import arrays_are_close
-from .geography import Vect, GAxis, GVect, GPlane
-from .faults import Slick, GFault
+from .geometry import *
+from .faults import *
 from .quaternions import Quaternion
 
 
@@ -20,7 +20,7 @@ class PTBAxes(object):
             self._p_versor.asAxis(),
             self._t_versor.asAxis())
 
-    def __init__(self, p_axis=GAxis(0, 0), t_axis=GAxis(90, 0)):
+    def __init__(self, p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)):
         """
         Create a new PTBAxes instances, given the two
         P and T axes (provided as GAxis instances).
@@ -239,7 +239,7 @@ class PTBAxes(object):
           True
         """
 
-        return self.p_axis.commonGPlane(self.t_axis)
+        return self.p_axis.commonPPlane(self.t_axis)
 
     def almost_equal(self, another, tolerance_angle=VECTOR_ANGLE_THRESHOLD):
         """

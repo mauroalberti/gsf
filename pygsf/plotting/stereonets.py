@@ -31,25 +31,25 @@ def splot(data, force=''):
         if force_emisphere == 'lower':
             default_marker = default_gvect_marker_downward_symbol
             if gvect.isUpward:
-                plot_gvect = gvect.opposite()
+                plot_orien = gvect.opposite()
             else:
-                plot_gvect = gvect
+                plot_orien = gvect
         elif force_emisphere == 'upper':
             default_marker = default_gvect_marker_upward_symbol
             if gvect.isDownward:
-                plot_gvect = gvect.opposite()
+                plot_orien = gvect.opposite()
             else:
-                plot_gvect = gvect
+                plot_orien = gvect
         elif not force_emisphere:
-            plot_gvect = gvect
-            default_marker = default_gvect_marker_downward_symbol if not plot_gvect.isUpward else default_gvect_marker_upward_symbol
+            plot_orien = gvect
+            default_marker = default_gvect_marker_downward_symbol if not plot_orien.isUpward else default_gvect_marker_upward_symbol
         else:
             raise PlotException("Invalid force emisphere parameter")
 
-        if plot_gvect.isUpward:  # apparently mplstereonet does not handle negative plunges
-            plot_gvect = plot_gvect.mirrorHoriz()
+        if plot_orien.isUpward:  # apparently mplstereonet does not handle negative plunges
+            plot_orien = plot_orien.mirrorHoriz()
 
-        plunge, bearing = plot_gvect.pt
+        bearing, plunge = plot_orien.d
         symbol = kwargs.get("m", default_marker)
         color = kwargs.get("c", default_gvect_marker_color)
 
@@ -75,7 +75,7 @@ def splot(data, force=''):
         if plot_gaxis.isUpward:  # apparently mplstereonet does not handle negative plunges
             plot_gaxis = plot_gaxis.mirrorHoriz()
 
-        plunge, bearing = plot_gaxis.pt
+        bearing, plunge = plot_gaxis.d
         symbol = kwargs.get("m", default_marker)
         color = kwargs.get("c", default_gaxis_marker_color)
 
@@ -126,7 +126,7 @@ def splot(data, force=''):
             kwargs = dict()
 
         for obj in objs:
-            if is_gvect(obj):
+            if isOrien(obj):
                 plunge, bearing, symbol, color = params_gvect(obj, kwargs, force_emisphere=force)
                 ax.line(
                     plunge,
@@ -134,7 +134,7 @@ def splot(data, force=''):
                     marker=symbol,
                     markerfacecolor=color,
                     markeredgecolor=color)
-            elif is_gaxis(obj):
+            elif isAxis(obj):
                 plunge, bearing, symbol, color = params_gaxis(obj, kwargs, force_emisphere=force)
                 ax.line(
                     plunge,
@@ -142,7 +142,7 @@ def splot(data, force=''):
                     marker=symbol,
                     markerfacecolor=color,
                     markeredgecolor=color)
-            elif is_gplane(obj):
+            elif isPPlane(obj):
                 strike, dip, linestyle, color = params_gplane(obj, kwargs, force_emisphere=force)
                 ax.plane(
                     strike,
@@ -153,11 +153,11 @@ def splot(data, force=''):
 
     """
 
-    gplanes = filter(is_gplane, data)
+    gplanes = filter(isPPlane, data)
 
-    # TODO: slickens = filter(is_slickln, data)
-    # TODO: faultslicks = filter(is_faultslck, data)
-    # TODO: ptbaxes = filter(is_ptbaxes, data)
+    # TODO: slickens = filter(isSlickln, data)
+    # TODO: faultslicks = filter(isFaultSlck, data)
+    # TODO: ptbaxes = filter(isPTBAxes, data)
 
     if not any([gvects, gaxes, gplanes]):
         return False

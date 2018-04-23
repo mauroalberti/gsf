@@ -936,16 +936,16 @@ class Orien(object):
         else:
             return self.asVersor().vCross(another.asVersor()).versor()
 
-    def normGPlane(self):
+    def normPPlane(self):
         """
         Return the geological plane that is normal to the orientation.
 
         Examples:
-          >>> Orien.fromAzPl(0, 45).normGPlane()
+          >>> Orien.fromAzPl(0, 45).normPPlane()
           PPlane(180.00, +45.00)
-          >>> Orien.fromAzPl(0, -45).normGPlane()
+          >>> Orien.fromAzPl(0, -45).normPPlane()
           PPlane(000.00, +45.00)
-          >>> Orien.fromAzPl(0, 90).normGPlane()
+          >>> Orien.fromAzPl(0, 90).normPPlane()
           PPlane(180.00, +00.00)
         """
 
@@ -955,28 +955,28 @@ class Orien(object):
 
         return PPlane(dipdir, dipangle)
 
-    def commonGPlane(self, another):
+    def commonPPlane(self, another):
         """
         Calculate PPlane instance defined by the two Vect instances.
 
         Examples:
-          >>> Orien.fromAzPl(0, 0).commonGPlane(Orien.fromAzPl(90, 0)).isAlmostParallel(PPlane(180.0, 0.0))
+          >>> Orien.fromAzPl(0, 0).commonPPlane(Orien.fromAzPl(90, 0)).isAlmostParallel(PPlane(180.0, 0.0))
           True
-          >>> Orien.fromAzPl(0, 0).commonGPlane(Orien.fromAzPl(90, 90)).isAlmostParallel(PPlane(90.0, 90.0))
+          >>> Orien.fromAzPl(0, 0).commonPPlane(Orien.fromAzPl(90, 90)).isAlmostParallel(PPlane(90.0, 90.0))
           True
-          >>> Orien.fromAzPl(45, 0).commonGPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(135.0, 45.0))
+          >>> Orien.fromAzPl(45, 0).commonPPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(135.0, 45.0))
           True
-          >>> Orien.fromAzPl(315, 45).commonGPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(225.0, 90.0))
+          >>> Orien.fromAzPl(315, 45).commonPPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(225.0, 90.0))
           True
-          >>> Orien.fromAzPl(0, 0).commonGPlane(Orien.fromAzPl(90, 0)).isAlmostParallel(PPlane(180.0, 10.0))
+          >>> Orien.fromAzPl(0, 0).commonPPlane(Orien.fromAzPl(90, 0)).isAlmostParallel(PPlane(180.0, 10.0))
           False
-          >>> Orien.fromAzPl(0, 0).commonGPlane(Orien.fromAzPl(90, 90)).isAlmostParallel(PPlane(90.0, 80.0))
+          >>> Orien.fromAzPl(0, 0).commonPPlane(Orien.fromAzPl(90, 90)).isAlmostParallel(PPlane(90.0, 80.0))
           False
-          >>> Orien.fromAzPl(45, 0).commonGPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(125.0, 45.0))
+          >>> Orien.fromAzPl(45, 0).commonPPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(125.0, 45.0))
           False
-          >>> Orien.fromAzPl(315, 45).commonGPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(225.0, 80.0))
+          >>> Orien.fromAzPl(315, 45).commonPPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(225.0, 80.0))
           False
-          >>> Orien.fromAzPl(315, 45).commonGPlane(Orien.fromAzPl(315, 44.5)) is None
+          >>> Orien.fromAzPl(315, 45).commonPPlane(Orien.fromAzPl(315, 44.5)) is None
           True
         """
 
@@ -984,7 +984,7 @@ class Orien(object):
         if normal_versor is None:
             return None
         else:
-            return normal_versor.asOrien().normGPlane()
+            return normal_versor.asOrien().normPPlane()
 
     def asAxis(self):
         """
@@ -2843,7 +2843,7 @@ class CPlane(object):
           Point(0.0000, 0.0000, 1.0000)
         """
 
-        geol_plane = self.normVersor().asOrien().normGPlane()
+        geol_plane = self.normVersor().asOrien().normPPlane()
         point = Point(*point_solution(array([[self.a, self.b, self.c]]),
                                       array([-self.d])))
         return geol_plane, point

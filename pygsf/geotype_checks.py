@@ -4,42 +4,42 @@
 from .ptbaxes import *
 
 
-def is_gvect(obj) -> bool:
+def isOrien(obj) -> bool:
 
-    return isinstance(obj, GVect) and not isinstance(obj, GAxis)
-
-
-def is_gaxis(obj) -> bool:
-
-    return isinstance(obj, GAxis)
+    return isinstance(obj, Orien) and not isinstance(obj, Axis)
 
 
-def is_gplane(obj) -> bool:
+def isAxis(obj) -> bool:
 
-    return isinstance(obj, GPlane)
+    return isinstance(obj, Axis)
 
 
-def is_slickln(obj) -> bool:
+def isPPlane(obj) -> bool:
+
+    return isinstance(obj, PPlane)
+
+
+def isSlickln(obj) -> bool:
 
     return isinstance(obj, Slick)
 
 
-def is_faultslck(obj) -> bool:
+def isFaultSlck(obj) -> bool:
 
     return isinstance(obj, GFault)
 
 
-def is_ptbaxes(obj) -> bool:
+def isPTBAxes(obj) -> bool:
 
     return isinstance(obj, PTBAxes)
 
 
-def is_upward(obj: GVect) -> bool:
+def is_upward(obj: Orien) -> bool:
 
     return obj.isUpward
 
 
-def is_not_upward(obj: GVect) -> bool:
+def is_not_upward(obj: Orien) -> bool:
 
     return not obj.isUpward
 

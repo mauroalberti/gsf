@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from .geography import *
+from .geometry import *
 from .mathematics import are_close
 
 
-class Slick(GVect):
+class Slick(Orien):
     """
     Slickeline.
     It can be defined through a OrienM instance, in which case it has a movement sense,
@@ -117,7 +117,7 @@ class Slick(GVect):
         return Slick(*self.opposite().tp)
 
 
-class GFault(GPlane):
+class GFault(PPlane):
     """
     Represent a fault plane, represented by a PPlane instance,
     and zero, one or more slickenlines, represented by a list of Slick instances (None when no slickenlines).
