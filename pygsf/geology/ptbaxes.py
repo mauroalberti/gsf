@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from pygsf.geology.structural.faults import *
-from pygsf.spatial.transformations.quaternions import Quaternion
+from .faults import *
+from pygsf.mathematics.quaternions import Quaternion
+from ..exceptions.geology import *
 
 
 class PTBAxes(object):
@@ -306,12 +307,6 @@ class PTBAxes(object):
         """
 
         return Quaternion.from_rot_matr(self.to_matrix())
-
-
-class PTBAxesInputException(Exception):
-    """
-    Exception for PTBAxes input
-    """
 
 
 if __name__ == "__main__":

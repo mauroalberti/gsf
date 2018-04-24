@@ -1,13 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from math import isnan, isinf, sqrt
-import numpy as np
-
-from pygsf.orientations.default_parameters import *
-
-
-isfinite = np.isfinite
-array = np.array
+from math import isnan, isinf
 
 
 def is_number(s: str) -> bool:
@@ -156,41 +149,6 @@ def apprFTuple(tup: tuple, ndec=1):
     """
 
     return tuple(map(lambda val: apprFloat(val, ndec), tup))
-
-
-def normXYZ(x: [int, float], y: [int, float], z: [int, float]):
-    """
-    Normalize numeric values.
-
-    :param x: x numeric value
-    :param y: y numeric value
-    :param z: z numeric value
-    :return: a tuple of three float values
-    """
-
-    # input vals checks
-    vals = [x, y, z]
-    if not all(map(lambda val: isinstance(val, (int, float)), vals)):
-        raise InputValuesException("Input values must be integer or float")
-    elif not all(map(isfinite, vals)):
-        raise InputValuesException("Input values must be finite")
-
-    mag = sqrt(x*x + y*y + z*z)
-
-    if mag <= MIN_VECTOR_MAGNITUDE:
-        norm_xyz = None
-    else:
-        norm_xyz = x/mag, y/mag, z/mag
-
-    return mag, norm_xyz
-
-
-class InputValuesException(Exception):
-    """
-    Exception for values input.
-    """
-
-    pass
 
 
 if __name__ == '__main__':

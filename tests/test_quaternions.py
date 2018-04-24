@@ -2,7 +2,7 @@
 import unittest
 
 from pygsf.mathematics import are_close
-from pygsf.spatial.transformations.quaternions import Quaternion
+from pygsf.mathematics.quaternions import Quaternion
 
 
 q_case_1 = Quaternion(3.2, 17.4, 9.25, -8.47)

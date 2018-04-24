@@ -3,8 +3,8 @@
 from math import sqrt, degrees, acos
 import numpy as np
 
-from .defaults import *
-from pygsf.mathematics.mathematics import are_close
+from pygsf.defaults.quaternions import *
+from pygsf.mathematics.scalars import are_close
 from pygsf.mathematics.arrays import arrays_are_close
 from pygsf.spatial.vector.vector import Vect
 
@@ -677,22 +677,6 @@ class Quaternion(object):
         return np.array([(a11, a12, a13),
                          (a21, a22, a23),
                          (a31, a32, a33)])
-
-
-class QuaternionInputException(Exception):
-    """
-    Exception for Quaternion input.
-    """
-
-    pass
-
-
-class QuaternionCalculationException(Exception):
-    """
-    Exception for Quaternion calculation.
-    """
-
-    pass
 
 
 if __name__ == "__main__":

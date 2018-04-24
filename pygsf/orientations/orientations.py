@@ -1794,14 +1794,6 @@ class PPlane(object):
         return CPlane(a, b, c, d)
 
 
-class GeomInputException(Exception):
-    """
-    Exception for geometric input.
-    """
-
-    pass
-
-
 if __name__ == "__main__":
 
     import doctest

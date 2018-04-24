@@ -5,7 +5,7 @@ import unittest
 
 
 from .test_datasets import *
-from pygsf.geology.structural.ptbaxes import *
+from pygsf.geology.ptbaxes import *
 
 
 class TestFocalMechamismRotations(unittest.TestCase):

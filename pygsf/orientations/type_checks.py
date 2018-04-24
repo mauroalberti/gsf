@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from pygsf.geology.structural.ptbaxes import *
+from pygsf.geology.ptbaxes import *
 
 
 def isOrien(obj) -> bool:

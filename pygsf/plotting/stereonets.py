@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import mplstereonet as ms
 
 
-from pygsf.orientations.geotype_checks import *
+from pygsf.orientations.type_checks import *
 from ..utils.conversions import *
 
 

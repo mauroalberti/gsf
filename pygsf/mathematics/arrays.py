@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division
+import numpy as np
 
-from pygsf.mathematics.mathematics import *
+from .scalars import *
+
+array = np.array
 
 
 def arr2tuple(arr1D) -> tuple:
@@ -14,7 +16,7 @@ def arr2tuple(arr1D) -> tuple:
     :return: tuple of float values
 
     Examples:
-      >>> arr = np.array([1,2,3,4,5])
+      >>> arr = array([1,2,3,4,5])
       >>> arr2tuple(arr)
       (1.0, 2.0, 3.0, 4.0, 5.0)
     """
@@ -50,15 +52,15 @@ def arrays_are_close(a_array, b_array, rtol=1e-012, atol=1e-12, equal_nan=False,
     :return: Boolean
 
     Example:
-      >>> arrays_are_close(np.array([1,2,3]), np.array([1,2,3]))
+      >>> arrays_are_close(array([1,2,3]), array([1,2,3]))
       True
-      >>> arrays_are_close(np.array([[1,2,3], [4, 5, 6]]), np.array([1,2,3]))
+      >>> arrays_are_close(array([[1,2,3], [4, 5, 6]]), array([1,2,3]))
       False
-      >>> arrays_are_close(np.array([[1,2,3], [4,5,6]]), np.array([[1,2,3], [4,5,6]]))
+      >>> arrays_are_close(array([[1,2,3], [4,5,6]]), array([[1,2,3], [4,5,6]]))
       True
-      >>> arrays_are_close(np.array([[1,2,np.nan], [4,5,6]]), np.array([[1,2,np.nan], [4,5,6]]))
+      >>> arrays_are_close(array([[1,2,np.nan], [4,5,6]]), array([[1,2,np.nan], [4,5,6]]))
       False
-      >>> arrays_are_close(np.array([[1,2,np.nan], [4,5,6]]), np.array([[1,2,np.nan], [4,5,6]]), equal_nan=True)
+      >>> arrays_are_close(array([[1,2,np.nan], [4,5,6]]), array([[1,2,np.nan], [4,5,6]]), equal_nan=True)
       True
     """
     if a_array.shape != b_array.shape:

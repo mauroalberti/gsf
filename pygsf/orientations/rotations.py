@@ -2,8 +2,8 @@
 
 from typing import List
 
-from pygsf.geology.structural.ptbaxes import PTBAxes
-from pygsf.spatial.transformations.quaternions import *
+from pygsf.geology.ptbaxes import PTBAxes
+from pygsf.mathematics.quaternions import *
 
 
 class RotationAxis(object):

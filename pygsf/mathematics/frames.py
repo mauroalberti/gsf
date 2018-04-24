@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-from .vector.vector import Vect
+from .vectors import Vect
+
+from ..exceptions.mathematics import *
 
 
 class RefFrame(object):
@@ -64,14 +66,6 @@ class RefFrame(object):
         """
 
         return self.x.vCross(self.y)
-
-
-class RefFrameInputException(Exception):
-    """
-    Exception for RefFrame input
-    """
-
-    pass
 
 
 if __name__ == "__main__":
