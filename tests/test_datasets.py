@@ -44,7 +44,7 @@ def sols2rotaxis(rot_sol: dict) -> RotationAxis:
 
     gv = GVect(az, pl_from_N)
 
-    return RotationAxis.from_gvect(gv, rot_ang)
+    return RotationAxis.fromDirect(gv, rot_ang)
 
 
 ##### gsf-scope derived parameters

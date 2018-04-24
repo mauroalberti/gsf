@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from math import sin, radians, pi
+from math import sin, cos, radians, pi
 
 from ..defaults.orientations import *
 from ..exceptions.orientations import *
@@ -32,11 +32,11 @@ class Azim(object):
           >>> Azim("10")
           Traceback (most recent call last):
           ...
-          GeomInputException: Input azimuth value must be int/float
+          pygsf.exceptions.orientations.GeomInputException: Input azimuth value must be int/float
           >>> Azim(np.nan)
           Traceback (most recent call last):
           ...
-          GeomInputException: Input azimuth value must be finite
+          pygsf.exceptions.orientations.GeomInputException: Input azimuth value must be finite
         """
 
         # unit check
@@ -107,11 +107,11 @@ class Azim(object):
           >>> Azim.fromXY(0, np.nan)
           Traceback (most recent call last):
           ...
-          GeomInputException: Input x and y values must be finite
+          pygsf.exceptions.orientations.GeomInputException: Input x and y values must be finite
           >>> Azim.fromXY("10", np.nan)
           Traceback (most recent call last):
           ...
-          GeomInputException: Input x and y values must be integer or float
+          pygsf.exceptions.orientations.GeomInputException: Input x and y values must be integer or float
         """
 
         # input vals checks
@@ -169,15 +169,15 @@ class Plunge(object):
           >>> Plunge("10")
           Traceback (most recent call last):
           ...
-          GeomInputException: Input plunge value must be int/float
+          pygsf.exceptions.orientations.GeomInputException: Input plunge value must be int/float
           >>> Plunge(np.nan)
           Traceback (most recent call last):
           ...
-          GeomInputException: Input plunge value must be finite
+          pygsf.exceptions.orientations.GeomInputException: Input plunge value must be finite
           >>> Plunge(-100)
           Traceback (most recent call last):
           ...
-          GeomInputException: Input value in degrees must be between -90° and 90°
+          pygsf.exceptions.orientations.GeomInputException: Input value in degrees must be between -90° and 90°
          """
 
         # unit check
@@ -253,11 +253,11 @@ class Plunge(object):
           >>> Plunge.fromHZ(-1, 0)
           Traceback (most recent call last):
           ...
-          GeomInputException: Horizontal component cannot be negative
+          pygsf.exceptions.orientations.GeomInputException: Horizontal component cannot be negative
           >>> Plunge.fromHZ(0, 0)
           Traceback (most recent call last):
           ...
-          GeomInputException: Input h and z values cannot be both zero
+          pygsf.exceptions.orientations.GeomInputException: Input h and z values cannot be both zero
         """
 
         # input vals check
@@ -421,23 +421,23 @@ class Direct(object):
 
         Examples:
           >>> Direct.fromAzPl(30, 40)
-          Orien(az: 30.00°, pl: 40.00°)
+          Direct(az: 30.00°, pl: 40.00°)
           >>> Direct.fromAzPl(370, 80)
-          Orien(az: 10.00°, pl: 80.00°)
+          Direct(az: 10.00°, pl: 80.00°)
           >>> Direct.fromAzPl(pi/2, pi/4, unit='r')
-          Orien(az: 90.00°, pl: 45.00°)
+          Direct(az: 90.00°, pl: 45.00°)
           >>> Direct.fromAzPl(280, -100)
           Traceback (most recent call last):
           ...
-          GeomInputException: Input value in degrees must be between -90° and 90°
+          pygsf.exceptions.orientations.GeomInputException: Input value in degrees must be between -90° and 90°
           >>> Direct.fromAzPl("10", 0)
           Traceback (most recent call last):
           ...
-          GeomInputException: Input azimuth value must be int/float
+          pygsf.exceptions.orientations.GeomInputException: Input azimuth value must be int/float
           >>> Direct.fromAzPl(100, np.nan)
           Traceback (most recent call last):
           ...
-          GeomInputException: Input plunge value must be finite
+          pygsf.exceptions.orientations.GeomInputException: Input plunge value must be finite
         """
 
         azim = Azim(az, unit=unit)
@@ -475,23 +475,23 @@ class Direct(object):
 
         Examples:
           >>> Direct.fromXYZ(1, 0, 0)
-          Orien(az: 90.00°, pl: -0.00°)
+          Direct(az: 90.00°, pl: -0.00°)
           >>> Direct.fromXYZ(0, 1, 0)
-          Orien(az: 0.00°, pl: -0.00°)
+          Direct(az: 0.00°, pl: -0.00°)
           >>> Direct.fromXYZ(0, 0, 1)
-          Orien(az: 0.00°, pl: -90.00°)
+          Direct(az: 0.00°, pl: -90.00°)
           >>> Direct.fromXYZ(0, 0, -1)
-          Orien(az: 0.00°, pl: 90.00°)
+          Direct(az: 0.00°, pl: 90.00°)
           >>> Direct.fromXYZ(1, 1, 0)
-          Orien(az: 45.00°, pl: -0.00°)
+          Direct(az: 45.00°, pl: -0.00°)
           >>> Direct.fromXYZ(0.5, -0.5, -0.7071067811865476)
-          Orien(az: 135.00°, pl: 45.00°)
+          Direct(az: 135.00°, pl: 45.00°)
           >>> Direct.fromXYZ(-0.5, 0.5, 0.7071067811865476)
-          Orien(az: 315.00°, pl: -45.00°)
+          Direct(az: 315.00°, pl: -45.00°)
           >>> Direct.fromXYZ(0, 0, 0)
           Traceback (most recent call last):
           ...
-          GeomInputException: Input components have near-zero values
+          pygsf.exceptions.orientations.GeomInputException: Input components have near-zero values
         """
 
         mag, norm_xyz = normXYZ(x, y, z)
@@ -511,23 +511,25 @@ class Direct(object):
 
         Examples:
           >>> Direct.fromVect(Vect(1, 1, 1))
-          Orien(az: 45.00°, pl: -35.26°)
+          Direct(az: 45.00°, pl: -35.26°)
           >>> Direct.fromVect(Vect(0, 1, 1))
-          Orien(az: 0.00°, pl: -45.00°)
+          Direct(az: 0.00°, pl: -45.00°)
           >>> Direct.fromVect(Vect(1, 0, 1))
-          Orien(az: 90.00°, pl: -45.00°)
+          Direct(az: 90.00°, pl: -45.00°)
           >>> Direct.fromVect(Vect(0, 0, 1))
-          Orien(az: 0.00°, pl: -90.00°)
+          Direct(az: 0.00°, pl: -90.00°)
           >>> Direct.fromVect(Vect(0, 0, -1))
-          Orien(az: 0.00°, pl: 90.00°)
+          Direct(az: 0.00°, pl: 90.00°)
           >>> Direct.fromVect(Vect(-1, 0, 0))
-          Orien(az: 270.00°, pl: 0.00°)
+          Direct(az: 270.00°, pl: -0.00°)
           >>> Direct.fromVect(Vect(0, -1, 0))
-          Orien(az: 180.00°, pl: 0.00°)
+          Direct(az: 180.00°, pl: -0.00°)
           >>> Direct.fromVect(Vect(-1, -1, 0))
-          Orien(az: 225.00°, pl: 0.00°)
-          >>> Direct.fromVect(Vect(0, 0, 0)) is None
-          True
+          Direct(az: 225.00°, pl: -0.00°)
+          >>> Direct.fromVect(Vect(0, 0, 0))
+          Traceback (most recent call last):
+          ...
+          pygsf.exceptions.orientations.GeomInputException: Input components have near-zero values
         """
 
         x, y, z = vect.toXYZ()
@@ -535,7 +537,7 @@ class Direct(object):
 
     def __repr__(self) -> str:
 
-        return "Orien(az: {:.2f}°, pl: {:.2f}°)".format(*self.d)
+        return "Direct(az: {:.2f}°, pl: {:.2f}°)".format(*self.d)
 
     def toXYZ(self) -> Tuple[float, float, float]:
         """
@@ -575,7 +577,7 @@ class Direct(object):
 
         Example:
           >>> Direct.fromAzPl(10, 20).copy()
-          Orien(az: 10.00°, pl: 20.00°)
+          Direct(az: 10.00°, pl: 20.00°)
         """
 
         return Direct(self.az, self.pl)
@@ -586,11 +588,11 @@ class Direct(object):
 
         Example:
           >>> Direct.fromAzPl(0, 30).opposite()
-          Orien(az: 180.00°, pl: -30.00°)
+          Direct(az: 180.00°, pl: -30.00°)
           >>> Direct.fromAzPl(315, 10).opposite()
-          Orien(az: 135.00°, pl: -10.00°)
+          Direct(az: 135.00°, pl: -10.00°)
           >>> Direct.fromAzPl(135, 0).opposite()
-          Orien(az: 315.00°, pl: -0.00°)
+          Direct(az: 315.00°, pl: -0.00°)
         """
 
         az, pl = self.r
@@ -606,11 +608,11 @@ class Direct(object):
 
         Example:
           >>> Direct.fromAzPl(0, 30).mirrorHoriz()
-          Orien(az: 0.00°, pl: -30.00°)
+          Direct(az: 0.00°, pl: -30.00°)
           >>> Direct.fromAzPl(315, 10).mirrorHoriz()
-          Orien(az: 315.00°, pl: -10.00°)
+          Direct(az: 315.00°, pl: -10.00°)
           >>> Direct.fromAzPl(135, 0).mirrorHoriz()
-          Orien(az: 135.00°, pl: -0.00°)
+          Direct(az: 135.00°, pl: -0.00°)
         """
 
         az = self.az.r
@@ -666,7 +668,7 @@ class Direct(object):
 
     def asVersor(self):
         """
-        Return the unit vector corresponding to the Orien instance.
+        Return the unit vector corresponding to the Direct instance.
 
         Examples:
           >>> Direct.fromAzPl(0, 90).asVersor()
@@ -776,7 +778,7 @@ class Direct(object):
 
     def isAbsDipInRange(self, min_val, max_val, min_val_incl=False, max_value_incl=True):
         """
-        Check whether the absolute value of the dip angle of an Orien instance is within a given range
+        Check whether the absolute value of the dip angle of an Direct instance is within a given range
         (default: minimum value is not included, maximum value is included).
 
         :param min_val: the minimum dip angle, positive, domain: 0-90°.
@@ -865,9 +867,9 @@ class Direct(object):
 
     def isAlmostParallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """
-        Check that two Orien instances are sub-parallel,
+        Check that two Direct instances are sub-parallel,
 
-        :param another: an Orien instance
+        :param another: an Direct instance
         :param angle_tolerance: the maximum allowed divergence angle (in degrees)
         :return: Boolean
 
@@ -941,7 +943,7 @@ class Direct(object):
 
     def normVersor(self, another):
         """
-        Calculate the versor (Vect) defined by the vector product of two Orien instances.
+        Calculate the versor (Vect) defined by the vector product of two Direct instances.
 
         Examples:
           >>> Direct.fromAzPl(0, 0).normVersor(Direct.fromAzPl(90, 0))
@@ -1007,7 +1009,7 @@ class Direct(object):
         if normal_versor is None:
             return None
         else:
-            return normal_versor.asOrien().normPPlane()
+            return Direct.fromVect(normal_versor).normPPlane()
 
     def asAxis(self):
         """
@@ -1022,7 +1024,7 @@ class Direct(object):
 
     def normOrien(self, another):
         """
-        Calculate the Orien instance that is normal to the two provided sources.
+        Calculate the Direct instance that is normal to the two provided sources.
         Angle between sources must be larger than MIN_ANGLE_DEGR_DISORIENTATION,
         otherwise a SubparallelLineationException will be raised.
 
@@ -1032,10 +1034,9 @@ class Direct(object):
           >>> Direct.fromAzPl(0, 0).normOrien(Direct.fromAzPl(179.5, 0)) is None
           True
           >>> Direct.fromAzPl(0, 0).normOrien(Direct.fromAzPl(5.1, 0))
-          Orien(az: 0.00°, pl: 90.00°)
+          Direct(az: 0.00°, pl: 90.00°)
           >>> Direct.fromAzPl(90, 45).normOrien(Direct.fromAzPl(90, 0))
-          Orien(az: 180.00°, pl: 0.00°)
-
+          Direct(az: 180.00°, pl: -0.00°)
         """
 
         if self.isAlmostAntiParallel(another):
@@ -1043,7 +1044,7 @@ class Direct(object):
         elif self.isAlmostParallel(another):
             return None
         else:
-            return self.normVersor(another).asOrien()
+            return Direct.fromVect(self.normVersor(another))
 
 
 class Axis(Direct):
@@ -1065,7 +1066,7 @@ class Axis(Direct):
 
         Example:
           >>> Axis.fromAzPl(220, 32).asOrien()
-          Orien(az: 220.00°, pl: 32.00°)
+          Direct(az: 220.00°, pl: 32.00°)
         """
 
         return Direct(self.az, self.pl)
@@ -1133,7 +1134,7 @@ class OrienM(object):
         """
 
         if not isinstance(orien, Direct):
-            raise GeomInputException("First vect argument must be of type Orien")
+            raise GeomInputException("First vect argument must be of type Direct")
 
         if not isinstance(mag, (int, float)):
             raise GeomInputException("Second vect arg must be int/float")
@@ -1291,11 +1292,11 @@ class PPlane(object):
           >>> PPlane(0, "90", True)
           Traceback (most recent call last):
           ...
-          GeomInputException: Source dip angle must be number
+          pygsf.exceptions.orientations.GeomInputException: Source dip angle must be number
           >>> PPlane(0, 900)
           Traceback (most recent call last):
           ...
-          GeomInputException: Dip angle must be between 0° and 90°
+          pygsf.exceptions.orientations.GeomInputException: Dip angle must be between 0° and 90°
         """
 
         def rhrstrk2dd(rhr_strk):
@@ -1438,11 +1439,11 @@ class PPlane(object):
 
         Examples:
           >>> PPlane(90, 45).rhrStrikeOrien()
-          Orien(az: 0.00°, pl: 0.00°)
+          Direct(az: 0.00°, pl: 0.00°)
           >>> PPlane(45, 17).rhrStrikeOrien()
-          Orien(az: 315.00°, pl: 0.00°)
+          Direct(az: 315.00°, pl: 0.00°)
           >>> PPlane(90, 0).rhrStrikeOrien()
-          Orien(az: 0.00°, pl: 0.00°)
+          Direct(az: 0.00°, pl: 0.00°)
         """
 
         return Direct.fromAzPl(
@@ -1457,9 +1458,9 @@ class PPlane(object):
 
         Examples:
           >>> PPlane(90, 45).lhrStrikeOrien()
-          Orien(az: 180.00°, pl: 0.00°)
+          Direct(az: 180.00°, pl: 0.00°)
           >>> PPlane(45, 17).lhrStrikeOrien()
-          Orien(az: 135.00°, pl: 0.00°)
+          Direct(az: 135.00°, pl: 0.00°)
         """
 
         return Direct.fromAzPl(
@@ -1474,9 +1475,9 @@ class PPlane(object):
 
         Examples:
           >>> PPlane(90, 45).dipDirOrien()
-          Orien(az: 90.00°, pl: 45.00°)
+          Direct(az: 90.00°, pl: 45.00°)
           >>> PPlane(45, 17).dipDirOrien()
-          Orien(az: 45.00°, pl: 17.00°)
+          Direct(az: 45.00°, pl: 17.00°)
         """
 
         return Direct.fromAzPl(
@@ -1491,9 +1492,9 @@ class PPlane(object):
 
         Examples:
           >>> PPlane(90, 45).dipDirOppOrien()
-          Orien(az: 270.00°, pl: -45.00°)
+          Direct(az: 270.00°, pl: -45.00°)
           >>> PPlane(45, 17).dipDirOppOrien()
-          Orien(az: 225.00°, pl: -17.00°)
+          Direct(az: 225.00°, pl: -17.00°)
         """
 
         return self.dipDirOrien().opposite()
@@ -1529,11 +1530,11 @@ class PPlane(object):
 
         Example:
             >>> PPlane(90, 55)._normal_orien_frwrd()
-            Orien(az: 90.00°, pl: -35.00°)
+            Direct(az: 90.00°, pl: -35.00°)
             >>> PPlane(90, 90)._normal_orien_frwrd()
-            Orien(az: 90.00°, pl: 0.00°)
+            Direct(az: 90.00°, pl: 0.00°)
             >>> PPlane(90, 0)._normal_orien_frwrd()
-            Orien(az: 90.00°, pl: -90.00°)
+            Direct(az: 90.00°, pl: -90.00°)
         """
 
         tr = self.dd % 360.0
@@ -1550,11 +1551,11 @@ class PPlane(object):
 
         Example:
             >>> PPlane(90, 55)._normal_orien_anti()
-            Orien(az: 270.00°, pl: 35.00°)
+            Direct(az: 270.00°, pl: 35.00°)
             >>> PPlane(90, 90)._normal_orien_anti()
-            Orien(az: 270.00°, pl: -0.00°)
+            Direct(az: 270.00°, pl: -0.00°)
             >>> PPlane(90, 0)._normal_orien_anti()
-            Orien(az: 270.00°, pl: 90.00°)
+            Direct(az: 270.00°, pl: 90.00°)
         """
 
         return self._normal_orien_frwrd().opposite()
@@ -1566,11 +1567,11 @@ class PPlane(object):
 
         Example:
             >>> PPlane(90, 55).downNormOrien()
-            Orien(az: 270.00°, pl: 35.00°)
+            Direct(az: 270.00°, pl: 35.00°)
             >>> PPlane(90, 90).downNormOrien()
-            Orien(az: 90.00°, pl: 0.00°)
+            Direct(az: 90.00°, pl: 0.00°)
             >>> PPlane(90, 0).downNormOrien()
-            Orien(az: 270.00°, pl: 90.00°)
+            Direct(az: 270.00°, pl: 90.00°)
         """
 
         return self._normal_orien_frwrd().downward()
@@ -1582,11 +1583,11 @@ class PPlane(object):
 
         Example:
             >>> PPlane(90, 55).upNormOrien()
-            Orien(az: 90.00°, pl: -35.00°)
+            Direct(az: 90.00°, pl: -35.00°)
             >>> PPlane(90, 90).upNormOrien()
-            Orien(az: 90.00°, pl: 0.00°)
+            Direct(az: 90.00°, pl: 0.00°)
             >>> PPlane(90, 0).upNormOrien()
-            Orien(az: 90.00°, pl: -90.00°)
+            Direct(az: 90.00°, pl: -90.00°)
         """
 
         return self._normal_orien_frwrd().upward()
@@ -1713,15 +1714,15 @@ class PPlane(object):
 
         Examples:
           >>> PPlane(180, 45).rakeToOrien(0.0)
-          Orien(az: 90.00°, pl: 0.00°)
+          Direct(az: 90.00°, pl: -0.00°)
           >>> PPlane(180, 45).rakeToOrien(90.0)
-          Orien(az: 0.00°, pl: -45.00°)
+          Direct(az: 0.00°, pl: -45.00°)
           >>> PPlane(180, 45).rakeToOrien(-90.0)
-          Orien(az: 180.00°, pl: 45.00°)
+          Direct(az: 180.00°, pl: 45.00°)
           >>> PPlane(180, 45).rakeToOrien(180.0).isAlmostParallel(Direct.fromAzPl(270.00, 0.00))
           True
           >>> PPlane(180, 45).rakeToOrien(-180.0)
-          Orien(az: 270.00°, pl: 0.00°)
+          Direct(az: 270.00°, pl: 0.00°)
         """
 
         rk = radians(rake)
@@ -1732,7 +1733,7 @@ class PPlane(object):
         y = cos(rk) * cos(strk) + sin(rk) * cos(dip) * sin(strk)
         z = sin(rk) * sin(dip)
 
-        return Vect(x, y, z).asOrien()
+        return Direct.fromXYZ(x, y, z)
 
     def isVLowAngle(self, dip_angle_threshold=angle_gplane_thrshld):
         """

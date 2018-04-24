@@ -2,6 +2,7 @@
 
 
 from .vectors import *
+from ..exceptions.mathematics import QuaternionInputException
 
 
 class Quaternion(object):
@@ -69,7 +70,7 @@ class Quaternion(object):
           Vect(4.9000, 1.0300, 5.1200)
         """
 
-        return Vect(*self.components[1:])
+        return Vect(*self.components()[1:])
 
     @classmethod
     def from_class(cls, w, x, y, z):
@@ -102,7 +103,7 @@ class Quaternion(object):
           >>> Quaternion.from_array(np.array([7.65, -12.34, -1.0]))
           Traceback (most recent call last):
           ...
-          QuaternionInputException: Input array for quaternion must have size of 4
+          pygsf.exceptions.mathematics.QuaternionInputException: Input array for quaternion must have size of 4
         """
 
         if a.size != 4:
@@ -122,7 +123,7 @@ class Quaternion(object):
         :return: Quaternion instance
 
         Example:
-          >>> Quaternion.from_vect(Vect(1, 0, 3))
+          >>> Quaternion.fromVect(Vect(1, 0, 3))
           Quaternion(0.00000, 1.00000, 0.00000, 3.00000)
         """
 
@@ -534,7 +535,7 @@ class Quaternion(object):
           >>> Quaternion(1, 1, 3, 0).scalar_div(1e-11)
           Traceback (most recent call last):
           ...
-          QuaternionCalculationException: Quaternion division by almost zero value
+          pygsf.exceptions.mathematics.QuaternionCalculationException: Quaternion division by almost zero value
         """
 
         if abs(denominator) < quat_division_tolerance:

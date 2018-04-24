@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from ..mathematics.quaternions import Quaternion
+from ..orientations.rotations import *
 from .faults import *
 
 
@@ -307,6 +307,84 @@ class PTBAxes(object):
         """
 
         return Quaternion.from_rot_matr(self.to_matrix())
+
+
+
+def focmech_rotate(fm: PTBAxes, ra: RotationAxis) -> PTBAxes:
+    """
+    Rotate a fochal mechanism (a PTBAxes instance) to a new orientation
+    via a rotation axis.
+
+    :param fm: the focal mechanism to rotate
+    :type fm: PTBAxes
+    :param ra: the rotation axis
+    :type ra: RotationAxis
+    :return: the rotated focal mechanism
+    :rtype: PTBAxes
+    """
+
+    qfm = fm.to_quaternion()
+    qra = ra.to_rotation_quaternion()
+
+    qrot = qra * qfm
+
+    return PTBAxes.from_quaternion(qrot)
+
+
+def focmechs_invert_rotations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
+    """
+    Calculate the rotations between two focal mechanisms, sensu Kagan.
+    See Kagan Y.Y. papers for theoretical basis.
+    Practical implementation derive from Alberti, 2010:
+    Analysis of kinematic correlations in faults and focal mechanisms with GIS and Fortran programs.
+
+    :param fm1: a PTBAxes instance
+    :param fm2: another PTBAxes instance
+    :return:a list of 4 rotation axes, sorted by increasing rotation angle
+    """
+
+    # processing of equal focal mechanisms
+
+    t_axes_angle = fm1.t_axis.angle(fm2.t_axis)
+    p_axes_angle = fm1.p_axis.angle(fm2.p_axis)
+
+    if t_axes_angle < 0.5 and p_axes_angle < 0.5:
+        return []
+
+    # transformation of XYZ axes cartesian xyz (fm1,2) into quaternions q1,2
+
+    focmec1_matrix = fm1.to_matrix()
+    focmec2_matrix = fm2.to_matrix()
+
+    fm1_quaternion = Quaternion.from_rot_matr(focmec1_matrix)
+    fm2_quaternion = Quaternion.from_rot_matr(focmec2_matrix)
+
+    # calculation of quaternion inverse q1,2[-1]
+
+    fm1_inversequatern = fm1_quaternion.inverse
+    fm2_inversequatern = fm2_quaternion.inverse
+
+    # calculation of rotation quaternion : q' = q2*q1[-1]
+
+    base_rot_quater = fm2_quaternion * fm1_inversequatern
+
+    # calculation of secondary rotation pure quaternions: a(i,j,k) = q2*(i,j,k)*q2[-1]
+
+    axes_quats = [
+        Quaternion.i(),
+        Quaternion.j(),
+        Quaternion.k()]
+
+    suppl_prod2quat = map(lambda ax_quat: fm2_quaternion * (ax_quat * fm2_inversequatern), axes_quats)
+
+    # calculation of the other 3 rotation quaternions: q'(i,j,k) = a(i,j,k)*q'
+
+    rotations_quaternions = list(map(lambda quat: quat * base_rot_quater, suppl_prod2quat))
+    rotations_quaternions.append(base_rot_quater)
+
+    rotation_axes = list(map(lambda quat: RotationAxis.fromQuaternion(quat).to_min_rotation_axis(), rotations_quaternions))
+
+    return sort_rotations(rotation_axes)
 
 
 if __name__ == "__main__":

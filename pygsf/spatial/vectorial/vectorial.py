@@ -2,7 +2,7 @@
 
 
 from ...exceptions.spatial import *
-
+from ...defaults.orientations import *
 from ...mathematics.vectors import *
 
 

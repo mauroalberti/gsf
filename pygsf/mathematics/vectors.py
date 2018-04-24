@@ -41,7 +41,6 @@ def normXYZ(x: [int, float], y: [int, float], z: [int, float]):
     return mag, norm_xyz
 
 
-
 class Vect(object):
     """
     Cartesian 3D vector.
@@ -61,11 +60,11 @@ class Vect(object):
           >>> Vect(1, np.nan, 1)
           Traceback (most recent call last):
           ...
-          VectorInputException: Input values must be finite
+          pygsf.exceptions.mathematics.VectorInputException: Input values must be finite
           >>> Vect(1, 0, np.inf)
           Traceback (most recent call last):
           ...
-          VectorInputException: Input values must be finite
+          pygsf.exceptions.mathematics.VectorInputException: Input values must be finite
           >>> Vect(0, 0, 0)
           Vect(0.0000, 0.0000, 0.0000)
         """
@@ -667,7 +666,7 @@ class Vect(object):
             else:
                 return val
 
-    def angle(self, another: 'Vect') -> Optional[float]:
+    def angle(self, another: 'Vect', unit='d') -> Optional[float]:
         """
         Calculate angle between two vectors, as degrees
         in 0° - 180° range.
@@ -690,7 +689,13 @@ class Vect(object):
         if not (self.isValid and another.isValid):
             return None
         else:
-            return degrees(acos(self.angleCos(another)))
+            angle_rad = acos(self.angleCos(another))
+            if unit == 'd':
+                return degrees(angle_rad)
+            elif unit == 'r':
+                return angle_rad
+            else:
+                raise VectorInputException("Unit must be 'd' or 'r'")
 
     def vCross(self, another: 'Vect') -> 'Vect':
         """

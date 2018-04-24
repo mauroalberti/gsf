@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
+
 from typing import List
 
-from pygsf.geology.ptbaxes import PTBAxes
 from pygsf.mathematics.quaternions import *
+from .orientations import *
 
 
 class RotationAxis(object):
@@ -13,7 +14,7 @@ class RotationAxis(object):
 
     def __repr__(self):
 
-        return "RotationAxis({:.4f}, {:.4f}, {:.4f})".format(self.gv.tr, self.gv.pl, self.a)
+        return "RotationAxis({:.4f}, {:.4f}, {:.4f})".format(*self.gv.d, self.a)
 
     def __init__(self, trend=float('nan'), plunge=float('nan'), rot_ang=float('nan')):
         """
@@ -28,11 +29,11 @@ class RotationAxis(object):
         RotationAxis(0.0000, 90.0000, 120.0000)
         """
 
-        self.gv = Direct(trend, plunge)
+        self.gv = Direct.fromAzPl(trend, plunge)
         self.a = float(rot_ang)
 
     @classmethod
-    def from_quaternion(cls, quat: Quaternion):
+    def fromQuaternion(cls, quat: Quaternion):
         """
         Calculates the Rotation Axis expressed by a quaternion.
         The resulting rotation asVect is set to point downward.
@@ -41,29 +42,29 @@ class RotationAxis(object):
         :return: RotationAxis instance.
 
         Examples:
-          >>> RotationAxis.from_quaternion(Quaternion(0.5, 0.5, 0.5, 0.5))
+          >>> RotationAxis.fromQuaternion(Quaternion(0.5, 0.5, 0.5, 0.5))
           RotationAxis(45.0000, -35.2644, 120.0000)
-          >>> RotationAxis.from_quaternion(Quaternion(sqrt(2)/2, 0.0, 0.0, sqrt(2)/2))
+          >>> RotationAxis.fromQuaternion(Quaternion(sqrt(2)/2, 0.0, 0.0, sqrt(2)/2))
           RotationAxis(0.0000, -90.0000, 90.0000)
-          >>> RotationAxis.from_quaternion(Quaternion(sqrt(2)/2, sqrt(2)/2, 0.0, 0.0))
+          >>> RotationAxis.fromQuaternion(Quaternion(sqrt(2)/2, sqrt(2)/2, 0.0, 0.0))
           RotationAxis(90.0000, 0.0000, 90.0000)
         """
 
         if abs(quat) < quat_magn_thresh:
 
             rot_ang = 0.0
-            rot_gvect = GVect(0.0, 0.0)
+            rot_gvect = Direct(0.0, 0.0)
 
         elif are_close(quat.scalar, 1):
 
             rot_ang = 0.0
-            rot_gvect = GVect(0.0, 0.0)
+            rot_gvect = Direct(0.0, 0.0)
 
         else:
 
             unit_quat = quat.normalize()
             rot_ang = unit_quat.rotation_angle()
-            rot_gvect = unit_quat.vector.asOrien()
+            rot_gvect = Direct.fromVect(unit_quat.vector)
 
         obj = cls()
         obj.gv = rot_gvect
@@ -72,23 +73,23 @@ class RotationAxis(object):
         return obj
 
     @classmethod
-    def from_gvect(cls, gvector: GVect, angle: float):
+    def fromDirect(cls, direct: Direct, angle: float):
         """
-        Class constructor from a GVect instance and an angle value.
+        Class constructor from a Direct instance and an angle value.
 
-        :param gvector: a GVect instance
+        :param gvector: a Direct instance
         :param angle: float value
         :return: RotationAxis instance
 
         Example:
-          >>> RotationAxis.from_gvect(GVect(320, 12), 30)
+          >>> RotationAxis.fromDirect(Direct(320, 12), 30)
           RotationAxis(320.0000, 12.0000, 30.0000)
-          >>> RotationAxis.from_gvect(GVect(315.0, -0.0), 10)
+          >>> RotationAxis.fromDirect(Direct(315.0, -0.0), 10)
           RotationAxis(315.0000, -0.0000, 10.0000)
         """
 
         obj = cls()
-        obj.gv = gvector
+        obj.gv = direct
         obj.a = float(angle)
 
         return obj
@@ -108,25 +109,25 @@ class RotationAxis(object):
         return self.a
 
     @property
-    def rot_vect(self) -> GVect:
+    def rot_vect(self) -> Direct:
         """
-        Returns the rotation axis, expressed as a GVect.
+        Returns the rotation axis, expressed as a Direct.
 
-        :return: GVect instance
+        :return: Direct instance
 
         Example:
           >>> RotationAxis(320, 40, 15).rot_vect
-          GVect(320.00, +40.00)
+          Direct(az: 320.00°, pl: 40.00°)
           >>> RotationAxis(135, 0, -10).rot_vect
-          GVect(135.00, +00.00)
+          Direct(az: 135.00°, pl: 0.00°)
           >>> RotationAxis(45, 10, 10).rot_vect
-          GVect(045.00, +10.00)
+          Direct(az: 45.00°, pl: 10.00°)
         """
 
         return self.gv
 
     @classmethod
-    def from_vect(cls, vector: Vect, angle: float):
+    def fromVect(cls, vector: Vect, angle: float):
         """
         Class constructor from a Vect instance and an angle value.
 
@@ -135,11 +136,11 @@ class RotationAxis(object):
         :return: RotationAxis instance
 
         Example:
-          >>> RotationAxis.from_vect(Vect(0, 1, 0), 30)
+          >>> RotationAxis.fromVect(Vect(0, 1, 0), 30)
           RotationAxis(0.0000, 0.0000, 30.0000)
-          >>> RotationAxis.from_vect(Vect(1, 0, 0), 30)
+          >>> RotationAxis.fromVect(Vect(1, 0, 0), 30)
           RotationAxis(90.0000, 0.0000, 30.0000)
-          >>> RotationAxis.from_vect(Vect(0, 0, -1), 30)
+          >>> RotationAxis.fromVect(Vect(0, 0, -1), 30)
           RotationAxis(0.0000, 90.0000, 30.0000)
         """
 
@@ -179,7 +180,7 @@ class RotationAxis(object):
         gvect_opp = self.rot_vect.opposite()
         opposite_angle = (360.0 - self.rot_ang) % 360.0
 
-        return RotationAxis.from_gvect(gvect_opp, opposite_angle)
+        return RotationAxis.fromDirect(gvect_opp, opposite_angle)
 
     def compl180(self):
         """
@@ -197,12 +198,12 @@ class RotationAxis(object):
         """
 
         rot_ang = - (180.0 - self.rot_ang) % 360.0
-        return RotationAxis.from_gvect(self.gv, rot_ang)
+        return RotationAxis.fromDirect(self.gv, rot_ang)
 
     def strictly_equival(self, another, angle_tolerance: float = VECTOR_ANGLE_THRESHOLD) -> bool:
         """
         Checks if two RotationAxis are almost equal, based on a strict checking
-        of the GVect component and of the rotation angle.
+        of the Direct component and of the rotation angle.
 
         :param another: another RotationAxis instance, to be compared with
         :type another: RotationAxis
@@ -210,14 +211,14 @@ class RotationAxis(object):
         :rtype: bool
 
         Examples:
-          >>> ra_1 = RotationAxis.from_gvect(GVect(180, 10), 10)
-          >>> ra_2 = RotationAxis.from_gvect(GVect(180, 10), 10.5)
+          >>> ra_1 = RotationAxis(180, 10, 10)
+          >>> ra_2 = RotationAxis(180, 10, 10.5)
           >>> ra_1.strictly_equival(ra_2)
           True
-          >>> ra_3 = RotationAxis.from_gvect(GVect(180.2, 10), 10.4)
+          >>> ra_3 = RotationAxis(180.2, 10, 10.4)
           >>> ra_1.strictly_equival(ra_3)
           True
-          >>> ra_4 = RotationAxis.from_gvect(GVect(184.9, 10), 10.4)
+          >>> ra_4 = RotationAxis(184.9, 10, 10.4)
           >>> ra_1.strictly_equival(ra_4)
           False
         """
@@ -298,8 +299,8 @@ def sort_rotations(rotation_axes: List[RotationAxis]) -> List[RotationAxis]:
     :return: the sorted list of RotationAxis
 
     Example:
-      >>> rotations = [RotationAxis(110, 14, -23), RotationAxis(42, 13, 17), RotationAxis(149, 87, 13)]
-      >>> sort_rotations(rotations)
+      >>> rots = [RotationAxis(110, 14, -23), RotationAxis(42, 13, 17), RotationAxis(149, 87, 13)]
+      >>> sort_rotations(rots)
       [RotationAxis(149.0000, 87.0000, 13.0000), RotationAxis(42.0000, 13.0000, 17.0000), RotationAxis(110.0000, 14.0000, -23.0000)]
     """
 
@@ -350,83 +351,6 @@ def quat_rot_quat(q1: Quaternion, q2: Quaternion) -> Quaternion:
     """
 
     return q2 * q1
-
-
-def focmech_rotate(fm: PTBAxes, ra: RotationAxis) -> PTBAxes:
-    """
-    Rotate a fochal mechanism (a PTBAxes instance) to a new orientation
-    via a rotation axis.
-
-    :param fm: the focal mechanism to rotate
-    :type fm: PTBAxes
-    :param ra: the rotation axis
-    :type ra: RotationAxis
-    :return: the rotated focal mechanism
-    :rtype: PTBAxes
-    """
-
-    qfm = fm.to_quaternion()
-    qra = ra.to_rotation_quaternion()
-
-    qrot = qra * qfm
-
-    return PTBAxes.from_quaternion(qrot)
-
-
-def focmechs_invert_rotations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
-    """
-    Calculate the rotations between two focal mechanisms, sensu Kagan.
-    See Kagan Y.Y. papers for theoretical basis.
-    Practical implementation derive from Alberti, 2010:
-    Analysis of kinematic correlations in faults and focal mechanisms with GIS and Fortran programs.
-
-    :param fm1: a PTBAxes instance
-    :param fm2: another PTBAxes instance
-    :return:a list of 4 rotation axes, sorted by increasing rotation angle
-    """
-
-    # processing of equal focal mechanisms
-
-    t_axes_angle = fm1.t_axis.angle(fm2.t_axis)
-    p_axes_angle = fm1.p_axis.angle(fm2.p_axis)
-
-    if t_axes_angle < 0.5 and p_axes_angle < 0.5:
-        return []
-
-    # transformation of XYZ axes cartesian xyz (fm1,2) into quaternions q1,2
-
-    focmec1_matrix = fm1.to_matrix()
-    focmec2_matrix = fm2.to_matrix()
-
-    fm1_quaternion = Quaternion.from_rot_matr(focmec1_matrix)
-    fm2_quaternion = Quaternion.from_rot_matr(focmec2_matrix)
-
-    # calculation of quaternion inverse q1,2[-1]
-
-    fm1_inversequatern = fm1_quaternion.inverse
-    fm2_inversequatern = fm2_quaternion.inverse
-
-    # calculation of rotation quaternion : q' = q2*q1[-1]
-
-    base_rot_quater = fm2_quaternion * fm1_inversequatern
-
-    # calculation of secondary rotation pure quaternions: a(i,j,k) = q2*(i,j,k)*q2[-1]
-
-    axes_quats = [
-        Quaternion.i(),
-        Quaternion.j(),
-        Quaternion.k()]
-
-    suppl_prod2quat = map(lambda ax_quat: fm2_quaternion * (ax_quat * fm2_inversequatern), axes_quats)
-
-    # calculation of the other 3 rotation quaternions: q'(i,j,k) = a(i,j,k)*q'
-
-    rotations_quaternions = list(map(lambda quat: quat * base_rot_quater, suppl_prod2quat))
-    rotations_quaternions.append(base_rot_quater)
-
-    rotation_axes = list(map(lambda quat: RotationAxis.from_quaternion(quat).to_min_rotation_axis(), rotations_quaternions))
-
-    return sort_rotations(rotation_axes)
 
 
 if __name__ == "__main__":
