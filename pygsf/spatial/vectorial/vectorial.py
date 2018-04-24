@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import Optional
+from ...exceptions.spatial import *
 
-from typing import Tuple
-
-from ...mathematics.arrays import *
-from ...defaults.mathematics import *
-
-
-isfinite = np.isfinite
-array = np.array
+from ...mathematics.vectors import *
 
 
 class Point(object):
@@ -131,7 +124,7 @@ class Point(object):
 
         return self.x, self.y, self.z
 
-    def toArray(self) -> 'numpy.array':
+    def toArray(self) -> 'array':
         """
         Return a double Numpy array representing the point values.
 

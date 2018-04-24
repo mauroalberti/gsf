@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-from ..defaults.orientations import *
 from ..orientations.orientations import *
 from ..exceptions.geology import *
 
 
-class Slick(Orien):
+class Slick(Direct):
     """
     Slickeline.
     It can be defined through a OrienM instance, in which case it has a movement sense,

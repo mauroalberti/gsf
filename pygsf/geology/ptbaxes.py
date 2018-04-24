@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
+
+from ..mathematics.quaternions import Quaternion
 from .faults import *
-from pygsf.mathematics.quaternions import Quaternion
-from ..exceptions.geology import *
 
 
 class PTBAxes(object):

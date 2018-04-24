@@ -28,7 +28,7 @@ class RotationAxis(object):
         RotationAxis(0.0000, 90.0000, 120.0000)
         """
 
-        self.gv = Orien(trend, plunge)
+        self.gv = Direct(trend, plunge)
         self.a = float(rot_ang)
 
     @classmethod

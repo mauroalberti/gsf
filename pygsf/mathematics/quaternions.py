@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from math import sqrt, degrees, acos
-import numpy as np
 
-from pygsf.defaults.quaternions import *
-from pygsf.mathematics.scalars import are_close
-from pygsf.mathematics.arrays import arrays_are_close
-from pygsf.spatial.vector.vector import Vect
+from .vectors import *
 
 
 class Quaternion(object):

@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
-from __future__ import division
+from math import sin, radians, pi
 
-from math import sin, cos, radians, pi
-
-from typing import Tuple
-
-from pygsf.mathematics.arrays import *
-from pygsf.spatial.vector.vector import *
-from pygsf.orientations.utils import *
-
-
-isfinite = np.isfinite
-array = np.array
+from ..defaults.orientations import *
+from ..exceptions.orientations import *
+from ..mathematics.vectors import *
+from ..spatial.vectorial.vectorial import *
+from ..orientations.utils import *
 
 
 class Azim(object):
@@ -343,9 +337,9 @@ class Plunge(object):
         return self.r > 0.0
 
 
-class Orien(object):
+class Direct(object):
     """
-    Class describing an orientation, expressed as a polar direction.
+    Class describing a direction, expressed as a polar direction.
     """
 
     def __init__(self, az: 'Azim', pl: 'Plunge'):
@@ -373,9 +367,9 @@ class Orien(object):
         :return: tuple of azimuth and plunge in decimal degrees
 
         Example:
-          >>> Orien.fromAzPl(100, 20).d
+          >>> Direct.fromAzPl(100, 20).d
           (100.0, 20.0)
-          >>> Orien.fromAzPl(-pi/2, -pi/4, unit='r').d
+          >>> Direct.fromAzPl(-pi/2, -pi/4, unit='r').d
           (270.0, -45.0)
         """
 
@@ -389,7 +383,7 @@ class Orien(object):
         :return: tuple of azimuth and plunge in radians
 
         Example:
-          >>> Orien.fromAzPl(90, 45).r
+          >>> Direct.fromAzPl(90, 45).r
           (1.5707963267948966, 0.7853981633974483)
         """
 
@@ -416,7 +410,7 @@ class Orien(object):
         return self._pl
 
     @classmethod
-    def fromAzPl(cls, az: [int, float], pl: [int, float], unit='d') -> 'Orien':
+    def fromAzPl(cls, az: [int, float], pl: [int, float], unit='d') -> 'Direct':
         """
         Class constructor from trend and plunge.
 
@@ -426,21 +420,21 @@ class Orien(object):
         :return: Orientation instance
 
         Examples:
-          >>> Orien.fromAzPl(30, 40)
+          >>> Direct.fromAzPl(30, 40)
           Orien(az: 30.00°, pl: 40.00°)
-          >>> Orien.fromAzPl(370, 80)
+          >>> Direct.fromAzPl(370, 80)
           Orien(az: 10.00°, pl: 80.00°)
-          >>> Orien.fromAzPl(pi/2, pi/4, unit='r')
+          >>> Direct.fromAzPl(pi/2, pi/4, unit='r')
           Orien(az: 90.00°, pl: 45.00°)
-          >>> Orien.fromAzPl(280, -100)
+          >>> Direct.fromAzPl(280, -100)
           Traceback (most recent call last):
           ...
           GeomInputException: Input value in degrees must be between -90° and 90°
-          >>> Orien.fromAzPl("10", 0)
+          >>> Direct.fromAzPl("10", 0)
           Traceback (most recent call last):
           ...
           GeomInputException: Input azimuth value must be int/float
-          >>> Orien.fromAzPl(100, np.nan)
+          >>> Direct.fromAzPl(100, np.nan)
           Traceback (most recent call last):
           ...
           GeomInputException: Input plunge value must be finite
@@ -452,7 +446,7 @@ class Orien(object):
         return cls(azim, plng)
 
     @classmethod
-    def _from_xyz(cls, x: [int, float], y: [int, float], z: [int, float]) -> 'Orien':
+    def _from_xyz(cls, x: [int, float], y: [int, float], z: [int, float]) -> 'Direct':
         """
         Private class constructor from three Cartesian values. Note: norm of components is unit.
 
@@ -470,7 +464,7 @@ class Orien(object):
         return cls(az, pl)
 
     @classmethod
-    def fromXYZ(cls, x: [int, float], y: [int, float], z: [int, float]) -> 'Orien':
+    def fromXYZ(cls, x: [int, float], y: [int, float], z: [int, float]) -> 'Direct':
         """
         Class constructor from three generic Cartesian values.
 
@@ -480,21 +474,21 @@ class Orien(object):
         :return: Orientation instance
 
         Examples:
-          >>> Orien.fromXYZ(1, 0, 0)
+          >>> Direct.fromXYZ(1, 0, 0)
           Orien(az: 90.00°, pl: -0.00°)
-          >>> Orien.fromXYZ(0, 1, 0)
+          >>> Direct.fromXYZ(0, 1, 0)
           Orien(az: 0.00°, pl: -0.00°)
-          >>> Orien.fromXYZ(0, 0, 1)
+          >>> Direct.fromXYZ(0, 0, 1)
           Orien(az: 0.00°, pl: -90.00°)
-          >>> Orien.fromXYZ(0, 0, -1)
+          >>> Direct.fromXYZ(0, 0, -1)
           Orien(az: 0.00°, pl: 90.00°)
-          >>> Orien.fromXYZ(1, 1, 0)
+          >>> Direct.fromXYZ(1, 1, 0)
           Orien(az: 45.00°, pl: -0.00°)
-          >>> Orien.fromXYZ(0.5, -0.5, -0.7071067811865476)
+          >>> Direct.fromXYZ(0.5, -0.5, -0.7071067811865476)
           Orien(az: 135.00°, pl: 45.00°)
-          >>> Orien.fromXYZ(-0.5, 0.5, 0.7071067811865476)
+          >>> Direct.fromXYZ(-0.5, 0.5, 0.7071067811865476)
           Orien(az: 315.00°, pl: -45.00°)
-          >>> Orien.fromXYZ(0, 0, 0)
+          >>> Direct.fromXYZ(0, 0, 0)
           Traceback (most recent call last):
           ...
           GeomInputException: Input components have near-zero values
@@ -505,39 +499,39 @@ class Orien(object):
         if norm_xyz is None:
             raise GeomInputException("Input components have near-zero values")
 
-        return Orien._from_xyz(*norm_xyz)
+        return Direct._from_xyz(*norm_xyz)
 
     @classmethod
-    def fromVect(cls, vect: Vect) -> Optional['Orien']:
+    def fromVect(cls, vect: Vect) -> Optional['Direct']:
         """
-        Calculate the polar orientation parallel to the Vect instance.
+        Calculate the polar direction parallel to the Vect instance.
         Trend range: [0°, 360°[
         Plunge range: [-90°, 90°], with negative values for upward-pointing
         geological axes and positive values for downward-pointing axes.
 
         Examples:
-          >>> Orien.fromVect(Vect(1, 1, 1))
+          >>> Direct.fromVect(Vect(1, 1, 1))
           Orien(az: 45.00°, pl: -35.26°)
-          >>> Orien.fromVect(Vect(0, 1, 1))
+          >>> Direct.fromVect(Vect(0, 1, 1))
           Orien(az: 0.00°, pl: -45.00°)
-          >>> Orien.fromVect(Vect(1, 0, 1))
+          >>> Direct.fromVect(Vect(1, 0, 1))
           Orien(az: 90.00°, pl: -45.00°)
-          >>> Orien.fromVect(Vect(0, 0, 1))
+          >>> Direct.fromVect(Vect(0, 0, 1))
           Orien(az: 0.00°, pl: -90.00°)
-          >>> Orien.fromVect(Vect(0, 0, -1))
+          >>> Direct.fromVect(Vect(0, 0, -1))
           Orien(az: 0.00°, pl: 90.00°)
-          >>> Orien.fromVect(Vect(-1, 0, 0))
+          >>> Direct.fromVect(Vect(-1, 0, 0))
           Orien(az: 270.00°, pl: 0.00°)
-          >>> Orien.fromVect(Vect(0, -1, 0))
+          >>> Direct.fromVect(Vect(0, -1, 0))
           Orien(az: 180.00°, pl: 0.00°)
-          >>> Orien.fromVect(Vect(-1, -1, 0))
+          >>> Direct.fromVect(Vect(-1, -1, 0))
           Orien(az: 225.00°, pl: 0.00°)
-          >>> Orien.fromVect(Vect(0, 0, 0)) is None
+          >>> Direct.fromVect(Vect(0, 0, 0)) is None
           True
         """
 
         x, y, z = vect.toXYZ()
-        return Orien.fromXYZ(x, y, z)
+        return Direct.fromXYZ(x, y, z)
 
     def __repr__(self) -> str:
 
@@ -545,28 +539,28 @@ class Orien(object):
 
     def toXYZ(self) -> Tuple[float, float, float]:
         """
-        Converts an orientation to a tuple of x, y and z cartesian components (with unit norm).
+        Converts a direction to a tuple of x, y and z cartesian components (with unit norm).
 
         :return: tuple of x, y and z components.
 
         Examples:
           >>> az, pl = Azim(90), Plunge(0)
-          >>> apprFTuple(Orien(az, pl).toXYZ())
+          >>> apprFTuple(Direct(az, pl).toXYZ())
           (1.0, 0.0, 0.0)
           >>> az, pl = Azim(135), Plunge(45)
-          >>> apprFTuple(Orien(az, pl).toXYZ(), ndec=6)
+          >>> apprFTuple(Direct(az, pl).toXYZ(), ndec=6)
           (0.5, -0.5, -0.707107)
           >>> az, pl = Azim(135), Plunge(0)
-          >>> apprFTuple(Orien(az, pl).toXYZ(), ndec=6)
+          >>> apprFTuple(Direct(az, pl).toXYZ(), ndec=6)
           (0.707107, -0.707107, 0.0)
           >>> az, pl = Azim(180), Plunge(45)
-          >>> apprFTuple(Orien(az, pl).toXYZ(), ndec=6)
+          >>> apprFTuple(Direct(az, pl).toXYZ(), ndec=6)
           (0.0, -0.707107, -0.707107)
           >>> az, pl = Azim(225), Plunge(-45)
-          >>> apprFTuple(Orien(az, pl).toXYZ(), ndec=6)
+          >>> apprFTuple(Direct(az, pl).toXYZ(), ndec=6)
           (-0.5, -0.5, 0.707107)
           >>> az, pl = Azim(270), Plunge(90)
-          >>> apprFTuple(Orien(az, pl).toXYZ(), ndec=6)
+          >>> apprFTuple(Direct(az, pl).toXYZ(), ndec=6)
           (0.0, 0.0, -1.0)
         """
 
@@ -580,22 +574,22 @@ class Orien(object):
         Return a copy of the Orientation instance.
 
         Example:
-          >>> Orien.fromAzPl(10, 20).copy()
+          >>> Direct.fromAzPl(10, 20).copy()
           Orien(az: 10.00°, pl: 20.00°)
         """
 
-        return Orien(self.az, self.pl)
+        return Direct(self.az, self.pl)
 
     def opposite(self):
         """
-        Return the opposite orientation.
+        Return the opposite direction.
 
         Example:
-          >>> Orien.fromAzPl(0, 30).opposite()
+          >>> Direct.fromAzPl(0, 30).opposite()
           Orien(az: 180.00°, pl: -30.00°)
-          >>> Orien.fromAzPl(315, 10).opposite()
+          >>> Direct.fromAzPl(315, 10).opposite()
           Orien(az: 135.00°, pl: -10.00°)
-          >>> Orien.fromAzPl(135, 0).opposite()
+          >>> Direct.fromAzPl(135, 0).opposite()
           Orien(az: 315.00°, pl: -0.00°)
         """
 
@@ -604,25 +598,25 @@ class Orien(object):
         az = (az + pi) % (2*pi)
         pl = -pl
 
-        return Orien.fromAzPl(az, pl, unit='r')
+        return Direct.fromAzPl(az, pl, unit='r')
 
     def mirrorHoriz(self):
         """
         Return the mirror Orientation using a horizontal plane.
 
         Example:
-          >>> Orien.fromAzPl(0, 30).mirrorHoriz()
+          >>> Direct.fromAzPl(0, 30).mirrorHoriz()
           Orien(az: 0.00°, pl: -30.00°)
-          >>> Orien.fromAzPl(315, 10).mirrorHoriz()
+          >>> Direct.fromAzPl(315, 10).mirrorHoriz()
           Orien(az: 315.00°, pl: -10.00°)
-          >>> Orien.fromAzPl(135, 0).mirrorHoriz()
+          >>> Direct.fromAzPl(135, 0).mirrorHoriz()
           Orien(az: 135.00°, pl: -0.00°)
         """
 
         az = self.az.r
         pl = -self.pl.r
 
-        return Orien.fromAzPl(az, pl, unit='r')
+        return Direct.fromAzPl(az, pl, unit='r')
 
     @property
     def colatNorth(self) -> float:
@@ -633,15 +627,15 @@ class Orien(object):
         :rtype: float
 
         Examples:
-          >>> Orien.fromAzPl(320, 90).colatNorth
+          >>> Direct.fromAzPl(320, 90).colatNorth
           180.0
-          >>> Orien.fromAzPl(320, 45).colatNorth
+          >>> Direct.fromAzPl(320, 45).colatNorth
           135.0
-          >>> Orien.fromAzPl(320, 0).colatNorth
+          >>> Direct.fromAzPl(320, 0).colatNorth
           90.0
-          >>> Orien.fromAzPl(320, -45).colatNorth
+          >>> Direct.fromAzPl(320, -45).colatNorth
           45.0
-          >>> Orien.fromAzPl(320, -90).colatNorth
+          >>> Direct.fromAzPl(320, -90).colatNorth
           0.0
         """
 
@@ -656,15 +650,15 @@ class Orien(object):
         :rtype: float
 
         Examples:
-          >>> Orien.fromAzPl(320, 90).colatSouth
+          >>> Direct.fromAzPl(320, 90).colatSouth
           0.0
-          >>> Orien.fromAzPl(320, 45).colatSouth
+          >>> Direct.fromAzPl(320, 45).colatSouth
           45.0
-          >>> Orien.fromAzPl(320, 0).colatSouth
+          >>> Direct.fromAzPl(320, 0).colatSouth
           90.0
-          >>> Orien.fromAzPl(320, -45).colatSouth
+          >>> Direct.fromAzPl(320, -45).colatSouth
           135.0
-          >>> Orien.fromAzPl(320, -90).colatSouth
+          >>> Direct.fromAzPl(320, -90).colatSouth
           180.0
         """
 
@@ -675,11 +669,11 @@ class Orien(object):
         Return the unit vector corresponding to the Orien instance.
 
         Examples:
-          >>> Orien.fromAzPl(0, 90).asVersor()
+          >>> Direct.fromAzPl(0, 90).asVersor()
           Vect(0.0000, 0.0000, -1.0000)
-          >>> Orien.fromAzPl(0, -90).asVersor()
+          >>> Direct.fromAzPl(0, -90).asVersor()
           Vect(0.0000, 0.0000, 1.0000)
-          >>> Orien.fromAzPl(90, 90).asVersor()
+          >>> Direct.fromAzPl(90, 90).asVersor()
           Vect(0.0000, 0.0000, -1.0000)
         """
 
@@ -698,11 +692,11 @@ class Orien(object):
         Check whether the instance is pointing upward or horizontal.
 
         Examples:
-          >>> Orien.fromAzPl(10, 15).isUpward
+          >>> Direct.fromAzPl(10, 15).isUpward
           False
-          >>> Orien.fromAzPl(257.4, 0.0).isUpward
+          >>> Direct.fromAzPl(257.4, 0.0).isUpward
           False
-          >>> Orien.fromAzPl(90, -45).isUpward
+          >>> Direct.fromAzPl(90, -45).isUpward
           True
         """
 
@@ -714,11 +708,11 @@ class Orien(object):
         Check whether the instance is pointing downward or horizontal.
 
         Examples:
-          >>> Orien.fromAzPl(10, 15).isDownward
+          >>> Direct.fromAzPl(10, 15).isDownward
           True
-          >>> Orien.fromAzPl(257.4, 0.0).isDownward
+          >>> Direct.fromAzPl(257.4, 0.0).isDownward
           False
-          >>> Orien.fromAzPl(90, -45).isDownward
+          >>> Direct.fromAzPl(90, -45).isDownward
           False
         """
 
@@ -729,21 +723,21 @@ class Orien(object):
         Return upward-point geological vector.
 
         Examples:
-          >>> Orien.fromAzPl(90, -45).upward().isAlmostParallel(Orien.fromAzPl(90.0, -45.0))
+          >>> Direct.fromAzPl(90, -45).upward().isAlmostParallel(Direct.fromAzPl(90.0, -45.0))
           True
-          >>> Orien.fromAzPl(180, 45).upward().isAlmostParallel(Orien.fromAzPl(0.0, -45.0))
+          >>> Direct.fromAzPl(180, 45).upward().isAlmostParallel(Direct.fromAzPl(0.0, -45.0))
           True
-          >>> Orien.fromAzPl(0, 0).upward().isAlmostParallel(Orien.fromAzPl(0.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).upward().isAlmostParallel(Direct.fromAzPl(0.0, 0.0))
           True
-          >>> Orien.fromAzPl(0, 90).upward().isAlmostParallel(Orien.fromAzPl(180.0, -90.0))
+          >>> Direct.fromAzPl(0, 90).upward().isAlmostParallel(Direct.fromAzPl(180.0, -90.0))
           True
-          >>> Orien.fromAzPl(90, -45).upward().isAlmostParallel(Orien.fromAzPl(90.0, -35.0))
+          >>> Direct.fromAzPl(90, -45).upward().isAlmostParallel(Direct.fromAzPl(90.0, -35.0))
           False
-          >>> Orien.fromAzPl(180, 45).upward().isAlmostParallel(Orien.fromAzPl(10.0, -45.0))
+          >>> Direct.fromAzPl(180, 45).upward().isAlmostParallel(Direct.fromAzPl(10.0, -45.0))
           False
-          >>> Orien.fromAzPl(0, 0).upward().isAlmostParallel(Orien.fromAzPl(170.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).upward().isAlmostParallel(Direct.fromAzPl(170.0, 0.0))
           False
-          >>> Orien.fromAzPl(0, 90).upward().isAlmostParallel(Orien.fromAzPl(180.0, -80.0))
+          >>> Direct.fromAzPl(0, 90).upward().isAlmostParallel(Direct.fromAzPl(180.0, -80.0))
           False
         """
 
@@ -757,21 +751,21 @@ class Orien(object):
         Return downward-pointing geological vector.
 
         Examples:
-          >>> Orien.fromAzPl(90, -45).downward().isAlmostParallel(Orien.fromAzPl(270.0, 45.0))
+          >>> Direct.fromAzPl(90, -45).downward().isAlmostParallel(Direct.fromAzPl(270.0, 45.0))
           True
-          >>> Orien.fromAzPl(180, 45).downward().isAlmostParallel(Orien.fromAzPl(180.0, 45.0))
+          >>> Direct.fromAzPl(180, 45).downward().isAlmostParallel(Direct.fromAzPl(180.0, 45.0))
           True
-          >>> Orien.fromAzPl(0, 0).downward().isAlmostParallel(Orien.fromAzPl(180.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).downward().isAlmostParallel(Direct.fromAzPl(180.0, 0.0))
           False
-          >>> Orien.fromAzPl(0, 90).downward().isAlmostParallel(Orien.fromAzPl(0.0, 90.0))
+          >>> Direct.fromAzPl(0, 90).downward().isAlmostParallel(Direct.fromAzPl(0.0, 90.0))
           True
-          >>> Orien.fromAzPl(90, -45).downward().isAlmostParallel(Orien.fromAzPl(270.0, 35.0))
+          >>> Direct.fromAzPl(90, -45).downward().isAlmostParallel(Direct.fromAzPl(270.0, 35.0))
           False
-          >>> Orien.fromAzPl(180, 45).downward().isAlmostParallel(Orien.fromAzPl(170.0, 45.0))
+          >>> Direct.fromAzPl(180, 45).downward().isAlmostParallel(Direct.fromAzPl(170.0, 45.0))
           False
-          >>> Orien.fromAzPl(0, 0).downward().isAlmostParallel(Orien.fromAzPl(180.0, 10.0))
+          >>> Direct.fromAzPl(0, 0).downward().isAlmostParallel(Direct.fromAzPl(180.0, 10.0))
           False
-          >>> Orien.fromAzPl(0, 90).downward().isAlmostParallel(Orien.fromAzPl(0.0, 80.0))
+          >>> Direct.fromAzPl(0, 90).downward().isAlmostParallel(Direct.fromAzPl(0.0, 80.0))
           False
         """
 
@@ -792,13 +786,13 @@ class Orien(object):
         :return: Boolean
 
         Examples:
-          >>> Orien.fromAzPl(90, -45).isAbsDipInRange(30, 60)
+          >>> Direct.fromAzPl(90, -45).isAbsDipInRange(30, 60)
           True
-          >>> Orien.fromAzPl(120, 0).isAbsDipInRange(0, 60)
+          >>> Direct.fromAzPl(120, 0).isAbsDipInRange(0, 60)
           False
-          >>> Orien.fromAzPl(120, 0).isAbsDipInRange(0, 60, min_val_incl=True)
+          >>> Direct.fromAzPl(120, 0).isAbsDipInRange(0, 60, min_val_incl=True)
           True
-          >>> Orien.fromAzPl(120, 60).isAbsDipInRange(0, 60)
+          >>> Direct.fromAzPl(120, 60).isAbsDipInRange(0, 60)
           True
         """
 
@@ -824,11 +818,11 @@ class Orien(object):
         Check whether the instance is almost horizontal.
 
         Examples:
-          >>> Orien.fromAzPl(10, 15).isSubHorizontal()
+          >>> Direct.fromAzPl(10, 15).isSubHorizontal()
           False
-          >>> Orien.fromAzPl(257, 2).isSubHorizontal()
+          >>> Direct.fromAzPl(257, 2).isSubHorizontal()
           True
-          >>> Orien.fromAzPl(90, -5).isSubHorizontal()
+          >>> Direct.fromAzPl(90, -5).isSubHorizontal()
           False
         """
 
@@ -839,9 +833,9 @@ class Orien(object):
         Check whether the instance is almost vertical.
 
         Examples:
-          >>> Orien.fromAzPl(10, 15).isSubVertical()
+          >>> Direct.fromAzPl(10, 15).isSubVertical()
           False
-          >>> Orien.fromAzPl(257, 89).isSubVertical()
+          >>> Direct.fromAzPl(257, 89).isSubVertical()
           True
         """
 
@@ -853,15 +847,15 @@ class Orien(object):
         Range is 0°-180°.
 
         Examples:
-          >>> are_close(Orien.fromAzPl(0, 90).angle(Orien.fromAzPl(90, 0)), 90)
+          >>> are_close(Direct.fromAzPl(0, 90).angle(Direct.fromAzPl(90, 0)), 90)
           True
-          >>> are_close(Orien.fromAzPl(0, 0).angle(Orien.fromAzPl(270, 0)), 90)
+          >>> are_close(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(270, 0)), 90)
           True
-          >>> are_close(Orien.fromAzPl(0, 0).angle(Orien.fromAzPl(0, 0)), 0)
+          >>> are_close(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(0, 0)), 0)
           True
-          >>> are_close(Orien.fromAzPl(0, 0).angle(Orien.fromAzPl(180, 0)), 180)
+          >>> are_close(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(180, 0)), 180)
           True
-          >>> are_close(Orien.fromAzPl(90, 0).angle(Orien.fromAzPl(270, 0)), 180)
+          >>> are_close(Direct.fromAzPl(90, 0).angle(Direct.fromAzPl(270, 0)), 180)
           True
         """
 
@@ -878,13 +872,13 @@ class Orien(object):
         :return: Boolean
 
         Examples:
-          >>> Orien.fromAzPl(0, 90).isAlmostParallel(Orien.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(0, 90).isAlmostParallel(Direct.fromAzPl(90, 0))
           False
-          >>> Orien.fromAzPl(0, 0).isAlmostParallel(Orien.fromAzPl(0, 1e-6))
+          >>> Direct.fromAzPl(0, 0).isAlmostParallel(Direct.fromAzPl(0, 1e-6))
           True
-          >>> Orien.fromAzPl(0, 90).isAlmostParallel(Orien.fromAzPl(180, 0))
+          >>> Direct.fromAzPl(0, 90).isAlmostParallel(Direct.fromAzPl(180, 0))
           False
-          >>> Orien.fromAzPl(0, 90).isAlmostParallel(Orien.fromAzPl(0, -90))
+          >>> Direct.fromAzPl(0, 90).isAlmostParallel(Direct.fromAzPl(0, -90))
           False
         """
 
@@ -908,15 +902,15 @@ class Orien(object):
         :return: Boolean
 
         Examples:
-          >>> Orien.fromAzPl(0, 90).isAlmostAntiParallel(Orien.fromAzPl(90, -89.5))
+          >>> Direct.fromAzPl(0, 90).isAlmostAntiParallel(Direct.fromAzPl(90, -89.5))
           True
-          >>> Orien.fromAzPl(0, 0).isAlmostAntiParallel(Orien.fromAzPl(180, 1e-6))
+          >>> Direct.fromAzPl(0, 0).isAlmostAntiParallel(Direct.fromAzPl(180, 1e-6))
           True
-          >>> Orien.fromAzPl(90, 45).isAlmostAntiParallel(Orien.fromAzPl(270, -45.5))
+          >>> Direct.fromAzPl(90, 45).isAlmostAntiParallel(Direct.fromAzPl(270, -45.5))
           True
-          >>> Orien.fromAzPl(45, 90).isAlmostAntiParallel(Orien.fromAzPl(0, -90))
+          >>> Direct.fromAzPl(45, 90).isAlmostAntiParallel(Direct.fromAzPl(0, -90))
           True
-          >>> Orien.fromAzPl(45, 72).isAlmostAntiParallel(Orien.fromAzPl(140, -38))
+          >>> Direct.fromAzPl(45, 72).isAlmostAntiParallel(Direct.fromAzPl(140, -38))
           False
         """
 
@@ -931,15 +925,15 @@ class Orien(object):
         :return: Boolean
 
          Examples:
-          >>> Orien.fromAzPl(0, 90).isSubOrthogonal(Orien.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(0, 90).isSubOrthogonal(Direct.fromAzPl(90, 0))
           True
-          >>> Orien.fromAzPl(0, 0).isSubOrthogonal(Orien.fromAzPl(0, 1.e-6))
+          >>> Direct.fromAzPl(0, 0).isSubOrthogonal(Direct.fromAzPl(0, 1.e-6))
           False
-          >>> Orien.fromAzPl(0, 0).isSubOrthogonal(Orien.fromAzPl(180, 0))
+          >>> Direct.fromAzPl(0, 0).isSubOrthogonal(Direct.fromAzPl(180, 0))
           False
-          >>> Orien.fromAzPl(90, 0).isSubOrthogonal(Orien.fromAzPl(270, 89.5))
+          >>> Direct.fromAzPl(90, 0).isSubOrthogonal(Direct.fromAzPl(270, 89.5))
           True
-          >>> Orien.fromAzPl(0, 90).isSubOrthogonal(Orien.fromAzPl(0, 0.5))
+          >>> Direct.fromAzPl(0, 90).isSubOrthogonal(Direct.fromAzPl(0, 0.5))
           True
         """
 
@@ -950,13 +944,13 @@ class Orien(object):
         Calculate the versor (Vect) defined by the vector product of two Orien instances.
 
         Examples:
-          >>> Orien.fromAzPl(0, 0).normVersor(Orien.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(0, 0).normVersor(Direct.fromAzPl(90, 0))
           Vect(0.0000, 0.0000, -1.0000)
-          >>> Orien.fromAzPl(45, 0).normVersor(Orien.fromAzPl(310, 0))
+          >>> Direct.fromAzPl(45, 0).normVersor(Direct.fromAzPl(310, 0))
           Vect(0.0000, 0.0000, 1.0000)
-          >>> Orien.fromAzPl(0, 0).normVersor(Orien.fromAzPl(90, 90))
+          >>> Direct.fromAzPl(0, 0).normVersor(Direct.fromAzPl(90, 90))
           Vect(-1.0000, 0.0000, -0.0000)
-          >>> Orien.fromAzPl(315, 45).normVersor(Orien.fromAzPl(315, 44.5)) is None
+          >>> Direct.fromAzPl(315, 45).normVersor(Direct.fromAzPl(315, 44.5)) is None
           True
         """
 
@@ -967,14 +961,14 @@ class Orien(object):
 
     def normPPlane(self):
         """
-        Return the geological plane that is normal to the orientation.
+        Return the geological plane that is normal to the direction.
 
         Examples:
-          >>> Orien.fromAzPl(0, 45).normPPlane()
+          >>> Direct.fromAzPl(0, 45).normPPlane()
           PPlane(180.00, +45.00)
-          >>> Orien.fromAzPl(0, -45).normPPlane()
+          >>> Direct.fromAzPl(0, -45).normPPlane()
           PPlane(000.00, +45.00)
-          >>> Orien.fromAzPl(0, 90).normPPlane()
+          >>> Direct.fromAzPl(0, 90).normPPlane()
           PPlane(180.00, +00.00)
         """
 
@@ -989,23 +983,23 @@ class Orien(object):
         Calculate PPlane instance defined by the two Vect instances.
 
         Examples:
-          >>> Orien.fromAzPl(0, 0).commonPPlane(Orien.fromAzPl(90, 0)).isAlmostParallel(PPlane(180.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(PPlane(180.0, 0.0))
           True
-          >>> Orien.fromAzPl(0, 0).commonPPlane(Orien.fromAzPl(90, 90)).isAlmostParallel(PPlane(90.0, 90.0))
+          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(PPlane(90.0, 90.0))
           True
-          >>> Orien.fromAzPl(45, 0).commonPPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(135.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(PPlane(135.0, 45.0))
           True
-          >>> Orien.fromAzPl(315, 45).commonPPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(225.0, 90.0))
+          >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(PPlane(225.0, 90.0))
           True
-          >>> Orien.fromAzPl(0, 0).commonPPlane(Orien.fromAzPl(90, 0)).isAlmostParallel(PPlane(180.0, 10.0))
+          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(PPlane(180.0, 10.0))
           False
-          >>> Orien.fromAzPl(0, 0).commonPPlane(Orien.fromAzPl(90, 90)).isAlmostParallel(PPlane(90.0, 80.0))
+          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(PPlane(90.0, 80.0))
           False
-          >>> Orien.fromAzPl(45, 0).commonPPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(125.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(PPlane(125.0, 45.0))
           False
-          >>> Orien.fromAzPl(315, 45).commonPPlane(Orien.fromAzPl(135, 45)).isAlmostParallel(PPlane(225.0, 80.0))
+          >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(PPlane(225.0, 80.0))
           False
-          >>> Orien.fromAzPl(315, 45).commonPPlane(Orien.fromAzPl(315, 44.5)) is None
+          >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(315, 44.5)) is None
           True
         """
 
@@ -1020,7 +1014,7 @@ class Orien(object):
         Create Axis instance with the same attitude as the self instance.
 
         Example:
-          >>> Orien.fromAzPl(220, 32).asAxis()
+          >>> Direct.fromAzPl(220, 32).asAxis()
           Axis(az: 220.00°, pl: 32.00°)
         """
 
@@ -1033,13 +1027,13 @@ class Orien(object):
         otherwise a SubparallelLineationException will be raised.
 
         Example:
-          >>> Orien.fromAzPl(0, 0).normOrien(Orien.fromAzPl(0.5, 0)) is None
+          >>> Direct.fromAzPl(0, 0).normOrien(Direct.fromAzPl(0.5, 0)) is None
           True
-          >>> Orien.fromAzPl(0, 0).normOrien(Orien.fromAzPl(179.5, 0)) is None
+          >>> Direct.fromAzPl(0, 0).normOrien(Direct.fromAzPl(179.5, 0)) is None
           True
-          >>> Orien.fromAzPl(0, 0).normOrien(Orien.fromAzPl(5.1, 0))
+          >>> Direct.fromAzPl(0, 0).normOrien(Direct.fromAzPl(5.1, 0))
           Orien(az: 0.00°, pl: 90.00°)
-          >>> Orien.fromAzPl(90, 45).normOrien(Orien.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(90, 45).normOrien(Direct.fromAzPl(90, 0))
           Orien(az: 180.00°, pl: 0.00°)
 
         """
@@ -1052,7 +1046,7 @@ class Orien(object):
             return self.normVersor(another).asOrien()
 
 
-class Axis(Orien):
+class Axis(Direct):
     """
     Polar Axis. Inherits from Orientation
     """
@@ -1074,7 +1068,7 @@ class Axis(Orien):
           Orien(az: 220.00°, pl: 32.00°)
         """
 
-        return Orien(self.az, self.pl)
+        return Direct(self.az, self.pl)
 
     def normAxis(self, another):
         """
@@ -1133,12 +1127,12 @@ class OrienM(object):
     Polar vector class.
     """
 
-    def __init__(self, orien: Orien, mag: [int, float], unit_m: str='m'):
+    def __init__(self, orien: Direct, mag: [int, float], unit_m: str= 'm'):
         """
         Constructs a polar vector object.
         """
 
-        if not isinstance(orien, Orien):
+        if not isinstance(orien, Direct):
             raise GeomInputException("First vect argument must be of type Orien")
 
         if not isinstance(mag, (int, float)):
@@ -1158,7 +1152,7 @@ class OrienM(object):
     @property
     def d(self):
         """
-        Returns azimuth and plunge of orientation in decimal degrees, as a tuple.
+        Returns azimuth and plunge of direction in decimal degrees, as a tuple.
 
         :return: tuple of azimuth and plunge in decimal degrees
 
@@ -1174,7 +1168,7 @@ class OrienM(object):
     @property
     def r(self):
         """
-        Returns azimuth and plunge of orientation in radians, as a tuple.
+        Returns azimuth and plunge of direction in radians, as a tuple.
 
         :return: tuple of azimuth and plunge in radians
 
@@ -1218,7 +1212,7 @@ class OrienM(object):
 
         az = Azim(az, unit=unit_a)
         pl = Plunge(pl, unit=unit_a)
-        orien = Orien(az, pl)
+        orien = Direct(az, pl)
 
         return cls(orien, mag, unit_m)
         
@@ -1241,9 +1235,9 @@ class OrienM(object):
         if norm_xyz is None:
             raise GeomInputException("Input components have near-zero values")
 
-        orientation = Orien._from_xyz(*norm_xyz)
+        direction = Direct._from_xyz(*norm_xyz)
 
-        return cls(orientation, mag, unit_m)
+        return cls(direction, mag, unit_m)
 
     def __repr__(self) -> str:
 
@@ -1451,7 +1445,7 @@ class PPlane(object):
           Orien(az: 0.00°, pl: 0.00°)
         """
 
-        return Orien.fromAzPl(
+        return Direct.fromAzPl(
             az=self.rhrStrike,
             pl=0.0)
 
@@ -1468,7 +1462,7 @@ class PPlane(object):
           Orien(az: 135.00°, pl: 0.00°)
         """
 
-        return Orien.fromAzPl(
+        return Direct.fromAzPl(
             az=self.lhrStrike,
             pl=0.0)
 
@@ -1485,7 +1479,7 @@ class PPlane(object):
           Orien(az: 45.00°, pl: 17.00°)
         """
 
-        return Orien.fromAzPl(
+        return Direct.fromAzPl(
             az=self.dd,
             pl=self.da)
 
@@ -1545,7 +1539,7 @@ class PPlane(object):
         tr = self.dd % 360.0
         pl = self.da - 90.0
 
-        return Orien.fromAzPl(
+        return Direct.fromAzPl(
             az=tr,
             pl=pl)
 
@@ -1583,7 +1577,7 @@ class PPlane(object):
 
     def upNormOrien(self):
         """
-        Return the orientation normal to the polar plane,
+        Return the direction normal to the polar plane,
         pointing upward.
 
         Example:
@@ -1724,7 +1718,7 @@ class PPlane(object):
           Orien(az: 0.00°, pl: -45.00°)
           >>> PPlane(180, 45).rakeToOrien(-90.0)
           Orien(az: 180.00°, pl: 45.00°)
-          >>> PPlane(180, 45).rakeToOrien(180.0).isAlmostParallel(Orien.fromAzPl(270.00, 0.00))
+          >>> PPlane(180, 45).rakeToOrien(180.0).isAlmostParallel(Direct.fromAzPl(270.00, 0.00))
           True
           >>> PPlane(180, 45).rakeToOrien(-180.0)
           Orien(az: 270.00°, pl: 0.00°)

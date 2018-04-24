@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from .vectors import Vect
 
 from ..exceptions.mathematics import *
