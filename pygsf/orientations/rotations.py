@@ -12,11 +12,7 @@ class RotationAxis(object):
     Rotation axis, expressed by an Orientation and a rotation angle.
     """
 
-    def __repr__(self):
-
-        return "RotationAxis({:.4f}, {:.4f}, {:.4f})".format(*self.gv.d, self.a)
-
-    def __init__(self, trend=float('nan'), plunge=float('nan'), rot_ang=float('nan')):
+    def __init__(self, trend: [int, float], plunge: [int, float], rot_ang: [int, float]):
         """
         Constructor.
 
@@ -29,7 +25,7 @@ class RotationAxis(object):
         RotationAxis(0.0000, 90.0000, 120.0000)
         """
 
-        self.gv = Direct.fromAzPl(trend, plunge)
+        self.dr = Direct.fromAzPl(trend, plunge)
         self.a = float(rot_ang)
 
     @classmethod
@@ -47,30 +43,26 @@ class RotationAxis(object):
           >>> RotationAxis.fromQuaternion(Quaternion(sqrt(2)/2, 0.0, 0.0, sqrt(2)/2))
           RotationAxis(0.0000, -90.0000, 90.0000)
           >>> RotationAxis.fromQuaternion(Quaternion(sqrt(2)/2, sqrt(2)/2, 0.0, 0.0))
-          RotationAxis(90.0000, 0.0000, 90.0000)
+          RotationAxis(90.0000, -0.0000, 90.0000)
         """
 
         if abs(quat) < quat_magn_thresh:
 
             rot_ang = 0.0
-            rot_gvect = Direct(0.0, 0.0)
+            rot_direct = Direct(0.0, 0.0)
 
         elif are_close(quat.scalar, 1):
 
             rot_ang = 0.0
-            rot_gvect = Direct(0.0, 0.0)
+            rot_direct = Direct(0.0, 0.0)
 
         else:
 
             unit_quat = quat.normalize()
             rot_ang = unit_quat.rotation_angle()
-            rot_gvect = Direct.fromVect(unit_quat.vector)
+            rot_direct = Direct.fromVect(unit_quat.vector)
 
-        obj = cls()
-        obj.gv = rot_gvect
-        obj.a = rot_ang
-
-        return obj
+        return RotationAxis(*rot_direct.d, rot_ang)
 
     @classmethod
     def fromDirect(cls, direct: Direct, angle: float):
@@ -82,17 +74,17 @@ class RotationAxis(object):
         :return: RotationAxis instance
 
         Example:
-          >>> RotationAxis.fromDirect(Direct(320, 12), 30)
+          >>> RotationAxis.fromDirect(Direct.fromAzPl(320, 12), 30)
           RotationAxis(320.0000, 12.0000, 30.0000)
-          >>> RotationAxis.fromDirect(Direct(315.0, -0.0), 10)
+          >>> RotationAxis.fromDirect(Direct.fromAzPl(315.0, -0.0), 10)
           RotationAxis(315.0000, -0.0000, 10.0000)
         """
 
-        obj = cls()
-        obj.gv = direct
-        obj.a = float(angle)
+        return RotationAxis(*direct.d, angle)
 
-        return obj
+    def __repr__(self):
+
+        return "RotationAxis({:.4f}, {:.4f}, {:.4f})".format(*self.dr.d, self.a)
 
     @property
     def rot_ang(self) -> float:
@@ -124,7 +116,7 @@ class RotationAxis(object):
           Direct(az: 45.00°, pl: 10.00°)
         """
 
-        return self.gv
+        return self.dr
 
     @classmethod
     def fromVect(cls, vector: Vect, angle: float):
@@ -137,18 +129,17 @@ class RotationAxis(object):
 
         Example:
           >>> RotationAxis.fromVect(Vect(0, 1, 0), 30)
-          RotationAxis(0.0000, 0.0000, 30.0000)
+          RotationAxis(0.0000, -0.0000, 30.0000)
           >>> RotationAxis.fromVect(Vect(1, 0, 0), 30)
-          RotationAxis(90.0000, 0.0000, 30.0000)
+          RotationAxis(90.0000, -0.0000, 30.0000)
           >>> RotationAxis.fromVect(Vect(0, 0, -1), 30)
           RotationAxis(0.0000, 90.0000, 30.0000)
         """
 
-        obj = cls()
-        obj.gv = vector.asOrien()
-        obj.a = angle
+        direct = Direct.fromVect(vector)
 
-        return obj
+        return RotationAxis.fromDirect(direct, angle)
+
 
     @property
     def versor(self) -> Vect:
@@ -158,7 +149,7 @@ class RotationAxis(object):
         :return: Vect
         """
 
-        return self.gv.versor()
+        return self.dr.asVersor()
 
     def specular(self):
         """
@@ -198,7 +189,7 @@ class RotationAxis(object):
         """
 
         rot_ang = - (180.0 - self.rot_ang) % 360.0
-        return RotationAxis.fromDirect(self.gv, rot_ang)
+        return RotationAxis.fromDirect(self.dr, rot_ang)
 
     def strictly_equival(self, another, angle_tolerance: float = VECTOR_ANGLE_THRESHOLD) -> bool:
         """
@@ -223,7 +214,7 @@ class RotationAxis(object):
           False
         """
 
-        if not self.gv.isAlmostParallel(another.gv, angle_tolerance):
+        if not self.dr.isAlmostParallel(another.dr, angle_tolerance):
             return False
 
         if not are_close(self.a, another.a, atol = 1.0):
@@ -240,7 +231,7 @@ class RotationAxis(object):
         """
 
         rotation_angle_rad = radians(self.a)
-        rotation_vector = self.gv.versor()
+        rotation_vector = self.dr.versor()
 
         w = cos(rotation_angle_rad / 2.0)
         x, y, z = rotation_vector.scale(sin(rotation_angle_rad / 2.0)).toXYZ()
@@ -332,7 +323,7 @@ def quat_rot_vect(quat: Quaternion, vect: Vect) -> Vect:
     """
 
     q = quat.normalize()
-    qv = Quaternion.from_vect(vect)
+    qv = Quaternion.fromVect(vect)
 
     rotated_v = q * (qv * q.inverse)
 
