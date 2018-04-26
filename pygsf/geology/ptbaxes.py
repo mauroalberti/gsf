@@ -49,7 +49,7 @@ class PTBAxes(object):
         or with unknown/uncertain movement sense (False).
 
         Example:
-          >>> PTBAxes.from_faultslick(GFault(PPlane(90, 45), Slick(GVect(90, 45))))
+          >>> PTBAxes.from_faultslick(Fault(PPlane(90, 45), Slick(GVect(90, 45))))
           PTBAxes(P: Axis(000.00, -90.00), T: Axis(090.00, +00.00))
         """
 

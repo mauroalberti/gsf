@@ -17,7 +17,7 @@ class SlickInputTypeException(Exception):
     pass
 
 
-class GFaultInputTypeException(Exception):
+class FaultInputTypeException(Exception):
     """
     Exception for GFault input type.
     """

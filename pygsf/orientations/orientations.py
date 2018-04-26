@@ -499,7 +499,7 @@ class Direct(object):
         if norm_xyz is None:
             raise GeomInputException("Input components have near-zero values")
 
-        return Direct._from_xyz(*norm_xyz)
+        return cls._from_xyz(*norm_xyz)
 
     @classmethod
     def fromVect(cls, vect: Vect) -> Optional['Direct']:
@@ -533,7 +533,7 @@ class Direct(object):
         """
 
         x, y, z = vect.toXYZ()
-        return Direct.fromXYZ(x, y, z)
+        return cls.fromXYZ(x, y, z)
 
     def __repr__(self) -> str:
 
@@ -573,14 +573,14 @@ class Direct(object):
 
     def copy(self):
         """
-        Return a copy of the Orientation instance.
+        Return a copy of the instance.
 
         Example:
           >>> Direct.fromAzPl(10, 20).copy()
           Direct(az: 10.00°, pl: 20.00°)
         """
 
-        return Direct(self.az, self.pl)
+        return self.__class__(self.az, self.pl)
 
     def opposite(self):
         """
@@ -600,7 +600,7 @@ class Direct(object):
         az = (az + pi) % (2*pi)
         pl = -pl
 
-        return Direct.fromAzPl(az, pl, unit='r')
+        return self.__class__.fromAzPl(az, pl, unit='r')
 
     def mirrorHoriz(self):
         """
@@ -618,7 +618,7 @@ class Direct(object):
         az = self.az.r
         pl = -self.pl.r
 
-        return Direct.fromAzPl(az, pl, unit='r')
+        return self.__class__.fromAzPl(az, pl, unit='r')
 
     @property
     def colatNorth(self) -> float:
@@ -845,7 +845,7 @@ class Direct(object):
 
     def angle(self, another):
         """
-        Calculate angle (in degrees) between the two Vect instances or a Vect and a GAXis instances.
+        Calculate angle (in degrees) between the two Direct instances.
         Range is 0°-180°.
 
         Examples:
@@ -920,9 +920,9 @@ class Direct(object):
 
     def isSubOrthogonal(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """
-        Check that two Vect instance are sub-orthogonal
+        Check that two Direct instance are sub-orthogonal
 
-        :param another: a Vect instance
+        :param another: a Direct instance
         :param angle_tolerance: the maximum allowed divergence angle (in degrees) from orthogonality
         :return: Boolean
 
@@ -1024,7 +1024,7 @@ class Direct(object):
 
     def normOrien(self, another):
         """
-        Calculate the Direct instance that is normal to the two provided sources.
+        Calculate the instance that is normal to the two provided sources.
         Angle between sources must be larger than MIN_ANGLE_DEGR_DISORIENTATION,
         otherwise a SubparallelLineationException will be raised.
 
@@ -1044,7 +1044,7 @@ class Direct(object):
         elif self.isAlmostParallel(another):
             return None
         else:
-            return Direct.fromVect(self.normVersor(another))
+            return self.__class__.fromVect(self.normVersor(another))
 
 
 class Axis(Direct):
@@ -1060,12 +1060,12 @@ class Axis(Direct):
 
         return "Axis(az: {:.2f}°, pl: {:.2f}°)".format(*self.d)
 
-    def asOrien(self):
+    def asDirect(self):
         """
-        Create OrienM instance with the same attitude as the self instance.
+        Create Direct instance with the same attitude as the self instance.
 
         Example:
-          >>> Axis.fromAzPl(220, 32).asOrien()
+          >>> Axis.fromAzPl(220, 32).asDirect()
           Direct(az: 220.00°, pl: 32.00°)
         """
 
@@ -1270,7 +1270,7 @@ class PPlane(object):
      - dip angle: [0, 90.0]: downward-pointing.
     """
 
-    def __init__(self, azim: float, dip_ang: float, is_rhr_strike=False):
+    def __init__(self, azim: [int, float], dip_ang: [int, float], is_rhr_strike: bool=False):
         """
         Geological plane constructor.
 
@@ -1610,7 +1610,7 @@ class PPlane(object):
 
         return self.downNormOrien().asAxis()
 
-    def angle(self, another):
+    def angle(self, another: 'PPlane'):
         """
         Calculate angle (in degrees) between two geoplanes.
         Range is 0°-90°.
@@ -1632,20 +1632,15 @@ class PPlane(object):
           True
         """
 
+        if not isinstance(another, PPlane):
+            raise GeomInputException("Second instance for angle is of {} type".format(type(another)))
+
         gpl_axis = self._normal_orien_frwrd().asAxis()
-        if isinstance(another, PPlane):
-            an_axis = another._normal_orien_frwrd().asAxis()
-        else:
-            raise GeomInputException("Provided another instance for angle is of {} type".format(type(another)))
+        an_axis = another._normal_orien_frwrd().asAxis()
 
-        angle = gpl_axis.angle(an_axis)
+        return gpl_axis.angle(an_axis)
 
-        if isinstance(another, PPlane):
-            return angle
-        else:
-            return 90.0 - angle
-
-    def isAlmostParallel(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD):
+    def isAlmostParallel(self, another, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD):
         """
         Check that two GPlanes are sub-parallel
 
@@ -1668,7 +1663,28 @@ class PPlane(object):
 
         return self.angle(another) < angle_tolerance
 
-    def isSubOrthogonal(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD):
+    def contains(self, dir: Direct, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD) -> bool:
+        """
+        Check that a plane contains a direction instance.
+
+        :param dir: a Direct instance
+        :return: True or False
+
+        Examples:
+          >>> PPlane(90, 0).contains(Direct.fromAzPl(60, 0))
+          True
+          >>> PPlane(90, 0).contains(Axis.fromAzPl(60, 0))
+          True
+          >>> PPlane(90, 0).contains(Direct.fromAzPl(60, 10))
+          False
+        """
+
+        plane_norm = self.normAxis()
+
+        return dir.isSubOrthogonal(plane_norm, angle_tolerance)
+
+
+    def isSubOrthogonal(self, another, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD):
         """
         Check that two GPlanes are sub-orthogonal.
 

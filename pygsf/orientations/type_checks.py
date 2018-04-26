@@ -26,7 +26,7 @@ def isSlickln(obj) -> bool:
 
 def isFaultSlck(obj) -> bool:
 
-    return isinstance(obj, GFault)
+    return isinstance(obj, Fault)
 
 
 def isPTBAxes(obj) -> bool:
