@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from typing import Sequence
+
 from ..defaults.geology import *
 from ..exceptions.geology import *
 from ..orientations.orientations import *
@@ -53,6 +55,22 @@ class Slick(object):
     def __repr__(self):
 
         return "Slick(az: {:.2f}°, pl: {:.2f}°, known_dir: {})".format(*self.s.d, self.has_known_sense())
+
+    @property
+    def geom(self):
+        """
+        Returns the geometric object (Direct or Axis) defining the slickenline.
+
+        :return: Direct or Axis instance
+
+        Examples:
+          >>> Slick(90, 45).geom
+          Direct(az: 90.00°, pl: 45.00°)
+          >>> Slick(90, 45, False).geom
+          Axis(az: 90.00°, pl: 45.00°)
+        """
+
+        return self.s
 
     def has_known_sense(self):
         """
@@ -122,7 +140,7 @@ class Fault(object):
     and zero, one or more slickenlines, represented by a list of Slick instances (None when no slickenlines).
     """
 
-    def __init__(self, azim: [int, float], dip_ang: [int, float], is_rhr_strike=False, slickenlines=None):
+    def __init__(self, azim: [int, float], dip_ang: [int, float], is_rhr_strike=False, slickenlines: Sequence[Slick]=None):
         """
         Create an instance of a Fault.
 
@@ -149,7 +167,9 @@ class Fault(object):
 
         if slickenlines is None:
             slickenlines = []
+
         pplane = PPlane(azim, dip_ang, is_rhr_strike)
+
         for slickenline in slickenlines:
             if not pplane.contains(slickenline.s):
                 raise FaultInputTypeException("All slickenlines must lie on the plane")
@@ -174,6 +194,34 @@ class Fault(object):
         return self._fltpln
 
     @property
+    def num_slicks(self) -> int:
+        """
+        Returns the number of slickenlines.
+
+        :return: number of slickenlines, as integer
+
+        Examples:
+          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).num_slicks
+          1
+        """
+
+        return len(self._slicks)
+
+    @property
+    def has_slicks(self) -> bool:
+        """
+        Returns the number of slickenlines.
+
+        :return: number of slickenlines, as integer
+
+        Examples:
+          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).has_slicks
+          True
+        """
+
+        return self.num_slicks > 0
+
+    @property
     def slicks(self):
         """
         Return the slickenlines associated with the fault.
@@ -191,9 +239,9 @@ class Fault(object):
         """
 
         if not self._slicks:
-            return None
+            raise FaultInputTypeException("No slickenline defined for current Fault instance")
         elif ndx > len(self._slicks) -1:
-            raise FaultInputTypeException["Slickenline index is greater than slickenlines number"]
+            raise FaultInputTypeException("Slickenline index is greater than slickenlines number")
         else:
             return self._slicks[ndx]
 
@@ -207,9 +255,9 @@ class Fault(object):
         """
 
         if not self._slicks:
-            return None
+            raise FaultInputTypeException("No slickenline defined for current Fault instance")
         elif ndx > len(self._slicks) -1:
-            raise FaultInputTypeException["Slickenline index is greater than slickenlines number"]
+            raise FaultInputTypeException("Slickenline index is greater than slickenlines number")
         else:
             return self._slicks[ndx].s
 
@@ -288,11 +336,11 @@ class Fault(object):
 
     def is_normal(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
         """
-        Checks if a fault has _normal_orien_frwrd movements.
+        Checks if a fault has normalOrienFrwrd movements.
 
         :param rk_threshold: the threshold, in degrees, for the rake angle
         :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
-        :return: True if _normal_orien_frwrd, False if not applicable
+        :return: True if normalOrienFrwrd, False if not applicable
 
         Examples:
           >>> Fault(0, 45, slickenlines=[Slick(0, 45)]).is_normal()

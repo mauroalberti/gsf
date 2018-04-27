@@ -410,7 +410,7 @@ class Direct(object):
         return self._pl
 
     @classmethod
-    def fromAzPl(cls, az: [int, float], pl: [int, float], unit='d') -> 'Direct':
+    def fromAzPl(cls, az: [int, float], pl: [int, float], unit='d'):
         """
         Class constructor from trend and plunge.
 
@@ -502,7 +502,7 @@ class Direct(object):
         return cls._from_xyz(*norm_xyz)
 
     @classmethod
-    def fromVect(cls, vect: Vect) -> Optional['Direct']:
+    def fromVect(cls, vect: Vect) -> [None, 'Direct', 'Axis']:
         """
         Calculate the polar direction parallel to the Vect instance.
         Trend range: [0°, 360°[
@@ -1523,17 +1523,17 @@ class PPlane(object):
             azim=opposite_trend(self.dd),
             dip_ang=self.da)
 
-    def _normal_orien_frwrd(self):
+    def normalOrienFrwrd(self):
         """
         Return the geological vector normal to the geological plane,
         pointing in the same direction as the geological plane.
 
         Example:
-            >>> PPlane(90, 55)._normal_orien_frwrd()
+            >>> PPlane(90, 55).normalOrienFrwrd()
             Direct(az: 90.00°, pl: -35.00°)
-            >>> PPlane(90, 90)._normal_orien_frwrd()
+            >>> PPlane(90, 90).normalOrienFrwrd()
             Direct(az: 90.00°, pl: 0.00°)
-            >>> PPlane(90, 0)._normal_orien_frwrd()
+            >>> PPlane(90, 0).normalOrienFrwrd()
             Direct(az: 90.00°, pl: -90.00°)
         """
 
@@ -1544,21 +1544,21 @@ class PPlane(object):
             az=tr,
             pl=pl)
 
-    def _normal_orien_anti(self):
+    def normalOrienAnti(self):
         """
         Return the geological vector normal to the geological plane,
         pointing in the opposite direction to the geological plane.
 
         Example:
-            >>> PPlane(90, 55)._normal_orien_anti()
+            >>> PPlane(90, 55).normalOrienAnti()
             Direct(az: 270.00°, pl: 35.00°)
-            >>> PPlane(90, 90)._normal_orien_anti()
+            >>> PPlane(90, 90).normalOrienAnti()
             Direct(az: 270.00°, pl: -0.00°)
-            >>> PPlane(90, 0)._normal_orien_anti()
+            >>> PPlane(90, 0).normalOrienAnti()
             Direct(az: 270.00°, pl: 90.00°)
         """
 
-        return self._normal_orien_frwrd().opposite()
+        return self.normalOrienFrwrd().opposite()
 
     def downNormOrien(self):
         """
@@ -1574,7 +1574,7 @@ class PPlane(object):
             Direct(az: 270.00°, pl: 90.00°)
         """
 
-        return self._normal_orien_frwrd().downward()
+        return self.normalOrienFrwrd().downward()
 
     def upNormOrien(self):
         """
@@ -1590,7 +1590,7 @@ class PPlane(object):
             Direct(az: 90.00°, pl: -90.00°)
         """
 
-        return self._normal_orien_frwrd().upward()
+        return self.normalOrienFrwrd().upward()
 
     def normOrien(self):
         """
@@ -1635,8 +1635,8 @@ class PPlane(object):
         if not isinstance(another, PPlane):
             raise GeomInputException("Second instance for angle is of {} type".format(type(another)))
 
-        gpl_axis = self._normal_orien_frwrd().asAxis()
-        an_axis = another._normal_orien_frwrd().asAxis()
+        gpl_axis = self.normalOrienFrwrd().asAxis()
+        an_axis = another.normalOrienFrwrd().asAxis()
 
         return gpl_axis.angle(an_axis)
 
@@ -1799,7 +1799,7 @@ class PPlane(object):
           CPlane(0.0000, 1.0000, -0.0000, -0.0000)
         """
 
-        normal_versor = self._normal_orien_frwrd().asVersor()
+        normal_versor = self.normalOrienFrwrd().asVersor()
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * point.x + b * point.y + c * point.z)
         return CPlane(a, b, c, d)

@@ -40,29 +40,7 @@ class PTBAxes(object):
         self._p_versor = b_vect.vCross(self._t_versor).versor()
 
     @classmethod
-    def fromFaultSlick(cls, fault_slick):
-        """
-        Class method to calculate P-T axes from a FaultSlick instance.
-        Return P and T axes and a third Boolean variable,
-        indicating whether the P-T derivation is from a slickenline with a known movement sense (True)
-        or with unknown/uncertain movement sense (False).
-
-        Example:
-          >>> PTBAxes.fromFaultSlick(Fault(PPlane(90, 45), Slick(GVect(90, 45))))
-          PTBAxes(P: Axis(000.00, -90.00), T: Axis(090.00, +00.00))
-        """
-
-        s_versor = fault_slick.slick.geom.versor()
-        f_versor = fault_slick.gplane._normal_orien_frwrd().versor()
-
-        obj = cls()
-        obj._p_versor = (f_versor - s_versor).versor()
-        obj._t_versor = (f_versor + s_versor).versor()
-
-        return obj
-
-    @classmethod
-    def fromVects(cls, t_vector, p_vector):
+    def fromVects(cls, p_vector, t_vector, ):
         """
         Class method to create a PTBAxes instance from T and P axis vectors.
         Vectors are not required to be normalized but are required to be
@@ -73,30 +51,64 @@ class PTBAxes(object):
         :return: a PTBAxes instance.
 
         Example:
-          >>> PTBAxes.fromVects(t_vector=Vect(1,0,0), p_vector=Vect(0,1,0))
-          PTBAxes(P: Axis(000.00, +00.00), T: Axis(090.00, +00.00))
-          >>> PTBAxes.fromVects(t_vector=Vect(0,0,-1), p_vector=Vect(1,0,0))
-          PTBAxes(P: Axis(090.00, +00.00), T: Axis(000.00, +90.00))
-          >>> PTBAxes.fromVects(t_vector=Vect(1,1,0), p_vector=Vect(-1,1,0))
-          PTBAxes(P: Axis(315.00, +00.00), T: Axis(045.00, +00.00))
-          >>> PTBAxes.fromVects(t_vector=Vect(1, 1, 0), p_vector=Vect(0.5, 1, 0))
+          >>> PTBAxes.fromVects(p_vector=Vect(0,1,0), t_vector=Vect(1,0,0))
+          PTBAxes(P: Axis(az: 360.00°, pl: -0.00°), T: Axis(az: 90.00°, pl: -0.00°))
+          >>> PTBAxes.fromVects(p_vector=Vect(1,0,0), t_vector=Vect(0,0,-1))
+          PTBAxes(P: Axis(az: 90.00°, pl: -0.00°), T: Axis(az: 0.00°, pl: 90.00°))
+          >>> PTBAxes.fromVects(p_vector=Vect(-1,1,0), t_vector=Vect(1,1,0))
+          PTBAxes(P: Axis(az: 315.00°, pl: -0.00°), T: Axis(az: 45.00°, pl: -0.00°))
+          >>> PTBAxes.fromVects(p_vector=Vect(0.5, 1, 0), t_vector=Vect(1, 1, 0))
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.geology.PTBAxesInputException: P and T vectors must be sub-orthogonal
+          pygsf.exceptions.geology.PTBAxesInputException: P and T axes must be sub-orthogonal
         """
 
-        if not Axis.fromVect(t_vector).isSubOrthogonal(Axis.fromVect(p_vector)):
-            raise PTBAxesInputException("P and T vectors must be sub-orthogonal")
+        if not isinstance(t_vector, Vect):
+            raise PTBAxesInputException("T vector must be of type Vect")
 
-        t_versor = t_vector.versor()
-        p_versor = p_vector.versor()
-        b_versor = t_versor.vCross(p_versor).versor()
+        if t_vector.isAlmostZero:
+            raise PTBAxesInputException("T vector cannot be zero-valued")
 
-        obj = cls()
-        obj._p_versor = b_versor.vCross(t_versor).versor()
-        obj._t_versor = t_versor
+        if not isinstance(p_vector, Vect):
+            raise PTBAxesInputException("P vector must be of type Vect")
 
-        return obj
+        if p_vector.isAlmostZero:
+            raise PTBAxesInputException("P vector cannot be zero-valued")
+
+        return cls(
+            p_axis=Axis.fromVect(p_vector),
+            t_axis=Axis.fromVect(t_vector))
+
+    @classmethod
+    def fromFaultSlick(cls, fault: Fault, slick_ndx: int=0):
+        """
+        Class method to calculate P-T axes from a FaultSlick instance.
+        Return P and T axes and a third Boolean variable,
+        indicating whether the P-T derivation is from a slickenline with a known movement sense (True)
+        or with unknown/uncertain movement sense (False).
+
+        Example:
+          >>> PTBAxes.fromFaultSlick(Fault(90, 45, slickenlines=[Slick(90, 45)]))
+          PTBAxes(P: Axis(az: 360.00°, pl: -90.00°), T: Axis(az: 90.00°, pl: -0.00°))
+        """
+
+        if not isinstance(fault, Fault):
+            raise PTBAxesInputException("First argument for fault input must have type Fault")
+
+        slick = fault.slick(slick_ndx)
+
+        if slick.has_unknown_sense():
+            raise PTBAxesInputException("Slickenline must have knonw movement sense")
+
+        s_versor = slick.geom.asVersor()
+        f_versor = fault.pplane.normalOrienFrwrd().asVersor()
+
+        p_versor = (f_versor - s_versor).versor()
+        t_versor = (f_versor + s_versor).versor()
+
+        return cls.fromVects(
+            t_vector=t_versor,
+            p_vector=p_versor)
 
     @classmethod
     def fromQuatern(cls, quaternion):
@@ -192,13 +204,13 @@ class PTBAxes(object):
         Return the P axis.
 
         Example:
-          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis.fromAzPl(90, 0)).PAxis
-          Axis(000.00, +00.00)
-          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis.fromAzPl(90, 0)).PAxis
-          Axis(000.00, +90.00)
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).PAxis
+          Axis(az: 360.00°, pl: -0.00°)
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).PAxis
+          Axis(az: 360.00°, pl: 90.00°)
         """
 
-        return self.PVersor.asAxis()
+        return Axis.fromVect(self.PVersor)
 
     @property
     def TAxis(self):
@@ -206,13 +218,13 @@ class PTBAxes(object):
         Return the T axis.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis(90, 0)).TAxis
-          Axis(090.00, +00.00)
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, -90), t_axis=Axis(90, 0)).TAxis
-          Axis(090.00, +00.00)
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).TAxis
+          Axis(az: 90.00°, pl: 0.00°)
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, -90), t_axis=Axis.fromAzPl(90, 0)).TAxis
+          Axis(az: 90.00°, pl: 0.00°)
         """
 
-        return self.TVersor.asAxis()
+        return Axis.fromVect(self.TVersor)
 
     @property
     def BAxis(self):
@@ -221,12 +233,12 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).BAxis
-          Axis(000.00, -90.00)
+          Axis(az: 0.00°, pl: -90.00°)
           >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(0, 0)).BAxis
-          Axis(270.00, +00.00)
+          Axis(az: 270.00°, pl: -0.00°)
         """
 
-        return self.BVersor.asAxis()
+        return Axis.fromVect(self.BVersor)
 
     @property
     def MPPlane(self):
@@ -236,7 +248,7 @@ class PTBAxes(object):
         Example:
           >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPPlane.isAlmostParallel(PPlane(0.0, 90.0))
           True
-          >>> (PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPPlane).isAlmostParallel(PPlane(315.00, 90.00))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPPlane.isAlmostParallel(PPlane(315.00, 90.00))
           True
         """
 
