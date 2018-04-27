@@ -40,7 +40,7 @@ class PTBAxes(object):
         self._p_versor = b_vect.vCross(self._t_versor).versor()
 
     @classmethod
-    def fromVects(cls, p_vector, t_vector, ):
+    def fromVects(cls, p_vector: Vect, t_vector: Vect) -> 'PTBAxes':
         """
         Class method to create a PTBAxes instance from T and P axis vectors.
         Vectors are not required to be normalized but are required to be
@@ -80,7 +80,7 @@ class PTBAxes(object):
             t_axis=Axis.fromVect(t_vector))
 
     @classmethod
-    def fromFaultSlick(cls, fault: Fault, slick_ndx: int=0):
+    def fromFaultSlick(cls, fault: Fault, slick_ndx: int=0) -> 'PTBAxes':
         """
         Class method to calculate P-T axes from a FaultSlick instance.
         Return P and T axes and a third Boolean variable,
@@ -111,7 +111,7 @@ class PTBAxes(object):
             p_vector=p_versor)
 
     @classmethod
-    def fromQuatern(cls, quaternion):
+    def fromQuatern(cls, quaternion: Quaternion) -> 'PTBAxes':
         """
         Creates a PTBAxes instance from a given quaternion.
         Formula extracted from eq. 10 in:
@@ -120,6 +120,9 @@ class PTBAxes(object):
         :param quaternion: a Quaternion instance.
         :return:a PTBAxes instance.
         """
+
+        if not isinstance(quaternion, Quaternion):
+            raise PTBAxesInputException("Input argument must be of Quaternion type")
 
         q0, q1, q2, q3 = quaternion.normalize().toXYZ()
 
@@ -157,7 +160,7 @@ class PTBAxes(object):
             Axis.fromVect(self._t_versor))
 
     @property
-    def PVersor(self):
+    def PVersor(self) -> Vect:
         """
         Return the P versor component of the PTBAxes instance.
 
@@ -171,7 +174,7 @@ class PTBAxes(object):
         return self._p_versor
 
     @property
-    def TVersor(self):
+    def TVersor(self) -> Vect:
         """
         Return the T versor component of the PTBAxes instance.
 
@@ -185,7 +188,7 @@ class PTBAxes(object):
         return self._t_versor
 
     @property
-    def BVersor(self):
+    def BVersor(self) -> Vect:
         """
         Return the B versor component of the PTBAxes instance.
 
@@ -199,7 +202,7 @@ class PTBAxes(object):
         return self.TVersor.vCross(self.PVersor)
 
     @property
-    def PAxis(self):
+    def PAxis(self) -> Axis:
         """
         Return the P axis.
 
@@ -213,7 +216,7 @@ class PTBAxes(object):
         return Axis.fromVect(self.PVersor)
 
     @property
-    def TAxis(self):
+    def TAxis(self) -> Axis:
         """
         Return the T axis.
 
@@ -227,7 +230,7 @@ class PTBAxes(object):
         return Axis.fromVect(self.TVersor)
 
     @property
-    def BAxis(self):
+    def BAxis(self) -> Axis:
         """
         Calculate the B axis.
 
@@ -241,20 +244,20 @@ class PTBAxes(object):
         return Axis.fromVect(self.BVersor)
 
     @property
-    def MPPlane(self):
+    def MPlane(self) -> PPlane:
         """
         Calculate M plane.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPPlane.isAlmostParallel(PPlane(0.0, 90.0))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPlane.isAlmostParallel(PPlane(0.0, 90.0))
           True
-          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPPlane.isAlmostParallel(PPlane(315.00, 90.00))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPlane.isAlmostParallel(PPlane(315.00, 90.00))
           True
         """
 
         return self.PAxis.commonPPlane(self.TAxis)
 
-    def almostEqual(self, another, tolerance_angle=VECTOR_ANGLE_THRESHOLD):
+    def almostEqual(self, another: 'PTBAxes', tolerance_angle: [int, float]=VECTOR_ANGLE_THRESHOLD) -> bool:
         """
         Checks for equivalence between two PTBAXes instances
         within a given tolerance angle (default is VECTOR_ANGLE_THRESHOLD)
@@ -278,6 +281,9 @@ class PTBAxes(object):
           False
         """
 
+        if not isinstance(another, PTBAxes):
+            raise PTBAxesInputException("Argument must be of PTBAxes type")
+
         if not self.PAxis.isAlmostParallel(another.PAxis, tolerance_angle):
             return False
 
@@ -286,7 +292,7 @@ class PTBAxes(object):
 
         return True
 
-    def toMatrix(self):
+    def toMatrix(self) -> 'array':
         """
         Creates a rotation matrix from the PTB as_vect xyz.
         Formula as in:
@@ -310,7 +316,7 @@ class PTBAxes(object):
             [t.z, p.z, b.z]
         ])
 
-    def toQuatern(self):
+    def toQuatern(self) -> Quaternion:
         """
         Transforms the focal mechanism into a quaternion.
 
