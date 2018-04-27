@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-
+from ..defaults.geology import *
+from ..exceptions.geology import *
 from ..orientations.rotations import *
 from .faults import *
 
@@ -11,12 +12,7 @@ class PTBAxes(object):
     It can also calculate the M plane.
     """
 
-    def __repr__(self):
-        return "PTBAxes(P: {}, T: {})".format(
-            self._p_versor.asAxis(),
-            self._t_versor.asAxis())
-
-    def __init__(self, p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)):
+    def __init__(self, p_axis: Axis, t_axis: Axis):
         """
         Create a new PTBAxes instances, given the two
         P and T axes (provided as Axis instances).
@@ -24,13 +20,16 @@ class PTBAxes(object):
         based on fixed T orientation.
 
         Example:
-          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0))
-          PTBAxes(P: Axis(000.00, +00.00), T: Axis(090.00, +00.00))
-          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(80, 0))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0))
+          PTBAxes(P: Axis(az: 360.00°, pl: -0.00°), T: Axis(az: 90.00°, pl: 0.00°))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(80, 0))
           Traceback (most recent call last):
           ...
-          PTBAxesInputException: P and T axes must be sub-orthogonal
+          pygsf.exceptions.geology.PTBAxesInputException: P and T axes must be sub-orthogonal
         """
+
+        if not (isinstance(p_axis, Axis) and isinstance(t_axis, Axis)):
+            raise PTBAxesInputException("P and T axes must be of type Axis")
 
         if not p_axis.isSubOrthogonal(t_axis):
             raise PTBAxesInputException("P and T axes must be sub-orthogonal")
@@ -41,7 +40,7 @@ class PTBAxes(object):
         self._p_versor = b_vect.vCross(self._t_versor).versor()
 
     @classmethod
-    def from_faultslick(cls, fault_slick):
+    def fromFaultSlick(cls, fault_slick):
         """
         Class method to calculate P-T axes from a FaultSlick instance.
         Return P and T axes and a third Boolean variable,
@@ -49,7 +48,7 @@ class PTBAxes(object):
         or with unknown/uncertain movement sense (False).
 
         Example:
-          >>> PTBAxes.from_faultslick(Fault(PPlane(90, 45), Slick(GVect(90, 45))))
+          >>> PTBAxes.fromFaultSlick(Fault(PPlane(90, 45), Slick(GVect(90, 45))))
           PTBAxes(P: Axis(000.00, -90.00), T: Axis(090.00, +00.00))
         """
 
@@ -63,7 +62,7 @@ class PTBAxes(object):
         return obj
 
     @classmethod
-    def from_vectors(cls, t_vector, p_vector):
+    def fromVects(cls, t_vector, p_vector):
         """
         Class method to create a PTBAxes instance from T and P axis vectors.
         Vectors are not required to be normalized but are required to be
@@ -74,19 +73,19 @@ class PTBAxes(object):
         :return: a PTBAxes instance.
 
         Example:
-          >>> PTBAxes.from_vectors(t_vector=Vect(1,0,0), p_vector=Vect(0,1,0))
+          >>> PTBAxes.fromVects(t_vector=Vect(1,0,0), p_vector=Vect(0,1,0))
           PTBAxes(P: Axis(000.00, +00.00), T: Axis(090.00, +00.00))
-          >>> PTBAxes.from_vectors(t_vector=Vect(0,0,-1), p_vector=Vect(1,0,0))
+          >>> PTBAxes.fromVects(t_vector=Vect(0,0,-1), p_vector=Vect(1,0,0))
           PTBAxes(P: Axis(090.00, +00.00), T: Axis(000.00, +90.00))
-          >>> PTBAxes.from_vectors(t_vector=Vect(1,1,0), p_vector=Vect(-1,1,0))
+          >>> PTBAxes.fromVects(t_vector=Vect(1,1,0), p_vector=Vect(-1,1,0))
           PTBAxes(P: Axis(315.00, +00.00), T: Axis(045.00, +00.00))
-          >>> PTBAxes.from_vectors(t_vector=Vect(1, 1, 0), p_vector=Vect(0.5, 1, 0))
+          >>> PTBAxes.fromVects(t_vector=Vect(1, 1, 0), p_vector=Vect(0.5, 1, 0))
           Traceback (most recent call last):
           ...
-          PTBAxesInputException: P and T vectors must be sub-orthogonal
+          pygsf.exceptions.geology.PTBAxesInputException: P and T vectors must be sub-orthogonal
         """
 
-        if not t_vector.isSubOrthogonal(p_vector):
+        if not Axis.fromVect(t_vector).isSubOrthogonal(Axis.fromVect(p_vector)):
             raise PTBAxesInputException("P and T vectors must be sub-orthogonal")
 
         t_versor = t_vector.versor()
@@ -100,7 +99,7 @@ class PTBAxes(object):
         return obj
 
     @classmethod
-    def from_quaternion(cls, quaternion):
+    def fromQuatern(cls, quaternion):
         """
         Creates a PTBAxes instance from a given quaternion.
         Formula extracted from eq. 10 in:
@@ -137,107 +136,113 @@ class PTBAxes(object):
         t_vector = Vect(t1, t2, t3)
         p_vector = Vect(p1, p2, p3)
 
-        return PTBAxes.from_vectors(t_vector=t_vector, p_vector=p_vector)
+        return PTBAxes.fromVects(t_vector=t_vector, p_vector=p_vector)
+
+    def __repr__(self):
+
+        return "PTBAxes(P: {}, T: {})".format(
+            Axis.fromVect(self._p_versor),
+            Axis.fromVect(self._t_versor))
 
     @property
-    def p_versor(self):
+    def PVersor(self):
         """
         Return the P versor component of the PTBAxes instance.
 
         :return: P versor instance
 
         Example:
-          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).p_versor
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).PVersor
           Vect(-0.0000, 1.0000, 0.0000)
         """
 
         return self._p_versor
 
     @property
-    def t_versor(self):
+    def TVersor(self):
         """
         Return the T versor component of the PTBAxes instance.
 
         :return: T versor instance
 
         Example:
-          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).t_versor
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).TVersor
           Vect(1.0000, 0.0000, -0.0000)
         """
 
         return self._t_versor
 
     @property
-    def b_versor(self):
+    def BVersor(self):
         """
         Return the B versor component of the PTBAxes instance.
 
         :return: B versor instance
 
         Example:
-          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).b_versor
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).BVersor
           Vect(0.0000, 0.0000, 1.0000)
         """
 
-        return self.t_versor.vCross(self.p_versor)
+        return self.TVersor.vCross(self.PVersor)
 
     @property
-    def p_axis(self):
+    def PAxis(self):
         """
         Return the P axis.
 
         Example:
-          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).p_axis
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis.fromAzPl(90, 0)).PAxis
           Axis(000.00, +00.00)
-          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis(90, 0)).p_axis
+          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis.fromAzPl(90, 0)).PAxis
           Axis(000.00, +90.00)
         """
 
-        return self.p_versor.asAxis()
+        return self.PVersor.asAxis()
 
     @property
-    def t_axis(self):
+    def TAxis(self):
         """
         Return the T axis.
 
         Example:
-          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).t_axis
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis(90, 0)).TAxis
           Axis(090.00, +00.00)
-          >>> PTBAxes(p_axis=Axis(0, -90), t_axis=Axis(90, 0)).t_axis
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, -90), t_axis=Axis(90, 0)).TAxis
           Axis(090.00, +00.00)
         """
 
-        return self.t_versor.asAxis()
+        return self.TVersor.asAxis()
 
     @property
-    def b_axis(self):
+    def BAxis(self):
         """
         Calculate the B axis.
 
         Example:
-          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).b_axis
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).BAxis
           Axis(000.00, -90.00)
-          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis(0, 0)).b_axis
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(0, 0)).BAxis
           Axis(270.00, +00.00)
         """
 
-        return self.b_versor.asAxis()
+        return self.BVersor.asAxis()
 
     @property
-    def m_plane(self):
+    def MPPlane(self):
         """
         Calculate M plane.
 
         Example:
-          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis(90, 0)).m_plane.isAlmostParallel(PPlane(0.0, 90.0))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPPlane.isAlmostParallel(PPlane(0.0, 90.0))
           True
-          >>> (PTBAxes(p_axis=Axis(45, 45), t_axis=Axis(225, 45)).m_plane).isAlmostParallel(PPlane(315.00, 90.00))
+          >>> (PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPPlane).isAlmostParallel(PPlane(315.00, 90.00))
           True
         """
 
-        return self.p_axis.commonPPlane(self.t_axis)
+        return self.PAxis.commonPPlane(self.TAxis)
 
-    def almost_equal(self, another, tolerance_angle=VECTOR_ANGLE_THRESHOLD):
+    def almostEqual(self, another, tolerance_angle=VECTOR_ANGLE_THRESHOLD):
         """
         Checks for equivalence between two PTBAXes instances
         within a given tolerance angle (default is VECTOR_ANGLE_THRESHOLD)
@@ -247,29 +252,29 @@ class PTBAxes(object):
         :return: Boolean.
 
         Examples:
-          >>> fm1 = PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0))
-          >>> fm2 = PTBAxes(p_axis=Axis(0, 0.5), t_axis=Axis(90, 0))
-          >>> fm1.almost_equal(fm2)
+          >>> fm1 = PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0))
+          >>> fm2 = PTBAxes(p_axis=Axis.fromAzPl(0, 0.5), t_axis=Axis.fromAzPl(90, 0))
+          >>> fm1.almostEqual(fm2)
           True
-          >>> fm3 = PTBAxes(p_axis=Axis(180.5, 0), t_axis=Axis(90.5, 0))
-          >>> fm1.almost_equal(fm3)
+          >>> fm3 = PTBAxes(p_axis=Axis.fromAzPl(180.5, 0), t_axis=Axis.fromAzPl(90.5, 0))
+          >>> fm1.almostEqual(fm3)
           True
-          >>> fm3.almost_equal(fm2)
+          >>> fm3.almostEqual(fm2)
           True
-          >>> fm4 = PTBAxes(p_axis=Axis(181.5, 0), t_axis=Axis(91.5, 0))
-          >>> fm1.almost_equal(fm4)
+          >>> fm4 = PTBAxes(p_axis=Axis.fromAzPl(181.5, 0), t_axis=Axis.fromAzPl(91.5, 0))
+          >>> fm1.almostEqual(fm4)
           False
         """
 
-        if not self.p_axis.isAlmostParallel(another.p_axis, tolerance_angle):
+        if not self.PAxis.isAlmostParallel(another.PAxis, tolerance_angle):
             return False
 
-        if not self.t_axis.isAlmostParallel(another.t_axis, tolerance_angle):
+        if not self.TAxis.isAlmostParallel(another.TAxis, tolerance_angle):
             return False
 
         return True
 
-    def to_matrix(self):
+    def toMatrix(self):
         """
         Creates a rotation matrix from the PTB as_vect xyz.
         Formula as in:
@@ -279,13 +284,13 @@ class PTBAxes(object):
         :return: a 3x3 numpy arrays fo floats.
 
         Example:
-          >>> arrays_are_close(PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).to_matrix(), np.identity(3))
+          >>> arrays_are_close(PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).toMatrix(), np.identity(3))
           True
         """
 
-        t = self.t_versor
-        p = self.p_versor
-        b = self.b_versor
+        t = self.TVersor
+        p = self.PVersor
+        b = self.BVersor
 
         return np.array([
             [t.x, p.x, b.x],
@@ -293,20 +298,20 @@ class PTBAxes(object):
             [t.z, p.z, b.z]
         ])
 
-    def to_quaternion(self):
+    def toQuatern(self):
         """
         Transforms the focal mechanism into a quaternion.
 
         :return: a Quaternion instance.
 
         Example:
-          >>> PTBAxes(p_axis=Axis(232, 41), t_axis=Axis(120, 24)).to_quaternion()
+          >>> PTBAxes(p_axis=Axis.fromAzPl(232, 41), t_axis=Axis.fromAzPl(120, 24)).toQuatern()
           Quaternion(-0.41567, 0.85017, -0.31120, -0.08706)
-          >>> PTBAxes(p_axis=Axis(51, 17), t_axis=Axis(295, 55)).to_quaternion()
+          >>> PTBAxes(p_axis=Axis.fromAzPl(51, 17), t_axis=Axis.fromAzPl(295, 55)).toQuatern()
           Quaternion(0.38380, 0.30459, 0.80853, -0.32588)
         """
 
-        return Quaternion.from_rot_matr(self.to_matrix())
+        return Quaternion.from_rot_matr(self.toMatrix())
 
 
 
@@ -323,12 +328,12 @@ def focmech_rotate(fm: PTBAxes, ra: RotationAxis) -> PTBAxes:
     :rtype: PTBAxes
     """
 
-    qfm = fm.to_quaternion()
+    qfm = fm.toQuatern()
     qra = ra.to_rotation_quaternion()
 
     qrot = qra * qfm
 
-    return PTBAxes.from_quaternion(qrot)
+    return PTBAxes.fromQuatern(qrot)
 
 
 def focmechs_invert_rotations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
@@ -345,16 +350,16 @@ def focmechs_invert_rotations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
 
     # processing of equal focal mechanisms
 
-    t_axes_angle = fm1.t_axis.angle(fm2.t_axis)
-    p_axes_angle = fm1.p_axis.angle(fm2.p_axis)
+    t_axes_angle = fm1.TAxis.angle(fm2.TAxis)
+    p_axes_angle = fm1.PAxis.angle(fm2.PAxis)
 
     if t_axes_angle < 0.5 and p_axes_angle < 0.5:
         return []
 
     # transformation of XYZ axes cartesian xyz (fm1,2) into quaternions q1,2
 
-    focmec1_matrix = fm1.to_matrix()
-    focmec2_matrix = fm2.to_matrix()
+    focmec1_matrix = fm1.toMatrix()
+    focmec2_matrix = fm2.toMatrix()
 
     fm1_quaternion = Quaternion.from_rot_matr(focmec1_matrix)
     fm2_quaternion = Quaternion.from_rot_matr(focmec2_matrix)

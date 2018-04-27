@@ -26,7 +26,7 @@ class TestFocalMechamismRotations(unittest.TestCase):
             calc_rot_fm = focmech_rotate(src_fm, rot_axis)
             print("calculated rotated fm: {}".format(calc_rot_fm))
             print("expected rotated fm: {}".format(rot_fm))
-            assert calc_rot_fm.almost_equal(rot_fm)
+            assert calc_rot_fm.almostEqual(rot_fm)
 
     def test_inversion_kagan_examples_1(self):
         """

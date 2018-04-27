@@ -60,7 +60,7 @@ k91_ss_PTBaxes = PTBAxes(
     p_axis=k91_ss_P_gaxis,
     t_axis=k91_ss_T_gaxis)
 
-k91_fs_quater = k91_fs_PTBaxes.to_quaternion()
-k91_ss_quater = k91_ss_PTBaxes.to_quaternion()
+k91_fs_quater = k91_fs_PTBaxes.toQuatern()
+k91_ss_quater = k91_ss_PTBaxes.toQuatern()
 
 

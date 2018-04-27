@@ -17,11 +17,11 @@ class TestFocalMechamismRotations(unittest.TestCase):
         :return:
         """
 
-        k91_fs_backPTBaxes = PTBAxes.from_quaternion(k91_fs_quater)
-        k91_ss_backPTBaxes = PTBAxes.from_quaternion(k91_ss_quater)
+        k91_fs_backPTBaxes = PTBAxes.fromQuatern(k91_fs_quater)
+        k91_ss_backPTBaxes = PTBAxes.fromQuatern(k91_ss_quater)
 
-        assert k91_fs_backPTBaxes.almost_equal(k91_fs_PTBaxes)
-        assert k91_ss_backPTBaxes.almost_equal(k91_ss_PTBaxes)
+        assert k91_fs_backPTBaxes.almostEqual(k91_fs_PTBaxes)
+        assert k91_ss_backPTBaxes.almostEqual(k91_ss_PTBaxes)
 
 
 
