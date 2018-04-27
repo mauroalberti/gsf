@@ -1,7 +1,7 @@
 
 import unittest
 
-from pygsf.mathematics import are_close
+from pygsf.mathematics.scalars import are_close
 from pygsf.mathematics.quaternions import Quaternion
 
 

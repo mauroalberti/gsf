@@ -124,7 +124,7 @@ class PTBAxes(object):
         if not isinstance(quaternion, Quaternion):
             raise PTBAxesInputException("Input argument must be of Quaternion type")
 
-        q0, q1, q2, q3 = quaternion.normalize().toXYZ()
+        q0, q1, q2, q3 = quaternion.normalize().components()
 
         q0q0 = q0*q0
         q0q1 = q0*q1
@@ -244,14 +244,14 @@ class PTBAxes(object):
         return Axis.fromVect(self.BVersor)
 
     @property
-    def MPlane(self) -> PPlane:
+    def MPlane(self) -> Plane:
         """
         Calculate M plane.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPlane.isAlmostParallel(PPlane(0.0, 90.0))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPlane.isAlmostParallel(Plane(0.0, 90.0))
           True
-          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPlane.isAlmostParallel(PPlane(315.00, 90.00))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPlane.isAlmostParallel(Plane(315.00, 90.00))
           True
         """
 

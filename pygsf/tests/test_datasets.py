@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from ..geography import *
+from ..geology.ptbaxes import *
 from pygsf.orientations.rotations import *
 
 
@@ -17,7 +17,7 @@ Kagan Y.Y., 1991
 ##### Original values
 
 k91_fs_T_axis_vals, k91_fs_P_axis_vals = (120, 24), (232, 41)
-k91_ss_T_axis_vals, k91_ss_P_axis_vals = (295, 55), ( 51, 17)
+k91_ss_T_axis_vals, k91_ss_P_axis_vals = (295, 55), (51, 17)
 
 # Kagan (1991) provided rotation solutions
 
@@ -36,21 +36,22 @@ k91_rot_sols = [
 
 
 def sols2rotaxis(rot_sol: dict) -> RotationAxis:
+
     az = rot_sol["az"]
     colat = rot_sol["colat_b"]
     rot_ang = rot_sol["rot_ang"]
 
     pl_from_N = plng2colatBottom(colat)
 
-    gv = GVect(az, pl_from_N)
+    gv = Direct.fromAzPl(az, pl_from_N)
 
     return RotationAxis.fromDirect(gv, rot_ang)
 
 
 ##### gsf-scope derived parameters
 
-k91_fs_T_gaxis, k91_fs_P_gaxis = GAxis(*k91_fs_T_axis_vals), GAxis(*k91_fs_P_axis_vals)
-k91_ss_T_gaxis, k91_ss_P_gaxis = GAxis(*k91_ss_T_axis_vals), GAxis(*k91_ss_P_axis_vals)
+k91_fs_T_gaxis, k91_fs_P_gaxis = Axis.fromAzPl(*k91_fs_T_axis_vals), Axis.fromAzPl(*k91_fs_P_axis_vals)
+k91_ss_T_gaxis, k91_ss_P_gaxis = Axis.fromAzPl(*k91_ss_T_axis_vals), Axis.fromAzPl(*k91_ss_P_axis_vals)
 
 k91_fs_PTBaxes = PTBAxes(
     p_axis=k91_fs_P_gaxis,

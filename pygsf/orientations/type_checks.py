@@ -16,7 +16,7 @@ def isAxis(obj) -> bool:
 
 def isPPlane(obj) -> bool:
 
-    return isinstance(obj, PPlane)
+    return isinstance(obj, Plane)
 
 
 def isSlickln(obj) -> bool:

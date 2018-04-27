@@ -136,7 +136,7 @@ class Slick(object):
 
 class Fault(object):
     """
-    Represent a fault plane, represented by a PPlane instance,
+    Represent a fault plane, represented by a Plane instance,
     and zero, one or more slickenlines, represented by a list of Slick instances (None when no slickenlines).
     """
 
@@ -168,7 +168,7 @@ class Fault(object):
         if slickenlines is None:
             slickenlines = []
 
-        pplane = PPlane(azim, dip_ang, is_rhr_strike)
+        pplane = Plane(azim, dip_ang, is_rhr_strike)
 
         for slickenline in slickenlines:
             if not pplane.contains(slickenline.s):
@@ -184,11 +184,11 @@ class Fault(object):
     @property
     def pplane(self):
         """
-        Return fault plane, as a PPlane instance.
+        Return fault plane, as a Plane instance.
 
         Example:
           >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).pplane
-          PPlane(090.00, +45.00)
+          Plane(090.00, +45.00)
         """
 
         return self._fltpln

@@ -890,7 +890,7 @@ class Direct(object):
 
         angle = fst_gvect.angle(snd_geoelem)
 
-        if isinstance(another, PPlane):
+        if isinstance(another, Plane):
             return angle > (90.0 - angle_tolerance)
         else:
             return angle <= angle_tolerance
@@ -967,39 +967,39 @@ class Direct(object):
 
         Examples:
           >>> Direct.fromAzPl(0, 45).normPPlane()
-          PPlane(180.00, +45.00)
+          Plane(180.00, +45.00)
           >>> Direct.fromAzPl(0, -45).normPPlane()
-          PPlane(000.00, +45.00)
+          Plane(000.00, +45.00)
           >>> Direct.fromAzPl(0, 90).normPPlane()
-          PPlane(180.00, +00.00)
+          Plane(180.00, +00.00)
         """
 
         down_orien = self.downward()
         dipdir = (down_orien.az.d + 180.0) % 360.0
         dipangle = 90.0 - down_orien.pl.d
 
-        return PPlane(dipdir, dipangle)
+        return Plane(dipdir, dipangle)
 
     def commonPPlane(self, another):
         """
-        Calculate PPlane instance defined by the two Vect instances.
+        Calculate Plane instance defined by the two Vect instances.
 
         Examples:
-          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(PPlane(180.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(Plane(180.0, 0.0))
           True
-          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(PPlane(90.0, 90.0))
+          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(Plane(90.0, 90.0))
           True
-          >>> Direct.fromAzPl(45, 0).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(PPlane(135.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(135.0, 45.0))
           True
-          >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(PPlane(225.0, 90.0))
+          >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(225.0, 90.0))
           True
-          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(PPlane(180.0, 10.0))
+          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(Plane(180.0, 10.0))
           False
-          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(PPlane(90.0, 80.0))
+          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(Plane(90.0, 80.0))
           False
-          >>> Direct.fromAzPl(45, 0).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(PPlane(125.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(125.0, 45.0))
           False
-          >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(PPlane(225.0, 80.0))
+          >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(225.0, 80.0))
           False
           >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(315, 44.5)) is None
           True
@@ -1262,7 +1262,7 @@ class OrienM(object):
         return x, y, z, unit_m
 
 
-class PPlane(object):
+class Plane(object):
     """
     Geological plane.
     Defined by dip direction and dip angle (both in degrees):
@@ -1280,20 +1280,20 @@ class PPlane(object):
         :type  dip_ang:  number or string convertible to float.
         :param is_rhr_strike: if the source azimuth is RHR strike (default is False, i.e. it is dip direction)
         :return: the instantiated geological plane.
-        :rtype: PPlane.
+        :rtype: Plane.
 
         Example:
-          >>> PPlane(0, 90)
-          PPlane(000.00, +90.00)
-          >>> PPlane(0, 90, is_rhr_strike=True)
-          PPlane(090.00, +90.00)
-          >>> PPlane(0, 90, True)
-          PPlane(090.00, +90.00)
-          >>> PPlane(0, "90", True)
+          >>> Plane(0, 90)
+          Plane(000.00, +90.00)
+          >>> Plane(0, 90, is_rhr_strike=True)
+          Plane(090.00, +90.00)
+          >>> Plane(0, 90, True)
+          Plane(090.00, +90.00)
+          >>> Plane(0, "90", True)
           Traceback (most recent call last):
           ...
           pygsf.exceptions.orientations.GeomInputException: Source dip angle must be number
-          >>> PPlane(0, 900)
+          >>> Plane(0, 900)
           Traceback (most recent call last):
           ...
           pygsf.exceptions.orientations.GeomInputException: Dip angle must be between 0° and 90°
@@ -1331,7 +1331,7 @@ class PPlane(object):
         Return the dip direction of the geological plane.
 
         Example:
-          >>> PPlane(34.2, 89.7).dd
+          >>> Plane(34.2, 89.7).dd
           34.2
         """
 
@@ -1343,7 +1343,7 @@ class PPlane(object):
         Return the dip angle of the geological plane.
 
         Example:
-          >>> PPlane(183, 77).da
+          >>> Plane(183, 77).da
           77.0
 
         """
@@ -1356,7 +1356,7 @@ class PPlane(object):
         Return a tuple storing the dip direction and dip angle values of a geological plane.
 
         Example:
-          >>> gp = PPlane(89.4, 17.2)
+          >>> gp = Plane(89.4, 17.2)
           >>> gp.dda
           (89.4, 17.2)
         """
@@ -1369,13 +1369,13 @@ class PPlane(object):
         Return the strike according to the right-hand-rule.
 
         Examples:
-          >>> PPlane(90, 45).rhrStrike
+          >>> Plane(90, 45).rhrStrike
           0.0
-          >>> PPlane(45, 89).rhrStrike
+          >>> Plane(45, 89).rhrStrike
           315.0
-          >>> PPlane(275, 38).rhrStrike
+          >>> Plane(275, 38).rhrStrike
           185.0
-          >>> PPlane(0, 38).rhrStrike
+          >>> Plane(0, 38).rhrStrike
           270.0
         """
 
@@ -1387,9 +1387,9 @@ class PPlane(object):
         Return a tuple storing the right-hand-rule strike and dip angle values of a geological plane.
 
         Example:
-          >>> PPlane(100, 17.2).srda
+          >>> Plane(100, 17.2).srda
           (10.0, 17.2)
-          >>> PPlane(10, 87).srda
+          >>> Plane(10, 87).srda
           (280.0, 87.0)
         """
 
@@ -1401,13 +1401,13 @@ class PPlane(object):
         Return the strike according to the left-hand-rule.
 
         Examples:
-          >>> PPlane(90, 45).lhrStrike
+          >>> Plane(90, 45).lhrStrike
           180.0
-          >>> PPlane(45, 89).lhrStrike
+          >>> Plane(45, 89).lhrStrike
           135.0
-          >>> PPlane(275, 38).lhrStrike
+          >>> Plane(275, 38).lhrStrike
           5.0
-          >>> PPlane(0, 38).lhrStrike
+          >>> Plane(0, 38).lhrStrike
           90.0
         """
 
@@ -1419,9 +1419,9 @@ class PPlane(object):
         Return a tuple storing the left-hand-rule strike and dip angle values of a geological plane.
 
         Example:
-          >>> PPlane(100, 17.2).slda
+          >>> Plane(100, 17.2).slda
           (190.0, 17.2)
-          >>> PPlane(10, 87).slda
+          >>> Plane(10, 87).slda
           (100.0, 87.0)
         """
 
@@ -1429,7 +1429,7 @@ class PPlane(object):
 
     def __repr__(self):
 
-        return "PPlane({:06.2f}, {:+06.2f})".format(*self.dda)
+        return "Plane({:06.2f}, {:+06.2f})".format(*self.dda)
 
     def rhrStrikeOrien(self):
         """
@@ -1438,11 +1438,11 @@ class PPlane(object):
         :return: OrienM instance,
 
         Examples:
-          >>> PPlane(90, 45).rhrStrikeOrien()
+          >>> Plane(90, 45).rhrStrikeOrien()
           Direct(az: 0.00°, pl: 0.00°)
-          >>> PPlane(45, 17).rhrStrikeOrien()
+          >>> Plane(45, 17).rhrStrikeOrien()
           Direct(az: 315.00°, pl: 0.00°)
-          >>> PPlane(90, 0).rhrStrikeOrien()
+          >>> Plane(90, 0).rhrStrikeOrien()
           Direct(az: 0.00°, pl: 0.00°)
         """
 
@@ -1457,9 +1457,9 @@ class PPlane(object):
         :return: OrienM instance.
 
         Examples:
-          >>> PPlane(90, 45).lhrStrikeOrien()
+          >>> Plane(90, 45).lhrStrikeOrien()
           Direct(az: 180.00°, pl: 0.00°)
-          >>> PPlane(45, 17).lhrStrikeOrien()
+          >>> Plane(45, 17).lhrStrikeOrien()
           Direct(az: 135.00°, pl: 0.00°)
         """
 
@@ -1474,9 +1474,9 @@ class PPlane(object):
         :return: OrienM instance.
 
         Examples:
-          >>> PPlane(90, 45).dipDirOrien()
+          >>> Plane(90, 45).dipDirOrien()
           Direct(az: 90.00°, pl: 45.00°)
-          >>> PPlane(45, 17).dipDirOrien()
+          >>> Plane(45, 17).dipDirOrien()
           Direct(az: 45.00°, pl: 17.00°)
         """
 
@@ -1491,9 +1491,9 @@ class PPlane(object):
         :return: OrienM instance.
 
         Examples:
-          >>> PPlane(90, 45).dipDirOppOrien()
+          >>> Plane(90, 45).dipDirOppOrien()
           Direct(az: 270.00°, pl: -45.00°)
-          >>> PPlane(45, 17).dipDirOppOrien()
+          >>> Plane(45, 17).dipDirOppOrien()
           Direct(az: 225.00°, pl: -17.00°)
         """
 
@@ -1506,20 +1506,20 @@ class PPlane(object):
         to the original one but with downward plunge.
 
         :return: geological plane
-        :rtype: PPlane
+        :rtype: Plane
 
         Examples:
-          >>> PPlane(0, 45).mirrorVertPPlane()
-          PPlane(180.00, +45.00)
-          >>> PPlane(225, 80).mirrorVertPPlane()
-          PPlane(045.00, +80.00)
-          >>> PPlane(90, 90).mirrorVertPPlane()
-          PPlane(270.00, +90.00)
-          >>> PPlane(270, 0).mirrorVertPPlane()
-          PPlane(090.00, +00.00)
+          >>> Plane(0, 45).mirrorVertPPlane()
+          Plane(180.00, +45.00)
+          >>> Plane(225, 80).mirrorVertPPlane()
+          Plane(045.00, +80.00)
+          >>> Plane(90, 90).mirrorVertPPlane()
+          Plane(270.00, +90.00)
+          >>> Plane(270, 0).mirrorVertPPlane()
+          Plane(090.00, +00.00)
         """
 
-        return PPlane(
+        return Plane(
             azim=opposite_trend(self.dd),
             dip_ang=self.da)
 
@@ -1529,11 +1529,11 @@ class PPlane(object):
         pointing in the same direction as the geological plane.
 
         Example:
-            >>> PPlane(90, 55).normalOrienFrwrd()
+            >>> Plane(90, 55).normalOrienFrwrd()
             Direct(az: 90.00°, pl: -35.00°)
-            >>> PPlane(90, 90).normalOrienFrwrd()
+            >>> Plane(90, 90).normalOrienFrwrd()
             Direct(az: 90.00°, pl: 0.00°)
-            >>> PPlane(90, 0).normalOrienFrwrd()
+            >>> Plane(90, 0).normalOrienFrwrd()
             Direct(az: 90.00°, pl: -90.00°)
         """
 
@@ -1550,11 +1550,11 @@ class PPlane(object):
         pointing in the opposite direction to the geological plane.
 
         Example:
-            >>> PPlane(90, 55).normalOrienAnti()
+            >>> Plane(90, 55).normalOrienAnti()
             Direct(az: 270.00°, pl: 35.00°)
-            >>> PPlane(90, 90).normalOrienAnti()
+            >>> Plane(90, 90).normalOrienAnti()
             Direct(az: 270.00°, pl: -0.00°)
-            >>> PPlane(90, 0).normalOrienAnti()
+            >>> Plane(90, 0).normalOrienAnti()
             Direct(az: 270.00°, pl: 90.00°)
         """
 
@@ -1566,11 +1566,11 @@ class PPlane(object):
         pointing downward.
 
         Example:
-            >>> PPlane(90, 55).downNormOrien()
+            >>> Plane(90, 55).downNormOrien()
             Direct(az: 270.00°, pl: 35.00°)
-            >>> PPlane(90, 90).downNormOrien()
+            >>> Plane(90, 90).downNormOrien()
             Direct(az: 90.00°, pl: 0.00°)
-            >>> PPlane(90, 0).downNormOrien()
+            >>> Plane(90, 0).downNormOrien()
             Direct(az: 270.00°, pl: 90.00°)
         """
 
@@ -1582,11 +1582,11 @@ class PPlane(object):
         pointing upward.
 
         Example:
-            >>> PPlane(90, 55).upNormOrien()
+            >>> Plane(90, 55).upNormOrien()
             Direct(az: 90.00°, pl: -35.00°)
-            >>> PPlane(90, 90).upNormOrien()
+            >>> Plane(90, 90).upNormOrien()
             Direct(az: 90.00°, pl: 0.00°)
-            >>> PPlane(90, 0).upNormOrien()
+            >>> Plane(90, 0).upNormOrien()
             Direct(az: 90.00°, pl: -90.00°)
         """
 
@@ -1596,7 +1596,7 @@ class PPlane(object):
         """
         Wrapper to down_normal_gv.
 
-        :return: OrienM normOrien to the PPlane self instance
+        :return: OrienM normOrien to the Plane self instance
         """
 
         return self.downNormOrien()
@@ -1605,34 +1605,34 @@ class PPlane(object):
         """
         Normal Axis.
 
-        :return: Axis normal to the PPlane self instance
+        :return: Axis normal to the Plane self instance
         """
 
         return self.downNormOrien().asAxis()
 
-    def angle(self, another: 'PPlane'):
+    def angle(self, another: 'Plane'):
         """
         Calculate angle (in degrees) between two geoplanes.
         Range is 0°-90°.
 
         Examples:
-          >>> PPlane(100.0, 50.0).angle(PPlane(100.0, 50.0))
+          >>> Plane(100.0, 50.0).angle(Plane(100.0, 50.0))
           0.0
-          >>> PPlane(300.0, 10.0).angle(PPlane(300.0, 90.0))
+          >>> Plane(300.0, 10.0).angle(Plane(300.0, 90.0))
           80.0
-          >>> PPlane(90.0, 90.0).angle(PPlane(270.0, 90.0))
+          >>> Plane(90.0, 90.0).angle(Plane(270.0, 90.0))
           0.0
-          >>> are_close(PPlane(90.0, 90.0).angle(PPlane(130.0, 90.0)), 40)
+          >>> are_close(Plane(90.0, 90.0).angle(Plane(130.0, 90.0)), 40)
           True
-          >>> are_close(PPlane(90, 70).angle(PPlane(270, 70)), 40)
+          >>> are_close(Plane(90, 70).angle(Plane(270, 70)), 40)
           True
-          >>> are_close(PPlane(90.0, 10.0).angle(PPlane(270.0, 10.0)), 20.0)
+          >>> are_close(Plane(90.0, 10.0).angle(Plane(270.0, 10.0)), 20.0)
           True
-          >>> are_close(PPlane(90.0, 10.0).angle(PPlane(270.0, 30.0)), 40.0)
+          >>> are_close(Plane(90.0, 10.0).angle(Plane(270.0, 30.0)), 40.0)
           True
         """
 
-        if not isinstance(another, PPlane):
+        if not isinstance(another, Plane):
             raise GeomInputException("Second instance for angle is of {} type".format(type(another)))
 
         gpl_axis = self.normalOrienFrwrd().asAxis()
@@ -1644,20 +1644,20 @@ class PPlane(object):
         """
         Check that two GPlanes are sub-parallel
 
-        :param another: a PPlane instance
+        :param another: a Plane instance
         :param angle_tolerance: the maximum allowed divergence angle (in degrees)
         :return: Boolean
 
          Examples:
-          >>> PPlane(0, 90).isAlmostParallel(PPlane(270, 90))
+          >>> Plane(0, 90).isAlmostParallel(Plane(270, 90))
           False
-          >>> PPlane(0, 90).isAlmostParallel(PPlane(180, 90))
+          >>> Plane(0, 90).isAlmostParallel(Plane(180, 90))
           True
-          >>> PPlane(0, 90).isAlmostParallel(PPlane(0, 0))
+          >>> Plane(0, 90).isAlmostParallel(Plane(0, 0))
           False
-          >>> PPlane(0, 0).isAlmostParallel(PPlane(0, 1e-6))
+          >>> Plane(0, 0).isAlmostParallel(Plane(0, 1e-6))
           True
-          >>> PPlane(0, 0).isAlmostParallel(PPlane(0, 1.1))
+          >>> Plane(0, 0).isAlmostParallel(Plane(0, 1.1))
           False
         """
 
@@ -1671,11 +1671,11 @@ class PPlane(object):
         :return: True or False
 
         Examples:
-          >>> PPlane(90, 0).contains(Direct.fromAzPl(60, 0))
+          >>> Plane(90, 0).contains(Direct.fromAzPl(60, 0))
           True
-          >>> PPlane(90, 0).contains(Axis.fromAzPl(60, 0))
+          >>> Plane(90, 0).contains(Axis.fromAzPl(60, 0))
           True
-          >>> PPlane(90, 0).contains(Direct.fromAzPl(60, 10))
+          >>> Plane(90, 0).contains(Direct.fromAzPl(60, 10))
           False
         """
 
@@ -1688,40 +1688,40 @@ class PPlane(object):
         """
         Check that two GPlanes are sub-orthogonal.
 
-        :param another: a PPlane instance
+        :param another: a Plane instance
         :param angle_tolerance: the maximum allowed divergence angle (in degrees)
         :return: Boolean
 
          Examples:
-          >>> PPlane(0, 90).isSubOrthogonal(PPlane(270, 90))
+          >>> Plane(0, 90).isSubOrthogonal(Plane(270, 90))
           True
-          >>> PPlane(0, 90).isSubOrthogonal(PPlane(180, 90))
+          >>> Plane(0, 90).isSubOrthogonal(Plane(180, 90))
           False
-          >>> PPlane(0, 90).isSubOrthogonal(PPlane(0, 0))
+          >>> Plane(0, 90).isSubOrthogonal(Plane(0, 0))
           True
-          >>> PPlane(0, 0).isSubOrthogonal(PPlane(0, 88))
+          >>> Plane(0, 0).isSubOrthogonal(Plane(0, 88))
           False
-          >>> PPlane(0, 0).isSubOrthogonal(PPlane(0, 45))
+          >>> Plane(0, 0).isSubOrthogonal(Plane(0, 45))
           False
         """
 
         fst_axis = self.normOrien().asAxis()
 
-        if isinstance(another, PPlane):
+        if isinstance(another, Plane):
             snd_gaxis = another.normOrien().asAxis()
         else:
             raise GeomInputException("Not accepted argument type for isSubOrthogonal method")
 
         angle = fst_axis.angle(snd_gaxis)
 
-        if isinstance(another, PPlane):
+        if isinstance(another, Plane):
             return angle > 90.0 - angle_tolerance
         else:
             return angle < angle_tolerance
 
     def rakeToOrien(self, rake):
         """
-        Calculate OrienM given a PPlane instance and a rake value.
+        Calculate OrienM given a Plane instance and a rake value.
         The rake is defined according to the Aki and Richards, 1980 conventions:
         rake = 0° -> left-lateral
         rake = 90° -> reverse
@@ -1729,15 +1729,15 @@ class PPlane(object):
         rake = -90° -> normal
 
         Examples:
-          >>> PPlane(180, 45).rakeToOrien(0.0)
+          >>> Plane(180, 45).rakeToOrien(0.0)
           Direct(az: 90.00°, pl: -0.00°)
-          >>> PPlane(180, 45).rakeToOrien(90.0)
+          >>> Plane(180, 45).rakeToOrien(90.0)
           Direct(az: 0.00°, pl: -45.00°)
-          >>> PPlane(180, 45).rakeToOrien(-90.0)
+          >>> Plane(180, 45).rakeToOrien(-90.0)
           Direct(az: 180.00°, pl: 45.00°)
-          >>> PPlane(180, 45).rakeToOrien(180.0).isAlmostParallel(Direct.fromAzPl(270.00, 0.00))
+          >>> Plane(180, 45).rakeToOrien(180.0).isAlmostParallel(Direct.fromAzPl(270.00, 0.00))
           True
-          >>> PPlane(180, 45).rakeToOrien(-180.0)
+          >>> Plane(180, 45).rakeToOrien(-180.0)
           Direct(az: 270.00°, pl: 0.00°)
         """
 
@@ -1760,9 +1760,9 @@ class PPlane(object):
         :return: bool flag indicating if it is very low angle
 
         Examples:
-          >>> PPlane(38.9, 1.2).isVLowAngle()
+          >>> Plane(38.9, 1.2).isVLowAngle()
           True
-          >>> PPlane(38.9, 7.4).isVLowAngle()
+          >>> Plane(38.9, 7.4).isVLowAngle()
           False
         """
 
@@ -1777,9 +1777,9 @@ class PPlane(object):
         :return: bool flag indicating if it is very high angle
 
         Examples:
-          >>> PPlane(38.9, 11.2).isVHighAngle()
+          >>> Plane(38.9, 11.2).isVHighAngle()
           False
-          >>> PPlane(38.9, 88.4).isVHighAngle()
+          >>> Plane(38.9, 88.4).isVHighAngle()
           True
         """
 
@@ -1787,15 +1787,15 @@ class PPlane(object):
 
     def toCPlane(self, point):
         """
-        Given a PPlane instance and a provided Point instance,
+        Given a Plane instance and a provided Point instance,
         calculate the corresponding Plane instance.
 
         Example:
-          >>> PPlane(0, 0).toCPlane(Point(0, 0, 0))
+          >>> Plane(0, 0).toCPlane(Point(0, 0, 0))
           CPlane(0.0000, 0.0000, 1.0000, -0.0000)
-          >>> PPlane(90, 45).toCPlane(Point(0, 0, 0))
+          >>> Plane(90, 45).toCPlane(Point(0, 0, 0))
           CPlane(0.7071, 0.0000, 0.7071, -0.0000)
-          >>> PPlane(0, 90).toCPlane(Point(0, 0, 0))
+          >>> Plane(0, 90).toCPlane(Point(0, 0, 0))
           CPlane(0.0000, 1.0000, -0.0000, -0.0000)
         """
 

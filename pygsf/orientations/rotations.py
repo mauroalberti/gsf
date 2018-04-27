@@ -49,12 +49,12 @@ class RotationAxis(object):
         if abs(quat) < quat_magn_thresh:
 
             rot_ang = 0.0
-            rot_direct = Direct(0.0, 0.0)
+            rot_direct = Direct.fromAzPl(0.0, 0.0)
 
         elif are_close(quat.scalar, 1):
 
             rot_ang = 0.0
-            rot_direct = Direct(0.0, 0.0)
+            rot_direct = Direct.fromAzPl(0.0, 0.0)
 
         else:
 
@@ -231,7 +231,7 @@ class RotationAxis(object):
         """
 
         rotation_angle_rad = radians(self.a)
-        rotation_vector = self.dr.versor()
+        rotation_vector = self.dr.asVersor()
 
         w = cos(rotation_angle_rad / 2.0)
         x, y, z = rotation_vector.scale(sin(rotation_angle_rad / 2.0)).toXYZ()
