@@ -304,36 +304,6 @@ class Vect(object):
         else:
             return another.z - self.z
 
-    def dist3DWith(self, another: 'Vect') -> Optional[float]:
-        """
-        Calculate Euclidean spatial distance between two points.
-
-        Examples:
-          >>> Vect(1., 1., 1.).dist3DWith(Vect(4., 5., 1,))
-          5.0
-          >>> Vect(1, 1, 1).dist3DWith(Vect(4, 5, 1))
-          5.0
-        """
-
-        if not isinstance(another, Vect):
-            return None
-        else:
-            return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
-
-    def dist2DWith(self, another: 'Vect') -> Optional[float]:
-        """
-        Calculate horizontal (2D) distance between two points.
-
-        Examples:
-          >>> Vect(1., 1., 1.).dist2DWith(Vect(4., 5., 7.))
-          5.0
-        """
-
-        if not isinstance(another, Vect):
-            return None
-        else:
-            return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
-
     def scale(self, scale_factor: [int, float]) -> Optional['Vect']:
         """
         Create a scaled object.
@@ -367,59 +337,6 @@ class Vect(object):
         """
 
         return self.scale(-1)
-
-    def isCoinc(self, another: 'Vect', tolerance: [int, float] = MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
-        """
-        Check spatial coincidence of two points
-
-        Example:
-          >>> Vect(1., 0., -1.).isCoinc(Vect(1., 1.5, -1.))
-          False
-          >>> Vect(1., 0., 0.).isCoinc(Vect(1., 0., 0.))
-          True
-          >>> Vect(1.2, 7.4, 1.4).isCoinc(Vect(1.2, 7.4, 1.4))
-          True
-          >>> Vect(1.2, 7.4, 1.4).isCoinc(Vect(1.2, 7.4, 1.4), tolerance=np.nan) is None
-          True
-        """
-
-        if not isinstance(another, Vect):
-            return None
-        elif not isinstance(tolerance, (int, float)):
-            return None
-        elif not isfinite(tolerance):
-            return None
-        else:
-            distance_2d = self.dist2DWith(another)
-            if np.isnan(distance_2d) or distance_2d > tolerance:
-                return False
-            else:
-                distance_3d = self.dist3DWith(another)
-                if np.isnan(distance_3d) or distance_3d > tolerance:
-                    return False
-                else:
-                    return True
-
-    def shift(self, sx: float, sy: float, sz: float) -> Optional['Vect']:
-        """
-        Create a new object shifted by given amount from the self instance.
-
-        Example:
-          >>> Vect(1, 1, 1).shift(0.5, 1., 1.5)
-          Vect(1.5000, 2.0000, 2.5000)
-          >>> Vect(1, 2, -1).shift(0.5, 1., 1.5)
-          Vect(1.5000, 3.0000, 0.5000)
-          >>> Vect(1, 2, -1).shift(0.5, np.nan, 1.5) is None
-          True
-       """
-
-        vals = [sx, sy, sz]
-        if not all(map(lambda val: isinstance(val, (int, float)), vals)):
-            return None
-        elif not all(map(isfinite, vals)):
-            return None
-        else:
-            return self.__class__(self.x + sx, self.y + sy, self.z + sz)
 
     def __repr__(self) -> str:
 

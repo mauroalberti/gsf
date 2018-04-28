@@ -961,16 +961,16 @@ class Direct(object):
         else:
             return self.asVersor().vCross(another.asVersor()).versor()
 
-    def normPPlane(self):
+    def normPlane(self):
         """
         Return the geological plane that is normal to the direction.
 
         Examples:
-          >>> Direct.fromAzPl(0, 45).normPPlane()
+          >>> Direct.fromAzPl(0, 45).normPlane()
           Plane(180.00, +45.00)
-          >>> Direct.fromAzPl(0, -45).normPPlane()
+          >>> Direct.fromAzPl(0, -45).normPlane()
           Plane(000.00, +45.00)
-          >>> Direct.fromAzPl(0, 90).normPPlane()
+          >>> Direct.fromAzPl(0, 90).normPlane()
           Plane(180.00, +00.00)
         """
 
@@ -980,28 +980,28 @@ class Direct(object):
 
         return Plane(dipdir, dipangle)
 
-    def commonPPlane(self, another):
+    def commonPlane(self, another):
         """
         Calculate Plane instance defined by the two Vect instances.
 
         Examples:
-          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(Plane(180.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(Plane(180.0, 0.0))
           True
-          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(Plane(90.0, 90.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(Plane(90.0, 90.0))
           True
-          >>> Direct.fromAzPl(45, 0).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(135.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(135.0, 45.0))
           True
-          >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(225.0, 90.0))
+          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(225.0, 90.0))
           True
-          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(Plane(180.0, 10.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(Plane(180.0, 10.0))
           False
-          >>> Direct.fromAzPl(0, 0).commonPPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(Plane(90.0, 80.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(Plane(90.0, 80.0))
           False
-          >>> Direct.fromAzPl(45, 0).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(125.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(125.0, 45.0))
           False
-          >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(225.0, 80.0))
+          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(225.0, 80.0))
           False
-          >>> Direct.fromAzPl(315, 45).commonPPlane(Direct.fromAzPl(315, 44.5)) is None
+          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(315, 44.5)) is None
           True
         """
 
@@ -1009,7 +1009,7 @@ class Direct(object):
         if normal_versor is None:
             return None
         else:
-            return Direct.fromVect(normal_versor).normPPlane()
+            return Direct.fromVect(normal_versor).normPlane()
 
     def asAxis(self):
         """
@@ -1022,20 +1022,20 @@ class Direct(object):
 
         return Axis(self.az, self.pl)
 
-    def normOrien(self, another):
+    def normDirect(self, another):
         """
         Calculate the instance that is normal to the two provided sources.
         Angle between sources must be larger than MIN_ANGLE_DEGR_DISORIENTATION,
         otherwise a SubparallelLineationException will be raised.
 
         Example:
-          >>> Direct.fromAzPl(0, 0).normOrien(Direct.fromAzPl(0.5, 0)) is None
+          >>> Direct.fromAzPl(0, 0).normDirect(Direct.fromAzPl(0.5, 0)) is None
           True
-          >>> Direct.fromAzPl(0, 0).normOrien(Direct.fromAzPl(179.5, 0)) is None
+          >>> Direct.fromAzPl(0, 0).normDirect(Direct.fromAzPl(179.5, 0)) is None
           True
-          >>> Direct.fromAzPl(0, 0).normOrien(Direct.fromAzPl(5.1, 0))
+          >>> Direct.fromAzPl(0, 0).normDirect(Direct.fromAzPl(5.1, 0))
           Direct(az: 0.00°, pl: 90.00°)
-          >>> Direct.fromAzPl(90, 45).normOrien(Direct.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(90, 45).normDirect(Direct.fromAzPl(90, 0))
           Direct(az: 180.00°, pl: -0.00°)
         """
 
@@ -1090,7 +1090,7 @@ class Axis(Direct):
           True
         """
 
-        norm_orien = self.normOrien(another)
+        norm_orien = self.normDirect(another)
         if norm_orien is None:
             return None
         else:
@@ -1523,17 +1523,17 @@ class Plane(object):
             azim=opposite_trend(self.dd),
             dip_ang=self.da)
 
-    def normalOrienFrwrd(self):
+    def normDirectFrwrd(self):
         """
-        Return the geological vector normal to the geological plane,
+        Return the direction normal to the geological plane,
         pointing in the same direction as the geological plane.
 
         Example:
-            >>> Plane(90, 55).normalOrienFrwrd()
+            >>> Plane(90, 55).normDirectFrwrd()
             Direct(az: 90.00°, pl: -35.00°)
-            >>> Plane(90, 90).normalOrienFrwrd()
+            >>> Plane(90, 90).normDirectFrwrd()
             Direct(az: 90.00°, pl: 0.00°)
-            >>> Plane(90, 0).normalOrienFrwrd()
+            >>> Plane(90, 0).normDirectFrwrd()
             Direct(az: 90.00°, pl: -90.00°)
         """
 
@@ -1544,62 +1544,62 @@ class Plane(object):
             az=tr,
             pl=pl)
 
-    def normalOrienAnti(self):
+    def normDirectBckwrd(self):
         """
-        Return the geological vector normal to the geological plane,
+        Return the direction normal to the geological plane,
         pointing in the opposite direction to the geological plane.
 
         Example:
-            >>> Plane(90, 55).normalOrienAnti()
+            >>> Plane(90, 55).normDirectBckwrd()
             Direct(az: 270.00°, pl: 35.00°)
-            >>> Plane(90, 90).normalOrienAnti()
+            >>> Plane(90, 90).normDirectBckwrd()
             Direct(az: 270.00°, pl: -0.00°)
-            >>> Plane(90, 0).normalOrienAnti()
+            >>> Plane(90, 0).normDirectBckwrd()
             Direct(az: 270.00°, pl: 90.00°)
         """
 
-        return self.normalOrienFrwrd().opposite()
+        return self.normDirectFrwrd().opposite()
 
-    def downNormOrien(self):
+    def normDirectDown(self):
         """
-        Return the geological vector normOrien to the geological plane,
+        Return the direction normal to the geological plane and
         pointing downward.
 
         Example:
-            >>> Plane(90, 55).downNormOrien()
+            >>> Plane(90, 55).normDirectDown()
             Direct(az: 270.00°, pl: 35.00°)
-            >>> Plane(90, 90).downNormOrien()
+            >>> Plane(90, 90).normDirectDown()
             Direct(az: 90.00°, pl: 0.00°)
-            >>> Plane(90, 0).downNormOrien()
+            >>> Plane(90, 0).normDirectDown()
             Direct(az: 270.00°, pl: 90.00°)
         """
 
-        return self.normalOrienFrwrd().downward()
+        return self.normDirectFrwrd().downward()
 
-    def upNormOrien(self):
+    def normDirectUp(self):
         """
         Return the direction normal to the polar plane,
         pointing upward.
 
         Example:
-            >>> Plane(90, 55).upNormOrien()
+            >>> Plane(90, 55).normDirectUp()
             Direct(az: 90.00°, pl: -35.00°)
-            >>> Plane(90, 90).upNormOrien()
+            >>> Plane(90, 90).normDirectUp()
             Direct(az: 90.00°, pl: 0.00°)
-            >>> Plane(90, 0).upNormOrien()
+            >>> Plane(90, 0).normDirectUp()
             Direct(az: 90.00°, pl: -90.00°)
         """
 
-        return self.normalOrienFrwrd().upward()
+        return self.normDirectFrwrd().upward()
 
-    def normOrien(self):
+    def normDirect(self):
         """
         Wrapper to down_normal_gv.
 
-        :return: OrienM normOrien to the Plane self instance
+        :return: OrienM normDirect to the Plane self instance
         """
 
-        return self.downNormOrien()
+        return self.normDirectDown()
 
     def normAxis(self):
         """
@@ -1608,7 +1608,7 @@ class Plane(object):
         :return: Axis normal to the Plane self instance
         """
 
-        return self.downNormOrien().asAxis()
+        return self.normDirectDown().asAxis()
 
     def angle(self, another: 'Plane'):
         """
@@ -1635,8 +1635,8 @@ class Plane(object):
         if not isinstance(another, Plane):
             raise GeomInputException("Second instance for angle is of {} type".format(type(another)))
 
-        gpl_axis = self.normalOrienFrwrd().asAxis()
-        an_axis = another.normalOrienFrwrd().asAxis()
+        gpl_axis = self.normDirectFrwrd().asAxis()
+        an_axis = another.normDirectFrwrd().asAxis()
 
         return gpl_axis.angle(an_axis)
 
@@ -1705,10 +1705,10 @@ class Plane(object):
           False
         """
 
-        fst_axis = self.normOrien().asAxis()
+        fst_axis = self.normDirect().asAxis()
 
         if isinstance(another, Plane):
-            snd_gaxis = another.normOrien().asAxis()
+            snd_gaxis = another.normDirect().asAxis()
         else:
             raise GeomInputException("Not accepted argument type for isSubOrthogonal method")
 
@@ -1799,7 +1799,7 @@ class Plane(object):
           CPlane(0.0000, 1.0000, -0.0000, -0.0000)
         """
 
-        normal_versor = self.normalOrienFrwrd().asVersor()
+        normal_versor = self.normDirectFrwrd().asVersor()
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * point.x + b * point.y + c * point.z)
         return CPlane(a, b, c, d)

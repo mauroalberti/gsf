@@ -21,7 +21,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0))
-          PTBAxes(P: Axis(az: 360.00°, pl: -0.00°), T: Axis(az: 90.00°, pl: 0.00°))
+          PTBAxes(P Axis(az: 360.00°, pl: -0.00°), T Axis(az: 90.00°, pl: 0.00°))
           >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(80, 0))
           Traceback (most recent call last):
           ...
@@ -52,11 +52,11 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes.fromVects(p_vector=Vect(0,1,0), t_vector=Vect(1,0,0))
-          PTBAxes(P: Axis(az: 360.00°, pl: -0.00°), T: Axis(az: 90.00°, pl: -0.00°))
+          PTBAxes(P Axis(az: 360.00°, pl: -0.00°), T Axis(az: 90.00°, pl: -0.00°))
           >>> PTBAxes.fromVects(p_vector=Vect(1,0,0), t_vector=Vect(0,0,-1))
-          PTBAxes(P: Axis(az: 90.00°, pl: -0.00°), T: Axis(az: 0.00°, pl: 90.00°))
+          PTBAxes(P Axis(az: 90.00°, pl: -0.00°), T Axis(az: 0.00°, pl: 90.00°))
           >>> PTBAxes.fromVects(p_vector=Vect(-1,1,0), t_vector=Vect(1,1,0))
-          PTBAxes(P: Axis(az: 315.00°, pl: -0.00°), T: Axis(az: 45.00°, pl: -0.00°))
+          PTBAxes(P Axis(az: 315.00°, pl: -0.00°), T Axis(az: 45.00°, pl: -0.00°))
           >>> PTBAxes.fromVects(p_vector=Vect(0.5, 1, 0), t_vector=Vect(1, 1, 0))
           Traceback (most recent call last):
           ...
@@ -89,7 +89,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes.fromFaultSlick(Fault(90, 45, slickenlines=[Slick(90, 45)]))
-          PTBAxes(P: Axis(az: 360.00°, pl: -90.00°), T: Axis(az: 90.00°, pl: -0.00°))
+          PTBAxes(P Axis(az: 360.00°, pl: -90.00°), T Axis(az: 90.00°, pl: -0.00°))
         """
 
         if not isinstance(fault, Fault):
@@ -101,7 +101,7 @@ class PTBAxes(object):
             raise PTBAxesInputException("Slickenline must have knonw movement sense")
 
         s_versor = slick.geom.asVersor()
-        f_versor = fault.pplane.normalOrienFrwrd().asVersor()
+        f_versor = fault.pplane.normDirectFrwrd().asVersor()
 
         p_versor = (f_versor - s_versor).versor()
         t_versor = (f_versor + s_versor).versor()
@@ -155,7 +155,7 @@ class PTBAxes(object):
 
     def __repr__(self):
 
-        return "PTBAxes(P: {}, T: {})".format(
+        return "PTBAxes(P {}, T {})".format(
             Axis.fromVect(self._p_versor),
             Axis.fromVect(self._t_versor))
 
@@ -255,7 +255,7 @@ class PTBAxes(object):
           True
         """
 
-        return self.PAxis.commonPPlane(self.TAxis)
+        return self.PAxis.commonPlane(self.TAxis)
 
     def almostEqual(self, another: 'PTBAxes', tolerance_angle: [int, float]=VECTOR_ANGLE_THRESHOLD) -> bool:
         """

@@ -336,11 +336,11 @@ class Fault(object):
 
     def is_normal(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
         """
-        Checks if a fault has normalOrienFrwrd movements.
+        Checks if a fault has normDirectFrwrd movements.
 
         :param rk_threshold: the threshold, in degrees, for the rake angle
         :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
-        :return: True if normalOrienFrwrd, False if not applicable
+        :return: True if normDirectFrwrd, False if not applicable
 
         Examples:
           >>> Fault(0, 45, slickenlines=[Slick(0, 45)]).is_normal()

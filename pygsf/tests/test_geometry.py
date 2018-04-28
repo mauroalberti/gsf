@@ -37,7 +37,7 @@ class TestOrientations(unittest.TestCase):
 
     def test_plane_normal(self):
 
-        assert are_close(Plane(90, 45).normalOrienFrwrd().angle(Direct.fromAzPl(90, -45)), 0.)
+        assert are_close(Plane(90, 45).normDirectFrwrd().angle(Direct.fromAzPl(90, -45)), 0.)
 
     def test_plane2cplane(self):
 
