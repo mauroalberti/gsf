@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from ..defaults.geology import *
-from ..exceptions.geology import *
+
 from ..orientations.rotations import *
 from .faults import *
 
@@ -31,7 +30,7 @@ class PTBAxes(object):
         if not (isinstance(p_axis, Axis) and isinstance(t_axis, Axis)):
             raise PTBAxesInputException("P and T axes must be of type Axis")
 
-        if not p_axis.isSubOrthogonal(t_axis):
+        if not p_axis.isSubOrthog(t_axis):
             raise PTBAxesInputException("P and T axes must be sub-orthogonal")
 
         b_vect = t_axis.normVersor(p_axis)
@@ -97,11 +96,11 @@ class PTBAxes(object):
 
         slick = fault.slick(slick_ndx)
 
-        if slick.has_unknown_sense():
+        if slick.hasUnknownSense():
             raise PTBAxesInputException("Slickenline must have knonw movement sense")
 
         s_versor = slick.geom.asVersor()
-        f_versor = fault.pplane.normDirectFrwrd().asVersor()
+        f_versor = fault.plane.normDirectFrwrd().asVersor()
 
         p_versor = (f_versor - s_versor).versor()
         t_versor = (f_versor + s_versor).versor()
@@ -249,9 +248,9 @@ class PTBAxes(object):
         Calculate M plane.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPlane.isAlmostParallel(Plane(0.0, 90.0))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPlane.isSubParallel(Plane(0.0, 90.0))
           True
-          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPlane.isAlmostParallel(Plane(315.00, 90.00))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPlane.isSubParallel(Plane(315.00, 90.00))
           True
         """
 
@@ -284,10 +283,10 @@ class PTBAxes(object):
         if not isinstance(another, PTBAxes):
             raise PTBAxesInputException("Argument must be of PTBAxes type")
 
-        if not self.PAxis.isAlmostParallel(another.PAxis, tolerance_angle):
+        if not self.PAxis.isSubParallel(another.PAxis, tolerance_angle):
             return False
 
-        if not self.TAxis.isAlmostParallel(another.TAxis, tolerance_angle):
+        if not self.TAxis.isSubParallel(another.TAxis, tolerance_angle):
             return False
 
         return True
@@ -329,8 +328,7 @@ class PTBAxes(object):
           Quaternion(0.38380, 0.30459, 0.80853, -0.32588)
         """
 
-        return Quaternion.from_rot_matr(self.toMatrix())
-
+        return Quaternion.fromRotMatr(self.toMatrix())
 
 
 def focmech_rotate(fm: PTBAxes, ra: RotationAxis) -> PTBAxes:
@@ -347,7 +345,7 @@ def focmech_rotate(fm: PTBAxes, ra: RotationAxis) -> PTBAxes:
     """
 
     qfm = fm.toQuatern()
-    qra = ra.to_rotation_quaternion()
+    qra = ra.toRotQuater()
 
     qrot = qra * qfm
 
@@ -379,8 +377,8 @@ def focmechs_invert_rotations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
     focmec1_matrix = fm1.toMatrix()
     focmec2_matrix = fm2.toMatrix()
 
-    fm1_quaternion = Quaternion.from_rot_matr(focmec1_matrix)
-    fm2_quaternion = Quaternion.from_rot_matr(focmec2_matrix)
+    fm1_quaternion = Quaternion.fromRotMatr(focmec1_matrix)
+    fm2_quaternion = Quaternion.fromRotMatr(focmec2_matrix)
 
     # calculation of quaternion inverse q1,2[-1]
 
@@ -405,9 +403,9 @@ def focmechs_invert_rotations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
     rotations_quaternions = list(map(lambda quat: quat * base_rot_quater, suppl_prod2quat))
     rotations_quaternions.append(base_rot_quater)
 
-    rotation_axes = list(map(lambda quat: RotationAxis.fromQuaternion(quat).to_min_rotation_axis(), rotations_quaternions))
+    rotation_axes = list(map(lambda quat: RotationAxis.fromQuater(quat).toMinRotAxis(), rotations_quaternions))
 
-    return sort_rotations(rotation_axes)
+    return sortRotations(rotation_axes)
 
 
 if __name__ == "__main__":

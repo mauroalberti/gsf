@@ -113,6 +113,7 @@ def angle_east_clock(x: float, y: float) -> Optional[float]:
     else:
         return mod360(360.0 - ang)
 
+
 def angle_north_clock(x: float, y: float) -> Optional[float]:
     """
     Calculate the angle from North (in degrees, positive clockwise) in the 2D plane

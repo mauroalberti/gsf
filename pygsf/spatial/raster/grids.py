@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division
+from ...exceptions.spatial import *
 
 from numpy import *  # general import for compatibility with formula input
 
@@ -81,14 +81,6 @@ def array_from_function(row_num, col_num, x_transfer_func, y_transfer_func, z_tr
     transfer_funcs = (x_transfer_func, y_transfer_func, z_transfer_func)
 
     return fromfunction(ij_transfer_func, (row_num, col_num), transfer_funcs=transfer_funcs)
-
-
-class AnaliticSurfaceCalcException(Exception):
-    """
-    Exception for Analytical Surface calculation.
-    """
-
-    pass
 
 
 if __name__ == "__main__":

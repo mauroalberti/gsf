@@ -1,14 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-class SlickSenseException(Exception):
-    """
-    Exception for slickenline movement sense.
-    """
-
-    pass
-
-
 class SlickInputTypeException(Exception):
     """
     Exception for slickenline type.

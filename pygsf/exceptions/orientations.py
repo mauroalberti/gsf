@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-class GeomInputException(Exception):
+class OrienInputException(Exception):
     """
     Exception for geometric input.
     """

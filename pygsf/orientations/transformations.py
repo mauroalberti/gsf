@@ -8,14 +8,14 @@ import numpy as np
 from pygsf.orientations.rotations import RotationAxis
 
 
-def scaling_matrix(scale_factor_x, scale_factor_y, scale_factor_z):
+def matrScaling(scale_factor_x, scale_factor_y, scale_factor_z):
 
     return np.array([(scale_factor_x, 0.0, 0.0),
                      (0.0, scale_factor_y, 0.0),
                      (0.0, 0.0, scale_factor_z)])
 
 
-def simple_shear_horiz_matrix(phi_angle_degr, alpha_angle_degr):
+def matrHorizSimpleShear(phi_angle_degr, alpha_angle_degr):
 
     phi_angle_rad = radians(phi_angle_degr)
     alpha_angle_rad = radians(alpha_angle_degr)
@@ -29,7 +29,7 @@ def simple_shear_horiz_matrix(phi_angle_degr, alpha_angle_degr):
                      (0.0, 0.0, 1.0)])
 
 
-def simple_shear_vert_matrix(phi_angle_degr, alpha_angle_degr):
+def matrVertSimpleShear(phi_angle_degr, alpha_angle_degr):
 
     phi_angle_rad = radians(phi_angle_degr)
     alpha_angle_rad = radians(alpha_angle_degr)
@@ -43,7 +43,7 @@ def simple_shear_vert_matrix(phi_angle_degr, alpha_angle_degr):
                      (0.0, 0.0, 1.0)])
 
 
-def deformation_matrices(deform_params):
+def deformMatrices(deform_params):
 
     deform_matrix = []
 
@@ -55,34 +55,35 @@ def deformation_matrices(deform_params):
             deformation = {'increment': 'additive',
                            'matrix': np.array([displ_x, displ_y, displ_z])}
         elif deform_param['type'] == 'rotation':
-            rot_matr = RotationAxis(deform_param['parameters']['rotation axis trend'],
-                                       deform_param['parameters']['rotation axis plunge'],
-                                       deform_param['parameters']['rotation angle']).to_rotation_matrix
+            rot_matr = RotationAxis(
+                deform_param['parameters']['rotation axis trend'],
+                deform_param['parameters']['rotation axis plunge'],
+                deform_param['parameters']['rotation angle']).toRotMatrix
             deformation = {'increment': 'multiplicative',
                            'matrix': rot_matr,
                            'shift_pt': np.array([deform_param['parameters']['center x'],
                                                  deform_param['parameters']['center y'],
                                                  deform_param['parameters']['center z']])}
         elif deform_param['type'] == 'scaling':
-            scal_matr = scaling_matrix(deform_param['parameters']['x factor'],
-                                       deform_param['parameters']['y factor'],
-                                       deform_param['parameters']['z factor'])
+            scal_matr = matrScaling(deform_param['parameters']['x factor'],
+                                    deform_param['parameters']['y factor'],
+                                    deform_param['parameters']['z factor'])
             deformation = {'increment': 'multiplicative',
                            'matrix': scal_matr,
                            'shift_pt': np.array([deform_param['parameters']['center x'],
                                                  deform_param['parameters']['center y'],
                                                  deform_param['parameters']['center z']])}
         elif deform_param['type'] == 'simple shear - horizontal':
-            simple_shear_horiz_matr = simple_shear_horiz_matrix(deform_param['parameters']['psi angle (degr.)'],
-                                                                deform_param['parameters']['alpha angle (degr.)'])
+            simple_shear_horiz_matr = matrHorizSimpleShear(deform_param['parameters']['psi angle (degr.)'],
+                                                           deform_param['parameters']['alpha angle (degr.)'])
             deformation = {'increment': 'multiplicative',
                            'matrix': simple_shear_horiz_matr,
                            'shift_pt': np.array([deform_param['parameters']['center x'],
                                                  deform_param['parameters']['center y'],
                                                  deform_param['parameters']['center z']])}
         elif deform_param['type'] == 'simple shear - vertical':
-            simple_shear_vert_matr = simple_shear_vert_matrix(deform_param['parameters']['psi angle (degr.)'],
-                                                              deform_param['parameters']['alpha angle (degr.)'])
+            simple_shear_vert_matr = matrVertSimpleShear(deform_param['parameters']['psi angle (degr.)'],
+                                                         deform_param['parameters']['alpha angle (degr.)'])
             deformation = {'increment': 'multiplicative',
                            'matrix': simple_shear_vert_matr,
                            'shift_pt': np.array([deform_param['parameters']['center x'],

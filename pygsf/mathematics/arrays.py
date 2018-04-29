@@ -5,6 +5,7 @@ import numpy as np
 
 from .scalars import *
 
+
 array = np.array
 
 
@@ -69,7 +70,7 @@ def arrays_are_close(a_array, b_array, rtol=1e-012, atol=1e-12, equal_nan=False,
 
     are_equal = []
     for a, b in np.nditer([a_array, b_array]):
-        are_equal.append(are_close(a.item(0), b.item(0), rtol=rtol, atol=atol, equal_nan=equal_nan, equal_inf=equal_inf))
+        are_equal.append(areClose(a.item(0), b.item(0), rtol=rtol, atol=atol, equal_nan=equal_nan, equal_inf=equal_inf))
 
     return all(are_equal)
 
@@ -95,7 +96,7 @@ def xyz_svd(xyz_array):
     """
 
     try:
-        result = np.svd(xyz_array)
+        result = np.linalg.svd(xyz_array)
     except:
         result = None
 

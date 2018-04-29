@@ -4,7 +4,7 @@
 from pygsf.geology.ptbaxes import *
 
 
-def isOrien(obj) -> bool:
+def isDirect(obj) -> bool:
 
     return isinstance(obj, Direct) and not isinstance(obj, Axis)
 
@@ -14,17 +14,17 @@ def isAxis(obj) -> bool:
     return isinstance(obj, Axis)
 
 
-def isPPlane(obj) -> bool:
+def isPlane(obj) -> bool:
 
     return isinstance(obj, Plane)
 
 
-def isSlickln(obj) -> bool:
+def isSlick(obj) -> bool:
 
     return isinstance(obj, Slick)
 
 
-def isFaultSlck(obj) -> bool:
+def isFault(obj) -> bool:
 
     return isinstance(obj, Fault)
 
@@ -34,12 +34,12 @@ def isPTBAxes(obj) -> bool:
     return isinstance(obj, PTBAxes)
 
 
-def is_upward(obj: Direct) -> bool:
+def isUpward(obj: Direct) -> bool:
 
     return obj.isUpward
 
 
-def is_not_upward(obj: Direct) -> bool:
+def isNotUpward(obj: Direct) -> bool:
 
     return not obj.isUpward
 

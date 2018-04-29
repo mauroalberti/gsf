@@ -3,9 +3,7 @@
 
 from math import sin, cos, radians, pi
 
-from ..defaults.orientations import *
 from ..exceptions.orientations import *
-from ..mathematics.vectors import *
 from ..spatial.vectorial.vectorial import *
 from ..orientations.utils import *
 
@@ -32,21 +30,21 @@ class Azim(object):
           >>> Azim("10")
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input azimuth value must be int/float
+          pygsf.exceptions.orientations.OrienInputException: Input azimuth value must be int/float
           >>> Azim(np.nan)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input azimuth value must be finite
+          pygsf.exceptions.orientations.OrienInputException: Input azimuth value must be finite
         """
 
         # unit check
         if unit not in ("d", "r"):
-            raise GeomInputException("Unit input must be 'd' or 'r'")
+            raise OrienInputException("Unit input must be 'd' or 'r'")
 
         if not (isinstance(val, (int, float))):
-            raise GeomInputException("Input azimuth value must be int/float")
+            raise OrienInputException("Input azimuth value must be int/float")
         elif not isfinite(val):
-            raise GeomInputException("Input azimuth value must be finite")
+            raise OrienInputException("Input azimuth value must be finite")
 
         if unit == 'd':
             val = radians(val)
@@ -107,19 +105,19 @@ class Azim(object):
           >>> Azim.fromXY(0, np.nan)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input x and y values must be finite
+          pygsf.exceptions.orientations.OrienInputException: Input x and y values must be finite
           >>> Azim.fromXY("10", np.nan)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input x and y values must be integer or float
+          pygsf.exceptions.orientations.OrienInputException: Input x and y values must be integer or float
         """
 
         # input vals checks
         vals = [x, y]
         if not all(map(lambda val: isinstance(val, (int, float)), vals)):
-            raise GeomInputException("Input x and y values must be integer or float")
+            raise OrienInputException("Input x and y values must be integer or float")
         elif not all(map(isfinite, vals)):
-            raise GeomInputException("Input x and y values must be finite")
+            raise OrienInputException("Input x and y values must be finite")
 
         angle = atan2(x, y)
         return cls(angle, unit='r')
@@ -169,30 +167,30 @@ class Plunge(object):
           >>> Plunge("10")
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input plunge value must be int/float
+          pygsf.exceptions.orientations.OrienInputException: Input plunge value must be int/float
           >>> Plunge(np.nan)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input plunge value must be finite
+          pygsf.exceptions.orientations.OrienInputException: Input plunge value must be finite
           >>> Plunge(-100)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input value in degrees must be between -90° and 90°
+          pygsf.exceptions.orientations.OrienInputException: Input value in degrees must be between -90° and 90°
          """
 
         # unit check
         if unit not in ('d', 'r'):
-            raise GeomInputException("Unit input must be 'd' (for degrees) or 'r' (for radians)")
+            raise OrienInputException("Unit input must be 'd' (for degrees) or 'r' (for radians)")
 
         # val check
         if not (isinstance(val, (int, float))):
-            raise GeomInputException("Input plunge value must be int/float")
+            raise OrienInputException("Input plunge value must be int/float")
         elif not isfinite(val):
-            raise GeomInputException("Input plunge value must be finite")
+            raise OrienInputException("Input plunge value must be finite")
         if unit == 'd' and not (-90.0 <= val <= 90.0):
-            raise GeomInputException("Input value in degrees must be between -90° and 90°")
+            raise OrienInputException("Input value in degrees must be between -90° and 90°")
         elif unit == 'r' and not (-pi/2 <= val <= pi/2):
-            raise GeomInputException("Input value in radians must be between -pi/2 and pi/2")
+            raise OrienInputException("Input value in radians must be between -pi/2 and pi/2")
 
         if unit == 'd':
             val = radians(val)
@@ -253,25 +251,25 @@ class Plunge(object):
           >>> Plunge.fromHZ(-1, 0)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Horizontal component cannot be negative
+          pygsf.exceptions.orientations.OrienInputException: Horizontal component cannot be negative
           >>> Plunge.fromHZ(0, 0)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input h and z values cannot be both zero
+          pygsf.exceptions.orientations.OrienInputException: Input h and z values cannot be both zero
         """
 
         # input vals check
 
         vals = [h, z]
         if not all(map(lambda val: isinstance(val, (int, float)), vals)):
-            raise GeomInputException("Input h and z values must be integer or float")
+            raise OrienInputException("Input h and z values must be integer or float")
         elif not all(map(isfinite, vals)):
-            raise GeomInputException("Input h and z values must be finite")
+            raise OrienInputException("Input h and z values must be finite")
 
         if h == 0.0 and z == 0.0:
-            raise GeomInputException("Input h and z values cannot be both zero")
+            raise OrienInputException("Input h and z values cannot be both zero")
         elif h < 0.0:
-            raise GeomInputException("Horizontal component cannot be negative")
+            raise OrienInputException("Horizontal component cannot be negative")
 
         angle = atan2(-z, h)
 
@@ -351,10 +349,10 @@ class Direct(object):
         """
 
         if not isinstance(az, Azim):
-            raise GeomInputException("First input value must be of type Azim")
+            raise OrienInputException("First input value must be of type Azim")
 
         if not isinstance(pl, Plunge):
-            raise GeomInputException("Second input value must be of type Plunge")
+            raise OrienInputException("Second input value must be of type Plunge")
 
         self._az = az
         self._pl = pl
@@ -429,15 +427,15 @@ class Direct(object):
           >>> Direct.fromAzPl(280, -100)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input value in degrees must be between -90° and 90°
+          pygsf.exceptions.orientations.OrienInputException: Input value in degrees must be between -90° and 90°
           >>> Direct.fromAzPl("10", 0)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input azimuth value must be int/float
+          pygsf.exceptions.orientations.OrienInputException: Input azimuth value must be int/float
           >>> Direct.fromAzPl(100, np.nan)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input plunge value must be finite
+          pygsf.exceptions.orientations.OrienInputException: Input plunge value must be finite
         """
 
         azim = Azim(az, unit=unit)
@@ -491,13 +489,13 @@ class Direct(object):
           >>> Direct.fromXYZ(0, 0, 0)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input components have near-zero values
+          pygsf.exceptions.orientations.OrienInputException: Input components have near-zero values
         """
 
         mag, norm_xyz = normXYZ(x, y, z)
 
         if norm_xyz is None:
-            raise GeomInputException("Input components have near-zero values")
+            raise OrienInputException("Input components have near-zero values")
 
         return cls._from_xyz(*norm_xyz)
 
@@ -529,7 +527,7 @@ class Direct(object):
           >>> Direct.fromVect(Vect(0, 0, 0))
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Input components have near-zero values
+          pygsf.exceptions.orientations.OrienInputException: Input components have near-zero values
         """
 
         x, y, z = vect.toXYZ()
@@ -725,21 +723,21 @@ class Direct(object):
         Return upward-point geological vector.
 
         Examples:
-          >>> Direct.fromAzPl(90, -45).upward().isAlmostParallel(Direct.fromAzPl(90.0, -45.0))
+          >>> Direct.fromAzPl(90, -45).upward().isSubParallel(Direct.fromAzPl(90.0, -45.0))
           True
-          >>> Direct.fromAzPl(180, 45).upward().isAlmostParallel(Direct.fromAzPl(0.0, -45.0))
+          >>> Direct.fromAzPl(180, 45).upward().isSubParallel(Direct.fromAzPl(0.0, -45.0))
           True
-          >>> Direct.fromAzPl(0, 0).upward().isAlmostParallel(Direct.fromAzPl(0.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).upward().isSubParallel(Direct.fromAzPl(0.0, 0.0))
           True
-          >>> Direct.fromAzPl(0, 90).upward().isAlmostParallel(Direct.fromAzPl(180.0, -90.0))
+          >>> Direct.fromAzPl(0, 90).upward().isSubParallel(Direct.fromAzPl(180.0, -90.0))
           True
-          >>> Direct.fromAzPl(90, -45).upward().isAlmostParallel(Direct.fromAzPl(90.0, -35.0))
+          >>> Direct.fromAzPl(90, -45).upward().isSubParallel(Direct.fromAzPl(90.0, -35.0))
           False
-          >>> Direct.fromAzPl(180, 45).upward().isAlmostParallel(Direct.fromAzPl(10.0, -45.0))
+          >>> Direct.fromAzPl(180, 45).upward().isSubParallel(Direct.fromAzPl(10.0, -45.0))
           False
-          >>> Direct.fromAzPl(0, 0).upward().isAlmostParallel(Direct.fromAzPl(170.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).upward().isSubParallel(Direct.fromAzPl(170.0, 0.0))
           False
-          >>> Direct.fromAzPl(0, 90).upward().isAlmostParallel(Direct.fromAzPl(180.0, -80.0))
+          >>> Direct.fromAzPl(0, 90).upward().isSubParallel(Direct.fromAzPl(180.0, -80.0))
           False
         """
 
@@ -753,21 +751,21 @@ class Direct(object):
         Return downward-pointing geological vector.
 
         Examples:
-          >>> Direct.fromAzPl(90, -45).downward().isAlmostParallel(Direct.fromAzPl(270.0, 45.0))
+          >>> Direct.fromAzPl(90, -45).downward().isSubParallel(Direct.fromAzPl(270.0, 45.0))
           True
-          >>> Direct.fromAzPl(180, 45).downward().isAlmostParallel(Direct.fromAzPl(180.0, 45.0))
+          >>> Direct.fromAzPl(180, 45).downward().isSubParallel(Direct.fromAzPl(180.0, 45.0))
           True
-          >>> Direct.fromAzPl(0, 0).downward().isAlmostParallel(Direct.fromAzPl(180.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).downward().isSubParallel(Direct.fromAzPl(180.0, 0.0))
           False
-          >>> Direct.fromAzPl(0, 90).downward().isAlmostParallel(Direct.fromAzPl(0.0, 90.0))
+          >>> Direct.fromAzPl(0, 90).downward().isSubParallel(Direct.fromAzPl(0.0, 90.0))
           True
-          >>> Direct.fromAzPl(90, -45).downward().isAlmostParallel(Direct.fromAzPl(270.0, 35.0))
+          >>> Direct.fromAzPl(90, -45).downward().isSubParallel(Direct.fromAzPl(270.0, 35.0))
           False
-          >>> Direct.fromAzPl(180, 45).downward().isAlmostParallel(Direct.fromAzPl(170.0, 45.0))
+          >>> Direct.fromAzPl(180, 45).downward().isSubParallel(Direct.fromAzPl(170.0, 45.0))
           False
-          >>> Direct.fromAzPl(0, 0).downward().isAlmostParallel(Direct.fromAzPl(180.0, 10.0))
+          >>> Direct.fromAzPl(0, 0).downward().isSubParallel(Direct.fromAzPl(180.0, 10.0))
           False
-          >>> Direct.fromAzPl(0, 90).downward().isAlmostParallel(Direct.fromAzPl(0.0, 80.0))
+          >>> Direct.fromAzPl(0, 90).downward().isSubParallel(Direct.fromAzPl(0.0, 80.0))
           False
         """
 
@@ -776,7 +774,7 @@ class Direct(object):
         else:
             return self.opposite()
 
-    def isAbsDipInRange(self, min_val, max_val, min_val_incl=False, max_value_incl=True):
+    def isAbsDipWithin(self, min_val, max_val, min_val_incl=False, max_value_incl=True):
         """
         Check whether the absolute value of the dip angle of an Direct instance is within a given range
         (default: minimum value is not included, maximum value is included).
@@ -788,13 +786,13 @@ class Direct(object):
         :return: Boolean
 
         Examples:
-          >>> Direct.fromAzPl(90, -45).isAbsDipInRange(30, 60)
+          >>> Direct.fromAzPl(90, -45).isAbsDipWithin(30, 60)
           True
-          >>> Direct.fromAzPl(120, 0).isAbsDipInRange(0, 60)
+          >>> Direct.fromAzPl(120, 0).isAbsDipWithin(0, 60)
           False
-          >>> Direct.fromAzPl(120, 0).isAbsDipInRange(0, 60, min_val_incl=True)
+          >>> Direct.fromAzPl(120, 0).isAbsDipWithin(0, 60, min_val_incl=True)
           True
-          >>> Direct.fromAzPl(120, 60).isAbsDipInRange(0, 60)
+          >>> Direct.fromAzPl(120, 60).isAbsDipWithin(0, 60)
           True
         """
 
@@ -815,29 +813,29 @@ class Direct(object):
         else:
             return True
 
-    def isSubHorizontal(self, max_dip_angle=DIP_ANGLE_THRESHOLD):
+    def isSubHoriz(self, max_dip_angle=DIP_ANGLE_THRESHOLD):
         """
         Check whether the instance is almost horizontal.
 
         Examples:
-          >>> Direct.fromAzPl(10, 15).isSubHorizontal()
+          >>> Direct.fromAzPl(10, 15).isSubHoriz()
           False
-          >>> Direct.fromAzPl(257, 2).isSubHorizontal()
+          >>> Direct.fromAzPl(257, 2).isSubHoriz()
           True
-          >>> Direct.fromAzPl(90, -5).isSubHorizontal()
+          >>> Direct.fromAzPl(90, -5).isSubHoriz()
           False
         """
 
         return abs(self.pl.d) < max_dip_angle
 
-    def isSubVertical(self, min_dip_angle=90.0 - DIP_ANGLE_THRESHOLD):
+    def isSubVert(self, min_dip_angle=90.0 - DIP_ANGLE_THRESHOLD):
         """
         Check whether the instance is almost vertical.
 
         Examples:
-          >>> Direct.fromAzPl(10, 15).isSubVertical()
+          >>> Direct.fromAzPl(10, 15).isSubVert()
           False
-          >>> Direct.fromAzPl(257, 89).isSubVertical()
+          >>> Direct.fromAzPl(257, 89).isSubVert()
           True
         """
 
@@ -849,15 +847,15 @@ class Direct(object):
         Range is 0°-180°.
 
         Examples:
-          >>> are_close(Direct.fromAzPl(0, 90).angle(Direct.fromAzPl(90, 0)), 90)
+          >>> areClose(Direct.fromAzPl(0, 90).angle(Direct.fromAzPl(90, 0)), 90)
           True
-          >>> are_close(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(270, 0)), 90)
+          >>> areClose(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(270, 0)), 90)
           True
-          >>> are_close(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(0, 0)), 0)
+          >>> areClose(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(0, 0)), 0)
           True
-          >>> are_close(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(180, 0)), 180)
+          >>> areClose(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(180, 0)), 180)
           True
-          >>> are_close(Direct.fromAzPl(90, 0).angle(Direct.fromAzPl(270, 0)), 180)
+          >>> areClose(Direct.fromAzPl(90, 0).angle(Direct.fromAzPl(270, 0)), 180)
           True
         """
 
@@ -865,7 +863,7 @@ class Direct(object):
 
         return angle_vers
 
-    def isAlmostParallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+    def isSubParallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """
         Check that two Direct instances are sub-parallel,
 
@@ -874,13 +872,13 @@ class Direct(object):
         :return: Boolean
 
         Examples:
-          >>> Direct.fromAzPl(0, 90).isAlmostParallel(Direct.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(0, 90).isSubParallel(Direct.fromAzPl(90, 0))
           False
-          >>> Direct.fromAzPl(0, 0).isAlmostParallel(Direct.fromAzPl(0, 1e-6))
+          >>> Direct.fromAzPl(0, 0).isSubParallel(Direct.fromAzPl(0, 1e-6))
           True
-          >>> Direct.fromAzPl(0, 90).isAlmostParallel(Direct.fromAzPl(180, 0))
+          >>> Direct.fromAzPl(0, 90).isSubParallel(Direct.fromAzPl(180, 0))
           False
-          >>> Direct.fromAzPl(0, 90).isAlmostParallel(Direct.fromAzPl(0, -90))
+          >>> Direct.fromAzPl(0, 90).isSubParallel(Direct.fromAzPl(0, -90))
           False
         """
 
@@ -895,7 +893,7 @@ class Direct(object):
         else:
             return angle <= angle_tolerance
 
-    def isAlmostAntiParallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+    def isSubAParallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """
         Check that two Vect instances are almost anti-parallel,
 
@@ -904,21 +902,21 @@ class Direct(object):
         :return: Boolean
 
         Examples:
-          >>> Direct.fromAzPl(0, 90).isAlmostAntiParallel(Direct.fromAzPl(90, -89.5))
+          >>> Direct.fromAzPl(0, 90).isSubAParallel(Direct.fromAzPl(90, -89.5))
           True
-          >>> Direct.fromAzPl(0, 0).isAlmostAntiParallel(Direct.fromAzPl(180, 1e-6))
+          >>> Direct.fromAzPl(0, 0).isSubAParallel(Direct.fromAzPl(180, 1e-6))
           True
-          >>> Direct.fromAzPl(90, 45).isAlmostAntiParallel(Direct.fromAzPl(270, -45.5))
+          >>> Direct.fromAzPl(90, 45).isSubAParallel(Direct.fromAzPl(270, -45.5))
           True
-          >>> Direct.fromAzPl(45, 90).isAlmostAntiParallel(Direct.fromAzPl(0, -90))
+          >>> Direct.fromAzPl(45, 90).isSubAParallel(Direct.fromAzPl(0, -90))
           True
-          >>> Direct.fromAzPl(45, 72).isAlmostAntiParallel(Direct.fromAzPl(140, -38))
+          >>> Direct.fromAzPl(45, 72).isSubAParallel(Direct.fromAzPl(140, -38))
           False
         """
 
         return self.angle(another) > (180.0 - angle_tolerance)
 
-    def isSubOrthogonal(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+    def isSubOrthog(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """
         Check that two Direct instance are sub-orthogonal
 
@@ -927,15 +925,15 @@ class Direct(object):
         :return: Boolean
 
          Examples:
-          >>> Direct.fromAzPl(0, 90).isSubOrthogonal(Direct.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(0, 90).isSubOrthog(Direct.fromAzPl(90, 0))
           True
-          >>> Direct.fromAzPl(0, 0).isSubOrthogonal(Direct.fromAzPl(0, 1.e-6))
+          >>> Direct.fromAzPl(0, 0).isSubOrthog(Direct.fromAzPl(0, 1.e-6))
           False
-          >>> Direct.fromAzPl(0, 0).isSubOrthogonal(Direct.fromAzPl(180, 0))
+          >>> Direct.fromAzPl(0, 0).isSubOrthog(Direct.fromAzPl(180, 0))
           False
-          >>> Direct.fromAzPl(90, 0).isSubOrthogonal(Direct.fromAzPl(270, 89.5))
+          >>> Direct.fromAzPl(90, 0).isSubOrthog(Direct.fromAzPl(270, 89.5))
           True
-          >>> Direct.fromAzPl(0, 90).isSubOrthogonal(Direct.fromAzPl(0, 0.5))
+          >>> Direct.fromAzPl(0, 90).isSubOrthog(Direct.fromAzPl(0, 0.5))
           True
         """
 
@@ -956,7 +954,7 @@ class Direct(object):
           True
         """
 
-        if self.isAlmostParallel(another):
+        if self.isSubParallel(another):
             return None
         else:
             return self.asVersor().vCross(another.asVersor()).versor()
@@ -985,21 +983,21 @@ class Direct(object):
         Calculate Plane instance defined by the two Vect instances.
 
         Examples:
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(Plane(180.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isSubParallel(Plane(180.0, 0.0))
           True
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(Plane(90.0, 90.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isSubParallel(Plane(90.0, 90.0))
           True
-          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(135.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(135.0, 45.0))
           True
-          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(225.0, 90.0))
+          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(225.0, 90.0))
           True
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isAlmostParallel(Plane(180.0, 10.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isSubParallel(Plane(180.0, 10.0))
           False
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isAlmostParallel(Plane(90.0, 80.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isSubParallel(Plane(90.0, 80.0))
           False
-          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(125.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(125.0, 45.0))
           False
-          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isAlmostParallel(Plane(225.0, 80.0))
+          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(225.0, 80.0))
           False
           >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(315, 44.5)) is None
           True
@@ -1039,9 +1037,9 @@ class Direct(object):
           Direct(az: 180.00°, pl: -0.00°)
         """
 
-        if self.isAlmostAntiParallel(another):
+        if self.isSubAParallel(another):
             return None
-        elif self.isAlmostParallel(another):
+        elif self.isSubParallel(another):
             return None
         else:
             return self.__class__.fromVect(self.normVersor(another))
@@ -1086,7 +1084,7 @@ class Axis(Direct):
           Axis(az: 0.00°, pl: 90.00°)
           >>> Axis.fromAzPl(90, 45).normAxis(Axis.fromAzPl(180, 0))
           Axis(az: 270.00°, pl: 45.00°)
-          >>> Axis.fromAzPl(270, 45).normAxis(Axis.fromAzPl(180, 90)).isAlmostParallel(Axis.fromAzPl(180, 0))
+          >>> Axis.fromAzPl(270, 45).normAxis(Axis.fromAzPl(180, 90)).isSubParallel(Axis.fromAzPl(180, 0))
           True
         """
 
@@ -1102,164 +1100,25 @@ class Axis(Direct):
         Range is 0°-90°.
 
         Examples:
-          >>> are_close(Axis.fromAzPl(0, 90).angle(Axis.fromAzPl(90, 0)), 90)
+          >>> areClose(Axis.fromAzPl(0, 90).angle(Axis.fromAzPl(90, 0)), 90)
           True
-          >>> are_close(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(270, 0)), 90)
+          >>> areClose(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(270, 0)), 90)
           True
-          >>> are_close(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(0, 0)), 0)
+          >>> areClose(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(0, 0)), 0)
           True
-          >>> are_close(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(180, 0)), 0)
+          >>> areClose(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(180, 0)), 0)
           True
-          >>> are_close(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(179, 0)), 1)
+          >>> areClose(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(179, 0)), 1)
           True
-          >>> are_close(Axis.fromAzPl(0, -90).angle(Axis.fromAzPl(0, 90)), 0)
+          >>> areClose(Axis.fromAzPl(0, -90).angle(Axis.fromAzPl(0, 90)), 0)
           True
-          >>> are_close(Axis.fromAzPl(90, 0).angle(Axis.fromAzPl(315, 0)), 45)
+          >>> areClose(Axis.fromAzPl(90, 0).angle(Axis.fromAzPl(315, 0)), 45)
           True
         """
 
         angle_vers = self.asVersor().angle(another.asVersor())
 
         return min(angle_vers, 180.0 - angle_vers)
-
-
-class OrienM(object):
-    """
-    Polar vector class.
-    """
-
-    def __init__(self, orien: Direct, mag: [int, float], unit_m: str= 'm'):
-        """
-        Constructs a polar vector object.
-        """
-
-        if not isinstance(orien, Direct):
-            raise GeomInputException("First vect argument must be of type Direct")
-
-        if not isinstance(mag, (int, float)):
-            raise GeomInputException("Second vect arg must be int/float")
-        elif not isfinite(mag):
-            raise GeomInputException("Second vect arg must be finite")
-        elif mag <= 0.0:
-            raise GeomInputException("Second vect argument must be positive")
-
-        if not isinstance(unit_m, str):
-            raise GeomInputException("Magnitude unit must be string")
-
-        self.o = orien
-        self.mag = float(mag)
-        self.um = unit_m
-
-    @property
-    def d(self):
-        """
-        Returns azimuth and plunge of direction in decimal degrees, as a tuple.
-
-        :return: tuple of azimuth and plunge in decimal degrees
-
-        Example:
-          >>> OrienM.fromAzPlMg(100, 20, 1).d
-          (100.0, 20.0)
-          >>> OrienM.fromAzPlMg(-pi/2, -pi/4, 0.5, unit_a='r').d
-          (270.0, -45.0)
-        """
-
-        return self.o.d
-
-    @property
-    def r(self):
-        """
-        Returns azimuth and plunge of direction in radians, as a tuple.
-
-        :return: tuple of azimuth and plunge in radians
-
-        Example:
-          >>> OrienM.fromAzPlMg(90, 45, 1).r
-          (1.5707963267948966, 0.7853981633974483)
-        """
-
-        return self.o.r
-
-    @property
-    def m(self):
-        """
-        Returns magnitude and its measurement unit, as a tuple.
-
-        :return: tuple of magnitude and measurement unit
-
-        Example:
-          >>> OrienM.fromAzPlMg(90, 45, 1, unit_m='mm').m
-          (1.0, 'mm')
-        """
-
-        return self.mag, self.um
-
-    @classmethod
-    def fromAzPlMg(cls, az: [int, float], pl: [int, float], mag: [int, float], unit_a='d', unit_m='m') -> 'OrienM':
-        """
-        Class constructor from azimuth, plunge and magnitude.
-
-        :param az: azimuth value
-        :param pl: plunge value
-        :param magn: magnitude
-        :param unit_d: angle measurement unit, in degrees ('d') or radians ('r')
-        :param unit_m: magnitude measurement unit. Default is meter ('m')
-        :return: OrienM instance
-
-        Examples:
-          >>> OrienM.fromAzPlMg(30, 40, 0.1)
-          OrienM(az: 30.00°, pl: 40.00°, mag: 0.1000 m)
-        """
-
-        az = Azim(az, unit=unit_a)
-        pl = Plunge(pl, unit=unit_a)
-        orien = Direct(az, pl)
-
-        return cls(orien, mag, unit_m)
-        
-    @classmethod
-    def fromXYZM(cls, x: [int, float], y: [int, float], z: [int, float], unit_m='m') -> 'OrienM':
-        """
-        Constructs a Vect object given a x-y-z triplet
-        :param x: x component
-        :param y: y component
-        :param z: z component
-        :return: the Vect instance
-
-        Examples:
-          >>> OrienM.fromXYZM(1, 1, 0, 'mm')
-          OrienM(az: 45.00°, pl: -0.00°, mag: 1.4142 mm)
-        """
-
-        mag, norm_xyz = normXYZ(x, y, z)
-
-        if norm_xyz is None:
-            raise GeomInputException("Input components have near-zero values")
-
-        direction = Direct._from_xyz(*norm_xyz)
-
-        return cls(direction, mag, unit_m)
-
-    def __repr__(self) -> str:
-
-        return "OrienM(az: {:.2f}°, pl: {:.2f}°, mag: {:.4f} {})".format(*self.d, *self.m)
-
-
-    def toXYZM(self) -> Tuple[float, float, float, str]:
-        """
-        Converts a polar vector to a tuple of x, y and z cartesian components, with measurement unit.
-
-        :return: tuple of x, y and z components, and measurement unit.
-
-        Examples:
-          >>> OrienM.fromAzPlMg(90, 0, 0.2).toXYZM()
-          (0.2, 1.2246467991473533e-17, -0.0, 'm')
-        """
-
-        vals = self.o.toXYZ()
-        mag, unit_m = self.m
-        x, y, z = map(lambda val: val*mag, vals)
-        return x, y, z, unit_m
 
 
 class Plane(object):
@@ -1292,11 +1151,11 @@ class Plane(object):
           >>> Plane(0, "90", True)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Source dip angle must be number
+          pygsf.exceptions.orientations.OrienInputException: Source dip angle must be number
           >>> Plane(0, 900)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.orientations.GeomInputException: Dip angle must be between 0° and 90°
+          pygsf.exceptions.orientations.OrienInputException: Dip angle must be between 0° and 90°
         """
 
         def rhrstrk2dd(rhr_strk):
@@ -1310,14 +1169,14 @@ class Plane(object):
             return (rhr_strk + 90.0) % 360.0
 
         if not isinstance(azim, (int, float)):
-            raise GeomInputException("Source azimuth must be number")
+            raise OrienInputException("Source azimuth must be number")
         if not isinstance(dip_ang, (int, float)):
-            raise GeomInputException("Source dip angle must be number")
+            raise OrienInputException("Source dip angle must be number")
         if not isinstance(is_rhr_strike, bool):
-            raise GeomInputException("Source azimuth type must be boolean")
+            raise OrienInputException("Source azimuth type must be boolean")
 
         if not (0.0 <= dip_ang <= 90.0):
-            raise GeomInputException("Dip angle must be between 0° and 90°")
+            raise OrienInputException("Dip angle must be between 0° and 90°")
 
         if is_rhr_strike:
             self._dipdir = rhrstrk2dd(azim)
@@ -1622,25 +1481,25 @@ class Plane(object):
           80.0
           >>> Plane(90.0, 90.0).angle(Plane(270.0, 90.0))
           0.0
-          >>> are_close(Plane(90.0, 90.0).angle(Plane(130.0, 90.0)), 40)
+          >>> areClose(Plane(90.0, 90.0).angle(Plane(130.0, 90.0)), 40)
           True
-          >>> are_close(Plane(90, 70).angle(Plane(270, 70)), 40)
+          >>> areClose(Plane(90, 70).angle(Plane(270, 70)), 40)
           True
-          >>> are_close(Plane(90.0, 10.0).angle(Plane(270.0, 10.0)), 20.0)
+          >>> areClose(Plane(90.0, 10.0).angle(Plane(270.0, 10.0)), 20.0)
           True
-          >>> are_close(Plane(90.0, 10.0).angle(Plane(270.0, 30.0)), 40.0)
+          >>> areClose(Plane(90.0, 10.0).angle(Plane(270.0, 30.0)), 40.0)
           True
         """
 
         if not isinstance(another, Plane):
-            raise GeomInputException("Second instance for angle is of {} type".format(type(another)))
+            raise OrienInputException("Second instance for angle is of {} type".format(type(another)))
 
         gpl_axis = self.normDirectFrwrd().asAxis()
         an_axis = another.normDirectFrwrd().asAxis()
 
         return gpl_axis.angle(an_axis)
 
-    def isAlmostParallel(self, another, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD):
+    def isSubParallel(self, another, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD):
         """
         Check that two GPlanes are sub-parallel
 
@@ -1649,25 +1508,26 @@ class Plane(object):
         :return: Boolean
 
          Examples:
-          >>> Plane(0, 90).isAlmostParallel(Plane(270, 90))
+          >>> Plane(0, 90).isSubParallel(Plane(270, 90))
           False
-          >>> Plane(0, 90).isAlmostParallel(Plane(180, 90))
+          >>> Plane(0, 90).isSubParallel(Plane(180, 90))
           True
-          >>> Plane(0, 90).isAlmostParallel(Plane(0, 0))
+          >>> Plane(0, 90).isSubParallel(Plane(0, 0))
           False
-          >>> Plane(0, 0).isAlmostParallel(Plane(0, 1e-6))
+          >>> Plane(0, 0).isSubParallel(Plane(0, 1e-6))
           True
-          >>> Plane(0, 0).isAlmostParallel(Plane(0, 1.1))
+          >>> Plane(0, 0).isSubParallel(Plane(0, 1.1))
           False
         """
 
         return self.angle(another) < angle_tolerance
 
-    def contains(self, dir: Direct, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD) -> bool:
+    def contains(self, direct: Direct, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD) -> bool:
         """
         Check that a plane contains a direction instance.
 
-        :param dir: a Direct instance
+        :param direct: a Direct instance
+        :param angle_tolerance: the tolerance angle
         :return: True or False
 
         Examples:
@@ -1681,10 +1541,9 @@ class Plane(object):
 
         plane_norm = self.normAxis()
 
-        return dir.isSubOrthogonal(plane_norm, angle_tolerance)
+        return direct.isSubOrthog(plane_norm, angle_tolerance)
 
-
-    def isSubOrthogonal(self, another, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD):
+    def isSubOrthog(self, another, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD):
         """
         Check that two GPlanes are sub-orthogonal.
 
@@ -1693,15 +1552,15 @@ class Plane(object):
         :return: Boolean
 
          Examples:
-          >>> Plane(0, 90).isSubOrthogonal(Plane(270, 90))
+          >>> Plane(0, 90).isSubOrthog(Plane(270, 90))
           True
-          >>> Plane(0, 90).isSubOrthogonal(Plane(180, 90))
+          >>> Plane(0, 90).isSubOrthog(Plane(180, 90))
           False
-          >>> Plane(0, 90).isSubOrthogonal(Plane(0, 0))
+          >>> Plane(0, 90).isSubOrthog(Plane(0, 0))
           True
-          >>> Plane(0, 0).isSubOrthogonal(Plane(0, 88))
+          >>> Plane(0, 0).isSubOrthog(Plane(0, 88))
           False
-          >>> Plane(0, 0).isSubOrthogonal(Plane(0, 45))
+          >>> Plane(0, 0).isSubOrthog(Plane(0, 45))
           False
         """
 
@@ -1710,7 +1569,7 @@ class Plane(object):
         if isinstance(another, Plane):
             snd_gaxis = another.normDirect().asAxis()
         else:
-            raise GeomInputException("Not accepted argument type for isSubOrthogonal method")
+            raise OrienInputException("Not accepted argument type for isSubOrthog method")
 
         angle = fst_axis.angle(snd_gaxis)
 
@@ -1719,9 +1578,9 @@ class Plane(object):
         else:
             return angle < angle_tolerance
 
-    def rakeToOrien(self, rake):
+    def rakeToDirect(self, rake):
         """
-        Calculate OrienM given a Plane instance and a rake value.
+        Calculate the Direct instance given a Plane instance and a rake value.
         The rake is defined according to the Aki and Richards, 1980 conventions:
         rake = 0° -> left-lateral
         rake = 90° -> reverse
@@ -1729,15 +1588,15 @@ class Plane(object):
         rake = -90° -> normal
 
         Examples:
-          >>> Plane(180, 45).rakeToOrien(0.0)
+          >>> Plane(180, 45).rakeToDirect(0.0)
           Direct(az: 90.00°, pl: -0.00°)
-          >>> Plane(180, 45).rakeToOrien(90.0)
+          >>> Plane(180, 45).rakeToDirect(90.0)
           Direct(az: 0.00°, pl: -45.00°)
-          >>> Plane(180, 45).rakeToOrien(-90.0)
+          >>> Plane(180, 45).rakeToDirect(-90.0)
           Direct(az: 180.00°, pl: 45.00°)
-          >>> Plane(180, 45).rakeToOrien(180.0).isAlmostParallel(Direct.fromAzPl(270.00, 0.00))
+          >>> Plane(180, 45).rakeToDirect(180.0).isSubParallel(Direct.fromAzPl(270.00, 0.00))
           True
-          >>> Plane(180, 45).rakeToOrien(-180.0)
+          >>> Plane(180, 45).rakeToDirect(-180.0)
           Direct(az: 270.00°, pl: 0.00°)
         """
 
@@ -1751,12 +1610,12 @@ class Plane(object):
 
         return Direct.fromXYZ(x, y, z)
 
-    def isVLowAngle(self, dip_angle_threshold=angle_gplane_thrshld):
+    def isVLowAngle(self, dip_angle_threshold: [int, float]=angle_gplane_thrshld):
         """
         Checks if a geological plane is very low angle.
 
-        :param threshold: the limit for the plane angle, in degrees
-        :type threshold: float
+        :param dip_angle_threshold: the limit for the plane angle, in degrees
+        :type dip_angle_threshold: int, float
         :return: bool flag indicating if it is very low angle
 
         Examples:
@@ -1768,12 +1627,12 @@ class Plane(object):
 
         return self.da < dip_angle_threshold
 
-    def isVHighAngle(self, dip_angle_threshold=angle_gplane_thrshld):
+    def isVHighAngle(self, dip_angle_threshold: [int, float]=angle_gplane_thrshld):
         """
         Checks if a geological plane is very high angle.
 
-        :param threshold: the limit for the plane angle, in degrees
-        :type threshold: float
+        :param dip_angle_threshold: the limit for the plane angle, in degrees
+        :type dip_angle_threshold: int, float
         :return: bool flag indicating if it is very high angle
 
         Examples:

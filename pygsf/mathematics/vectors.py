@@ -383,7 +383,7 @@ class Vect(object):
           True
         """
 
-        return are_close(self.len3D, 0)
+        return areClose(self.len3D, 0)
 
     @property
     def isAlmostUnit(self) -> bool:
@@ -399,7 +399,7 @@ class Vect(object):
           True
         """
 
-        return are_close(self.len3D, 1)
+        return areClose(self.len3D, 1)
 
     @property
     def isValid(self) -> bool:

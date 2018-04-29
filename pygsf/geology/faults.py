@@ -2,7 +2,7 @@
 
 from typing import Sequence
 
-from ..defaults.geology import *
+
 from ..exceptions.geology import *
 from ..orientations.orientations import *
 
@@ -54,7 +54,7 @@ class Slick(object):
 
     def __repr__(self):
 
-        return "Slick(az: {:.2f}°, pl: {:.2f}°, known_dir: {})".format(*self.s.d, self.has_known_sense())
+        return "Slick(az: {:.2f}°, pl: {:.2f}°, known_dir: {})".format(*self.s.d, self.hasKnownSense())
 
     @property
     def geom(self):
@@ -72,49 +72,49 @@ class Slick(object):
 
         return self.s
 
-    def has_known_sense(self):
+    def hasKnownSense(self):
         """
         Check whether the slickenline has known movement sense.
 
         Example:
-          >>> Slick(90, 45).has_known_sense()
+          >>> Slick(90, 45).hasKnownSense()
           True
-          >>> Slick(90, 45, False).has_known_sense()
+          >>> Slick(90, 45, False).hasKnownSense()
           False
         """
 
         return not isinstance(self.s, Axis)
 
-    def has_unknown_sense(self):
+    def hasUnknownSense(self):
         """
         Check whether the slickenline has unknown/uncertain movement sense.
 
         Example:
-          >>> Slick(90, 45, False).has_unknown_sense()
+          >>> Slick(90, 45, False).hasUnknownSense()
           True
-          >>> Slick(90, 45).has_unknown_sense()
+          >>> Slick(90, 45).hasUnknownSense()
           False
         """
 
-        return not self.has_known_sense()
+        return not self.hasKnownSense()
 
-    def set_known_sense(self):
+    def setKnownSense(self):
         """
         Return a new slickenline with movement sense set to known.
 
         Example:
-          >>> Slick(180, -30, False).set_known_sense()
+          >>> Slick(180, -30, False).setKnownSense()
           Slick(az: 180.00°, pl: -30.00°, known_dir: True)
         """
 
         return Slick(*self.s.d, True)
 
-    def set_unknown_sense(self):
+    def setUnknownSense(self):
         """
         Set to unknown/uncertain the movement sense for the current Slickline instance.
 
         Example:
-          >>> Slick(180, -30).set_unknown_sense()
+          >>> Slick(180, -30).setUnknownSense()
           Slick(az: 180.00°, pl: -30.00°, known_dir: False)
         """
 
@@ -131,7 +131,7 @@ class Slick(object):
          Slick(az: 210.00°, pl: -45.00°, known_dir: True)
         """
 
-        return Slick(*self.s.opposite().d, self.has_known_sense())
+        return Slick(*self.s.opposite().d, self.hasKnownSense())
 
 
 class Fault(object):
@@ -179,47 +179,47 @@ class Fault(object):
 
     def __repr__(self):
 
-        return "Fault({}, {}) with {} slickeline(s)".format(*self.pplane.dda, len(self.slicks))
+        return "Fault({}, {}) with {} slickeline(s)".format(*self.plane.dda, len(self.slicks))
 
     @property
-    def pplane(self):
+    def plane(self):
         """
         Return fault plane, as a Plane instance.
 
         Example:
-          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).pplane
+          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).plane
           Plane(090.00, +45.00)
         """
 
         return self._fltpln
 
     @property
-    def num_slicks(self) -> int:
+    def numSlicks(self) -> int:
         """
         Returns the number of slickenlines.
 
         :return: number of slickenlines, as integer
 
         Examples:
-          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).num_slicks
+          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).numSlicks
           1
         """
 
         return len(self._slicks)
 
     @property
-    def has_slicks(self) -> bool:
+    def hasSlicks(self) -> bool:
         """
         Returns the number of slickenlines.
 
         :return: number of slickenlines, as integer
 
         Examples:
-          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).has_slicks
+          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).hasSlicks
           True
         """
 
-        return self.num_slicks > 0
+        return self.numSlicks > 0
 
     @property
     def slicks(self):
@@ -240,45 +240,45 @@ class Fault(object):
 
         if not self._slicks:
             raise FaultInputTypeException("No slickenline defined for current Fault instance")
-        elif ndx > len(self._slicks) -1:
+        elif ndx > len(self._slicks) - 1:
             raise FaultInputTypeException("Slickenline index is greater than slickenlines number")
         else:
             return self._slicks[ndx]
 
-    def slick_geom(self, ndx: int=0):
+    def slickGeom(self, ndx: int=0):
         """
         Return the geometric object (Direct or Axis) associated with slickenline.
 
         Example:
-          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).slick_geom()
+          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).slickGeom()
           Direct(az: 90.00°, pl: 45.00°)
         """
 
         if not self._slicks:
             raise FaultInputTypeException("No slickenline defined for current Fault instance")
-        elif ndx > len(self._slicks) -1:
+        elif ndx > len(self._slicks) - 1:
             raise FaultInputTypeException("Slickenline index is greater than slickenlines number")
         else:
             return self._slicks[ndx].s
 
     @property
-    def known_sense(self, ndx: int=0):
+    def knownSense(self, ndx: int=0):
         """
         Check if the Slick instance in the GFault instance has a known movement sense.
 
         Example:
-          >>> Fault(90, 45, slickenlines=[Slick(90, 45, False)]).known_sense
+          >>> Fault(90, 45, slickenlines=[Slick(90, 45, False)]).knownSense
           False
-          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).known_sense
+          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).knownSense
           True
         """
 
         if not self._slicks:
             return None
-        elif ndx > len(self._slicks) -1:
+        elif ndx > len(self._slicks) - 1:
             raise FaultInputTypeException("Slickenline index is greater than slickenlines number")
         else:
-            return self._slicks[ndx].has_known_sense()
+            return self._slicks[ndx].hasKnownSense()
 
     def rake(self, ndx: int=0):
         """
@@ -323,39 +323,40 @@ class Fault(object):
           -140.00000000000003
         """
 
-        if not self.known_sense:
+        if not self.knownSense:
             raise FaultInputTypeException("Slickeline must have known movement sense")
 
-        sl_gv = self.slick_geom(ndx)
-        angle = sl_gv.angle(self.pplane.rhrStrikeOrien())
+        sl_gv = self.slickGeom(ndx)
+        angle = sl_gv.angle(self.plane.rhrStrikeOrien())
 
-        if self.pplane.dipDirOrien().angle(sl_gv) < 90.0:
+        if self.plane.dipDirOrien().angle(sl_gv) < 90.0:
             return -angle
         else:
             return angle
 
-    def is_normal(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
+    def isNormal(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
         """
         Checks if a fault has normDirectFrwrd movements.
 
+        :param ndx: slickenline index
         :param rk_threshold: the threshold, in degrees, for the rake angle
         :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
         :return: True if normDirectFrwrd, False if not applicable
 
         Examples:
-          >>> Fault(0, 45, slickenlines=[Slick(0, 45)]).is_normal()
+          >>> Fault(0, 45, slickenlines=[Slick(0, 45)]).isNormal()
           True
-          >>> Fault(0, 45, slickenlines=[Slick(90, 0)]).is_normal()
+          >>> Fault(0, 45, slickenlines=[Slick(90, 0)]).isNormal()
           False
-          >>> Fault(0, 15, slickenlines=[Slick(180, -15)]).is_normal()
+          >>> Fault(0, 15, slickenlines=[Slick(180, -15)]).isNormal()
           False
-          >>> Fault(0, 90, slickenlines=[Slick(90, 45)]).is_normal()
+          >>> Fault(0, 90, slickenlines=[Slick(90, 45)]).isNormal()
           False
-          >>> Fault(0, 90, slickenlines=[Slick(270, -45)]).is_normal()
+          >>> Fault(0, 90, slickenlines=[Slick(270, -45)]).isNormal()
           False
         """
 
-        if self.pplane.isVHighAngle(dip_angle_threshold) or self.pplane.isVLowAngle(dip_angle_threshold):
+        if self.plane.isVHighAngle(dip_angle_threshold) or self.plane.isVLowAngle(dip_angle_threshold):
             return False
 
         if - rk_threshold >= self.rake(ndx) >= -(180.0 - rk_threshold):
@@ -363,28 +364,29 @@ class Fault(object):
         else:
             return False
 
-    def is_reverse(self,  ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
+    def isReverse(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
         """
         Checks if a fault has reverse movements.
 
+        :param ndx: slickenline index
         :param rk_threshold: the threshold, in degrees, for the rake angle
         :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
         :return: True if reverse, False if not applicable
 
         Examples:
-          >>> Fault(90, 90, slickenlines=[Slick(0, 0)]).is_reverse()
+          >>> Fault(90, 90, slickenlines=[Slick(0, 0)]).isReverse()
           False
-          >>> Fault(90, 90, slickenlines=[Slick(90, 90)]).is_reverse()
+          >>> Fault(90, 90, slickenlines=[Slick(90, 90)]).isReverse()
           False
-          >>> Fault(90, 45, slickenlines=[Slick(0, 0)]).is_reverse()
+          >>> Fault(90, 45, slickenlines=[Slick(0, 0)]).isReverse()
           False
-          >>> Fault(90, 45, slickenlines=[Slick(270, -45)]).is_reverse()
+          >>> Fault(90, 45, slickenlines=[Slick(270, -45)]).isReverse()
           True
-          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).is_reverse()
+          >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).isReverse()
           False
         """
 
-        if self.pplane.isVHighAngle(dip_angle_threshold) or self.pplane.isVLowAngle(dip_angle_threshold):
+        if self.plane.isVHighAngle(dip_angle_threshold) or self.plane.isVLowAngle(dip_angle_threshold):
             return False
 
         if rk_threshold <= self.rake(ndx) <= (180.0 - rk_threshold):
@@ -392,30 +394,31 @@ class Fault(object):
         else:
             return False
 
-    def is_right_lateral(self,  ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
+    def isRightLateral(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
         """
         Checks if a fault has right-lateral movements.
 
+        :param ndx: slickenline index
         :param rk_threshold: the threshold, in degrees, for the rake angle
         :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
         :return: True if right-lateral, False if not applicable
 
         Examples:
-          >>> Fault(90, 90, slickenlines=[Slick(0, 0)]).is_right_lateral()
+          >>> Fault(90, 90, slickenlines=[Slick(0, 0)]).isRightLateral()
           False
-          >>> Fault(90, 90, slickenlines=[Slick(180, 0)]).is_right_lateral()
+          >>> Fault(90, 90, slickenlines=[Slick(180, 0)]).isRightLateral()
           True
-          >>> Fault(90, 45, slickenlines=[Slick(0, 0)]).is_right_lateral()
+          >>> Fault(90, 45, slickenlines=[Slick(0, 0)]).isRightLateral()
           False
-          >>> Fault(90, 45, slickenlines=[Slick(180, 0)]).is_right_lateral()
+          >>> Fault(90, 45, slickenlines=[Slick(180, 0)]).isRightLateral()
           True
-          >>> Fault(90, 45, slickenlines=[Slick(270, -45)]).is_right_lateral()
+          >>> Fault(90, 45, slickenlines=[Slick(270, -45)]).isRightLateral()
           False
-          >>> Fault(90, 2, slickenlines=[Slick(180, 0)]).is_right_lateral()
+          >>> Fault(90, 2, slickenlines=[Slick(180, 0)]).isRightLateral()
           False
         """
 
-        if self.pplane.isVLowAngle(dip_angle_threshold):
+        if self.plane.isVLowAngle(dip_angle_threshold):
             return False
 
         rake = self.rake(ndx)
@@ -424,30 +427,31 @@ class Fault(object):
         else:
             return False
 
-    def is_left_lateral(self,  ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
+    def isLeftLateral(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld):
         """
         Checks if a fault has left-lateral movements.
 
+        :param ndx: slickenline index
         :param rk_threshold: the threshold, in degrees, for the rake angle
         :param dip_angle_threshold: the threshold, in degrees, for the dip angle of the geological plane
         :return: True if left-lateral, False if not applicable
 
         Examples:
-          >>> Fault(90, 90, slickenlines=[Slick(0, 0)]).is_left_lateral()
+          >>> Fault(90, 90, slickenlines=[Slick(0, 0)]).isLeftLateral()
           True
-          >>> Fault(90, 90, slickenlines=[Slick(180, 0)]).is_left_lateral()
+          >>> Fault(90, 90, slickenlines=[Slick(180, 0)]).isLeftLateral()
           False
-          >>> Fault(90, 45, slickenlines=[Slick(0, 0)]).is_left_lateral()
+          >>> Fault(90, 45, slickenlines=[Slick(0, 0)]).isLeftLateral()
           True
-          >>> Fault(90, 45, slickenlines=[Slick(180, 0)]).is_left_lateral()
+          >>> Fault(90, 45, slickenlines=[Slick(180, 0)]).isLeftLateral()
           False
-          >>> Fault(90, 45, slickenlines=[Slick(270, -45)]).is_left_lateral()
+          >>> Fault(90, 45, slickenlines=[Slick(270, -45)]).isLeftLateral()
           False
-          >>> Fault(90, 2, slickenlines=[Slick(0, 0)]).is_left_lateral()
+          >>> Fault(90, 2, slickenlines=[Slick(0, 0)]).isLeftLateral()
           False
         """
 
-        if self.pplane.isVLowAngle(dip_angle_threshold):
+        if self.plane.isVLowAngle(dip_angle_threshold):
             return False
 
         if (-90.0 + rk_threshold) <= self.rake(ndx) <= (90.0 - rk_threshold):

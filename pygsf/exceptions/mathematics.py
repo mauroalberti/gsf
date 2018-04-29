@@ -9,7 +9,6 @@ class RefFrameInputException(Exception):
     pass
 
 
-
 class InputValuesException(Exception):
     """
     Exception for values input.
@@ -24,7 +23,6 @@ class VectorInputException(Exception):
     """
 
     pass
-
 
 
 class QuaternionInputException(Exception):

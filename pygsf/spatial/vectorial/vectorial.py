@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-from ...exceptions.spatial import *
 from ...defaults.orientations import *
 from ...mathematics.vectors import *
 
@@ -63,7 +62,7 @@ class Point(object):
             return not (self == another)
 
     @property
-    def a(self) -> 'numpy.array':
+    def a(self) -> 'np.array':
         """
         Return a copy of the object inner array.
 
@@ -476,26 +475,31 @@ class CPlane(object):
           CPlane(1.0000, 0.0000, 0.0000, 0.0000)
         """
 
-        matr_a = array([[pt1.y, pt1.z, 1],
-                           [pt2.y, pt2.z, 1],
-                           [pt3.y, pt3.z, 1]])
+        matr_a = array(
+            [[pt1.y, pt1.z, 1],
+            [pt2.y, pt2.z, 1],
+            [pt3.y, pt3.z, 1]])
 
-        matr_b = - array([[pt1.x, pt1.z, 1],
-                             [pt2.x, pt2.z, 1],
-                             [pt3.x, pt3.z, 1]])
+        matr_b = - array(
+            [[pt1.x, pt1.z, 1],
+            [pt2.x, pt2.z, 1],
+            [pt3.x, pt3.z, 1]])
 
-        matr_c = array([[pt1.x, pt1.y, 1],
-                           [pt2.x, pt2.y, 1],
-                           [pt3.x, pt3.y, 1]])
+        matr_c = array(
+            [[pt1.x, pt1.y, 1],
+            [pt2.x, pt2.y, 1],
+            [pt3.x, pt3.y, 1]])
 
-        matr_d = - array([[pt1.x, pt1.y, pt1.z],
-                             [pt2.x, pt2.y, pt2.z],
-                             [pt3.x, pt3.y, pt3.z]])
+        matr_d = - array(
+            [[pt1.x, pt1.y, pt1.z],
+            [pt2.x, pt2.y, pt2.z],
+            [pt3.x, pt3.y, pt3.z]])
 
-        return cls(np.linalg.det(matr_a),
-                   np.linalg.det(matr_b),
-                   np.linalg.det(matr_c),
-                   np.linalg.det(matr_d))
+        return cls(
+            np.linalg.det(matr_a),
+            np.linalg.det(matr_b),
+            np.linalg.det(matr_c),
+            np.linalg.det(matr_d))
 
     def __repr__(self):
 
@@ -593,7 +597,7 @@ class CPlane(object):
 
         return angle_degr
 
-    def isAlmostParallel(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD):
+    def isSubParallel(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD):
         """
         Check that two Plane are sub-parallel
 
@@ -602,9 +606,9 @@ class CPlane(object):
         :return: Boolean
 
          Examples:
-          >>> CPlane(1,0,0,0).isAlmostParallel(CPlane(1,0,0,0))
+          >>> CPlane(1,0,0,0).isSubParallel(CPlane(1,0,0,0))
           True
-          >>> CPlane(1,0,0,0).isAlmostParallel(CPlane(1,0,1,0))
+          >>> CPlane(1,0,0,0).isSubParallel(CPlane(1,0,1,0))
           False
         """
 

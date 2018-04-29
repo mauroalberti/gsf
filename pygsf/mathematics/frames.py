@@ -3,7 +3,7 @@
 from .vectors import Vect
 
 from ..exceptions.mathematics import *
-from .scalars import are_close
+from .scalars import areClose
 
 
 class RefFrame(object):
@@ -19,7 +19,7 @@ class RefFrame(object):
         if not (versor_x.isAlmostUnit and versor_y.isAlmostUnit):
             raise RefFrameInputException("Input vectors must be near unit")
 
-        if not are_close(versor_x.angle(versor_y), 90.0):
+        if not areClose(versor_x.angle(versor_y), 90.0):
             raise RefFrameInputException("Input vectors must be sub-orthogonal")
 
         self._x = versor_x

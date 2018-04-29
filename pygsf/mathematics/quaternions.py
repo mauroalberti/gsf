@@ -73,34 +73,16 @@ class Quaternion(object):
         return Vect(*self.components()[1:])
 
     @classmethod
-    def from_class(cls, w, x, y, z):
-        """
-        Class method for quaternion construction.
-
-        :param w: q0, float
-        :param x: q1, float
-        :param y: q2, float
-        :param z: q3, float
-        :return: Quaternion instance
-        """
-
-        obj = cls()
-        q = np.array([w, x, y, z], dtype=np.float64)
-        obj.q = q
-
-        return obj
-
-    @classmethod
-    def from_array(cls, a):
+    def fromArray(cls, a):
         """
         Class method to construct a quaternion from a numpy 1x4 array.
 
         Example:
-          >>> Quaternion.from_array(np.array([1, 0, 1, 0]))
+          >>> Quaternion.fromArray(np.array([1, 0, 1, 0]))
           Quaternion(1.00000, 0.00000, 1.00000, 0.00000)
-          >>> Quaternion.from_array(np.array([7.65, -12.34, -1.0, 2.234]))
+          >>> Quaternion.fromArray(np.array([7.65, -12.34, -1.0, 2.234]))
           Quaternion(7.65000, -12.34000, -1.00000, 2.23400)
-          >>> Quaternion.from_array(np.array([7.65, -12.34, -1.0]))
+          >>> Quaternion.fromArray(np.array([7.65, -12.34, -1.0]))
           Traceback (most recent call last):
           ...
           pygsf.exceptions.mathematics.QuaternionInputException: Input array for quaternion must have size of 4
@@ -129,10 +111,10 @@ class Quaternion(object):
 
         w, x, y, z = 0, vect.x, vect.y, vect.z
 
-        return Quaternion.from_class(w, x, y, z)
+        return Quaternion(w, x, y, z)
 
     @classmethod
-    def from_rot_matr(cls, matr):
+    def fromRotMatr(cls, matr):
         """
         Class method to construct a quaternion from a 3x3 rotation matrix.
         """
@@ -175,7 +157,7 @@ class Quaternion(object):
 
         w, x, y, z = q0, q1, q2, q3
 
-        return Quaternion.from_class(w, x, y, z)
+        return Quaternion(w, x, y, z)
 
     @classmethod
     def zero(cls):
@@ -189,7 +171,7 @@ class Quaternion(object):
 
         w, x, y, z = 0, 0, 0, 0
 
-        return Quaternion.from_class(w, x, y, z)
+        return Quaternion(w, x, y, z)
 
     @classmethod
     def identity(cls):
@@ -203,7 +185,7 @@ class Quaternion(object):
 
         w, x, y, z = 1, 0, 0, 0
 
-        return Quaternion.from_class(w, x, y, z)
+        return Quaternion(w, x, y, z)
 
     @classmethod
     def i(cls):
@@ -217,7 +199,7 @@ class Quaternion(object):
 
         w, x, y, z = 0, 1, 0, 0
 
-        return Quaternion.from_class(w, x, y, z)
+        return Quaternion(w, x, y, z)
 
     @classmethod
     def j(cls):
@@ -231,7 +213,7 @@ class Quaternion(object):
 
         w, x, y, z = 0, 0, 1, 0
 
-        return Quaternion.from_class(w, x, y, z)
+        return Quaternion(w, x, y, z)
 
     @classmethod
     def k(cls):
@@ -245,7 +227,7 @@ class Quaternion(object):
 
         w, x, y, z = 0, 0, 0, 1
 
-        return Quaternion.from_class(w, x, y, z)
+        return Quaternion(w, x, y, z)
 
     def __eq__(self, another):
         """
@@ -297,7 +279,7 @@ class Quaternion(object):
           Quaternion(5.00000, 3.00000, nan, 4.00000)
         """
 
-        return Quaternion.from_array(self.q + another.q)
+        return Quaternion.fromArray(self.q + another.q)
 
     def __sub__(self, another):
         """
@@ -313,9 +295,9 @@ class Quaternion(object):
           Quaternion(nan, nan, 4.00000, inf)
         """
 
-        return Quaternion.from_array(self.q - another.q)
+        return Quaternion.fromArray(self.q - another.q)
 
-    def scalar_mult(self, val):
+    def multByScalar(self, val):
         """
         Multiplication of a quaternion by a scalar value.
 
@@ -323,13 +305,13 @@ class Quaternion(object):
         :return: Quaternion instance
 
         Example:
-          >>> Quaternion(1, 1, 3, 0).scalar_mult(4)
+          >>> Quaternion(1, 1, 3, 0).multByScalar(4)
           Quaternion(4.00000, 4.00000, 12.00000, 0.00000)
-          >>> Quaternion(1.9, -1.2, 3.6, 4.1).scalar_mult(2)
+          >>> Quaternion(1.9, -1.2, 3.6, 4.1).multByScalar(2)
           Quaternion(3.80000, -2.40000, 7.20000, 8.20000)
         """
 
-        return Quaternion.from_array(self.q * val)
+        return Quaternion.fromArray(self.q * val)
 
     def __neg__(self):
         """
@@ -344,9 +326,9 @@ class Quaternion(object):
           Quaternion(-1.90000, 1.20000, -3.60000, -4.10000)
         """
 
-        return self.scalar_mult(-1)
+        return self.multByScalar(-1)
 
-    def quater_mult(self, another):
+    def multByQuater(self, another):
         """
         Quaternion multiplication.
         Examples are taken from Kuipers, 2002, chp. 5.
@@ -355,7 +337,7 @@ class Quaternion(object):
         :return: Quaternion instance.
 
         Example:
-          >>> Quaternion(3, 1, -2, 1).quater_mult(Quaternion(2, -1, 2, 3))
+          >>> Quaternion(3, 1, -2, 1).multByQuater(Quaternion(2, -1, 2, 3))
           Quaternion(8.00000, -9.00000, -2.00000, 11.00000)
         """
         
@@ -381,15 +363,15 @@ class Quaternion(object):
                 
         return Quaternion(a, b, c, d)
 
-    def vector_mult(self, vect):
+    def multByVect(self, vect):
         """
-        Quaternion multiplication by a asVect.
+        Quaternion multiplication by a Vect.
 
         :param vect: Vect instance .
         :return: Quaternion instance.
         """
 
-        return self.quater_mult(Quaternion.fromVect(vect))
+        return self.multByQuater(Quaternion.fromVect(vect))
 
     def __mul__(self, another):
         """
@@ -411,11 +393,11 @@ class Quaternion(object):
         """
 
         if isinstance(another, (float, int)):
-            return self.scalar_mult(another)
+            return self.multByScalar(another)
         elif isinstance(another, Vect):
-            return self.vector_mult(another)
+            return self.multByVect(another)
         elif isinstance(another, Quaternion):
-            return self.quater_mult(another)
+            return self.multByQuater(another)
         else:
             raise QuaternionCalculationException("Multiplicand is not number or quaternion")
 
@@ -442,20 +424,20 @@ class Quaternion(object):
 
         return Quaternion(a, b, c, d)
 
-    def sqrd_norm(self):
+    def sqrdNorm(self):
         """
         Squared norm of a quaternion.
 
         :return: Float value
 
         Example:
-          >>> Quaternion(1, 0, 0, 0).sqrd_norm()
+          >>> Quaternion(1, 0, 0, 0).sqrdNorm()
           1.0
-          >>> Quaternion(1, 1, 0, 2).sqrd_norm()
+          >>> Quaternion(1, 1, 0, 2).sqrdNorm()
           6.0
-          >>> Quaternion(2, -1, 2, 3).sqrd_norm()
+          >>> Quaternion(2, -1, 2, 3).sqrdNorm()
           18.0
-          >>> Quaternion(2, np.nan, 2, 3).sqrd_norm()
+          >>> Quaternion(2, np.nan, 2, 3).sqrdNorm()
           nan
         """
 
@@ -470,11 +452,11 @@ class Quaternion(object):
         Example:
           >>> abs(Quaternion(1, 0, 0, 0))
           1.0
-          >>> are_close(abs(Quaternion(2, -1, 2, 3)), sqrt(18.0))
+          >>> areClose(abs(Quaternion(2, -1, 2, 3)), sqrt(18.0))
           True
         """
 
-        return sqrt(self.sqrd_norm())
+        return sqrt(self.sqrdNorm())
 
     @property
     def norm(self):
@@ -505,24 +487,24 @@ class Quaternion(object):
           Quaternion(1.00000, 0.00000, 0.00000, 0.00000)
         """
 
-        return self.conjugate / self.sqrd_norm()
+        return self.conjugate / self.sqrdNorm()
 
-    def is_normalized(self):
+    def isNormalized(self):
         """
         Check if a quaternion is unitary.
 
         :return: Boolean
 
         Example:
-          >>> Quaternion(0, 1, 0, 0).is_normalized()
+          >>> Quaternion(0, 1, 0, 0).isNormalized()
           True
-          >>> Quaternion(1, 4, 0, -4).is_normalized()
+          >>> Quaternion(1, 4, 0, -4).isNormalized()
           False
         """
 
-        return abs(1.0 - sqrt(self.sqrd_norm())) < quat_normaliz_tolerance
+        return abs(1.0 - sqrt(self.sqrdNorm())) < quat_normaliz_tolerance
 
-    def scalar_div(self, denominator):
+    def divByScalar(self, denominator):
         """
         Division of a quaternion by a scalar.
 
@@ -530,9 +512,9 @@ class Quaternion(object):
         :return: Quaternion instance.
 
         Example:
-          >>> Quaternion(1, 1, 3, 0).scalar_div(3)
+          >>> Quaternion(1, 1, 3, 0).divByScalar(3)
           Quaternion(0.33333, 0.33333, 1.00000, 0.00000)
-          >>> Quaternion(1, 1, 3, 0).scalar_div(1e-11)
+          >>> Quaternion(1, 1, 3, 0).divByScalar(1e-11)
           Traceback (most recent call last):
           ...
           pygsf.exceptions.mathematics.QuaternionCalculationException: Quaternion division by almost zero value
@@ -541,9 +523,9 @@ class Quaternion(object):
         if abs(denominator) < quat_division_tolerance:
             raise QuaternionCalculationException("Quaternion division by almost zero value")
         else:
-            return Quaternion.from_array(self.q / denominator)
+            return Quaternion.fromArray(self.q / denominator)
 
-    def quater_div(self, another):
+    def divByQuater(self, another):
         """
         Quaternion division by another quaternion.
 
@@ -551,7 +533,7 @@ class Quaternion(object):
         :return: Quaternion instance
         """
 
-        return self * another.conjugate / another.sqrd_norm()
+        return self * another.conjugate / another.sqrdNorm()
 
     def __truediv__(self, another):
         """
@@ -566,9 +548,9 @@ class Quaternion(object):
         """
 
         if isinstance(another, (int, float)):
-            return self.scalar_div(another)
+            return self.divByScalar(another)
         elif isinstance(another, Quaternion):
-            return self.quater_div(another)
+            return self.divByQuater(another)
         else:
             raise QuaternionCalculationException("Denominator is not number or quaternion")
 
@@ -583,15 +565,15 @@ class Quaternion(object):
           Quaternion(0.00000, 1.00000, 0.00000, 0.00000)
           >>> Quaternion(0, 4, 0, 8).normalize()
           Quaternion(0.00000, 0.44721, 0.00000, 0.89443)
-          >>> are_close(abs(Quaternion(0.2, 17.9, -2.7, 4.3).normalize()), 1.0)
+          >>> areClose(abs(Quaternion(0.2, 17.9, -2.7, 4.3).normalize()), 1.0)
           True
           >>> Quaternion(0.696, 0.322, -0.152, 0.624).normalize()
           Quaternion(0.69580, 0.32191, -0.15196, 0.62382)
         """
 
-        return self / sqrt(self.sqrd_norm())
+        return self / sqrt(self.sqrdNorm())
 
-    def is_close_to(self, another, rtol=1e-012, atol=1e-12, equal_nan=False, equal_inf=False):
+    def isCloseTo(self, another, rtol=1e-012, atol=1e-12, equal_nan=False, equal_inf=False):
         """
         Check for quaternion equivalence.
 
@@ -603,19 +585,19 @@ class Quaternion(object):
         :return: Boolean.
 
         Example:
-          >>> Quaternion(1, 2, 3, 4).is_close_to(Quaternion(1, 2, 3, 4))
+          >>> Quaternion(1, 2, 3, 4).isCloseTo(Quaternion(1, 2, 3, 4))
           True
-          >>> Quaternion(1, 2, 3, 4).is_close_to(Quaternion(1, 2.01, 3, 4))
+          >>> Quaternion(1, 2, 3, 4).isCloseTo(Quaternion(1, 2.01, 3, 4))
           False
-          >>> Quaternion(1, 2, 3, 4).is_close_to(Quaternion(1, 2.01, 3, 4), atol=1e-1)
+          >>> Quaternion(1, 2, 3, 4).isCloseTo(Quaternion(1, 2.01, 3, 4), atol=1e-1)
           True
-          >>> Quaternion(1, 2, 3, np.nan).is_close_to(Quaternion(1, 2, 3, np.nan), equal_nan=True)
+          >>> Quaternion(1, 2, 3, np.nan).isCloseTo(Quaternion(1, 2, 3, np.nan), equal_nan=True)
           True
         """
 
         return arrays_are_close(self.q, another.q, rtol, atol, equal_nan, equal_inf)
 
-    def rotation_angle(self):
+    def rotAngle(self):
         """
         Calculate the rotation angle associated with a normalized quaternion.
         Formula from p. 710 in Kagan, Y. Y., 1991. 3-D rotation of double-couple earthquake sources.
@@ -623,15 +605,15 @@ class Quaternion(object):
         :return: Float
 
         Quaternion case for Kagan, 1991, p.712:
-          >>> are_close(Quaternion(0.696, 0.322, -0.152, 0.624).rotation_angle(), 91.8182771683)
+          >>> areClose(Quaternion(0.696, 0.322, -0.152, 0.624).rotAngle(), 91.8182771683)
           True
-          >>> are_close(Quaternion(0.62471, 0.32267, 0.69465, 0.15195).rotation_angle(), 102.67846140868497)
+          >>> areClose(Quaternion(0.62471, 0.32267, 0.69465, 0.15195).rotAngle(), 102.67846140868497)
           True
         """
 
         return 2 * degrees(acos(self.normalize().scalar))
 
-    def to_rotation_matrix(self):
+    def toRotMatrix(self):
         """
         Computes the rotation matrix from the quaternion xyz.
         Formula as in:

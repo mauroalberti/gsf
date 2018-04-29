@@ -5,8 +5,6 @@ import unittest
 
 from .test_datasets import *
 
-from pygsf.orientations.rotations import *
-
 
 class TestFocalMechamismRotations(unittest.TestCase):
 
@@ -43,7 +41,7 @@ class TestFocalMechamismRotations(unittest.TestCase):
             print("calculated solution: {}".format(rot))
             k91_sol = sols2rotaxis(k91_rot_sols[ndx])
             print("Kagan 1991 solution: {}".format(k91_sol))
-            assert rot.strictly_equival(k91_sol)
+            assert rot.strictlyEquival(k91_sol)
 
 
 if __name__ == '__main__':
