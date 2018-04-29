@@ -32,11 +32,12 @@ You can then check if the module is installed in Python3 by successfully importi
 ```python
 import pygsf
 ```
+## Docs
 
 There are three Jupyter notebooks describing some of the features of the module:
-[pygsf 1: spatial data](https://github.com/mauroalberti/gsf/blob/master/notebooks/pygsf%201%20-%20spatial%20data.ipynb)
-[pygsf 2: vectors and orientations](https://github.com/mauroalberti/gsf/blob/master/notebooks/pygsf%202%20-%20orientations.ipynb)
-[pygsf 3 - geology](https://github.com/mauroalberti/gsf/blob/master/notebooks/pygsf%203%20-%20geology.ipynb)
+ - [pygsf 1: spatial data](https://github.com/mauroalberti/gsf/blob/master/notebooks/pygsf%201%20-%20spatial%20data.ipynb)
+ - [pygsf 2: vectors and orientations](https://github.com/mauroalberti/gsf/blob/master/notebooks/pygsf%202%20-%20orientations.ipynb)
+ - [pygsf 3 - geology](https://github.com/mauroalberti/gsf/blob/master/notebooks/pygsf%203%20-%20geology.ipynb)
 
 
 
