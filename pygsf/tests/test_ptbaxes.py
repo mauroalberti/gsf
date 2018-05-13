@@ -24,4 +24,6 @@ class TestFocalMechamismRotations(unittest.TestCase):
         assert k91_ss_backPTBaxes.almostEqual(k91_ss_PTBaxes)
 
 
+if __name__ == '__main__':
 
+    unittest.main()
