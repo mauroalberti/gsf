@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from ...exceptions.spatial import *
 
 from numpy import *  # general import for compatibility with formula input
+
+from .exceptions import *
 
 
 def formula_to_grid(array_range, array_size, formula):

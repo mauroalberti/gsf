@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
-from math import sin, cos, radians, pi
-
-from ..exceptions.orientations import *
 from ..spatial.vectorial.vectorial import *
-from ..orientations.utils import *
+
+from .exceptions import *
+from .utils import *
 
 
 class Azim(object):

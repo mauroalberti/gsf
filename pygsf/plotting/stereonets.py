@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
+
 import matplotlib.pyplot as plt
 import mplstereonet as ms
 
 
-from pygsf.orientations.type_checks import *
-from ..utils.conversions import *
+from ..orientations.type_checks import *
+from ..utils.dicts import *
 
 
 default_gvect_marker_upward_symbol = "x"

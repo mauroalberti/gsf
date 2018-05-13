@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from math import isnan, isinf
+
+from ..defaults.typing import *
+
+from .defaults import *
 
 
-def areClose(a: float, b: float, rtol: float = 1e-012, atol: float = 1e-12, equal_nan: bool = False, equal_inf: bool = False) -> bool:
+def areClose(a: float, b: float,
+    rtol: float = 1e-012, atol: float = 1e-12,
+    equal_nan: bool = False, equal_inf: bool = False) -> bool:
     """
     Mimics math.isclose from Python 3.5 (see: https://docs.python.org/3.5/library/math.html)
 
@@ -60,7 +65,7 @@ def areClose(a: float, b: float, rtol: float = 1e-012, atol: float = 1e-12, equa
     return abs(a - b) <= max(rtol * max(abs(a), abs(b)), atol)
 
 
-def apprFloat(val: [int, float], ndec: int=1):
+def apprFloat(val: Number, ndec: int=1) -> float:
     """
     Rounds a numeric value to ndec.
 
@@ -82,7 +87,7 @@ def apprFloat(val: [int, float], ndec: int=1):
     return rval
 
 
-def apprFTuple(tup: tuple, ndec=1):
+def apprFTuple(tup: Tuple[float, ...], ndec=1) -> Tuple[float, ...]:
     """
     Rounds numeric values inside a tuple to ndec decimals
 

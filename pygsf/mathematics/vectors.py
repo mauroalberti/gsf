@@ -1,27 +1,17 @@
 # -*- coding: utf-8 -*-
 
-
-from typing import Optional
-
-from math import sqrt, degrees, acos
-
-from typing import Tuple
-
-from ..defaults.mathematics import *
-from ..exceptions.mathematics import *
+from .exceptions import *
 from .arrays import *
 
-isfinite = np.isfinite
 
-
-def normXYZ(x: [int, float], y: [int, float], z: [int, float]):
+def normXYZ(x: Number, y: Number, z: Number) -> Tuple:
     """
     Normalize numeric values.
 
     :param x: x numeric value
     :param y: y numeric value
     :param z: z numeric value
-    :return: a tuple of three float values
+    :return: the magnitude and a tuple of three float values
     """
 
     # input vals checks
@@ -50,7 +40,7 @@ class Vect(object):
     z axis -> Up
     """
 
-    def __init__(self, x: [int, float], y: [int, float], z: [int, float]):
+    def __init__(self, x: Number, y: Number, z: Number):
         """
         Vect constructor.
 
@@ -60,11 +50,11 @@ class Vect(object):
           >>> Vect(1, np.nan, 1)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.mathematics.VectorInputException: Input values must be finite
+          pygsf.mathematics.exceptions.VectorInputException: Input values must be finite
           >>> Vect(1, 0, np.inf)
           Traceback (most recent call last):
           ...
-          pygsf.exceptions.mathematics.VectorInputException: Input values must be finite
+          pygsf.mathematics.exceptions.VectorInputException: Input values must be finite
           >>> Vect(0, 0, 0)
           Vect(0.0000, 0.0000, 0.0000)
         """
@@ -77,7 +67,7 @@ class Vect(object):
         else:
             self._a = array(vals, dtype=np.float64)
 
-    def __eq__(self, another: 'Vect') -> Optional[bool]:
+    def __eq__(self, another: 'Vect') -> bool:
         """
         Return True if objects are equal.
 
@@ -89,14 +79,14 @@ class Vect(object):
         """
 
         if not isinstance(another, Vect):
-            raise VectorInputException("Variables must be of the same type")
+            raise VectorInputException("Instances must be of the same type")
         else:
             return all([
                 self.x == another.x,
                 self.y == another.y,
                 self.z == another.z])
 
-    def __ne__(self, another: 'Vect') -> Optional[bool]:
+    def __ne__(self, another: 'Vect') -> bool:
         """
         Return False if objects are equal.
 
@@ -106,12 +96,12 @@ class Vect(object):
         """
 
         if not isinstance(another, Vect):
-            return None
+            raise VectorInputException("Instances must be of the same type")
         else:
             return not (self == another)
 
     @property
-    def a(self) -> 'np.array':
+    def a(self) -> 'numpy.array':
         """
         Return a copy of the object inner array.
 
@@ -172,7 +162,7 @@ class Vect(object):
 
         return self.x, self.y, self.z
 
-    def toArray(self) -> 'np.array':
+    def toArray(self) -> 'numpy.array':
         """
         Return a double Numpy array representing the point values.
 
@@ -253,7 +243,7 @@ class Vect(object):
 
         return sqrt(self.x * self.x + self.y * self.y)
 
-    def deltaX(self, another: 'Vect') -> Optional[float]:
+    def deltaX(self, another: 'Vect') -> float:
         """
         Delta between x components of two Vect Instances.
 
@@ -266,11 +256,11 @@ class Vect(object):
         """
 
         if not isinstance(another, Vect):
-            return None
+            raise VectorInputException("Input instance must be of type Vect")
         else:
             return another.x - self.x
 
-    def deltaY(self, another: 'Vect') -> Optional[float]:
+    def deltaY(self, another: 'Vect') -> float:
         """
         Delta between y components of two Vect Instances.
 
@@ -283,11 +273,11 @@ class Vect(object):
         """
 
         if not isinstance(another, Vect):
-            return None
+            raise VectorInputException("Input instance must be of type Vect")
         else:
             return another.y - self.y
 
-    def deltaZ(self, another: 'Vect') -> Optional[float]:
+    def deltaZ(self, another: 'Vect') -> float:
         """
         Delta between x components of two Vect Instances.
 
@@ -300,29 +290,33 @@ class Vect(object):
         """
 
         if not isinstance(another, Vect):
-            return None
+            raise VectorInputException("Input instance must be of type Vect")
         else:
             return another.z - self.z
 
-    def scale(self, scale_factor: [int, float]) -> Optional['Vect']:
+    def scale(self, scale_factor: Number) -> 'Vect':
         """
         Create a scaled object.
 
         Example;
           >>> Vect(1, 0, 1).scale(2.5)
           Vect(2.5000, 0.0000, 2.5000)
-          >>> Vect(1, 0, 1).scale(np.nan) is None
-          True
-          >>> Vect(1, 0, 1).scale(np.inf) is None
-          True
+          >>> Vect(1, 0, 1).scale(np.nan)
+          Traceback (most recent call last):
+          ...
+          pygsf.mathematics.exceptions.VectorInputException: Scale factor must be finite
+          >>> Vect(1, 0, 1).scale(np.inf)
+          Traceback (most recent call last):
+          ...
+          pygsf.mathematics.exceptions.VectorInputException: Scale factor must be finite
         """
 
         if not isinstance(scale_factor, (int, float)):
-            return None
+            raise VectorInputException("Scale factor must be number")
         elif not isfinite(scale_factor):
-            return None
+            raise VectorInputException("Scale factor must be finite")
         else:
-            x, y, z = arr2tuple(self.a * scale_factor)
+            x, y, z = arrToTuple(self.a * scale_factor)
             return self.__class__(x, y, z)
 
     def invert(self) -> 'Vect':
@@ -353,7 +347,7 @@ class Vect(object):
           Vect(0.0000, 0.0000, 0.0000)
         """
 
-        x, y, z = arr2tuple(self.a + another.a)
+        x, y, z = arrToTuple(self.a + another.a)
         return self.__class__(x, y, z)
 
     def __sub__(self, another: 'Vect') -> 'Vect':
@@ -366,7 +360,7 @@ class Vect(object):
           Vect(0.0000, 0.0000, 0.8000)
         """
 
-        x, y, z = arr2tuple(self.a - another.a)
+        x, y, z = arrToTuple(self.a - another.a)
         return self.__class__(x, y, z)
 
     @property
@@ -627,7 +621,7 @@ class Vect(object):
           True
         """
 
-        x, y, z = arr2tuple(np.cross(self.a[:3], another.a[:3]))
+        x, y, z = arrToTuple(np.cross(self.a[:3], another.a[:3]))
         return Vect(x, y, z)
 
     def byMatrix(self, array3x3: 'np.array') -> 'Vect':
@@ -636,7 +630,7 @@ class Vect(object):
 
         """
 
-        x, y, z = arr2tuple(array3x3.dot(self.a))
+        x, y, z = arrToTuple(array3x3.dot(self.a))
         return Vect(x, y, z)
 
 
