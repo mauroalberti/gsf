@@ -92,6 +92,10 @@ ENV/
 .directory
 
 codice_sorgente/
+dist/
+hgsf/
+working/
+__pycache__/
 .idea/
 .mypy_cache/
-docs/
+
