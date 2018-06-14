@@ -93,7 +93,7 @@ ENV/
 
 codice_sorgente/
 dist/
-hgsf/
+hsgsf/
 working/
 __pycache__/
 .idea/
