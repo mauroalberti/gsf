@@ -93,8 +93,6 @@ ENV/
 
 codice_sorgente/
 dist/
-hsgsf/
-working/
 __pycache__/
 .idea/
 .mypy_cache/
