@@ -5,7 +5,7 @@ from ...mathematics.arrays import interp_bilinear
 from .fields import *
 
 
-def pixToArrIndices(i_pix: Number, j_pix:Number) -> Tuple(Number, Number):
+def pixToArrIndices(i_pix: Number, j_pix:Number) -> Tuple[Number, Number]:
     """
     Converts from pixel (geotransform-derived) to array indices.
 
@@ -26,7 +26,7 @@ def pixToArrIndices(i_pix: Number, j_pix:Number) -> Tuple(Number, Number):
     return i_pix - 0.5, j_pix - 0.5
 
 
-def arrIndicesToPix(i_arr: Number, j_arr: Number) -> Tuple(Number, Number):
+def arrIndicesToPix(i_arr: Number, j_arr: Number) -> Tuple[Number, Number]:
     """
     Converts from array indices to geotransform-related pixel indices.
 
@@ -120,7 +120,7 @@ class GeoArray(object):
 
         return len(self._levels)
 
-    def level(self, level_ndx: int=0) -> Optional['array']:
+    def level(self, level_ndx: int=0):
         """
         Return the array corresponding to the requested level
         if existing else None.
