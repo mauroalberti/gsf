@@ -239,6 +239,8 @@ def geogrToPix(geotransform: GeoTransform, x: Number, y: Number) -> Tuple[float,
     g2 * (g1g3 - g0g4 + g4x - g1y) / (g2g4 - g1g5) = x - g0 - g1p
 
 
+    :param geotransform: the input geotransform.
+    :type geotransform: GeoTransform.
     :param x: the  geographic x coordinate.
     :type x: Number.
     :param y: the geographic y coordinate.

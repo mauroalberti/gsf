@@ -5,7 +5,7 @@ from ...mathematics.arrays import interp_bilinear
 from .fields import *
 
 
-def pixToArrIndices(i_pix: Number, j_pix:Number) -> Tuple[Number, Number]:
+def pixToArrIndices(i_pix: Number, j_pix: Number) -> Tuple[Number, Number]:
     """
     Converts from pixel (geotransform-derived) to array indices.
 
@@ -193,7 +193,7 @@ class GeoArray(object):
         Examples:
         """
 
-        return pixToArrIndices(geogrToPix(self.gt, x, y))
+        return pixToArrIndices(*geogrToPix(self.gt, x, y))
 
     def ijToxy(self, i: Number, j: Number) -> Tuple[Number, Number]:
         """
