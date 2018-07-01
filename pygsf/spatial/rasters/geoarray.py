@@ -18,9 +18,11 @@ def pixToArrIndices(i_pix: Number, j_pix: Number) -> Tuple[Number, Number]:
 
     Examples:
       >>> pixToArrIndices(0, 0)
-      -0.5, -0.5
+      (-0.5, -0.5)
       >>> pixToArrIndices(0.5, 0.5)
-      0.0, 0.0
+      (0.0, 0.0)
+      >>> pixToArrIndices(0.5, 1.5)
+      (0.0, 1.0)
     """
 
     return i_pix - 0.5, j_pix - 0.5
@@ -39,9 +41,11 @@ def arrIndicesToPix(i_arr: Number, j_arr: Number) -> Tuple[Number, Number]:
 
     Examples:
       >>> arrIndicesToPix(0, 0)
-      0.5, 0.5
+      (0.5, 0.5)
       >>> arrIndicesToPix(0.5, 0.5)
-      1.0, 1.0
+      (1.0, 1.0)
+      >>> arrIndicesToPix(1.5, 0.5)
+      (2.0, 1.0)
     """
 
     return i_arr + 0.5, j_arr + 0.5
@@ -112,9 +116,10 @@ class GeoArray(object):
         :rtype: int.
 
         Examples:
-          >>> GeoArray(grid_data=array([[1, 2], [3, 4]])).levels_num
+          >>> gt = GeoTransform(0, 0, 10, 10)
+          >>> GeoArray(gt, "", [array([[1, 2], [3, 4]])]).levels_num
           1
-          >>> GeoArray(grid_data=np.ones((4, 3, 2)))
+          >>> GeoArray(gt, "", [array([[1, 2], [3, 4]]), np.ones((4, 3, 2))]).levels_num
           2
         """
 
@@ -148,10 +153,14 @@ class GeoArray(object):
         :rtype: optional tuple of two int values.
 
         Examples:
-          >>> GeoArray(grid_data=array([[1, 2], [3, 4]])).level_shape
-          2, 2
-          >>> GeoArray(grid_data=np.ones((4, 3, 2)))
-          1
+
+        inGeotransform: GeoTransform, inProjection: str, inLevels: Optional[List['np.array']]
+
+          >>> gt = GeoTransform(0, 0, 10, 10)
+          >>> GeoArray(gt, "", [array([[1, 2], [3, 4]])]).level_shape()
+          (2, 2)
+          >>> GeoArray(gt, "", [array([[1, 2], [3, 4]]), np.ones((4, 3, 2))]).level_shape(1)
+          (4, 3, 2)
         """
 
         if 0 <= level_ndx < self.levels_num:
