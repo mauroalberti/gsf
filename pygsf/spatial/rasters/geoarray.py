@@ -153,9 +153,6 @@ class GeoArray(object):
         :rtype: optional tuple of two int values.
 
         Examples:
-
-        inGeotransform: GeoTransform, inProjection: str, inLevels: Optional[List['np.array']]
-
           >>> gt = GeoTransform(0, 0, 10, 10)
           >>> GeoArray(gt, "", [array([[1, 2], [3, 4]])]).level_shape()
           (2, 2)
