@@ -2,7 +2,9 @@
 
 
 import matplotlib.pyplot as plt
-import mplstereonet as ms
+
+
+from ..embedded import mplstereonet as ms
 
 
 from ..orientations.type_checks import *

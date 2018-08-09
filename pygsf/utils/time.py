@@ -12,9 +12,9 @@ def standard_gpstime_to_seconds(time_str):
 
     Example:
       >>> standard_gpstime_to_seconds("1970-01-01T00:00:00Z")
-      0
+      0.0
       >>> standard_gpstime_to_seconds("1970-01-01T01:0:00Z")
-      3600
+      3600.0
     """
 
     date, hhmmss = time_str.split("T")
@@ -37,5 +37,4 @@ def standard_gpstime_to_seconds(time_str):
 if __name__ == "__main__":
 
     import doctest
-    import numtest  # external module, used in doctest float checks
     doctest.testmod()
