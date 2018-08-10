@@ -96,7 +96,7 @@ class PTBAxes(object):
 
         slick = fault.slick(slick_ndx)
 
-        if slick.hasUnknownSense():
+        if slick.hasUnknownSense:
             raise PTBAxesInputException("Slickenline must have knonw movement sense")
 
         s_versor = slick.geom.asVersor()

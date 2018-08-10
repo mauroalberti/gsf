@@ -16,7 +16,7 @@ class Slick(object):
     - for a vertical fault: the block individuated by the (formal) dip direction.
     """
 
-    def __init__(self, trend: [int, float], plunge: [int, float], known: bool=True):
+    def __init__(self, trend: [int, float], plunge: [int, float], known: bool=True, time: float=0.0):
         """"
         Class constructors from trend, plunge and optional known movement sense flag.
 
@@ -26,13 +26,15 @@ class Slick(object):
         :type plunge: float
         :param known: the known movement sense flag
         :type known: bool
+        :param time: the absolute or relative timing of the slickeline.
+        :type time: float.
         :return: the Slick instance
 
         Example:
           >>> Slick(90, 10)
-          Slick(az: 90.00°, pl: 10.00°, known_dir: True)
+          Slick(az: 90.00°, pl: 10.00°, known_dir: True, time: 0.0)
           >>> Slick(90, 10, known=False)
-          Slick(az: 90.00°, pl: 10.00°, known_dir: False)
+          Slick(az: 90.00°, pl: 10.00°, known_dir: False, time: 0.0)
           >>> Slick("90", 10, False)
           Traceback (most recent call last):
           ...
@@ -45,15 +47,18 @@ class Slick(object):
             raise SlickInputTypeException("Plunge must be a number")
         if not isinstance(known, bool):
             raise SlickInputTypeException("Known movement sense must be a boolean")
+        if not isinstance(time, (int, float)):
+            raise SlickInputTypeException("Time must be a number")
 
         if known:
             self.s = Direct.fromAzPl(trend, plunge)
         else:
             self.s = Axis.fromAzPl(trend, plunge)
+        self.t = float(time)
 
     def __repr__(self):
 
-        return "Slick(az: {:.2f}°, pl: {:.2f}°, known_dir: {})".format(*self.s.d, self.hasKnownSense())
+        return "Slick(az: {:.2f}°, pl: {:.2f}°, known_dir: {}, time: {})".format(self.s.d[0], self.s.d[1], self.hasKnownSense, self.t)
 
     @property
     def geom(self) -> [Direct, Axis]:
@@ -71,31 +76,33 @@ class Slick(object):
 
         return self.s
 
+    @property
     def hasKnownSense(self) -> bool:
         """
         Check whether the slickenline has known movement sense.
 
         Example:
-          >>> Slick(90, 45).hasKnownSense()
+          >>> Slick(90, 45).hasKnownSense
           True
-          >>> Slick(90, 45, False).hasKnownSense()
+          >>> Slick(90, 45, False).hasKnownSense
           False
         """
 
         return not isinstance(self.s, Axis)
 
+    @property
     def hasUnknownSense(self) -> bool:
         """
         Check whether the slickenline has unknown/uncertain movement sense.
 
         Example:
-          >>> Slick(90, 45, False).hasUnknownSense()
+          >>> Slick(90, 45, False).hasUnknownSense
           True
-          >>> Slick(90, 45).hasUnknownSense()
+          >>> Slick(90, 45).hasUnknownSense
           False
         """
 
-        return not self.hasKnownSense()
+        return not self.hasKnownSense
 
     def setKnownSense(self) -> 'Slick':
         """
@@ -103,10 +110,10 @@ class Slick(object):
 
         Example:
           >>> Slick(180, -30, False).setKnownSense()
-          Slick(az: 180.00°, pl: -30.00°, known_dir: True)
+          Slick(az: 180.00°, pl: -30.00°, known_dir: True, time: 0.0)
         """
 
-        return Slick(*self.s.d, True)
+        return Slick(self.s.d[0], self.s.d[1], True, self.t)
 
     def setUnknownSense(self) -> 'Slick':
         """
@@ -114,10 +121,10 @@ class Slick(object):
 
         Example:
           >>> Slick(180, -30).setUnknownSense()
-          Slick(az: 180.00°, pl: -30.00°, known_dir: False)
+          Slick(az: 180.00°, pl: -30.00°, known_dir: False, time: 0.0)
         """
 
-        return Slick(*self.s.d, False)
+        return Slick(self.s.d[0], self.s.d[1], False, self.t)
 
     def invert(self) -> Optional['Slick']:
         """
@@ -125,12 +132,13 @@ class Slick(object):
 
         Example:
          >>> Slick(30, 45, False).invert()
-         Slick(az: 210.00°, pl: -45.00°, known_dir: False)
+         Slick(az: 210.00°, pl: -45.00°, known_dir: False, time: 0.0)
          >>> Slick(30, 45).invert()
-         Slick(az: 210.00°, pl: -45.00°, known_dir: True)
+         Slick(az: 210.00°, pl: -45.00°, known_dir: True, time: 0.0)
         """
 
-        return Slick(*self.s.opposite().d, self.hasKnownSense())
+        az, pl = self.s.opposite().d
+        return Slick(az, pl, self.hasKnownSense, self.t)
 
 
 class Fault(object):
@@ -238,7 +246,7 @@ class Fault(object):
 
         Example:
           >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).slick()
-          Slick(az: 90.00°, pl: 45.00°, known_dir: True)
+          Slick(az: 90.00°, pl: 45.00°, known_dir: True, time: 0.0)
         """
 
         if not self._slicks:
@@ -281,7 +289,7 @@ class Fault(object):
         elif ndx > len(self._slicks) - 1:
             raise FaultInputTypeException("Slickenline index is greater than slickenlines number")
         else:
-            return self._slicks[ndx].hasKnownSense()
+            return self._slicks[ndx].hasKnownSense
 
     def rake(self, ndx: int=0) -> float:
         """
