@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 
 from ..embedded import mplstereonet as ms
 
-
 from ..orientations.type_checks import *
 from ..utils.dicts import *
 
