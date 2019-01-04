@@ -1,8 +1,6 @@
 
-[![Build Status](https://travis-ci.org/mauroalberti/gsf.svg?branch=master)](https://travis-ci.org/mauroalberti/gsf)
-
 # gsf 
-**gsf** is a library for the processing of structural geology data. It is developed in Python 3 (module *pygsf*), while there is  also a preliminary, in-progress Haskell version (module *hsgsf*).
+**gsf** is a library for the processing of structural geology data. It is developed in Python 3 (module *pygsf*).
 
 ## Summary
 
