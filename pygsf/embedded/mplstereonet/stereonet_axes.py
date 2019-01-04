@@ -463,35 +463,35 @@ class StereonetAxes(LambertAxes):
         modified Kamb method with exponential smoothing [1]_.
 
         >>> strikes, dips = [120, 315, 86], [22, 85, 31]
-        >>> ax.density_contour(strikes, dips)
+        >>> ax.density_contour(strikes, dips)  # xdoctest: +SKIP
 
         Plot density contours of a set of linear orientation measurements.
 
         >>> plunges, bearings = [-10, 20, -30], [120, 315, 86]
-        >>> ax.density_contour(plunges, bearings, measurement='lines')
+        >>> ax.density_contour(plunges, bearings, measurement='lines')  # xdoctest: +SKIP
 
         Plot density contours of a set of rake measurements.
 
         >>> strikes, dips, rakes = [120, 315, 86], [22, 85, 31], [-5, 20, 9]
-        >>> ax.density_contour(strikes, dips, rakes, measurement='rakes')
+        >>> ax.density_contour(strikes, dips, rakes, measurement='rakes')  # xdoctest: +SKIP
 
         Plot density contours of a set of "raw" longitudes and latitudes.
 
         >>> lon, lat = np.radians([-40, 30, -85]), np.radians([21, -59, 45])
-        >>> ax.density_contour(lon, lat, measurement='radians')
+        >>> ax.density_contour(lon, lat, measurement='radians')  # xdoctest: +SKIP
 
 
         Plot density contours of poles to planes using a Kamb method [2]_
         with the density estimated on a 10x10 grid (in long-lat space)
 
         >>> strikes, dips = [120, 315, 86], [22, 85, 31]
-        >>> ax.density_contour(strikes, dips, method='kamb', gridsize=10)
+        >>> ax.density_contour(strikes, dips, method='kamb', gridsize=10)  # xdoctest: +SKIP
 
         Plot density contours of poles to planes with contours at [1,2,3]
         standard deviations.
 
         >>> strikes, dips = [120, 315, 86], [22, 85, 31]
-        >>> ax.density_contour(strikes, dips, levels=[1,2,3])
+        >>> ax.density_contour(strikes, dips, levels=[1,2,3])  # xdoctest: +SKIP
 
         References
         ----------
@@ -587,37 +587,37 @@ class StereonetAxes(LambertAxes):
         a modified Kamb method with exponential smoothing [1]_.
 
         >>> strikes, dips = [120, 315, 86], [22, 85, 31]
-        >>> ax.density_contourf(strikes, dips)
+        >>> ax.density_contourf(strikes, dips)  # xdoctest: +SKIP
 
         Plot filled density contours of a set of linear orientation
         measurements.
 
         >>> plunges, bearings = [-10, 20, -30], [120, 315, 86]
-        >>> ax.density_contourf(plunges, bearings, measurement='lines')
+        >>> ax.density_contourf(plunges, bearings, measurement='lines')  # xdoctest: +SKIP
 
         Plot filled density contours of a set of rake measurements.
 
         >>> strikes, dips, rakes = [120, 315, 86], [22, 85, 31], [-5, 20, 9]
-        >>> ax.density_contourf(strikes, dips, rakes, measurement='rakes')
+        >>> ax.density_contourf(strikes, dips, rakes, measurement='rakes')  # xdoctest: +SKIP
 
         Plot filled density contours of a set of "raw" longitudes and
         latitudes.
 
         >>> lon, lat = np.radians([-40, 30, -85]), np.radians([21, -59, 45])
-        >>> ax.density_contourf(lon, lat, measurement='radians')
+        >>> ax.density_contourf(lon, lat, measurement='radians')  # xdoctest: +SKIP
 
 
         Plot filled density contours of poles to planes using a Kamb method
         [2]_ with the density estimated on a 10x10 grid (in long-lat space)
 
         >>> strikes, dips = [120, 315, 86], [22, 85, 31]
-        >>> ax.density_contourf(strikes, dips, method='kamb', gridsize=10)
+        >>> ax.density_contourf(strikes, dips, method='kamb', gridsize=10)  # xdoctest: +SKIP
 
         Plot filled density contours of poles to planes with contours at
         [1,2,3] standard deviations.
 
         >>> strikes, dips = [120, 315, 86], [22, 85, 31]
-        >>> ax.density_contourf(strikes, dips, levels=[1,2,3])
+        >>> ax.density_contourf(strikes, dips, levels=[1,2,3])  # xdoctest: +SKIP
 
         References
         ----------

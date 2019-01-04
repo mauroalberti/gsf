@@ -7,12 +7,12 @@ def subplots(nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True,
 
     This prevents constantly doing:
 
-        >>> fig, ax = plt.subplot(subplot_kw=dict(projection='stereonet'))
+        >>> fig, ax = plt.subplot(subplot_kw=dict(projection='stereonet'))  # xdoctest: +SKIP
 
     or
 
-        >>> fig = plt.figure()
-        >>> ax = fig.add_subplot(111, projection='stereonet')
+        >>> fig = plt.figure()  # xdoctest: +SKIP
+        >>> ax = fig.add_subplot(111, projection='stereonet')  # xdoctest: +SKIP
 
     Using this function also avoids having ``mplstereonet`` continually appear
     to be an unused import when one of the above methods are used.

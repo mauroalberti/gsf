@@ -51,8 +51,8 @@ def fit_girdle(*args, **kwargs):
 
         >>> strike = [270, 334, 270, 270]
         >>> dip = [20, 15, 80, 78]
-        >>> s, d = mplstereonet.fit_girdle(strike, dip)
-        >>> plunge, bearing = mplstereonet.pole2plunge_bearing(s, d)
+        >>> s, d = mplstereonet.fit_girdle(strike, dip)  # xdoctest: +SKIP
+        >>> plunge, bearing = mplstereonet.pole2plunge_bearing(s, d)  # xdoctest: +SKIP
 
     """
     vec = 0 # Smallest eigenvector will be the pole
@@ -106,7 +106,7 @@ def fit_pole(*args, **kwargs):
 
         >>> strike = [270, 65, 280, 300]
         >>> dip = [20, 15, 10, 5]
-        >>> strike0, dip0 = mplstereonet.fit_pole(strike, dip)
+        >>> strike0, dip0 = mplstereonet.fit_pole(strike, dip)  # xdoctest: +SKIP
 
     """
     vec = -1 # Largest eigenvector will be the pole
@@ -168,7 +168,7 @@ def eigenvectors(*args, **kwargs):
 
         >>> strikes = [270, 65, 280, 300]
         >>> dips = [20, 15, 10, 5]
-        >>> plu, azi, vals = mplstereonet.eigenvectors(strikes, dips)
+        >>> plu, azi, vals = mplstereonet.eigenvectors(strikes, dips)  # xdoctest: +SKIP
     """
     lon, lat = _convert_measurements(args, kwargs.get('measurement', 'poles'))
     vals, vecs = cov_eig(lon, lat, kwargs.get('bidirectional', True))
