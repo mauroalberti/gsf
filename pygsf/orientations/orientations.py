@@ -958,17 +958,17 @@ class Direct(object):
         else:
             return self.asVersor().vCross(another.asVersor()).versor()
 
-    def normPlane(self) -> 'CPlane':
+    def normPlane(self) -> 'Plane':
         """
         Return the geological plane that is normal to the direction.
 
         Examples:
           >>> Direct.fromAzPl(0, 45).normPlane()
-          CPlane(180.00, +45.00)
+          Plane(180.00, +45.00)
           >>> Direct.fromAzPl(0, -45).normPlane()
-          CPlane(000.00, +45.00)
+          Plane(000.00, +45.00)
           >>> Direct.fromAzPl(0, 90).normPlane()
-          CPlane(180.00, +00.00)
+          Plane(180.00, +00.00)
         """
 
         down_orien = self.downward()
@@ -979,24 +979,24 @@ class Direct(object):
 
     def commonPlane(self, another):
         """
-        Calculate CPlane instance defined by the two Vect instances.
+        Calculate Plane instance defined by the two Vect instances.
 
         Examples:
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isSubParallel(CPlane(180.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isSubParallel(Plane(180.0, 0.0))
           True
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isSubParallel(CPlane(90.0, 90.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isSubParallel(Plane(90.0, 90.0))
           True
-          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(CPlane(135.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(135.0, 45.0))
           True
-          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(CPlane(225.0, 90.0))
+          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(225.0, 90.0))
           True
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isSubParallel(CPlane(180.0, 10.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isSubParallel(Plane(180.0, 10.0))
           False
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isSubParallel(CPlane(90.0, 80.0))
+          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isSubParallel(Plane(90.0, 80.0))
           False
-          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(CPlane(125.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(125.0, 45.0))
           False
-          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(CPlane(225.0, 80.0))
+          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(225.0, 80.0))
           False
           >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(315, 44.5)) is None
           True
@@ -1138,20 +1138,20 @@ class Plane(object):
         :type  dip_ang:  number or string convertible to float.
         :param is_rhr_strike: if the source azimuth is RHR strike (default is False, i.e. it is dip direction)
         :return: the instantiated geological plane.
-        :rtype: CPlane.
+        :rtype: Plane.
 
         Example:
-          >>> CPlane(0, 90)
-          CPlane(000.00, +90.00)
-          >>> CPlane(0, 90, is_rhr_strike=True)
-          CPlane(090.00, +90.00)
-          >>> CPlane(0, 90, True)
-          CPlane(090.00, +90.00)
-          >>> CPlane(0, "90", True)
+          >>> Plane(0, 90)
+          Plane(000.00, +90.00)
+          >>> Plane(0, 90, is_rhr_strike=True)
+          Plane(090.00, +90.00)
+          >>> Plane(0, 90, True)
+          Plane(090.00, +90.00)
+          >>> Plane(0, "90", True)
           Traceback (most recent call last):
           ...
           pygsf.orientations.exceptions.OrienInputException: Source dip angle must be number
-          >>> CPlane(0, 900)
+          >>> Plane(0, 900)
           Traceback (most recent call last):
           ...
           pygsf.orientations.exceptions.OrienInputException: Dip angle must be between 0° and 90°
@@ -1189,7 +1189,7 @@ class Plane(object):
         Return the dip direction of the geological plane.
 
         Example:
-          >>> CPlane(34.2, 89.7).dd
+          >>> Plane(34.2, 89.7).dd
           34.2
         """
 
@@ -1201,7 +1201,7 @@ class Plane(object):
         Return the dip angle of the geological plane.
 
         Example:
-          >>> CPlane(183, 77).da
+          >>> Plane(183, 77).da
           77.0
 
         """
@@ -1214,7 +1214,7 @@ class Plane(object):
         Return a tuple storing the dip direction and dip angle values of a geological plane.
 
         Example:
-          >>> gp = CPlane(89.4, 17.2)
+          >>> gp = Plane(89.4, 17.2)
           >>> gp.dda
           (89.4, 17.2)
         """
@@ -1227,13 +1227,13 @@ class Plane(object):
         Return the strike according to the right-hand-rule.
 
         Examples:
-          >>> CPlane(90, 45).rhrStrike
+          >>> Plane(90, 45).rhrStrike
           0.0
-          >>> CPlane(45, 89).rhrStrike
+          >>> Plane(45, 89).rhrStrike
           315.0
-          >>> CPlane(275, 38).rhrStrike
+          >>> Plane(275, 38).rhrStrike
           185.0
-          >>> CPlane(0, 38).rhrStrike
+          >>> Plane(0, 38).rhrStrike
           270.0
         """
 
@@ -1245,9 +1245,9 @@ class Plane(object):
         Return a tuple storing the right-hand-rule strike and dip angle values of a geological plane.
 
         Example:
-          >>> CPlane(100, 17.2).srda
+          >>> Plane(100, 17.2).srda
           (10.0, 17.2)
-          >>> CPlane(10, 87).srda
+          >>> Plane(10, 87).srda
           (280.0, 87.0)
         """
 
@@ -1259,13 +1259,13 @@ class Plane(object):
         Return the strike according to the left-hand-rule.
 
         Examples:
-          >>> CPlane(90, 45).lhrStrike
+          >>> Plane(90, 45).lhrStrike
           180.0
-          >>> CPlane(45, 89).lhrStrike
+          >>> Plane(45, 89).lhrStrike
           135.0
-          >>> CPlane(275, 38).lhrStrike
+          >>> Plane(275, 38).lhrStrike
           5.0
-          >>> CPlane(0, 38).lhrStrike
+          >>> Plane(0, 38).lhrStrike
           90.0
         """
 
@@ -1277,9 +1277,9 @@ class Plane(object):
         Return a tuple storing the left-hand-rule strike and dip angle values of a geological plane.
 
         Example:
-          >>> CPlane(100, 17.2).slda
+          >>> Plane(100, 17.2).slda
           (190.0, 17.2)
-          >>> CPlane(10, 87).slda
+          >>> Plane(10, 87).slda
           (100.0, 87.0)
         """
 
@@ -1287,7 +1287,7 @@ class Plane(object):
 
     def __repr__(self):
 
-        return "CPlane({:06.2f}, {:+06.2f})".format(*self.dda)
+        return "Plane({:06.2f}, {:+06.2f})".format(*self.dda)
 
     def rhrStrikeOrien(self):
         """
@@ -1296,11 +1296,11 @@ class Plane(object):
         :return: OrienM instance,
 
         Examples:
-          >>> CPlane(90, 45).rhrStrikeOrien()
+          >>> Plane(90, 45).rhrStrikeOrien()
           Direct(az: 0.00°, pl: 0.00°)
-          >>> CPlane(45, 17).rhrStrikeOrien()
+          >>> Plane(45, 17).rhrStrikeOrien()
           Direct(az: 315.00°, pl: 0.00°)
-          >>> CPlane(90, 0).rhrStrikeOrien()
+          >>> Plane(90, 0).rhrStrikeOrien()
           Direct(az: 0.00°, pl: 0.00°)
         """
 
@@ -1315,9 +1315,9 @@ class Plane(object):
         :return: OrienM instance.
 
         Examples:
-          >>> CPlane(90, 45).lhrStrikeOrien()
+          >>> Plane(90, 45).lhrStrikeOrien()
           Direct(az: 180.00°, pl: 0.00°)
-          >>> CPlane(45, 17).lhrStrikeOrien()
+          >>> Plane(45, 17).lhrStrikeOrien()
           Direct(az: 135.00°, pl: 0.00°)
         """
 
@@ -1332,9 +1332,9 @@ class Plane(object):
         :return: OrienM instance.
 
         Examples:
-          >>> CPlane(90, 45).dipDirOrien()
+          >>> Plane(90, 45).dipDirOrien()
           Direct(az: 90.00°, pl: 45.00°)
-          >>> CPlane(45, 17).dipDirOrien()
+          >>> Plane(45, 17).dipDirOrien()
           Direct(az: 45.00°, pl: 17.00°)
         """
 
@@ -1349,9 +1349,9 @@ class Plane(object):
         :return: OrienM instance.
 
         Examples:
-          >>> CPlane(90, 45).dipDirOppOrien()
+          >>> Plane(90, 45).dipDirOppOrien()
           Direct(az: 270.00°, pl: -45.00°)
-          >>> CPlane(45, 17).dipDirOppOrien()
+          >>> Plane(45, 17).dipDirOppOrien()
           Direct(az: 225.00°, pl: -17.00°)
         """
 
@@ -1367,14 +1367,14 @@ class Plane(object):
         :rtype: Plane
 
         Examples:
-          >>> CPlane(0, 45).mirrorVertPPlane()
-          CPlane(180.00, +45.00)
-          >>> CPlane(225, 80).mirrorVertPPlane()
-          CPlane(045.00, +80.00)
-          >>> CPlane(90, 90).mirrorVertPPlane()
-          CPlane(270.00, +90.00)
-          >>> CPlane(270, 0).mirrorVertPPlane()
-          CPlane(090.00, +00.00)
+          >>> Plane(0, 45).mirrorVertPPlane()
+          Plane(180.00, +45.00)
+          >>> Plane(225, 80).mirrorVertPPlane()
+          Plane(045.00, +80.00)
+          >>> Plane(90, 90).mirrorVertPPlane()
+          Plane(270.00, +90.00)
+          >>> Plane(270, 0).mirrorVertPPlane()
+          Plane(090.00, +00.00)
         """
 
         return Plane(
@@ -1387,11 +1387,11 @@ class Plane(object):
         pointing in the same direction as the geological plane.
 
         Example:
-            >>> CPlane(90, 55).normDirectFrwrd()
+            >>> Plane(90, 55).normDirectFrwrd()
             Direct(az: 90.00°, pl: -35.00°)
-            >>> CPlane(90, 90).normDirectFrwrd()
+            >>> Plane(90, 90).normDirectFrwrd()
             Direct(az: 90.00°, pl: 0.00°)
-            >>> CPlane(90, 0).normDirectFrwrd()
+            >>> Plane(90, 0).normDirectFrwrd()
             Direct(az: 90.00°, pl: -90.00°)
         """
 
@@ -1408,11 +1408,11 @@ class Plane(object):
         pointing in the opposite direction to the geological plane.
 
         Example:
-            >>> CPlane(90, 55).normDirectBckwrd()
+            >>> Plane(90, 55).normDirectBckwrd()
             Direct(az: 270.00°, pl: 35.00°)
-            >>> CPlane(90, 90).normDirectBckwrd()
+            >>> Plane(90, 90).normDirectBckwrd()
             Direct(az: 270.00°, pl: -0.00°)
-            >>> CPlane(90, 0).normDirectBckwrd()
+            >>> Plane(90, 0).normDirectBckwrd()
             Direct(az: 270.00°, pl: 90.00°)
         """
 
@@ -1424,11 +1424,11 @@ class Plane(object):
         pointing downward.
 
         Example:
-            >>> CPlane(90, 55).normDirectDown()
+            >>> Plane(90, 55).normDirectDown()
             Direct(az: 270.00°, pl: 35.00°)
-            >>> CPlane(90, 90).normDirectDown()
+            >>> Plane(90, 90).normDirectDown()
             Direct(az: 90.00°, pl: 0.00°)
-            >>> CPlane(90, 0).normDirectDown()
+            >>> Plane(90, 0).normDirectDown()
             Direct(az: 270.00°, pl: 90.00°)
         """
 
@@ -1440,11 +1440,11 @@ class Plane(object):
         pointing upward.
 
         Example:
-            >>> CPlane(90, 55).normDirectUp()
+            >>> Plane(90, 55).normDirectUp()
             Direct(az: 90.00°, pl: -35.00°)
-            >>> CPlane(90, 90).normDirectUp()
+            >>> Plane(90, 90).normDirectUp()
             Direct(az: 90.00°, pl: 0.00°)
-            >>> CPlane(90, 0).normDirectUp()
+            >>> Plane(90, 0).normDirectUp()
             Direct(az: 90.00°, pl: -90.00°)
         """
 
@@ -1454,7 +1454,7 @@ class Plane(object):
         """
         Wrapper to down_normal_gv.
 
-        :return: downward-pointing Direct instance normal to the CPlane self instance
+        :return: downward-pointing Direct instance normal to the Plane self instance
         """
 
         return self.normDirectDown()
@@ -1463,30 +1463,30 @@ class Plane(object):
         """
         Normal Axis.
 
-        :return: Axis normal to the CPlane self instance
+        :return: Axis normal to the Plane self instance
         """
 
         return self.normDirectDown().asAxis()
 
-    def angle(self, another: 'CPlane'):
+    def angle(self, another: 'Plane'):
         """
         Calculate angle (in degrees) between two geoplanes.
         Range is 0°-90°.
 
         Examples:
-          >>> CPlane(100.0, 50.0).angle(CPlane(100.0, 50.0))
+          >>> Plane(100.0, 50.0).angle(Plane(100.0, 50.0))
           0.0
-          >>> CPlane(300.0, 10.0).angle(CPlane(300.0, 90.0))
+          >>> Plane(300.0, 10.0).angle(Plane(300.0, 90.0))
           80.0
-          >>> CPlane(90.0, 90.0).angle(CPlane(270.0, 90.0))
+          >>> Plane(90.0, 90.0).angle(Plane(270.0, 90.0))
           0.0
-          >>> areClose(CPlane(90.0, 90.0).angle(CPlane(130.0, 90.0)), 40)
+          >>> areClose(Plane(90.0, 90.0).angle(Plane(130.0, 90.0)), 40)
           True
-          >>> areClose(CPlane(90, 70).angle(CPlane(270, 70)), 40)
+          >>> areClose(Plane(90, 70).angle(Plane(270, 70)), 40)
           True
-          >>> areClose(CPlane(90.0, 10.0).angle(CPlane(270.0, 10.0)), 20.0)
+          >>> areClose(Plane(90.0, 10.0).angle(Plane(270.0, 10.0)), 20.0)
           True
-          >>> areClose(CPlane(90.0, 10.0).angle(CPlane(270.0, 30.0)), 40.0)
+          >>> areClose(Plane(90.0, 10.0).angle(Plane(270.0, 30.0)), 40.0)
           True
         """
 
@@ -1502,20 +1502,20 @@ class Plane(object):
         """
         Check that two GPlanes are sub-parallel
 
-        :param another: a CPlane instance
+        :param another: a Plane instance
         :param angle_tolerance: the maximum allowed divergence angle (in degrees)
         :return: Boolean
 
          Examples:
-          >>> CPlane(0, 90).isSubParallel(CPlane(270, 90))
+          >>> Plane(0, 90).isSubParallel(Plane(270, 90))
           False
-          >>> CPlane(0, 90).isSubParallel(CPlane(180, 90))
+          >>> Plane(0, 90).isSubParallel(Plane(180, 90))
           True
-          >>> CPlane(0, 90).isSubParallel(CPlane(0, 0))
+          >>> Plane(0, 90).isSubParallel(Plane(0, 0))
           False
-          >>> CPlane(0, 0).isSubParallel(CPlane(0, 1e-6))
+          >>> Plane(0, 0).isSubParallel(Plane(0, 1e-6))
           True
-          >>> CPlane(0, 0).isSubParallel(CPlane(0, 1.1))
+          >>> Plane(0, 0).isSubParallel(Plane(0, 1.1))
           False
         """
 
@@ -1530,11 +1530,11 @@ class Plane(object):
         :return: True or False
 
         Examples:
-          >>> CPlane(90, 0).contains(Direct.fromAzPl(60, 0))
+          >>> Plane(90, 0).contains(Direct.fromAzPl(60, 0))
           True
-          >>> CPlane(90, 0).contains(Axis.fromAzPl(60, 0))
+          >>> Plane(90, 0).contains(Axis.fromAzPl(60, 0))
           True
-          >>> CPlane(90, 0).contains(Direct.fromAzPl(60, 10))
+          >>> Plane(90, 0).contains(Direct.fromAzPl(60, 10))
           False
         """
 
@@ -1546,20 +1546,20 @@ class Plane(object):
         """
         Check that two GPlanes are sub-orthogonal.
 
-        :param another: a CPlane instance
+        :param another: a Plane instance
         :param angle_tolerance: the maximum allowed divergence angle (in degrees)
         :return: Boolean
 
          Examples:
-          >>> CPlane(0, 90).isSubOrthog(CPlane(270, 90))
+          >>> Plane(0, 90).isSubOrthog(Plane(270, 90))
           True
-          >>> CPlane(0, 90).isSubOrthog(CPlane(180, 90))
+          >>> Plane(0, 90).isSubOrthog(Plane(180, 90))
           False
-          >>> CPlane(0, 90).isSubOrthog(CPlane(0, 0))
+          >>> Plane(0, 90).isSubOrthog(Plane(0, 0))
           True
-          >>> CPlane(0, 0).isSubOrthog(CPlane(0, 88))
+          >>> Plane(0, 0).isSubOrthog(Plane(0, 88))
           False
-          >>> CPlane(0, 0).isSubOrthog(CPlane(0, 45))
+          >>> Plane(0, 0).isSubOrthog(Plane(0, 45))
           False
         """
 
@@ -1579,7 +1579,7 @@ class Plane(object):
 
     def rakeToDirect(self, rake):
         """
-        Calculate the Direct instance given a CPlane instance and a rake value.
+        Calculate the Direct instance given a Plane instance and a rake value.
         The rake is defined according to the Aki and Richards, 1980 conventions:
         rake = 0° -> left-lateral
         rake = 90° -> reverse
@@ -1587,15 +1587,15 @@ class Plane(object):
         rake = -90° -> normal
 
         Examples:
-          >>> CPlane(180, 45).rakeToDirect(0.0)
+          >>> Plane(180, 45).rakeToDirect(0.0)
           Direct(az: 90.00°, pl: -0.00°)
-          >>> CPlane(180, 45).rakeToDirect(90.0)
+          >>> Plane(180, 45).rakeToDirect(90.0)
           Direct(az: 0.00°, pl: -45.00°)
-          >>> CPlane(180, 45).rakeToDirect(-90.0)
+          >>> Plane(180, 45).rakeToDirect(-90.0)
           Direct(az: 180.00°, pl: 45.00°)
-          >>> CPlane(180, 45).rakeToDirect(180.0).isSubParallel(Direct.fromAzPl(270.00, 0.00))
+          >>> Plane(180, 45).rakeToDirect(180.0).isSubParallel(Direct.fromAzPl(270.00, 0.00))
           True
-          >>> CPlane(180, 45).rakeToDirect(-180.0)
+          >>> Plane(180, 45).rakeToDirect(-180.0)
           Direct(az: 270.00°, pl: 0.00°)
         """
 
@@ -1618,9 +1618,9 @@ class Plane(object):
         :return: bool flag indicating if it is very low angle
 
         Examples:
-          >>> CPlane(38.9, 1.2).isVLowAngle()
+          >>> Plane(38.9, 1.2).isVLowAngle()
           True
-          >>> CPlane(38.9, 7.4).isVLowAngle()
+          >>> Plane(38.9, 7.4).isVLowAngle()
           False
         """
 
@@ -1635,9 +1635,9 @@ class Plane(object):
         :return: bool flag indicating if it is very high angle
 
         Examples:
-          >>> CPlane(38.9, 11.2).isVHighAngle()
+          >>> Plane(38.9, 11.2).isVHighAngle()
           False
-          >>> CPlane(38.9, 88.4).isVHighAngle()
+          >>> Plane(38.9, 88.4).isVHighAngle()
           True
         """
 
@@ -1645,15 +1645,15 @@ class Plane(object):
 
     def toCPlane(self, point):
         """
-        Given a CPlane instance and a provided Point instance,
-        calculate the corresponding CPlane instance.
+        Given a Plane instance and a provided Point instance,
+        calculate the corresponding Plane instance.
 
         Example:
-          >>> CPlane(0, 0).toCPlane(Point(0, 0, 0))
+          >>> Plane(0, 0).toCPlane(Point(0, 0, 0))
           CPlane(0.0000, 0.0000, 1.0000, -0.0000)
-          >>> CPlane(90, 45).toCPlane(Point(0, 0, 0))
+          >>> Plane(90, 45).toCPlane(Point(0, 0, 0))
           CPlane(0.7071, 0.0000, 0.7071, -0.0000)
-          >>> CPlane(0, 90).toCPlane(Point(0, 0, 0))
+          >>> Plane(0, 90).toCPlane(Point(0, 0, 0))
           CPlane(0.0000, 1.0000, -0.0000, -0.0000)
         """
 

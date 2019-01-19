@@ -248,9 +248,9 @@ class PTBAxes(object):
         Calculate M plane.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPlane.isSubParallel(CPlane(0.0, 90.0))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPlane.isSubParallel(Plane(0.0, 90.0))
           True
-          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPlane.isSubParallel(CPlane(315.00, 90.00))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPlane.isSubParallel(Plane(315.00, 90.00))
           True
         """
 
