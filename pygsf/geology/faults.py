@@ -143,7 +143,7 @@ class Slick(object):
 
 class Fault(object):
     """
-    Represent a fault plane, composed by a Plane instance, and zero, one or more slickenlines,
+    Represent a fault plane, composed by a CPlane instance, and zero, one or more slickenlines,
     stored by a list of Slick instances (None when no slickenlines).
     """
 
@@ -195,11 +195,11 @@ class Fault(object):
     @property
     def plane(self) -> Plane:
         """
-        Return fault plane, as a Plane instance.
+        Return fault plane, as a CPlane instance.
 
         Example:
           >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).plane
-          Plane(090.00, +45.00)
+          CPlane(090.00, +45.00)
         """
 
         return self._fltpln

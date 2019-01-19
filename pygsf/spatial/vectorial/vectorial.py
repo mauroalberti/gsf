@@ -424,7 +424,7 @@ class CPlane(object):
     Expressed by equation:
     ax + by + cz + d = 0
 
-    Note: Plane is locational - its position in space is defined.
+    Note: CPlane is locational - its position in space is defined.
     This contrast with PPlane, defined just by its attitude, but with undefined position
 
     """
@@ -439,7 +439,7 @@ class CPlane(object):
     @property
     def a(self):
         """
-        Return a coefficient of a Plane instance.
+        Return a coefficient of a CPlane instance.
 
         Example:
           >>> CPlane(1, 0, 0, 2).a
@@ -451,7 +451,7 @@ class CPlane(object):
     @property
     def b(self):
         """
-        Return b coefficient of a Plane instance.
+        Return b coefficient of a CPlane instance.
 
         Example:
           >>> CPlane(1, 4, 0, 2).b
@@ -463,7 +463,7 @@ class CPlane(object):
     @property
     def c(self):
         """
-        Return a coefficient of a Plane instance.
+        Return a coefficient of a CPlane instance.
 
         Example:
           >>> CPlane(1, 0, 5.4, 2).c
@@ -475,7 +475,7 @@ class CPlane(object):
     @property
     def d(self):
         """
-        Return a coefficient of a Plane instance.
+        Return a coefficient of a CPlane instance.
 
         Example:
           >>> CPlane(1, 0, 0, 2).d
@@ -487,7 +487,7 @@ class CPlane(object):
     @property
     def v(self):
         """
-        Return coefficients of a Plane instance.
+        Return coefficients of a CPlane instance.
 
         Example:
           >>> CPlane(1, 1, 7, -4).v
@@ -498,7 +498,7 @@ class CPlane(object):
     @classmethod
     def fromPoints(cls, pt1, pt2, pt3):
         """
-        Create a Plane from three given Point instances.
+        Create a CPlane from three given Point instances.
 
         Example:
           >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
@@ -661,9 +661,9 @@ class CPlane(object):
 
     def isSubParallel(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD):
         """
-        Check that two Plane are sub-parallel
+        Check that two CPlane are sub-parallel
 
-        :param another: a Plane instance
+        :param another: a CPlane instance
         :param angle_tolerance: the maximum allowed divergence angle (in degrees)
         :return: Boolean
 

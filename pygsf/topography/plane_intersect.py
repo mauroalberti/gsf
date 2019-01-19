@@ -177,7 +177,7 @@ def plane_dem_intersection(
     Calculates the intersections (as points) between the grid and a planar analytical surface.
 
     :param srcPlaneAttitude: orientation of the surface (currently only planes).
-    :type srcPlaneAttitude: class Plane.
+    :type srcPlaneAttitude: class CPlane.
     :param srcPt: point, expressed in geographical coordinates, that the plane must contain.
     :type srcPt: Point.
     :param geo_array: the input GeoArray storing the used grid.

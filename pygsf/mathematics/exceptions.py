@@ -17,6 +17,11 @@ class VectorInputException(Exception):
     pass
 
 
+class VectorIOException(Exception):
+
+    pass
+
+
 class RefFrameInputException(Exception):
     """
     Exception for RefFrame input
