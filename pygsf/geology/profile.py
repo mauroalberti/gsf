@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-
-from ..mathematics.defaults import *
-
 import copy
 import xml.dom.minidom
+
+from ..libs_utils.qgis.qgs_tools import get_project_crs
 
 from ..spatial.vectorial.vectorial import *
 from ..spatial.vectorial.geodetic import *
@@ -443,7 +442,8 @@ def topoprofiles_from_dems(canvas, source_profile_line, sample_distance, selecte
     """
 
     # get project CRS information
-    on_the_fly_projection, project_crs = get_on_the_fly_projection(canvas)
+
+    project_crs = get_project_crs(self.canvas)
 
     if invert_profile:
         line = source_profile_line.reverse_direction()
@@ -825,10 +825,10 @@ def calculate_projected_3d_pts(canvas, struct_pts, structural_pts_crs, demObj):
     demCrs = demObj.params.crs
 
     # check if on-the-fly-projection is set on
-    on_the_fly_projection, project_crs = get_on_the_fly_projection(canvas)
+    project_crs = get_project_crs(canvas)
 
     # set points in the project crs
-    if on_the_fly_projection and structural_pts_crs != project_crs:
+    if structural_pts_crs != project_crs:
         struct_pts_in_prj_crs = calculate_pts_in_projection(struct_pts, structural_pts_crs, project_crs)
     else:
         struct_pts_in_prj_crs = copy.deepcopy(struct_pts)
@@ -840,7 +840,7 @@ def calculate_projected_3d_pts(canvas, struct_pts, structural_pts_crs, demObj):
     else:
         struct_pts_in_dem_crs = copy.deepcopy(struct_pts)
 
-        # - 3D structural points, with x, y, and z extracted from the current DEM
+    # - 3D structural points, with x, y, and z extracted from the current DEM
     struct_pts_z = get_zs_from_dem(struct_pts_in_dem_crs, demObj)
 
     assert len(struct_pts_in_prj_crs) == len(struct_pts_z)

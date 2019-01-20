@@ -29,7 +29,7 @@ def get_project_crs(canvas):
 
 def get_on_the_fly_projection(canvas):
     """
-    Will be deprecated in following releases.
+    Deprecated.
 
     :param canvas:
     :return:
@@ -68,7 +68,12 @@ def loaded_vector_layers():
  
     return [layer for layer in loaded_layers() if layer.type() == QgsMapLayer.VectorLayer]
     
-            
+
+def loaded_polygon_layers():
+
+    return [layer for layer in loaded_vector_layers() if layer.geometryType() == QgsWkbTypes.PolygonGeometry]
+
+
 def loaded_line_layers():        
     
     return [layer for layer in loaded_vector_layers() if layer.geometryType() == QgsWkbTypes.LineGeometry]
