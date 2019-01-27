@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from ...orientations.defaults import *
 from ...mathematics.vectors import *
 
@@ -8,27 +7,30 @@ from ...mathematics.vectors import *
 class Point(object):
     """
     Cartesian point.
-    Dimensions: 3D (space)
+    Dimensions: 4D (space-time)
     """
 
-    def __init__(self, x: [int, float], y: [int, float], z: [int, float]=0.0):
+    def __init__(self, x: [int, float], y: [int, float], z: [int, float]=0.0, t: [int, float]=0.0):
         """
         Construct a Point instance.
         """
 
-        vals = [x, y, z]
+        vals = [x, y, z, t]
         if any(map(lambda val: not isinstance(val, (int, float)), vals)):
             raise VectorInputException("Input values must be integer of float")
         elif not all(map(isfinite, vals)):
             raise VectorInputException("Input values must be finite")
         else:
-            self._a = array(vals, dtype=np.float64)
+            self.x = float(x)
+            self.y = float(y)
+            self.z = float(z)
+            self.t = float(t)
 
     def __repr__(self) -> str:
 
-        return "Point({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
+        return "Point({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z, self.t)
 
-    def __eq__(self, another: 'Point') -> Optional[bool]:
+    def __eq__(self, another: 'Point') -> bool:
         """
         Return True if objects are equal.
 
@@ -39,15 +41,13 @@ class Point(object):
           False
         """
 
-        if not isinstance(another, Point):
-            raise VectorInputException("Variables must be of the same type")
-        else:
-            return all([
-                self.x == another.x,
-                self.y == another.y,
-                self.z == another.z])
+        return all([
+            self.x == another.x,
+            self.y == another.y,
+            self.z == another.z,
+            self.t == another.t])
 
-    def __ne__(self, another: 'Point') -> Optional[bool]:
+    def __ne__(self, another: 'Point') -> bool:
         """
         Return False if objects are equal.
 
@@ -56,58 +56,21 @@ class Point(object):
           True
         """
 
-        if not isinstance(another, Point):
-            return None
-        else:
-            return not (self == another)
+        return not (self == another)
 
     @property
-    def a(self) -> 'np.array':
+    def a(self) -> Tuple[float, float, float, float]:
         """
-        Return a copy of the object inner array.
+        Return a copy of the object inner values.
 
         :return: double array of x, y, z values
 
         Examples:
           >>> Point(4, 3, 7).a
-          array([4., 3., 7.])
+          (4.0, 3.0, 7.0, 0.0)
         """
 
-        return np.copy(self._a)
-
-    @property
-    def x(self) -> float:
-        """
-        Return x value
-
-        Example:
-          >>> Point(1.5, 1, 1).x
-          1.5
-        """
-
-        return self.a[0]
-
-    @property
-    def y(self) -> float:
-        """
-        Return y value
-
-        Example:
-          >>> Point(1.5, 3.0, 1).y
-          3.0
-        """
-        return self.a[1]
-
-    @property
-    def z(self) -> float:
-        """
-        Return z value
-
-        Example:
-          >>> Point(1.5, 3.2, 41.).z
-          41.0
-        """
-        return self.a[2]
+        return self.x, self.y, self.z, self.t
 
     def toXYZ(self) -> Tuple[float, float, float]:
         """
@@ -131,10 +94,10 @@ class Point(object):
 
         Examples:
           >>> Point(1, 2, 3).toArray()
-          array([1., 2., 3.])
+          array([1., 2., 3., 0.])
         """
 
-        return self.a
+        return np.asarray(self.a)
 
     def pXY(self) -> 'Point':
         """
@@ -144,10 +107,10 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pXY()
-          Point(2.0000, 3.0000, 0.0000)
+          Point(2.0000, 3.0000, 0.0000, 0.0000)
         """
 
-        return self.__class__(self.x, self.y, 0.0)
+        return Point(self.x, self.y, 0.0, self.t)
 
     def pXZ(self) -> 'Point':
         """
@@ -157,10 +120,10 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pXZ()
-          Point(2.0000, 0.0000, 4.0000)
+          Point(2.0000, 0.0000, 4.0000, 0.0000)
         """
 
-        return self.__class__(self.x, 0.0, self.z)
+        return Point(self.x, 0.0, self.z, self.t)
 
     def pYZ(self) -> 'Point':
         """
@@ -170,10 +133,10 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pYZ()
-          Point(0.0000, 3.0000, 4.0000)
+          Point(0.0000, 3.0000, 4.0000, 0.0000)
         """
 
-        return self.__class__(0.0, self.y, self.z)
+        return Point(0.0, self.y, self.z, self.t)
 
     @property
     def len3D(self) -> float:
@@ -204,7 +167,7 @@ class Point(object):
 
         return sqrt(self.x * self.x + self.y * self.y)
 
-    def deltaX(self, another: 'Point') -> Optional[float]:
+    def deltaX(self, another: 'Point') -> float:
         """
         Delta between x components of two Point Instances.
 
@@ -216,12 +179,9 @@ class Point(object):
           3.0
         """
 
-        if not isinstance(another, Point):
-            return None
-        else:
-            return another.x - self.x
+        return another.x - self.x
 
-    def deltaY(self, another: 'Point') -> Optional[float]:
+    def deltaY(self, another: 'Point') -> float:
         """
         Delta between y components of two Point Instances.
 
@@ -233,14 +193,11 @@ class Point(object):
           5.0
         """
 
-        if not isinstance(another, Point):
-            return None
-        else:
-            return another.y - self.y
+        return another.y - self.y
 
-    def deltaZ(self, another: 'Point') -> Optional[float]:
+    def deltaZ(self, another: 'Point') -> float:
         """
-        Delta between x components of two Point Instances.
+        Delta between z components of two Point Instances.
 
         :return: difference value
         :rtype: float
@@ -250,12 +207,23 @@ class Point(object):
           -2.0
         """
 
-        if not isinstance(another, Point):
-            return None
-        else:
-            return another.z - self.z
+        return another.z - self.z
 
-    def dist3DWith(self, another: 'Point') -> Optional[float]:
+    def deltaT(self, another: 'Point') -> float:
+        """
+        Delta between t components of two Point Instances.
+
+        :return: difference value
+        :rtype: float
+
+        Examples:
+          >>> Point(1, 2, 3, 17.3).deltaT(Point(4, 7, 1, 42.9))
+          25.599999999999998
+        """
+
+        return another.t - self.t
+
+    def dist3DWith(self, another: 'Point') -> float:
         """
         Calculate Euclidean spatial distance between two points.
 
@@ -266,12 +234,9 @@ class Point(object):
           5.0
         """
 
-        if not isinstance(another, Point):
-            return None
-        else:
-            return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
+        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
-    def dist2DWith(self, another: 'Point') -> Optional[float]:
+    def dist2DWith(self, another: 'Point') -> float:
         """
         Calculate horizontal (2D) distance between two points.
 
@@ -280,31 +245,19 @@ class Point(object):
           5.0
         """
 
-        if not isinstance(another, Point):
-            return None
-        else:
-            return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
+        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
-    def scale(self, scale_factor: [int, float]) -> Optional['Point']:
+    def scale(self, scale_factor: [int, float]) -> 'Point':
         """
         Create a scaled object.
 
         Example;
           >>> Point(1, 0, 1).scale(2.5)
-          Point(2.5000, 0.0000, 2.5000)
-          >>> Point(1, 0, 1).scale(np.nan) is None
-          True
-          >>> Point(1, 0, 1).scale(np.inf) is None
-          True
+          Point(2.5000, 0.0000, 2.5000, 0.0000)
         """
 
-        if not isinstance(scale_factor, (int, float)):
-            return None
-        elif not isfinite(scale_factor):
-            return None
-        else:
-            x, y, z = arrToTuple(self.a * scale_factor)
-            return self.__class__(x, y, z)
+        x, y, z = self.x * scale_factor, self.y * scale_factor, self.z * scale_factor
+        return Point(x, y, z, self.t)
 
     def invert(self) -> 'Point':
         """
@@ -312,14 +265,14 @@ class Point(object):
 
         Examples:
           >>> Point(1, 1, 1).invert()
-          Point(-1.0000, -1.0000, -1.0000)
+          Point(-1.0000, -1.0000, -1.0000, 0.0000)
           >>> Point(2, -1, 4).invert()
-          Point(-2.0000, 1.0000, -4.0000)
+          Point(-2.0000, 1.0000, -4.0000, 0.0000)
         """
 
         return self.scale(-1)
 
-    def isCoinc(self, another: 'Point', tolerance: [int, float] = MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
+    def isCoinc(self, another: 'Point', tolerance: float = MIN_SEPARATION_THRESHOLD) -> bool:
         """
         Check spatial coincidence of two points
 
@@ -330,26 +283,9 @@ class Point(object):
           True
           >>> Point(1.2, 7.4, 1.4).isCoinc(Point(1.2, 7.4, 1.4))
           True
-          >>> Point(1.2, 7.4, 1.4).isCoinc(Point(1.2, 7.4, 1.4), tolerance=np.nan) is None
-          True
         """
 
-        if not isinstance(another, Point):
-            return None
-        elif not isinstance(tolerance, (int, float)):
-            return None
-        elif not isfinite(tolerance):
-            return None
-        else:
-            distance_2d = self.dist2DWith(another)
-            if np.isnan(distance_2d) or distance_2d > tolerance:
-                return False
-            else:
-                distance_3d = self.dist3DWith(another)
-                if np.isnan(distance_3d) or distance_3d > tolerance:
-                    return False
-                else:
-                    return True
+        return self.dist3DWith(another) <= tolerance
 
     def already_present(self, pt_list: List['Point'], tolerance: [int, float] = MIN_SEPARATION_THRESHOLD) -> bool:
         """
@@ -368,26 +304,18 @@ class Point(object):
                 return True
         return False
 
-    def shift(self, sx: float, sy: float, sz: float) -> Optional['Point']:
+    def shift(self, sx: float, sy: float, sz: float) -> 'Point':
         """
         Create a new object shifted by given amount from the self instance.
 
         Example:
           >>> Point(1, 1, 1).shift(0.5, 1., 1.5)
-          Point(1.5000, 2.0000, 2.5000)
+          Point(1.5000, 2.0000, 2.5000, 0.0000)
           >>> Point(1, 2, -1).shift(0.5, 1., 1.5)
-          Point(1.5000, 3.0000, 0.5000)
-          >>> Point(1, 2, -1).shift(0.5, np.nan, 1.5) is None
-          True
+          Point(1.5000, 3.0000, 0.5000, 0.0000)
        """
 
-        vals = [sx, sy, sz]
-        if not all(map(lambda val: isinstance(val, (int, float)), vals)):
-            return None
-        elif not all(map(isfinite, vals)):
-            return None
-        else:
-            return self.__class__(self.x + sx, self.y + sy, self.z + sz)
+        return Point(self.x + sx, self.y + sy, self.z + sz, self.t)
 
     def shiftByVect(self, v: Vect) -> 'Point':
         """
@@ -395,14 +323,14 @@ class Point(object):
 
         Example:
           >>> Point(1, 1, 1).shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 2.0000, 2.5000)
+          Point(1.5000, 2.0000, 2.5000, 0.0000)
           >>> Point(1, 2, -1).shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 3.0000, 0.5000)
+          Point(1.5000, 3.0000, 0.5000, 0.0000)
        """
 
         sx, sy, sz = v.toXYZ()
 
-        return self.__class__(self.x + sx, self.y + sy, self.z + sz)
+        return Point(self.x + sx, self.y + sy, self.z + sz, self.t)
 
     def asVect(self) -> 'Vect':
         """
@@ -556,7 +484,7 @@ class CPlane(object):
 
         Examples:
           >>> CPlane(0, 0, 1, -1).toPoint()
-          Point(0.0000, 0.0000, 1.0000)
+          Point(0.0000, 0.0000, 1.0000, 0.0000)
         """
 
         point = Point(*pointSolution(array([[self.a, self.b, self.c]]),
@@ -585,7 +513,7 @@ class CPlane(object):
           >>> a = CPlane(1, 0, 0, 0)
           >>> b = CPlane(0, 0, 1, 0)
           >>> a.intersPoint(b)
-          Point(0.0000, 0.0000, 0.0000)
+          Point(0.0000, 0.0000, 0.0000, 0.0000)
         """
 
         # find a point lying on the intersection line (this is a non-unique solution)
@@ -782,7 +710,7 @@ class Segment(object):
     @property
     def length_3d(self):
 
-        return self.start_pt.dist_3d(self.end_pt)
+        return self.start_pt.dist3DWith(self.end_pt)
 
     def vector(self):
 
@@ -828,8 +756,8 @@ class Segment(object):
     def contains_2d_pt(self, pt2d):
 
         segment_length2d = self.length_2d
-        segmentstart_pt2d_distance = self.start_pt.dist_2d(pt2d)
-        segmentend_pt2d_distance = self.end_pt.dist_2d(pt2d)
+        segmentstart_pt2d_distance = self.start_pt.dist2DWith(pt2d)
+        segmentend_pt2d_distance = self.end_pt.dist2DWith(pt2d)
 
         if segmentstart_pt2d_distance > segment_length2d or \
                 segmentend_pt2d_distance > segment_length2d:
@@ -881,24 +809,18 @@ class Segment(object):
         :return: Line
         """
 
-        assert densify_distance > 0.0
-
         length2d = self.length_2d
 
-        assert length2d > 0.0
-
         vect = self.vector()
-        vers_2d = vect.versor_2d
+        vers_2d = vect.versor2D()
         generator_vector = vers_2d.scale(densify_distance)
-
-        assert generator_vector.len_2d > 0.0
 
         interpolated_line = Line([self.start_pt])
         n = 0
         while True:
             n += 1
-            new_pt = self.start_pt.vect_offset(generator_vector.scale(n))
-            distance = self.start_pt.dist_2d(new_pt)
+            new_pt = self.start_pt.shiftByVect(generator_vector.scale(n))
+            distance = self.start_pt.dist2DWith(new_pt)
             if distance >= length2d:
                 break
             interpolated_line.add_pt(new_pt)
@@ -1033,7 +955,7 @@ class Line(object):
 
         new_line = Line(self.pts[:1])
         for ndx in range(1, self.num_pts):
-            if not self.pts[ndx].coincident(new_line.pts[-1]):
+            if not self.pts[ndx].isCoinc(new_line.pts[-1]):
                 new_line.add_pt(self.pts[ndx])
 
         return new_line
@@ -1091,7 +1013,7 @@ class Line(object):
 
         length = 0.0
         for ndx in range(self.num_pts - 1):
-            length += self.pts[ndx].dist_3d(self.pts[ndx + 1])
+            length += self.pts[ndx].dist3DWith(self.pts[ndx + 1])
         return length
 
     @property
@@ -1099,7 +1021,7 @@ class Line(object):
 
         length = 0.0
         for ndx in range(self.num_pts - 1):
-            length += self.pts[ndx].dist_2d(self.pts[ndx + 1])
+            length += self.pts[ndx].dist2DWith(self.pts[ndx + 1])
         return length
 
     def incremental_length_3d(self):
@@ -1108,7 +1030,7 @@ class Line(object):
         length = 0.0
         incremental_length_list.append(length)
         for ndx in range(self.num_pts - 1):
-            length += self.pts[ndx].dist_3d(self.pts[ndx + 1])
+            length += self.pts[ndx].dist3DWith(self.pts[ndx + 1])
             incremental_length_list.append(length)
 
         return incremental_length_list
@@ -1119,7 +1041,7 @@ class Line(object):
         length = 0.0
         lIncrementalLengths.append(length)
         for ndx in range(self.num_pts - 1):
-            length += self.pts[ndx].dist_2d(self.pts[ndx + 1])
+            length += self.pts[ndx].dist2DWith(self.pts[ndx + 1])
             lIncrementalLengths.append(length)
 
         return lIncrementalLengths
@@ -1136,7 +1058,7 @@ class Line(object):
         lSlopes = []
         for ndx in range(self.num_pts - 1):
             vector = Segment(self.pts[ndx], self.pts[ndx + 1]).vector()
-            lSlopes.append(-vector.slope)  # minus because vector convetion is positive downward
+            lSlopes.append(-vector.slope)  # minus because vector convention is positive downward
         lSlopes.append(np.nan)  # slope value for last point is unknown
 
         return lSlopes
@@ -1144,15 +1066,6 @@ class Line(object):
     def absolute_slopes(self):
 
         return map(abs, self.slopes())
-
-    def crs_project(self, srcCrs, destCrs):
-
-        points = []
-        for point in self.pts:
-            destCrs_point = project_point(point, srcCrs, destCrs)
-            points.append(destCrs_point)
-
-        return Line(points)
 
 
 class MultiLine(object):
@@ -1226,8 +1139,8 @@ class MultiLine(object):
     def is_continuous(self):
 
         for line_ndx in range(len(self._lines) - 1):
-            if not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[0]) or \
-                    not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[-1]):
+            if not self.lines[line_ndx].pts[-1].isCoinc(self.lines[line_ndx + 1].pts[0]) or \
+                    not self.lines[line_ndx].pts[-1].isCoinc(self.lines[line_ndx + 1].pts[-1]):
                 return False
 
         return True
@@ -1235,7 +1148,7 @@ class MultiLine(object):
     def is_unidirectional(self):
 
         for line_ndx in range(len(self.lines) - 1):
-            if not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[0]):
+            if not self.lines[line_ndx].pts[-1].isCoinc(self.lines[line_ndx + 1].pts[0]):
                 return False
 
         return True
@@ -1243,14 +1156,6 @@ class MultiLine(object):
     def to_line(self):
 
         return Line([point for line in self.lines for point in line.pts])
-
-    def crs_project(self, srcCrs, destCrs):
-
-        lines = []
-        for line in self.lines:
-            lines.append(line.crs_project(srcCrs, destCrs))
-
-        return MultiLine(lines)
 
     def densify_2d_multiline(self, sample_distance):
 

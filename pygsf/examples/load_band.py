@@ -1,5 +1,5 @@
 
-from pygsf.libs_utils.gdal.gdal import *
+from ..libs_utils.gdal.gdal import *
 
 
 data_path = r"../example_data/vx.asc"

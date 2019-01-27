@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from math import atan
+
 from .exceptions import *
 from .arrays import *
 
@@ -535,6 +537,42 @@ class Vect(object):
             return self.scale(-1.0)
         else:
             return self.scale(1.0)
+
+
+    @property
+    def slope(self):
+        """
+        Slope of a vector expressed as degrees.
+        Positive when vector is downward pointing or horizontal,
+        negative when upward pointing.
+
+        Example:
+          >>> Vect(1, 0, -1).slope
+          45.0
+          >>> Vect(1, 0, 1).slope
+          -45.0
+          >>> Vect(0, 1, 0).slope
+          0.0
+          >>> Vect(0, 0, 1).slope
+          -90.0
+          >>> Vect(0, 0, -1).slope
+          90.0
+        """
+
+        hlen = self.len2D
+        if hlen == 0.0:
+            if self.z > 0.:
+                return -90.
+            elif self.z < 0.:
+                return 90.
+            else:
+                raise Exception("Zero-valued vector")
+        else:
+            slope = - degrees(atan(self.z / self.len2D))
+            if abs(slope) > MIN_SCALAR_VALUE:
+                return slope
+            else:
+                return 0.
 
     def vDot(self, another: 'Vect') -> float:
         """

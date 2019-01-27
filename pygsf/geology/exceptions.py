@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
+class GPXIOException(Exception):
+
+    pass
+
+
 class RakeInputException(Exception):
 
     pass

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from typing import Optional
 
 from ...mathematics.defaults import *
-
 
 from ...utils.time import *
 
@@ -45,24 +45,33 @@ def geodetic2ecef(lat, lon, height):
     return x, y, z
 
 
-class TrackPointGPX(object):
+class PolarSTPoint(object):
 
-    def __init__(self, lat, lon, elev, time):
+    def __init__(self, lat: float, lon: float, elev: float, time: Optional[float], crs_id: str):
+        """
+        Creates a space-time point expressed with polar (latitude-longitude) coordinates.
+
+        :param lat: latitude.
+        :type lat: float.
+        :param lon: longitude.
+        :type lon: float.
+        :param elev: elevation.
+        :type elev: float.
+        :param time: time.
+        :type time: optional float.
+        :param crs_id: CRS code id.
+        :type crs_id: basestring.
         """
 
-        :param lat:
-        :param lon:
-        :param elev:
-        :param time:
-        """
-
-        self.lat = float(lat)
-        self.lon = float(lon)
-        self.elev = float(elev)
+        self.lat = lat
+        self.lon = lon
+        self.elev = elev
         self.time = time
+        self.crs_id = crs_id
 
-    def as_pt3dt(self):
+    def ecef_stpt(self):
         """
+        Converts to ECEF (Earth-centered, Earth-fixed) Cartesian reference frame.
 
         :return:
         """

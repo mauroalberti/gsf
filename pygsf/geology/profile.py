@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 
+
+from math import asin
 import copy
-import xml.dom.minidom
+#import xml.dom.minidom
 
-from ..libs_utils.qgis.qgs_tools import get_project_crs
+from .exceptions import GPXIOException
 
+from ..mathematics.statistics import get_statistics
+from ..geography.earth import projectionType
 from ..spatial.vectorial.vectorial import *
 from ..spatial.vectorial.geodetic import *
+
+#from ..libs_utils.qgis.projections import multiline_project
+#from ..libs_utils.qgis.qgs_tools import get_project_crs, line_geoms_attrs, get_zs_from_dem
 
 
 class GeoProfilesSet(object):
     """
-    Represents a set of ProfileElements instances,
+    Represents a set of Geoprofile elements,
     stored as a list
     """
 
@@ -145,9 +152,7 @@ class GeoProfile(object):
         self.sample_distance = None  # max spacing along profile; float
         self.resampled_line = None
 
-        #self.plot_params = None
-
-        self.profile_elevations = None  # instance of ProfileElevations
+        self.topoprofiles = None  # instance of TopoProfiles
         self.geoplane_attitudes = []
         self.geosurfaces = []
         self.geosurfaces_ids = []
@@ -161,7 +166,7 @@ class GeoProfile(object):
         :return:
         """
 
-        self.profile_elevations = topo_profiles
+        self.topoprofiles = topo_profiles
 
     def add_intersections_pts(self, intersection_list):
         """
@@ -189,7 +194,7 @@ class GeoProfile(object):
         :return:
         """
 
-        return self.profile_elevations.surface_names
+        return self.topoprofiles.surface_names
 
     def max_s(self):
         """
@@ -197,7 +202,7 @@ class GeoProfile(object):
         :return:
         """
 
-        return self.profile_elevations.max_s()
+        return self.topoprofiles.max_s()
 
     def min_z_topo(self):
         """
@@ -205,7 +210,7 @@ class GeoProfile(object):
         :return:
         """
 
-        return self.profile_elevations.min_z()
+        return self.topoprofiles.min_z()
 
     def max_z_topo(self):
         """
@@ -213,7 +218,7 @@ class GeoProfile(object):
         :return:
         """
 
-        return self.profile_elevations.max_z()
+        return self.topoprofiles.max_z()
 
     def min_z_plane_attitudes(self):
         """
@@ -306,76 +311,211 @@ class GeoProfile(object):
         self.geosurfaces_ids.append(lIds)
 
 
-class ProfileElevations(object):
+class TopoProfiles(object):
+    """
+    A set of topographic profiles created from a
+    single planar profile trace and a set of source elevations
+    data (for instance, a pair of dems).
+    """
 
-    def __init__(self):
+    def __init__(self,
+                 crs_authid: str,
+                 profile_source: str,
+                 source_names: List[str],
+                 xs: List[float],
+                 ys: List[float],
+                 zs: List[List[float]],
+                 times: List[float],
+                 inverted: bool):
+        """
+        Creates the topoprofile instance.
+
+        :param crs_authid: the CRS authid. E.g.: "EPSG:4326".
+        :type crs_authid: basestring.
+        :param profile_source: the source type of the elevations, i.e., DEMs or GPS.
+        :type profile_source: basestring.
+        :param source_names: list of data sources names.
+        :type source_names: list of basestrings.
+        :param xs:
+        :param ys:
+        :param zs:
+        :param times:
+        :param inverted:
         """
 
+
+        self.crs_authid = crs_authid
+        self.profile_source = profile_source
+        self.source_names = source_names
+        self.xs = xs
+        self.ys = ys
+        self.zs = zs
+        self.times = times
+        self.inverted = inverted
+
+        ###
+
+        if projectionType(self.crs_authid) == "polar":
+            self.profile_s, self.profiles_s3ds, self.profiles_dirslopes = self.params_polar()
+        else:
+            self.profile_s = np.asarray(source_trace.incremental_length_2d())
+
+            self.profiles_dirslopes = [np.asarray(line.slopes()) for line in topo_lines]
+
+            self.profiles_s3ds = [np.asarray(line.incremental_length_3d()) for line in topo_lines]
+
+            """
+            self.dem_params = [DEMParams(dem, params) for (dem, params) in
+                               zip(source_dems, dem_parameters)]
+            self.gpx_params = None                  
+            """
+
+    @property
+    def num_pnts(self) -> int:
+        """
+        Returns the number of points in the profile.
         """
 
-        self.line_source = None
-        self.dem_params = []
-        self.gpx_params = None
+        return len(self.xs)
 
-        self.planar_xs = None
-        self.planar_ys = None
-        self.lons = None
-        self.lats = None
-        self.times = None
-        self.profile_s = None
-
-        self.surface_names = []
-
-        self.profile_s3ds = []
-        self.profile_zs = []
-        self.profile_dirslopes = []
-
-        self.inverted = None
-
-        self.statistics_calculated = False
-        self.profile_created = False
-
-    def max_s(self):
+    def params_polar(self):
+        """
+        Calculates parameters for polar projections source datasets.
         """
 
-        :return:
+        xs = self.xs.tolist()
+        ys = self.ys.tolist()
+
+        for profile_ndx in range(len(self.zs)):
+
+            zs = self.zs[profile_ndx].tolist()
+            times = self.times.tolist()
+
+            # convert original values into ECEF values (x, y, z, time in ECEF global coordinate system)
+
+            ecef_pt = [PolarSTPoint(lat, lon, elev, time).ecef_stpt() for lat, lon, elev, time in zip(xs, ys, zs, times)]
+
+            # calculate 3D distances between consecutive points
+
+            dist_3D_values = [np.nan]
+            for ndx in range(1, self.num_pnts):
+                dist_3D_values.append(ecef_pt[ndx].dist3DWith(ecef_pt[ndx - 1]))
+
+            # calculate delta elevations between consecutive points
+
+            delta_elev_values = [np.nan]
+            for ndx in range(1, self.num_pnts):
+                delta_elev_values.append(zs[ndx] - zs[ndx - 1])
+
+            # calculate slope along track
+
+            dir_slopes = []
+            for delta_elev, dist_3D in zip(delta_elev_values, dist_3D_values):
+                try:
+                    slope = degrees(asin(delta_elev / dist_3D))
+                except:
+                    slope = 0.0
+                dir_slopes.append(slope)
+
+            # calculate horizontal distance along track
+
+            horiz_dist_values = []
+            for slope, dist_3D in zip(dir_slopes, dist_3D_values):
+                try:
+                    horiz_dist_values.append(dist_3D * cos(radians(slope)))
+                except:
+                    horiz_dist_values.append(np.nan)
+
+            """
+            # defines the cumulative 2D distance values
+            
+            cum_distances_2D = [0.0]
+            for ndx in range(1, len(horiz_dist_values)):
+                cum_distances_2D.append(cum_distances_2D[-1] + horiz_dist_values[ndx])
+    
+            # defines the cumulative 3D distance values
+            
+            cum_distances_3D = [0.0]
+            for ndx in range(1, len(dist_3D_values)):
+                cum_distances_3D.append(cum_distances_3D[-1] + dist_3D_values[ndx])
+            """
+
+        return horiz_dist_values, dist_3D_values, dir_slopes
+
+
+    def max_s(self) -> float:
+        """
+        Return the horizontal length of the topographic profile trace.
+
+        :return: the length of the profile.
+        :rtype: float
         """
 
         return self.profile_s[-1]
 
-    def min_z(self):
+    def min_z(self) -> float:
         """
+        Returns the minimum elevation value in the
+        set of stored topographic profiles.
 
         :return:
         """
 
-        return min(map(np.nanmin, self.profile_zs))
+        return float(min([np.nanmin(prof_elev) for prof_elev in self.profiles_elevs]))
 
-    def max_z(self):
+    def max_z(self) -> float:
+        """
+        Return the maximum elevation in the set of stored topographic profiles.
 
-        return max(map(np.nanmax, self.profile_zs))
+        :return: the maximum elevation in the profiles.
+        :rtype: float.
+        """
+
+        return float(max([np.nanmax(prof_elev) for prof_elev in self.profiles_elevs]))
 
     @property
-    def absolute_slopes(self):
+    def absolute_slopes(self) -> List[np.ndarray]:
+        """
+        Returns a list of the absolute slopes of the stored topographic profiles.
+
+        :return: a list of the absolute slopes of the stored topographic profiles.
+        :rtype: list of nd.arrays.
         """
 
-        :return:
+        return [np.fabs(prof_dirslopes) for prof_dirslopes in self.profiles_dirslopes]
+
+    @property
+    def statistics_elev(self) -> List(Dict):
+        """
+        Return statistics (min, max, mean, var, std) for elevations in stored topographic profiles.
+
+        :return: statistics values.
+        :rtype: List of dictionaries, one for each topographic profile.
         """
 
-        return map(np.fabs, self.profile_dirslopes)
+        return [get_statistics(prof_elev) for prof_elev in self.profiles_elevs]
 
+    @property
+    def statistics_dirslopes(self) -> List(Dict):
+        """
+        Return statistics (min, max, mean, var, std) for directional slopes of stored topographic profiles.
 
-class DEMParams(object):
-
-    def __init__(self, layer, params):
+        :return: statistics values.
+        :rtype: List of dictionaries, one for each topographic profile.
         """
 
-        :param layer:
-        :param params:
+        return [get_statistics(prof_dirslopes) for prof_dirslopes in self.profiles_dirslopes]
+
+    @property
+    def statistics_slopes(self) -> List(Dict):
+        """
+        Return statistics (min, max, mean, var, std) for absolute slopes of stored topographic profiles.
+
+        :return: statistics values.
+        :rtype: List of dictionaries, one for each topographic profile.
         """
 
-        self.layer = layer
-        self.params = params
+        return [get_statistics(prof_abs_slopes) for prof_abs_slopes in self.absolute_slopes]
 
 
 class PlaneAttitude(object):
@@ -401,86 +541,7 @@ class PlaneAttitude(object):
         self.sign_hor_dist = sign_hor_dist
 
 
-def topoline_from_dem(resampled_trace2d, bOnTheFlyProjection, project_crs, dem, dem_params):
-    """
-
-    :param resampled_trace2d:
-    :param bOnTheFlyProjection:
-    :param project_crs:
-    :param dem:
-    :param dem_params:
-    :return:
-    """
-
-    if bOnTheFlyProjection and dem.crs() != project_crs:
-        trace2d_in_dem_crs = resampled_trace2d.crs_project(project_crs, dem.crs())
-    else:
-        trace2d_in_dem_crs = resampled_trace2d
-
-    ln3dtProfile = Line()
-    for trace_pt2d_dem_crs, trace_pt2d_project_crs in zip(trace2d_in_dem_crs.pts, resampled_trace2d.pts):
-        fInterpolatedZVal = interpolate_z(dem, dem_params, trace_pt2d_dem_crs)
-        pt3dtPoint = Point(trace_pt2d_project_crs.x,
-                           trace_pt2d_project_crs.y,
-                           fInterpolatedZVal)
-        ln3dtProfile.add_pt(pt3dtPoint)
-
-    return ln3dtProfile
-
-
-def topoprofiles_from_dems(canvas, source_profile_line, sample_distance, selected_dems, selected_dem_parameters,
-                           invert_profile):
-    """
-
-    :param canvas:
-    :param source_profile_line:
-    :param sample_distance:
-    :param selected_dems:
-    :param selected_dem_parameters:
-    :param invert_profile:
-    :return:
-    """
-
-    # get project CRS information
-
-    project_crs = get_project_crs(self.canvas)
-
-    if invert_profile:
-        line = source_profile_line.reverse_direction()
-    else:
-        line = source_profile_line
-
-    resampled_line = line.densify_2d_line(sample_distance)  # line resampled by sample distance
-
-    # calculate 3D profiles from DEMs
-
-    dem_topolines3d = []
-    for dem, dem_params in zip(selected_dems, selected_dem_parameters):
-        dem_topoline3d = topoline_from_dem(resampled_line,
-                                           on_the_fly_projection,
-                                           project_crs,
-                                           dem,
-                                           dem_params)
-        dem_topolines3d.append(dem_topoline3d)
-
-    # setup topoprofiles properties
-
-    topo_profiles = ProfileElevations()
-
-    topo_profiles.planar_xs = np.asarray(resampled_line.x_list)
-    topo_profiles.planar_ys = np.asarray(resampled_line.y_list)
-    topo_profiles.surface_names = map(lambda dem: dem.name(), selected_dems)
-    topo_profiles.profile_s = np.asarray(resampled_line.incremental_length_2d())
-    topo_profiles.profile_s3ds = map(lambda cl3dt: np.asarray(cl3dt.incremental_length_3d()), dem_topolines3d)
-    topo_profiles.profile_zs = map(lambda cl3dt: cl3dt.z_array(), dem_topolines3d)
-    topo_profiles.profile_dirslopes = map(lambda cl3dt: np.asarray(cl3dt.slopes()), dem_topolines3d)
-    topo_profiles.dem_params = [DEMParams(dem, params) for (dem, params) in
-                                zip(selected_dems, selected_dem_parameters)]
-
-    return topo_profiles
-
-
-def topoprofiles_from_gpxfile(source_gpx_path, invert_profile, gpx_source):
+def topoprofiles_from_gpxsource(source_gpx_path, invert_profile, gpx_source):
     """
 
     :param source_gpx_path:
@@ -513,104 +574,38 @@ def topoprofiles_from_gpxfile(source_gpx_path, invert_profile, gpx_source):
     else:
         track_data = track_raw_data
 
-    # create list of TrackPointGPX elements
+    # create list of PolarSTPoint elements
     track_points = []
     for val in track_data:
-        gpx_trackpoint = TrackPointGPX(*val)
+        gpx_trackpoint = PolarSTPoint(*val)
         track_points.append(gpx_trackpoint)
 
     # check for the presence of track points
     if len(track_points) == 0:
         raise GPXIOException("No track point found in this file")
 
-    # calculate delta elevations between consecutive points
-    delta_elev_values = [np.nan]
-    for ndx in range(1, len(track_points)):
-        delta_elev_values.append(track_points[ndx].elev - track_points[ndx - 1].elev)
+    lats =       np.asarray([track.lat  for track in track_points])
+    lons =       np.asarray([track.lon  for track in track_points])
+    times =      np.asarray([track.time for track in track_points])
+    elevations = np.asarray([track.elev for track in track_points])
 
-    # convert original values into ECEF values (x, y, z in ECEF global coordinate system)
-    trk_ECEFpoints = map(lambda trck: trck.as_pt3dt(), track_points)
-
-    # calculate 3D distances between consecutive points
-    dist_3D_values = [np.nan]
-    for ndx in range(1, len(trk_ECEFpoints)):
-        dist_3D_values.append(trk_ECEFpoints[ndx].dist_3d(trk_ECEFpoints[ndx - 1]))
-
-    # calculate slope along track
-    dir_slopes = []
-    for delta_elev, dist_3D in zip(delta_elev_values, dist_3D_values):
-        try:
-            slope = degrees(asin(delta_elev / dist_3D))
-        except:
-            slope = 0.0
-        dir_slopes.append(slope)
-
-    # calculate horizontal distance along track
-    horiz_dist_values = []
-    for slope, dist_3D in zip(dir_slopes, dist_3D_values):
-        try:
-            horiz_dist_values.append(dist_3D * cos(radians(slope)))
-        except:
-            horiz_dist_values.append(np.nan)
-
-    # defines the cumulative 2D distance values
-    cum_distances_2D = [0.0]
-    for ndx in range(1, len(horiz_dist_values)):
-        cum_distances_2D.append(cum_distances_2D[-1] + horiz_dist_values[ndx])
-
-    # defines the cumulative 3D distance values
-    cum_distances_3D = [0.0]
-    for ndx in range(1, len(dist_3D_values)):
-        cum_distances_3D.append(cum_distances_3D[-1] + dist_3D_values[ndx])
-
-    lat_values = [track.lat for track in track_points]
-    lon_values = [track.lon for track in track_points]
-    time_values = [track.time for track in track_points]
-    elevations = [track.elev for track in track_points]
-
-    topo_profiles = ProfileElevations()
-
-    topo_profiles.line_source = gpx_source
-    topo_profiles.inverted = invert_profile
-
-    topo_profiles.lons = np.asarray(lon_values)
-    topo_profiles.lats = np.asarray(lat_values)
-    topo_profiles.times = time_values
-    topo_profiles.surface_names = [trkname]  # [] required for compatibility with DEM case
-    topo_profiles.profile_s = np.asarray(cum_distances_2D)
-    topo_profiles.profile_s3ds = [np.asarray(cum_distances_3D)]  # [] required for compatibility with DEM case
-    topo_profiles.profile_zs = [np.asarray(elevations)]  # [] required for compatibility with DEM case
-    topo_profiles.profile_dirslopes = [np.asarray(dir_slopes)]  # [] required for compatibility with DEM case
-
-    return topo_profiles
+    return TopoProfiles(
+        crs_authid=4236,
+        profile_source=gpx_source,
+        xs=lons,
+        ys=lats,
+        times=times,
+        source_names=[trkname],
+        topo_lines=None,
+        zs=[elevations],
+        inverted=invert_profile)
 
 
-def intersect_with_dem(demLayer, demParams, on_the_fly_projection, project_crs, lIntersPts):
-    """
-    
-    :param demLayer: 
-    :param demParams: 
-    :param on_the_fly_projection: 
-    :param project_crs: 
-    :param lIntersPts: 
-    :return: a list of Point instances
-    """
+    profile_s=np.asarray(cum_distances_2D),
+    profiles_s3ds=[np.asarray(cum_distances_3D)]
 
-    # project to Dem CRS
-    if on_the_fly_projection and demParams.crs != project_crs:
-        lQgsPoints = [QgsPoint(pt.x, pt.y) for pt in lIntersPts]
-        lDemCrsIntersQgsPoints = [project_qgs_point(qgsPt, project_crs, demParams.crs) for qgsPt in
-                                               lQgsPoints]
-        lDemCrsIntersPts = [Point(qgispt.x(), qgispt.y()) for qgispt in lDemCrsIntersQgsPoints]
-    else:
-        lDemCrsIntersPts = lIntersPts
+    profiles_dirslopes=[np.asarray(dir_slopes)]
 
-    # interpolate z values from Dem
-    lZVals = [interpolate_z(demLayer, demParams, pt) for pt in lDemCrsIntersPts]
-
-    lXYZVals = [(pt2d.x, pt2d.y, z) for pt2d, z in zip(lIntersPts, lZVals)]
-
-    return [Point(x, y, z) for x, y, z in lXYZVals]
 
 
 def calculate_profile_lines_intersection(multilines2d_list, id_list, profile_line2d):
@@ -655,8 +650,7 @@ def intersection_distances_by_profile_start_list(profile_line, intersections):
     :return:
     """
 
-    # convert the profile line
-    # from a CartesianLine2DT to a CartesianSegment2DT
+    # convert the profile line from a CartesianLine2DT to a CartesianSegment2DT
     profile_segment2d_list = profile_line.as_segments()
     # debug
     assert len(profile_segment2d_list) == 1
@@ -666,26 +660,9 @@ def intersection_distances_by_profile_start_list(profile_line, intersections):
     # creating a list of float values
     distance_from_profile_start_list = []
     for intersection in intersections:
-        distance_from_profile_start_list.append(profile_segment2d.start_pt.dist_2d(intersection[0]))
+        distance_from_profile_start_list.append(profile_segment2d.start_pt.dist2DWith(intersection[0]))
 
     return distance_from_profile_start_list
-
-
-def calculate_pts_in_projection(pts_in_orig_crs, srcCrs, destCrs):
-    """
-
-    :param pts_in_orig_crs:
-    :param srcCrs:
-    :param destCrs:
-    :return:
-    """
-
-    pts_in_prj_crs = []
-    for pt in pts_in_orig_crs:
-        qgs_pt = QgsPoint(pt.x, pt.y)
-        qgs_pt_prj_crs = project_qgs_point(qgs_pt, srcCrs, destCrs)
-        pts_in_prj_crs.append(Point(qgs_pt_prj_crs.x(), qgs_pt_prj_crs.y()))
-    return pts_in_prj_crs
 
 
 def profile_polygon_intersection(profile_qgsgeometry, polygon_layer, inters_polygon_classifaction_field_ndx):
@@ -739,11 +716,10 @@ def profile_polygon_intersection(profile_qgsgeometry, polygon_layer, inters_poly
     return True, intersection_polyline_polygon_crs_list
 
 
-def extract_multiline2d_list(structural_line_layer, on_the_fly_projection, project_crs):
+def extract_multiline2d_list(structural_line_layer, project_crs):
     """
 
     :param structural_line_layer:
-    :param on_the_fly_projection:
     :param project_crs:
     :return:
     """
@@ -759,11 +735,8 @@ def extract_multiline2d_list(structural_line_layer, on_the_fly_projection, proje
     structural_line_layer_crs = structural_line_layer.crs()
 
     # project input line layer to project CRS
-    if on_the_fly_projection:
-        line_proj_crs_MultiLine2D_list = [multiline2d.crs_project(structural_line_layer_crs, project_crs) for
+    line_proj_crs_MultiLine2D_list = [multiline_project(multiline2d, structural_line_layer_crs, project_crs) for
                                           multiline2d in line_orig_crs_clean_MultiLine2D_list]
-    else:
-        line_proj_crs_MultiLine2D_list = line_orig_crs_clean_MultiLine2D_list
 
     return line_proj_crs_MultiLine2D_list
 

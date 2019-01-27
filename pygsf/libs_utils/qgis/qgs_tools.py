@@ -3,17 +3,146 @@ from builtins import str
 
 from typing import Optional, Tuple, List
 
+from math import floor, ceil
+
 import numpy as np
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import *
 
 from qgis.core import *
 from qgis.gui import *
+#from qgis.core import QgsPointXY
 
+from osgeo import ogr, osr
+
+from .projections import line_project, multiline_project
 from ...spatial.vectorial.vectorial import Point, Line
 from ...spatial.vectorial.exceptions import VectorIOException
+
+
+def topoline_from_dem(resampled_trace2d, project_crs, dem, dem_params) -> Line:
+    """
+
+    :param resampled_trace2d:
+    :param project_crs:
+    :param dem:
+    :param dem_params:
+    :return: the Line instance.
+    """
+
+    if dem.crs() != project_crs:
+        trace2d_in_dem_crs = line_project(resampled_trace2d, project_crs, dem.crs())
+    else:
+        trace2d_in_dem_crs = resampled_trace2d
+
+    lnProfile = Line()
+
+    for trace_pt2d_dem_crs, trace_pt2d_project_crs in zip(trace2d_in_dem_crs.pts, resampled_trace2d.pts):
+
+        fInterpolatedZVal = interpolate_z(dem, dem_params, trace_pt2d_dem_crs)
+        print(trace_pt2d_project_crs.x, trace_pt2d_project_crs.y, fInterpolatedZVal)
+        pt3dtPoint = Point(
+            x=trace_pt2d_project_crs.x,
+            y=trace_pt2d_project_crs.y,
+            z=fInterpolatedZVal)
+        lnProfile.add_pt(pt3dtPoint)
+
+    return lnProfile
+
+
+
+def calculate_pts_in_projection(pts_in_orig_crs, srcCrs, destCrs):
+    """
+
+    :param pts_in_orig_crs:
+    :param srcCrs:
+    :param destCrs:
+    :return:
+    """
+
+    pts_in_prj_crs = []
+    for pt in pts_in_orig_crs:
+        qgs_pt = QgsPointXY(pt.x, pt.y)
+        qgs_pt_prj_crs = qgs_project_point(qgs_pt, srcCrs, destCrs)
+        pts_in_prj_crs.append(Point(qgs_pt_prj_crs.x(), qgs_pt_prj_crs.y()))
+    return pts_in_prj_crs
+
+
+def intersect_with_dem(demLayer, demParams, project_crs, lIntersPts):
+    """
+
+    :param demLayer:
+    :param demParams:
+    :param project_crs:
+    :param lIntersPts:
+    :return: a list of Point instances
+    """
+
+    # project to Dem CRS
+    if demParams.crs != project_crs:
+        lQgsPoints = [QgsPointXY(pt.x, pt.y) for pt in lIntersPts]
+        lDemCrsIntersQgsPoints = [qgs_project_point(qgsPt, project_crs, demParams.crs) for qgsPt in
+                                  lQgsPoints]
+        lDemCrsIntersPts = [Point(qgispt.x(), qgispt.y()) for qgispt in lDemCrsIntersQgsPoints]
+    else:
+        lDemCrsIntersPts = lIntersPts
+
+    # interpolate z values from Dem
+    lZVals = [interpolate_z(demLayer, demParams, pt) for pt in lDemCrsIntersPts]
+
+    lXYZVals = [(pt2d.x, pt2d.y, z) for pt2d, z in zip(lIntersPts, lZVals)]
+
+    return [Point(x, y, z) for x, y, z in lXYZVals]
+
+
+class DEMParams(object):
+
+    def __init__(self, layer, params):
+        """
+
+        :param layer:
+        :param params:
+        """
+
+        self.layer = layer
+        self.params = params
+
+
+def qcolor2rgbmpl(qcolor):
+
+    red = qcolor.red() / 255.0
+    green = qcolor.green() / 255.0
+    blue = qcolor.blue() / 255.0
+    return red, green, blue
+
+
+def xy_from_canvas(canvas, position):
+
+    mapPos = canvas.getCoordinateTransform().toMapCoordinates(position["x"], position["y"])
+
+    return mapPos.x(), mapPos.y()
+
+
+def get_prjcrs_as_proj4str(canvas):
+
+    project_crs = get_project_crs(canvas)
+    proj4_str = str(project_crs.toProj4())
+    project_crs_osr = osr.SpatialReference()
+    project_crs_osr.ImportFromProj4(proj4_str)
+
+    return project_crs_osr
+
+
+def get_zs_from_dem(struct_pts_2d, demObj):
+    # TODO: check if required
+
+    z_list = []
+    for point_2d in struct_pts_2d:
+        interp_z = interpolate_z(demObj.layer, demObj.params, point_2d)
+        z_list.append(interp_z)
+
+    return z_list
 
 
 def get_project_crs(canvas):
@@ -263,10 +392,10 @@ def line_geoms_with_id(line_layer, curr_field_ndx):
              
         geom = feature.geometry()         
         if geom.isMultipart():
-            lines.append('multiline', multipolyline_to_xytuple_list2(geom.asMultiPolyline())) # typedef QVector<QgsPolyline>
+            lines.append(('multiline', multipolyline_to_xytuple_list2(geom.asMultiPolyline()))) # typedef QVector<QgsPolyline>
             # now is a list of list of (x,y) tuples
         else:           
-            lines.append(('line', polyline_to_xytuple_list(geom.asPolyline()))) # typedef QVector<QgsPoint>
+            lines.append(('line', polyline_to_xytuple_list(geom.asPolyline())))  # typedef QVector<QgsPointXY>
                          
     return lines, progress_ids
               
@@ -330,8 +459,8 @@ def raster_qgis_params(raster_layer):
     cellsizeNS = (yMax-yMin) / float(rows)
     
     #TODO: get real no data value from QGIS
-    if raster_layer.dataProvider().srcHasNoDataValue(1):
-        nodatavalue = raster_layer.dataProvider().srcNoDataValue (1)
+    if raster_layer.dataProvider().sourceHasNoDataValue(1):
+        nodatavalue = raster_layer.dataProvider().sourceNoDataValue(1)
     else:
         nodatavalue = np.nan
     
@@ -459,6 +588,154 @@ def project_line_2d(srcLine, srcCrs, destCrs):
     return destLine
 
 
+class QGisRasterParameters(object):
+
+    def __init__(self, name, cellsizeEW, cellsizeNS, rows, cols, xMin, xMax, yMin, yMax, nodatavalue, crs):
+
+        self.name = name
+        self.cellsizeEW = cellsizeEW
+        self.cellsizeNS = cellsizeNS
+        self.rows = rows
+        self.cols = cols
+        self.xMin = xMin
+        self.xMax = xMax
+        self.yMin = yMin
+        self.yMax = yMax
+        self.nodatavalue = nodatavalue
+        self.crs = crs
+
+    def point_in_dem_area(self, point):
+        """
+        Check that a point is within or on the boundary of the grid area.
+        Assume grid has no rotation.
+
+        :param point: qProf.gsf.geometry.Point
+        :return: bool
+        """
+
+        if self.xMin <= point.x <= self.xMax and \
+                self.yMin <= point.y <= self.yMax:
+            return True
+        else:
+            return False
+
+    def point_in_interpolation_area(self, point):
+        """
+        Check that a point is within or on the boundary of the area defined by
+        the extreme cell center values.
+        Assume grid has no rotation.
+
+        :param point: qProf.gsf.geometry.Point
+        :return: bool
+        """
+
+        if self.xMin + self.cellsizeEW / 2.0 <= point.x <= self.xMax - self.cellsizeEW / 2.0 and \
+                self.yMin + self.cellsizeNS / 2.0 <= point.y <= self.yMax - self.cellsizeNS / 2.0:
+            return True
+        else:
+            return False
+
+    def geogr2raster(self, point):
+        """
+        Convert from geographic to raster-based coordinates.
+        Assume grid has no rotation.
+
+        :param point: qProf.gsf.geometry.Point
+        :return: dict
+        """
+
+        x = (point.x - (self.xMin + self.cellsizeEW / 2.0)) / self.cellsizeEW
+        y = (point.y - (self.yMin + self.cellsizeNS / 2.0)) / self.cellsizeNS
+
+        return dict(x=x, y=y)
+
+    def raster2geogr(self, array_dict):
+        """
+        Convert from raster-based to geographic coordinates.
+        Assume grid has no rotation.
+
+        :param array_dict: dict
+        :return: qProf.gsf.geometry.Point instance
+        """
+
+        assert 'x' in array_dict
+        assert 'y' in array_dict
+
+        x = self.xMin + (array_dict['x'] + 0.5) * self.cellsizeEW
+        y = self.yMin + (array_dict['y'] + 0.5) * self.cellsizeNS
+
+        return Point(x, y)
+
+
+def get_z(dem_layer, point):
+
+    identification = dem_layer.dataProvider().identify(QgsPointXY(point.x, point.y), QgsRaster.IdentifyFormatValue)
+    if not identification.isValid():
+        return np.nan
+    else:
+        try:
+            result_map = identification.results()
+            return float(result_map[1])
+        except:
+            return np.nan
+
+
+def interpolate_bilinear(dem, qrpDemParams, point):
+    """
+    :param dem: qgis._core.QgsRasterLayer
+    :param qrpDemParams: qProf.gis_utils.qgs_tools.QGisRasterParameters
+    :param point: qProf.gis_utils.features.Point
+    :return: float
+    """
+
+    dArrayCoords = qrpDemParams.geogr2raster(point)
+
+    floor_x_raster = floor(dArrayCoords["x"])
+    ceil_x_raster = ceil(dArrayCoords["x"])
+    floor_y_raster = floor(dArrayCoords["y"])
+    ceil_y_raster = ceil(dArrayCoords["y"])
+
+    # bottom-left center
+    p1 = qrpDemParams.raster2geogr(dict(x=floor_x_raster,
+                                        y=floor_y_raster))
+    # bottom-right center
+    p2 = qrpDemParams.raster2geogr(dict(x=ceil_x_raster,
+                                        y=floor_y_raster))
+    # top-left center
+    p3 = qrpDemParams.raster2geogr(dict(x=floor_x_raster,
+                                        y=ceil_y_raster))
+    # top-right center
+    p4 = qrpDemParams.raster2geogr(dict(x=ceil_x_raster,
+                                        y=ceil_y_raster))
+
+    z1 = get_z(dem, p1)
+    z2 = get_z(dem, p2)
+    z3 = get_z(dem, p3)
+    z4 = get_z(dem, p4)
+
+    delta_x = point.x - p1.x
+    delta_y = point.y - p1.y
+
+    z_x_a = z1 + (z2 - z1) * delta_x / qrpDemParams.cellsizeEW
+    z_x_b = z3 + (z4 - z3) * delta_x / qrpDemParams.cellsizeEW
+
+    return z_x_a + (z_x_b - z_x_a) * delta_y / qrpDemParams.cellsizeNS
+
+
+def interpolate_z(dem, dem_params, point):
+    """
+        dem_params: type qProf.gis_utils.qgs_tools.QGisRasterParameters
+        point: type qProf.gis_utils.features.Point
+    """
+
+    if dem_params.point_in_interpolation_area(point):
+        return interpolate_bilinear(dem, dem_params, point)
+    elif dem_params.point_in_dem_area(point):
+        return get_z(dem, point)
+    else:
+        return np.nan
+
+
 """
 Modified from: profiletool, script: tools/ptmaptool.py
 
@@ -502,4 +779,52 @@ class PointMapToolEmitPoint(QgsMapToolEmitPoint):
         
         self.cursor = QCursor(cursor)
         
+
+
+
+class MapDigitizeTool(QgsMapTool):
+
+    moved = pyqtSignal(dict)
+    leftClicked = pyqtSignal(dict)
+    rightClicked = pyqtSignal(dict)
+
+    def __init__(self, canvas):
+
+        QgsMapTool.__init__(self, canvas)
+        self.canvas = canvas
+        self.cursor = QCursor(Qt.CrossCursor)
+
+    def canvasMoveEvent(self, event):
+
+        self.moved.emit({'x': event.pos().x(), 'y': event.pos().y()})
+
+    def canvasReleaseEvent(self, event):
+
+        if event.button() == Qt.RightButton:
+            self.rightClicked.emit({'x': event.pos().x(), 'y': event.pos().y()})
+        elif event.button() == Qt.LeftButton:
+            self.leftClicked.emit({'x': event.pos().x(), 'y': event.pos().y()})
+        else:
+            return
+
+    def canvasDoubleClickEvent(self, event):
+
+        self.doubleClicked.emit({'x': event.pos().x(), 'y': event.pos().y()})
+
+    def activate(self):
+
+        QgsMapTool.activate(self)
+        self.canvas.setCursor(self.cursor)
+
+    def deactivate(self):
+
+        QgsMapTool.deactivate(self)
+
+    def isZoomTool(self):
+
+        return False
+
+    def setCursor(self, cursor):
+
+        self.cursor = QCursor(cursor)
 

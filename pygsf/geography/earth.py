@@ -4,6 +4,24 @@
 latitude_one_degree_45degr_meters = 111131.745  #  source: http://www.csgnetwork.com/degreelenllavcalc.html, consulted on 2018-12-23
 
 
+def projectionType(id_code):
+    """
+    NOTE: currently it is a stub code.
+    TODO: make more general.
+
+    Determines if the provided projection type is polar, planar or unknown.
+
+    :param id_code: string.
+    :return: True if polar, False if planar
+    :rtype: bool.
+    """
+
+    if id_code == "EPSG:4326":
+        return "polar"
+
+    return "unknown"
+
+
 def latLengthOneMinutePrime() -> float:
     """
     Approximate length (in meters) of one minute prime at latitude 45°.
