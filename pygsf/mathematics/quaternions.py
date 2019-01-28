@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
+from pygsf.defaults.maths import QUAT_NORMALIZ_TOL, QUAT_DIVISION_TOL
+
 from .vectors import *
 
 from .exceptions import *
+
+array = np.array
 
 
 class Quaternion(object):
@@ -548,7 +552,7 @@ class Quaternion(object):
           False
         """
 
-        return abs(1.0 - sqrt(self.sqrdNorm())) < quat_normaliz_tolerance
+        return abs(1.0 - sqrt(self.sqrdNorm())) < QUAT_NORMALIZ_TOL
 
     def divByScalar(self, denominator: Number) -> 'Quaternion':
         """
@@ -570,7 +574,7 @@ class Quaternion(object):
 
         if not isinstance(denominator, (int, float)):
             raise QuaternionCalculationException("Quaternion divisor must be integer or float")
-        elif abs(denominator) < quat_division_tolerance:
+        elif abs(denominator) < QUAT_DIVISION_TOL:
             raise QuaternionCalculationException("Quaternion division by almost zero value")
         else:
             return Quaternion.fromArray(self.q / denominator)

@@ -6,11 +6,10 @@ from math import *
 import numpy as np
 
 from ..spatial.vectorial.vectorial import Point, Segment, ParamLine3D
-from ..spatial.vectorial.exceptions import *
 
 from ..orientations.orientations import Axis
 
-from .profile import PlaneAttitude
+from .profiles import PlaneAttitude
 
 
 def calculate_distance_with_sign(projected_point, section_init_pt, section_vector):
@@ -28,7 +27,7 @@ def calculate_distance_with_sign(projected_point, section_init_pt, section_vecto
     projected_vector = Segment(section_init_pt, projected_point).vector()
     cos_alpha = section_vector.cos_angle(projected_vector)
 
-    return projected_vector.len_3d * cos_alpha
+    return projected_vector.len3D * cos_alpha
 
 
 def get_intersection_slope(intersection_versor_3d, section_vector):
@@ -75,7 +74,7 @@ def calculate_nearest_intersection(intersection_versor_3d, section_cartes_plane,
 
     dummy_inters_point = section_cartes_plane.inters_point(structural_cartes_plane)
     dummy_structural_vector = Segment(dummy_inters_point, structural_pt).vector()
-    dummy_distance = dummy_structural_vector.sp(intersection_versor_3d)
+    dummy_distance = dummy_structural_vector.vDot(intersection_versor_3d)
     offset_vector = intersection_versor_3d.scale(dummy_distance)
 
     return Point(dummy_inters_point.x + offset_vector.x,

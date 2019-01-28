@@ -1,0 +1,22 @@
+# -*- coding: utf-8 -*-
+
+"""
+Geometric parameters
+"""
+
+
+MIN_VECTOR_MAGNITUDE = 1e-9
+MIN_SCALAR_VALUE = 1e-12
+MIN_POINT_POS_DIFF = MIN_SCALAR_VALUE
+MIN_VECTOR_MAGN_DIFF = MIN_SCALAR_VALUE
+
+
+"""
+Quaternion parameters
+"""
+
+QUAT_NORMALIZ_TOL = 1.0e-6
+QUAT_DIVISION_TOL = 1.0e-10
+QUAT_MAGN_THRESH = 1.0e-6
+
+

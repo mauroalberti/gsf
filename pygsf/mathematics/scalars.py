@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from math import isnan, isinf
 
 from ..defaults.typing import *
-
-from .defaults import *
 
 
 def areClose(a: float, b: float,

@@ -1,3 +1,6 @@
+"""
+Constants for profiles processing.
+"""
 
-demline_source = "demline"
-gpxfile_source = "gpxfile"
+DEM_LINE_SOURCE = "demline"
+GPX_FILE_SOURCE = "gpxfile"

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
+from math import radians, cos, sin
+
+from ..defaults.maths import QUAT_MAGN_THRESH
 from ..mathematics.quaternions import *
 from .orientations import *
 
@@ -44,7 +47,7 @@ class RotationAxis(object):
           RotationAxis(90.0000, -0.0000, 90.0000)
         """
 
-        if abs(quat) < quat_magn_thresh:
+        if abs(quat) < QUAT_MAGN_THRESH:
 
             rot_ang = 0.0
             rot_direct = Direct.fromAzPl(0.0, 0.0)

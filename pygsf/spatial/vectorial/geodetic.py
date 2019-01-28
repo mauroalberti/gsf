@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from ...mathematics.defaults import *
+from math import sqrt, sin, cos, radians
 
 from ...utils.time import *
 

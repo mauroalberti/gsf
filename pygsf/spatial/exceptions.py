@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 
 
+class CRSCodeException(Exception):
+    """
+    Class for exceptions related to CRS codes.
+    """
+
+    pass
+
+
 class RasterIOExceptions(Exception):
     """
     Class for rasters IO exception
@@ -37,3 +45,10 @@ class VectorIOException(Exception):
 
     pass
 
+
+class GeoArrayIOException(Exception):
+    """
+    Class for geoarray IO exception
+    """
+
+    pass

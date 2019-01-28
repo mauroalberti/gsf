@@ -1,8 +1,8 @@
 # coding: utf-8
 
-# ### Magnitude gradient along flowlines
+# Testing magnitude gradient along flowlines
 
-import math
+from math import sqrt, degrees, atan
 
 from pygsf.spatial.rasters.fields import *
 
@@ -44,7 +44,7 @@ class TestMagnGradFlwlns(unittest.TestCase):
 
         assert np.allclose(
             oriens_d,
-            degrees(math.atan(0.5)))
+            degrees(atan(0.5)))
 
         mgflwln = magn_grad_along_flowlines(fx, fy, 10, 10)
 

@@ -1,7 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from ...orientations.defaults import *
+from math import sqrt
+import numpy as np
+from numpy import isfinite
+
+from ..constants import MIN_SEPARATION_THRESHOLD, MIN_SCALAR_VALUE
 from ...mathematics.vectors import *
+from ..exceptions import CRSCodeException
+from ...orientations.defaults import *
+
+array = np.array
 
 
 class Point(object):
@@ -10,25 +18,122 @@ class Point(object):
     Dimensions: 4D (space-time)
     """
 
-    def __init__(self, x: [int, float], y: [int, float], z: [int, float]=0.0, t: [int, float]=0.0):
+    def __init__(self, x: [int, float], y: [int, float], z: [int, float]=0.0, t: [int, float]=0.0, crs_code: str= ""):
         """
         Construct a Point instance.
+
+        :param x: point x coordinate.
+        :type x: int or float.
+        :param y: point y coordinate.
+        :type y: int or float.
+        :param z: point z coordinate.
+        :type z: int or float.
+        :param t: point time coordinate.
+        :type t: int or float.
+        :param crs_code: CRS code.
+        :type crs_code: basestring.
         """
 
         vals = [x, y, z, t]
         if any(map(lambda val: not isinstance(val, (int, float)), vals)):
-            raise VectorInputException("Input values must be integer of float")
-        elif not all(map(isfinite, vals)):
+            raise VectorInputException("Input values must be integer or float type")
+        if not all(map(isfinite, vals)):
             raise VectorInputException("Input values must be finite")
-        else:
-            self.x = float(x)
-            self.y = float(y)
-            self.z = float(z)
-            self.t = float(t)
+
+        self._x = float(x)
+        self._y = float(y)
+        self._z = float(z)
+        self._t = float(t)
+        self._crs = crs_code
+
+    @property
+    def x(self) -> float:
+        """
+        Return the x coordinate of the current point.
+
+        :return: x coordinate.
+        :rtype: float
+
+        Examples:
+          >>> Point(4, 3, 7, crs_code="EPSG:4326").x
+          4.0
+          >>> Point(-0.39, 3, 7).x
+          -0.39
+        """
+
+        return self._x
+
+    @property
+    def y(self) -> float:
+        """
+        Return the y coordinate of the current point.
+
+        :return: y coordinate.
+        :rtype: float
+
+        Examples:
+          >>> Point(4, 3, 7, crs_code="EPSG:4326").y
+          3.0
+          >>> Point(-0.39, 17.42, 7).y
+          17.42
+        """
+
+        return self._y
+
+    @property
+    def z(self) -> float:
+        """
+        Return the z coordinate of the current point.
+
+        :return: z coordinate.
+        :rtype: float
+
+        Examples:
+          >>> Point(4, 3, 7, crs_code="EPSG:4326").z
+          7.0
+          >>> Point(-0.39, 17.42, 8.9).z
+          8.9
+        """
+
+        return self._z
+
+    @property
+    def t(self) -> float:
+        """
+        Return the time coordinate of the current point.
+
+        :return: time coordinate.
+        :rtype: float
+
+        Examples:
+          >>> Point(4, 3, 7, crs_code="EPSG:4326").t
+          0.0
+          >>> Point(-0.39, 17.42, 8.9, 4112).t
+          4112.0
+        """
+
+        return self._t
+
+    @property
+    def crs(self) -> str:
+        """
+        Return the _crs of the current point.
+
+        :return: the CRS code.
+        :rtype: basestring
+
+        Examples:
+          >>> Point(4, 3, 7, crs_code="EPSG:4326").crs
+          EPSG:4326
+          >>> Point(4, 3, 7).crs
+          ''
+        """
+
+        return self._crs
 
     def __repr__(self) -> str:
 
-        return "Point({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z, self.t)
+        return "Point({:.4f}, {:.4f}, {:.4f}, {:.4f}, '{}')".format(self.x, self.y, self.z, self.t, self.crs)
 
     def __eq__(self, another: 'Point') -> bool:
         """
@@ -37,6 +142,8 @@ class Point(object):
         Example:
           >>> Point(1., 1., 1.) == Point(1, 1, 1)
           True
+          >>> Point(1., 1., 1., crs_code="EPSG:4326") == Point(1, 1, 1)
+          False
           >>> Point(1., 1., 1.) == Point(1, 1, -1)
           False
         """
@@ -45,7 +152,8 @@ class Point(object):
             self.x == another.x,
             self.y == another.y,
             self.z == another.z,
-            self.t == another.t])
+            self.t == another.t,
+            self.crs == another.crs])
 
     def __ne__(self, another: 'Point') -> bool:
         """
@@ -54,23 +162,26 @@ class Point(object):
         Example:
           >>> Point(1., 1., 1.) != Point(0., 0., 0.)
           True
+          >>> Point(1., 1., 1., crs_code="EPSG:4326") != Point(1, 1, 1)
+          True
         """
 
         return not (self == another)
 
     @property
-    def a(self) -> Tuple[float, float, float, float]:
+    def a(self) -> Tuple[float, float, float, float, str]:
         """
-        Return a copy of the object inner values.
+        Return the individual values of the point.
 
         :return: double array of x, y, z values
 
         Examples:
-          >>> Point(4, 3, 7).a
-          (4.0, 3.0, 7.0, 0.0)
+          >>> Point(4, 3, 7, crs_code="EPSG:4326").a
+          (4.0, 3.0, 7.0, 0.0, 'EPSG:4326')
         """
 
-        return self.x, self.y, self.z, self.t
+        return self.x, self.y, self.z, self.t, self.crs
+
 
     def toXYZ(self) -> Tuple[float, float, float]:
         """
@@ -86,9 +197,23 @@ class Point(object):
 
         return self.x, self.y, self.z
 
+    def toXYZT(self) -> Tuple[float, float, float, float]:
+        """
+        Returns the spatial and time components as a tuple of four values.
+
+        :return: the spatial components (x, y, z) and the time component.
+        :rtype: a tuple of four floats.
+
+        Examples:
+          >>> Point(1, 0, 3).toXYZT()
+          (1.0, 0.0, 3.0, 0.0)
+        """
+
+        return self.x, self.y, self.z, self.t
+
     def toArray(self) -> 'array':
         """
-        Return a double Numpy array representing the point values.
+        Return a Numpy array representing the point values (without the crs code).
 
         :return: Numpy array
 
@@ -97,7 +222,7 @@ class Point(object):
           array([1., 2., 3., 0.])
         """
 
-        return np.asarray(self.a)
+        return np.asarray(self.toXYZT())
 
     def pXY(self) -> 'Point':
         """
@@ -107,10 +232,10 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pXY()
-          Point(2.0000, 3.0000, 0.0000, 0.0000)
+          Point(2.0000, 3.0000, 0.0000, 0.0000, '')
         """
 
-        return Point(self.x, self.y, 0.0, self.t)
+        return Point(self.x, self.y, 0.0, self.t, self.crs)
 
     def pXZ(self) -> 'Point':
         """
@@ -120,10 +245,10 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pXZ()
-          Point(2.0000, 0.0000, 4.0000, 0.0000)
+          Point(2.0000, 0.0000, 4.0000, 0.0000, '')
         """
 
-        return Point(self.x, 0.0, self.z, self.t)
+        return Point(self.x, 0.0, self.z, self.t, self.crs)
 
     def pYZ(self) -> 'Point':
         """
@@ -133,81 +258,68 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pYZ()
-          Point(0.0000, 3.0000, 4.0000, 0.0000)
+          Point(0.0000, 3.0000, 4.0000, 0.0000, '')
         """
 
-        return Point(0.0, self.y, self.z, self.t)
+        return Point(0.0, self.y, self.z, self.t, self.crs)
 
-    @property
-    def len3D(self) -> float:
-        """
-        Spatial distance of the point from the axis origin.
 
-        :return: distance
-        :rtype: float
-
-        Examples:
-          >>> Point(4.0, 3.0, 0.0).len3D
-          5.0
-        """
-
-        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
-
-    @property
-    def len2D(self) -> float:
-        """
-        2D distance of the point from the axis origin.
-
-        Example:
-          >>> Point(3, 4, 0).len2D
-          5.0
-          >>> Point(12, 5, 3).len2D
-          13.0
-        """
-
-        return sqrt(self.x * self.x + self.y * self.y)
-
-    def deltaX(self, another: 'Point') -> float:
+    def deltaX(self, another: 'Point') -> Optional[float]:
         """
         Delta between x components of two Point Instances.
 
-        :return: difference value
-        :rtype: float
+        :return: x coordinates difference value.
+        :rtype: optional float.
 
         Examples:
           >>> Point(1, 2, 3).deltaX(Point(4, 7, 1))
           3.0
+          >>> Point(1, 2, 3, crs_code="EPSG:4326").deltaX(Point(4, 7, 1)) is None
+          True
         """
 
-        return another.x - self.x
+        if self.crs != another.crs:
+            return None
+        else:
+            return another.x - self.x
 
-    def deltaY(self, another: 'Point') -> float:
+    def deltaY(self, another: 'Point') -> Optional[float]:
         """
         Delta between y components of two Point Instances.
 
-        :return: difference value
-        :rtype: float
+        :return: y coordinates difference value.
+        :rtype: optional float.
 
         Examples:
           >>> Point(1, 2, 3).deltaY(Point(4, 7, 1))
           5.0
+          >>> Point(1, 2, 3, crs_code="EPSG:4326").deltaY(Point(4, 7, 1)) is None
+          True
         """
 
-        return another.y - self.y
+        if self.crs != another.crs:
+            return None
+        else:
+            return another.y - self.y
 
-    def deltaZ(self, another: 'Point') -> float:
+    def deltaZ(self, another: 'Point') -> Optional[float]:
         """
         Delta between z components of two Point Instances.
 
-        :return: difference value
-        :rtype: float
+        :return: z coordinates difference value.
+        :rtype: optional float.
 
         Examples:
           >>> Point(1, 2, 3).deltaZ(Point(4, 7, 1))
           -2.0
+          >>> Point(1, 2, 3, crs_code="EPSG:4326").deltaZ(Point(4, 7, 1)) is None
+          True
         """
 
-        return another.z - self.z
+        if self.crs != another.crs:
+            return None
+        else:
+            return another.z - self.z
 
     def deltaT(self, another: 'Point') -> float:
         """
@@ -223,56 +335,81 @@ class Point(object):
 
         return another.t - self.t
 
-    def dist3DWith(self, another: 'Point') -> float:
+    def dist3DWith(self, another: 'Point') -> Optional[float]:
         """
         Calculate Euclidean spatial distance between two points.
 
+        :param another: another Point instance.
+        :type another: Point.
+        :return: the optional distance (when the two points have the same CRS).
+        :rtype: optional float.
+
         Examples:
           >>> Point(1., 1., 1.).dist3DWith(Point(4., 5., 1,))
+          5.0
+          >>> Point(1, 1, 1, crs_code="EPSG:32632").dist3DWith(Point(4, 5, 1, crs_code="EPSG:32632"))
           5.0
           >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1))
           5.0
         """
 
-        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
+        if self.crs != another.crs:
+            return None
+        else:
+            return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
-    def dist2DWith(self, another: 'Point') -> float:
+    def dist2DWith(self, another: 'Point') -> Optional[float]:
         """
         Calculate horizontal (2D) distance between two points.
+
+        :param another: another Point instance.
+        :type another: Point.
+        :return: the optional 2D distance (when the two points have the same CRS).
+        :rtype: optional float.
 
         Examples:
           >>> Point(1., 1., 1.).dist2DWith(Point(4., 5., 7.))
           5.0
+          >>> Point(1., 1., 1., crs_code="EPSG:32632").dist2DWith(Point(4., 5., 7.)) is None
+          True
         """
 
-        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
+        if self.crs != another.crs:
+            return None
+        else:
+            return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
     def scale(self, scale_factor: [int, float]) -> 'Point':
         """
         Create a scaled object.
+        Note: it does not make sense for polar coordinates.
+        TODO: manage polar coordinates cases OR deprecate and remove - after dependency check.
 
         Example;
           >>> Point(1, 0, 1).scale(2.5)
-          Point(2.5000, 0.0000, 2.5000, 0.0000)
+          Point(2.5000, 0.0000, 2.5000, 0.0000, '')
+          >>> Point(1, 0, 1).scale(2.5)
+          Point(2.5000, 0.0000, 2.5000, 0.0000, '')
         """
 
         x, y, z = self.x * scale_factor, self.y * scale_factor, self.z * scale_factor
-        return Point(x, y, z, self.t)
+        return Point(x, y, z, self.t, self.crs)
 
     def invert(self) -> 'Point':
         """
         Create a new object with inverted direction.
+        Note: it depends on scale method, that could be deprecated/removed.
 
         Examples:
           >>> Point(1, 1, 1).invert()
-          Point(-1.0000, -1.0000, -1.0000, 0.0000)
+          Point(-1.0000, -1.0000, -1.0000, 0.0000, '')
           >>> Point(2, -1, 4).invert()
-          Point(-2.0000, 1.0000, -4.0000, 0.0000)
+          Point(-2.0000, 1.0000, -4.0000, 0.0000, '')
         """
 
         return self.scale(-1)
 
-    def isCoinc(self, another: 'Point', tolerance: float = MIN_SEPARATION_THRESHOLD) -> bool:
+    def isCoinc(self, another: 'Point', tolerance: float = MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
         """
         Check spatial coincidence of two points
 
@@ -283,11 +420,16 @@ class Point(object):
           True
           >>> Point(1.2, 7.4, 1.4).isCoinc(Point(1.2, 7.4, 1.4))
           True
+          >>> Point(1.2, 7.4, 1.4, crs_code="EPSG:4326").isCoinc(Point(1.2, 7.4, 1.4)) is None
+          True
         """
 
-        return self.dist3DWith(another) <= tolerance
+        if self.crs != another.crs:
+            return None
+        else:
+            return self.dist3DWith(another) <= tolerance
 
-    def already_present(self, pt_list: List['Point'], tolerance: [int, float] = MIN_SEPARATION_THRESHOLD) -> bool:
+    def already_present(self, pt_list: List['Point'], tolerance: [int, float] = MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
         """
         Determines if a point is already in a given point list, using an optional distance separation,
 
@@ -296,7 +438,7 @@ class Point(object):
         :param tolerance: optional maximum distance between near-coincident point pair.
         :type tolerance: numeric (int, float).
         :return: True if already present, False otherwise.
-        :rtype: boolean.
+        :rtype: optional boolean.
         """
 
         for pt in pt_list:
@@ -304,33 +446,38 @@ class Point(object):
                 return True
         return False
 
-    def shift(self, sx: float, sy: float, sz: float) -> 'Point':
+    def shift(self, sx: float, sy: float, sz: float) -> Optional['Point']:
         """
         Create a new object shifted by given amount from the self instance.
 
         Example:
           >>> Point(1, 1, 1).shift(0.5, 1., 1.5)
-          Point(1.5000, 2.0000, 2.5000, 0.0000)
+          Point(1.5000, 2.0000, 2.5000, 0.0000, '')
           >>> Point(1, 2, -1).shift(0.5, 1., 1.5)
-          Point(1.5000, 3.0000, 0.5000, 0.0000)
+          Point(1.5000, 3.0000, 0.5000, 0.0000, '')
        """
 
-        return Point(self.x + sx, self.y + sy, self.z + sz, self.t)
+        return Point(self.x + sx, self.y + sy, self.z + sz, self.t, self.crs)
 
     def shiftByVect(self, v: Vect) -> 'Point':
         """
         Create a new object shifted from the self instance by given vector.
 
+        :param v: the shift vector.
+        :type v: Vect.
+        :return: the shifted point.
+        :rtype: Point.
+
         Example:
           >>> Point(1, 1, 1).shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 2.0000, 2.5000, 0.0000)
+          Point(1.5000, 2.0000, 2.5000, 0.0000, '')
           >>> Point(1, 2, -1).shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 3.0000, 0.5000, 0.0000)
+          Point(1.5000, 3.0000, 0.5000, 0.0000, '')
        """
 
         sx, sy, sz = v.toXYZ()
 
-        return Point(self.x + sx, self.y + sy, self.z + sz, self.t)
+        return Point(self.x + sx, self.y + sy, self.z + sz, self.t, self.crs)
 
     def asVect(self) -> 'Vect':
         """
@@ -437,23 +584,23 @@ class CPlane(object):
 
         matr_a = array(
             [[pt1.y, pt1.z, 1],
-            [pt2.y, pt2.z, 1],
-            [pt3.y, pt3.z, 1]])
+             [pt2.y, pt2.z, 1],
+             [pt3.y, pt3.z, 1]])
 
         matr_b = - array(
             [[pt1.x, pt1.z, 1],
-            [pt2.x, pt2.z, 1],
-            [pt3.x, pt3.z, 1]])
+             [pt2.x, pt2.z, 1],
+             [pt3.x, pt3.z, 1]])
 
         matr_c = array(
             [[pt1.x, pt1.y, 1],
-            [pt2.x, pt2.y, 1],
-            [pt3.x, pt3.y, 1]])
+             [pt2.x, pt2.y, 1],
+             [pt3.x, pt3.y, 1]])
 
         matr_d = - array(
             [[pt1.x, pt1.y, pt1.z],
-            [pt2.x, pt2.y, pt2.z],
-            [pt3.x, pt3.y, pt3.z]])
+             [pt2.x, pt2.y, pt2.z],
+             [pt3.x, pt3.y, pt3.z]])
 
         return cls(
             np.linalg.det(matr_a),
@@ -484,7 +631,7 @@ class CPlane(object):
 
         Examples:
           >>> CPlane(0, 0, 1, -1).toPoint()
-          Point(0.0000, 0.0000, 1.0000, 0.0000)
+          Point(0.0000, 0.0000, 1.0000, 0.0000, '')
         """
 
         point = Point(*pointSolution(array([[self.a, self.b, self.c]]),
@@ -513,7 +660,7 @@ class CPlane(object):
           >>> a = CPlane(1, 0, 0, 0)
           >>> b = CPlane(0, 0, 1, 0)
           >>> a.intersPoint(b)
-          Point(0.0000, 0.0000, 0.0000, 0.0000)
+          Point(0.0000, 0.0000, 0.0000, 0.0000, '')
         """
 
         # find a point lying on the intersection line (this is a non-unique solution)
@@ -618,9 +765,23 @@ class Segment(object):
     """
 
     def __init__(self, start_pt, end_pt):
+        """
+        Creates a segment instance provided the two points have the same CRS code.
+
+        :param start_pt: the start point.
+        :type: Point.
+        :param end_pt: the end point.
+        :type end_pt: Point.
+        :return: the new segment instance if both points have the same crs.
+        :raises: CRSCodeException.
+        """
+
+        if start_pt.crs != end_pt.crs:
+            raise CRSCodeException("Start and end point must have the same CRS code")
 
         self._start_pt = start_pt
         self._end_pt = end_pt
+        self._crs = start_pt.crs
 
     @property
     def start_pt(self):
@@ -631,6 +792,11 @@ class Segment(object):
     def end_pt(self):
 
         return self._end_pt
+
+    @property
+    def crs(self):
+
+        return self._crs
 
     def clone(self):
 
@@ -831,19 +997,43 @@ class Segment(object):
 
 class Line(object):
     """
-    A list of Point objects.
+    A list of Point objects, all with the same CRS code.
     """
 
     def __init__(self, pts=None):
+        """
+        Creates the Line instance, when all the provided points have the same CRS codes.
+
+        :param pts: a list of points
+        :type pts: List of Point instances.
+        :return: a Line instance.
+        :rtype: Line.
+        :raises: CRSCodeException.
+
+        """
 
         if pts is None:
             pts = []
+            init_crs_code = None
+        else:
+            init_crs_code = pts[0].crs
+            for ndx in range(1, len(pts)):
+                pt = pts[ndx]
+                if pt.crs != init_crs_code:
+                    raise CRSCodeException("All points must have the same CRS code")
+
         self._pts = pts
+        self._crs = init_crs_code
 
     @property
     def pts(self):
 
         return self._pts
+
+    @property
+    def crs(self):
+
+        return self._crs
 
     @property
     def num_pts(self):
@@ -863,7 +1053,12 @@ class Line(object):
         :return: self
         """
 
+        if self.num_pts > 0 and pt.crs != self._crs:
+            raise CRSCodeException("Added point must have the same CRS as original points")
+
         self.pts.append(pt)
+        if self.crs is None:
+            self._crs = pt.crs
 
     def add_pts(self, pt_list):
         """
@@ -874,7 +1069,14 @@ class Line(object):
         :return: self
         """
 
+        if self.num_pts > 0:
+            for pt in pt_list:
+                if pt.crs != self.crs:
+                    raise CRSCodeException("Added points must have the same CRS as original points")
+
         self._pts += pt_list
+        if self._crs is None:
+            self.crs = pt_list[0].crs
 
     @property
     def x_list(self):
@@ -1070,21 +1272,43 @@ class Line(object):
 
 class MultiLine(object):
     """
-    MultiLine is a list of Line objects
+    MultiLine is a list of Line objects, each one with the same CRS code
     """
 
-    def __init__(self, lines_list=None):
+    def __init__(self, lines=None):
 
-        if lines_list is None:
-            lines_list = []
-        self._lines = lines_list
+        if lines is None:
+            self._lines = []
+            self._crs = None
+        else:
+            crs_code = lines[0].crs
+            for ndx in range(1, len(lines)):
+                if lines[ndx].crs != crs_code:
+                    raise CRSCodeException("All lines must have the same CRS code")
+
+            self._lines = lines
+            self.crs = crs_code
 
     @property
     def lines(self):
 
         return self._lines
 
+    @property
+    def crs(self):
+
+        return self._crs
+
+    @property
+    def num_lines(self):
+
+        return len(self.lines)
+
     def add(self, line):
+
+        if self.num_lines > 0:
+            if line.crs != self.crs:
+                raise  CRSCodeException("Added line must have the same CRS code as current multiline")
 
         return MultiLine(self.lines + [line])
 
@@ -1093,12 +1317,7 @@ class MultiLine(object):
         return MultiLine(self.lines)
 
     @property
-    def num_parts(self):
-
-        return len(self.lines)
-
-    @property
-    def num_points(self):
+    def num_tot_pts(self):
 
         num_points = 0
         for line in self.lines:

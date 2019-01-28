@@ -1,5 +1,7 @@
 # coding: utf-8
 
+from math import pi
+from numpy import array
 
 from pygsf.spatial.rasters.fields import *
 

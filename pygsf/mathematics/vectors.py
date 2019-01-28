@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from math import atan
+from math import atan, isfinite, sqrt, degrees, acos
+from numpy import isfinite, array
+
+from pygsf.defaults.maths import MIN_VECTOR_MAGNITUDE, MIN_SCALAR_VALUE
 
 from .exceptions import *
 from .arrays import *
@@ -629,7 +632,7 @@ class Vect(object):
           180.0
           >>> Vect(0, 0, 1).angle(Vect(0, 0, -1))
           180.0
-          >>> Vect(1, 1, 1).angle(Vect(1, 1,1 ))
+          >>> Vect(1, 1, 1).angle(Vect(1, 1,1))
           0.0
           >>> Vect(0, 0, 0).angle(Vect(1,0,0)) is None
           True

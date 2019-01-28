@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from math import sin, cos
+import numpy as np
+
 from ...mathematics.exceptions import InputValuesException
 from .geotransform import *
+
+
 
 
 def ij_transfer_func(
@@ -61,12 +66,14 @@ def array_from_function(
     Examples:
     """
 
-    return np.fromfunction(
+    array = np.fromfunction(
         function=ij_transfer_func,
         shape=(row_num, col_num),
         dtype=np.float64,
         geotransform=geotransform,
         z_transfer_func=z_transfer_func)
+
+    return np.asarray(array)
 
 
 def grad_j(

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
+from math import radians, pi, tan, atan2, sin, cos
 from ..spatial.vectorial.vectorial import *
 
 from .exceptions import *

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
-from .pygsf.mathematics.defaults import *
+import numpy as np
 
 
 def get_statistics(array):

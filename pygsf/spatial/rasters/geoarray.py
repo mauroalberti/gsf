@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import math
+from numpy import array
 
-from .exceptions import *
+from pygsf.spatial.exceptions import *
 from .fields import *
 from ..generics.general import *
 

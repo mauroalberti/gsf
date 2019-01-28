@@ -16,6 +16,72 @@ from ..spatial.vectorial.geodetic import *
 #from ..libs_utils.qgis.qgs_tools import get_project_crs, line_geoms_attrs, get_zs_from_dem
 
 
+def params_polar(self, pts: List[Point]) -> Tuple[List[float], List[float], List[float]]:
+    """
+    Calculates profile parameters for polar projections source datasets.
+
+    :param pts: the points.
+    :type pts: List of Point instances.
+    :return: three profile parameters: horizontal distances, 3D distances, directional slopes
+    :rtype: Tuple of three floats lists.
+    """
+
+    for profile_ndx in range(len(self.zs)):
+
+        zs = self.zs[profile_ndx]
+
+        # convert original values into ECEF values (x, y, z, time in ECEF global coordinate system)
+
+        ecef_pt = [PolarSTPoint(lat, lon, elev, time).ecef_stpt() for lat, lon, elev, time in zip(xs, ys, zs, times)]
+
+        # calculate 3D distances between consecutive points
+
+        dist_3D_values = [np.nan]
+        for ndx in range(1, self.num_pnts):
+            dist_3D_values.append(ecef_pt[ndx].dist3DWith(ecef_pt[ndx - 1]))
+
+        # calculate delta elevations between consecutive points
+
+        delta_elev_values = [np.nan]
+        for ndx in range(1, self.num_pnts):
+            delta_elev_values.append(zs[ndx] - zs[ndx - 1])
+
+        # calculate slope along track
+
+        dir_slopes = []
+        for delta_elev, dist_3D in zip(delta_elev_values, dist_3D_values):
+            try:
+                slope = degrees(asin(delta_elev / dist_3D))
+            except:
+                slope = 0.0
+            dir_slopes.append(slope)
+
+        # calculate horizontal distance along track
+
+        horiz_dist_values = []
+        for slope, dist_3D in zip(dir_slopes, dist_3D_values):
+            try:
+                horiz_dist_values.append(dist_3D * cos(radians(slope)))
+            except:
+                horiz_dist_values.append(np.nan)
+
+        """
+        # defines the cumulative 2D distance values
+
+        cum_distances_2D = [0.0]
+        for ndx in range(1, len(horiz_dist_values)):
+            cum_distances_2D.append(cum_distances_2D[-1] + horiz_dist_values[ndx])
+
+        # defines the cumulative 3D distance values
+
+        cum_distances_3D = [0.0]
+        for ndx in range(1, len(dist_3D_values)):
+            cum_distances_3D.append(cum_distances_3D[-1] + dist_3D_values[ndx])
+        """
+
+    return horiz_dist_values, dist_3D_values, dir_slopes
+
+
 class GeoProfilesSet(object):
     """
     Represents a set of Geoprofile elements,
@@ -378,71 +444,6 @@ class TopoProfiles(object):
 
         return len(self.xs)
 
-    def params_polar(self):
-        """
-        Calculates parameters for polar projections source datasets.
-        """
-
-        xs = self.xs.tolist()
-        ys = self.ys.tolist()
-
-        for profile_ndx in range(len(self.zs)):
-
-            zs = self.zs[profile_ndx].tolist()
-            times = self.times.tolist()
-
-            # convert original values into ECEF values (x, y, z, time in ECEF global coordinate system)
-
-            ecef_pt = [PolarSTPoint(lat, lon, elev, time).ecef_stpt() for lat, lon, elev, time in zip(xs, ys, zs, times)]
-
-            # calculate 3D distances between consecutive points
-
-            dist_3D_values = [np.nan]
-            for ndx in range(1, self.num_pnts):
-                dist_3D_values.append(ecef_pt[ndx].dist3DWith(ecef_pt[ndx - 1]))
-
-            # calculate delta elevations between consecutive points
-
-            delta_elev_values = [np.nan]
-            for ndx in range(1, self.num_pnts):
-                delta_elev_values.append(zs[ndx] - zs[ndx - 1])
-
-            # calculate slope along track
-
-            dir_slopes = []
-            for delta_elev, dist_3D in zip(delta_elev_values, dist_3D_values):
-                try:
-                    slope = degrees(asin(delta_elev / dist_3D))
-                except:
-                    slope = 0.0
-                dir_slopes.append(slope)
-
-            # calculate horizontal distance along track
-
-            horiz_dist_values = []
-            for slope, dist_3D in zip(dir_slopes, dist_3D_values):
-                try:
-                    horiz_dist_values.append(dist_3D * cos(radians(slope)))
-                except:
-                    horiz_dist_values.append(np.nan)
-
-            """
-            # defines the cumulative 2D distance values
-            
-            cum_distances_2D = [0.0]
-            for ndx in range(1, len(horiz_dist_values)):
-                cum_distances_2D.append(cum_distances_2D[-1] + horiz_dist_values[ndx])
-    
-            # defines the cumulative 3D distance values
-            
-            cum_distances_3D = [0.0]
-            for ndx in range(1, len(dist_3D_values)):
-                cum_distances_3D.append(cum_distances_3D[-1] + dist_3D_values[ndx])
-            """
-
-        return horiz_dist_values, dist_3D_values, dir_slopes
-
-
     def max_s(self) -> float:
         """
         Return the horizontal length of the topographic profile trace.
@@ -539,73 +540,6 @@ class PlaneAttitude(object):
         self.slope_rad = slope_rad
         self.dwnwrd_sense = dwnwrd_sense
         self.sign_hor_dist = sign_hor_dist
-
-
-def topoprofiles_from_gpxsource(source_gpx_path, invert_profile, gpx_source):
-    """
-
-    :param source_gpx_path:
-    :param invert_profile:
-    :param gpx_source:
-    :return:
-    """
-
-    doc = xml.dom.minidom.parse(source_gpx_path)
-
-    # define track name
-    try:
-        trkname = doc.getElementsByTagName('trk')[0].getElementsByTagName('name')[0].firstChild.data
-    except:
-        trkname = ''
-
-    # get raw track point values (lat, lon, elev, time)
-    track_raw_data = []
-    for trk_node in doc.getElementsByTagName('trk'):
-        for trksegment in trk_node.getElementsByTagName('trkseg'):
-            for tkr_pt in trksegment.getElementsByTagName('trkpt'):
-                track_raw_data.append((tkr_pt.getAttribute("lat"),
-                                       tkr_pt.getAttribute("lon"),
-                                       tkr_pt.getElementsByTagName("ele")[0].childNodes[0].data,
-                                       tkr_pt.getElementsByTagName("time")[0].childNodes[0].data))
-
-    # reverse profile orientation if requested
-    if invert_profile:
-        track_data = track_raw_data[::-1]
-    else:
-        track_data = track_raw_data
-
-    # create list of PolarSTPoint elements
-    track_points = []
-    for val in track_data:
-        gpx_trackpoint = PolarSTPoint(*val)
-        track_points.append(gpx_trackpoint)
-
-    # check for the presence of track points
-    if len(track_points) == 0:
-        raise GPXIOException("No track point found in this file")
-
-    lats =       np.asarray([track.lat  for track in track_points])
-    lons =       np.asarray([track.lon  for track in track_points])
-    times =      np.asarray([track.time for track in track_points])
-    elevations = np.asarray([track.elev for track in track_points])
-
-    return TopoProfiles(
-        crs_authid=4236,
-        profile_source=gpx_source,
-        xs=lons,
-        ys=lats,
-        times=times,
-        source_names=[trkname],
-        topo_lines=None,
-        zs=[elevations],
-        inverted=invert_profile)
-
-
-    profile_s=np.asarray(cum_distances_2D),
-    profiles_s3ds=[np.asarray(cum_distances_3D)]
-
-    profiles_dirslopes=[np.asarray(dir_slopes)]
-
 
 
 def calculate_profile_lines_intersection(multilines2d_list, id_list, profile_line2d):

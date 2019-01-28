@@ -6,11 +6,10 @@ import json
 
 from numpy import *  # general import for compatibility with formula input
 
-from .exceptions import *
+from ..exceptions import *
 from .vectorial import Segment
 from ...mathematics.scalars import areClose
 from ...mathematics.transformations import deformMatrices
-from ...libs_utils.gdal.ogr import *
 
 
 def formula_to_grid(array_range, array_size, formula):
@@ -23,14 +22,17 @@ def formula_to_grid(array_range, array_size, formula):
     :return: three lists of float values
     """
 
-    a_min, a_max, b_max, b_min = array_range  # note: b range reversed for conventional j order in arrays
+    # note: b range reversed for conventional j order in arrays
+    a_min, a_max, b_max, b_min = array_range
     array_rows, array_cols = array_size
 
+    # note: reversed for conventional j order in arrays
     a_array = linspace(a_min, a_max, num=array_cols)
-    b_array = linspace(b_max, b_min, num=array_rows)  # note: reversed for conventional j order in arrays
+    b_array = linspace(b_max, b_min, num=array_rows)
 
     try:
-        a_list, b_list = [a for a in a_array for _ in b_array], [b for _ in a_array for b in b_array]
+        a_list = [a for a in a_array for _ in b_array]
+        b_list = [b for _ in a_array for b in b_array]
     except:
         raise AnaliticSurfaceCalcException("Error in a-b values")
 
@@ -44,10 +46,10 @@ def formula_to_grid(array_range, array_size, formula):
 
 class TriangBeam(object):
     """
-    represents a 'fascio', a 2D semi-infinite geometrical object,
+    Represents a 'beam', a 2D semi-infinite geometrical object,
     defined by an apex (a Point object) and two semi-infinite segments, originating
-    from the apex and defined by two versors (Vect objects, with init name 'versor_1' and 'versor_2').
-    Its maximum width
+    from the apex and defined by two versors (Vect objects, with init name
+    'versor_1' and 'versor_2').
     """
 
     def __init__(self, apex_pt3d, vector_1, vector_2):
@@ -137,9 +139,9 @@ class CartesianTriangle(object):
             :return:
             """
 
-            return Segment(pt_1, pt_2).vector().versor_full()
+            return Segment(pt_1, pt_2).vector().versor()
 
-        def is_pt_in_fascio(pt_1, pt_2, pt_3):
+        def is_pt_in_strip(pt_1, pt_2, pt_3):
             """
 
             :param pt_1:
@@ -158,8 +160,8 @@ class CartesianTriangle(object):
             else:
                 return True
 
-        if not (is_pt_in_fascio(self._pt_1, self._pt_2, self._pt_3) and
-                    is_pt_in_fascio(self._pt_2, self._pt_1, self._pt_3)):
+        if not (is_pt_in_strip(self._pt_1, self._pt_2, self._pt_3) and
+                is_pt_in_strip(self._pt_2, self._pt_1, self._pt_3)):
             return False
         else:
             return True
@@ -192,14 +194,14 @@ class AnalyticGeosurface(object):
             raise AnaliticSurfaceCalcException(msg)
 
         # calculate geographic transformations to surface
-        self.geographical_values = self.get_geographical_param_values()
-        (geog_x_min, geog_y_min), (area_height, area_width), area_rot_ang_deg = self.geographical_values
-        geog_scale_matr = geographic_scale_matrix(a_range, b_range, area_height, area_width)
-        geogr_rot_matrix = geographic_rotation_matrix(area_rot_ang_deg)
+        self.geograph_vals = self.get_geographical_param_values()
+        (geog_x_min, geog_y_min), (area_height, area_width), area_rot_ang_deg = self.geograph_vals
+        geog_scale_matr = geograph_scale_matrix(a_range, b_range, area_height, area_width)
+        geogr_rot_matrix = geograph_rotation_matrix(area_rot_ang_deg)
 
-        self.geographic_transformation_matrix = dot(geogr_rot_matrix, geog_scale_matr)
+        self.geograph_transformation_matrix = dot(geogr_rot_matrix, geog_scale_matr)
 
-        self.geographic_offset_matrix = geographic_offset(self.geographic_transformation_matrix,
+        self.geographic_offset_matrix = geographic_offset(self.geograph_transformation_matrix,
                                                           array([a_min, b_min, 0.0]),
                                                           array([geog_x_min, geog_y_min, 0.0]))
 
@@ -295,7 +297,7 @@ class AnalyticGeosurface(object):
         :return:
         """
 
-        pt = dot(self.geographic_transformation_matrix, array([x, y, z])) + self.geographic_offset_matrix
+        pt = dot(self.geograph_transformation_matrix, array([x, y, z])) + self.geographic_offset_matrix
         for deformation in self.deformations:
             if deformation['increment'] == 'additive':
                 pt = pt + deformation['matrix']
@@ -306,7 +308,7 @@ class AnalyticGeosurface(object):
         return pt
 
 
-def geographic_scale_matrix(a_range, b_range, grid_height, grid_width):
+def geograph_scale_matrix(a_range, b_range, grid_height, grid_width):
     """
 
     :param a_range:
@@ -328,7 +330,7 @@ def geographic_scale_matrix(a_range, b_range, grid_height, grid_width):
     return array([(sx, 0.0, 0.0), (0.0, sy, 0.0), (0.0, 0.0, sz)])
 
 
-def geographic_rotation_matrix(grid_rot_angle_degr):
+def geograph_rotation_matrix(grid_rot_angle_degr):
     """
 
     :param grid_rot_angle_degr:
@@ -516,18 +518,18 @@ def geosurface_save_gas(output_filepath, geodata):
     return True
 
 
-def geosurface_export_xyz( xyz_file_path, geodata, ):
+def geosurface_export_xyz(xyz_file_path, geodata,):
 
     geosurface_XYZ, _ = geodata
     X, Y, Z = geosurface_XYZ
     assert len(X) == len(Y)
     assert len(X) == len(Z)
 
-    rec_values_list2 = zip( X, Y, Z )
+    rec_values_list2 = zip(X, Y, Z )
 
-    with open( xyz_file_path, "w") as ofile:
+    with open(xyz_file_path, "w") as ofile:
         for line in rec_values_list2:
-            ofile.write( ",".join([str(val) for val in line ])+"\n")
+            ofile.write(",".join([str(val) for val in line ])+"\n")
 
     return True
 
@@ -554,30 +556,3 @@ def geosurface_read_gas_input(infile_path):
 
     return src_analytical_params, src_geographical_params, src_deformational_params
 
-
-def try_geosurface_export_shapefile_pt3d(shapefile_path, geodata, fields_dict_list, crs=None):
-    """
-
-    :param shapefile_path:
-    :param geodata:
-    :param fields_dict_list:
-    :param crs:
-    :return:
-    """
-
-    shapefile_create(shapefile_path,
-         ogr.wkbPoint25D,
-         fields_dict_list,
-         crs)
-
-    field_list = [field_dict["name"] for field_dict in fields_dict_list]
-
-    geosurface_XYZ, _ = geodata
-    X, Y, Z = geosurface_XYZ
-
-    ids = range(len(X))
-
-    rec_values_list2 = zip(ids, X, Y, Z)
-    success, msg = try_write_point_shapefile(shapefile_path, field_list, rec_values_list2)
-
-    return success, msg
