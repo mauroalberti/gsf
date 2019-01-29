@@ -10,8 +10,7 @@ from ...defaults.types import Number
 
 from ..vectorial.vectorial import Point
 from ...mathematics.arrays import array_bilin_interp
-from .geotransform import xyGeogrToijPix, gtToxyCellCenters, gtEquiv
-from .geotransform import GeoTransform, ijPixToxyGeogr
+from .geotransform import xyGeogrToijPix, gtToxyCellCenters, gtEquiv, GeoTransform, ijPixToxyGeogr
 
 from ..exceptions import GeoArrayIOException
 from ..general import prjEquiv

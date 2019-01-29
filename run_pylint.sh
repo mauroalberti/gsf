@@ -1,2 +1,2 @@
  
-pylint -j 4 --disable=C,R pygsf > pylint.txt
+pylint -j 4 --disable=C,R,W pygsf > pylint.txt

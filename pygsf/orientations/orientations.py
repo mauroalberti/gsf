@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
+from typing import Callable
+
 from math import radians, pi, tan, atan2, sin, cos
 from ..spatial.vectorial.vectorial import *
 

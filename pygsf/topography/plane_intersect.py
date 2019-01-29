@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from typing import Tuple, Optional
 
 from ..spatial.rasters.geoarray import GeoArray
 from ..spatial.rasters.fields import *

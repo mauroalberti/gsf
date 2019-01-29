@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
+from typing import Tuple, Optional
+
 from ..defaults.types import *
 from ..spatial.vectorial.vectorial import Point
 from ..spatial.rasters.geoarray import GeoArray

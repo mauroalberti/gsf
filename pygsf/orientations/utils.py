@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from typing import Optional
 
 from math import atan2, degrees
 
-from ..defaults.types import *
 
 
 def mod360(val: float) -> float:

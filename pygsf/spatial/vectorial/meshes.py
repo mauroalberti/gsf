@@ -70,7 +70,7 @@ class TriangBeam(object):
 
     def fangle_degr(self):
         """
-        angle 'sotteso' by the 'fascio'
+        angle within fan
         in the 0 - 180 degrees range
         """
 
@@ -151,8 +151,8 @@ class CartesianTriangle(object):
             versor_1 = versor3d(pt_1, pt_2)
             versor_2 = versor3d(pt_1, pt_3)
 
-            fascio = TriangBeam(apex, versor_1, versor_2)
-            if not fascio.is_within_fan(pt_3d):
+            fan = TriangBeam(apex, versor_1, versor_2)
+            if not fan.is_within_fan(pt_3d):
                 return False
             else:
                 return True

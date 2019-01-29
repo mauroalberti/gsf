@@ -59,7 +59,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs_code="EPSG:4326").x
+          >>> Point(4, 3, 7, crs="EPSG:4326").x
           4.0
           >>> Point(-0.39, 3, 7).x
           -0.39
@@ -76,7 +76,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs_code="EPSG:4326").y
+          >>> Point(4, 3, 7, crs="EPSG:4326").y
           3.0
           >>> Point(-0.39, 17.42, 7).y
           17.42
@@ -93,7 +93,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs_code="EPSG:4326").z
+          >>> Point(4, 3, 7, crs="EPSG:4326").z
           7.0
           >>> Point(-0.39, 17.42, 8.9).z
           8.9
@@ -110,7 +110,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs_code="EPSG:4326").t
+          >>> Point(4, 3, 7, crs="EPSG:4326").t
           0.0
           >>> Point(-0.39, 17.42, 8.9, 4112).t
           4112.0
@@ -127,7 +127,7 @@ class Point(object):
         :rtype: basestring
 
         Examples:
-          >>> Point(4, 3, 7, crs_code="EPSG:4326").crs
+          >>> Point(4, 3, 7, crs="EPSG:4326").crs
           EPSG:4326
           >>> Point(4, 3, 7).crs
           ''
@@ -146,7 +146,7 @@ class Point(object):
         Example:
           >>> Point(1., 1., 1.) == Point(1, 1, 1)
           True
-          >>> Point(1., 1., 1., crs_code="EPSG:4326") == Point(1, 1, 1)
+          >>> Point(1., 1., 1., crs="EPSG:4326") == Point(1, 1, 1)
           False
           >>> Point(1., 1., 1.) == Point(1, 1, -1)
           False
@@ -166,7 +166,7 @@ class Point(object):
         Example:
           >>> Point(1., 1., 1.) != Point(0., 0., 0.)
           True
-          >>> Point(1., 1., 1., crs_code="EPSG:4326") != Point(1, 1, 1)
+          >>> Point(1., 1., 1., crs="EPSG:4326") != Point(1, 1, 1)
           True
         """
 
@@ -180,7 +180,7 @@ class Point(object):
         :return: double array of x, y, z values
 
         Examples:
-          >>> Point(4, 3, 7, crs_code="EPSG:4326").a
+          >>> Point(4, 3, 7, crs="EPSG:4326").a
           (4.0, 3.0, 7.0, 0.0, 'EPSG:4326')
         """
 
@@ -286,7 +286,7 @@ class Point(object):
         Examples:
           >>> Point(1, 2, 3).deltaX(Point(4, 7, 1))
           3.0
-          >>> Point(1, 2, 3, crs_code="EPSG:4326").deltaX(Point(4, 7, 1)) is None
+          >>> Point(1, 2, 3, crs="EPSG:4326").deltaX(Point(4, 7, 1)) is None
           True
         """
 
@@ -305,7 +305,7 @@ class Point(object):
         Examples:
           >>> Point(1, 2, 3).deltaY(Point(4, 7, 1))
           5.0
-          >>> Point(1, 2, 3, crs_code="EPSG:4326").deltaY(Point(4, 7, 1)) is None
+          >>> Point(1, 2, 3, crs="EPSG:4326").deltaY(Point(4, 7, 1)) is None
           True
         """
 
@@ -324,7 +324,7 @@ class Point(object):
         Examples:
           >>> Point(1, 2, 3).deltaZ(Point(4, 7, 1))
           -2.0
-          >>> Point(1, 2, 3, crs_code="EPSG:4326").deltaZ(Point(4, 7, 1)) is None
+          >>> Point(1, 2, 3, crs="EPSG:4326").deltaZ(Point(4, 7, 1)) is None
           True
         """
 
@@ -359,7 +359,7 @@ class Point(object):
         Examples:
           >>> Point(1., 1., 1.).dist3DWith(Point(4., 5., 1,))
           5.0
-          >>> Point(1, 1, 1, crs_code="EPSG:32632").dist3DWith(Point(4, 5, 1, crs_code="EPSG:32632"))
+          >>> Point(1, 1, 1, crs="EPSG:32632").dist3DWith(Point(4, 5, 1, crs="EPSG:32632"))
           5.0
           >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1))
           5.0
@@ -382,7 +382,7 @@ class Point(object):
         Examples:
           >>> Point(1., 1., 1.).dist2DWith(Point(4., 5., 7.))
           5.0
-          >>> Point(1., 1., 1., crs_code="EPSG:32632").dist2DWith(Point(4., 5., 7.)) is None
+          >>> Point(1., 1., 1., crs="EPSG:32632").dist2DWith(Point(4., 5., 7.)) is None
           True
         """
 
@@ -432,7 +432,7 @@ class Point(object):
           True
           >>> Point(1.2, 7.4, 1.4).isCoinc(Point(1.2, 7.4, 1.4))
           True
-          >>> Point(1.2, 7.4, 1.4, crs_code="EPSG:4326").isCoinc(Point(1.2, 7.4, 1.4)) is None
+          >>> Point(1.2, 7.4, 1.4, crs="EPSG:4326").isCoinc(Point(1.2, 7.4, 1.4)) is None
           True
         """
 
@@ -1384,13 +1384,13 @@ class MultiLine(object):
             self._lines = []
             self._crs = None
         else:
-            crs_code = lines[0].crs
+            crs = lines[0].crs
             for ndx in range(1, len(lines)):
-                if lines[ndx].crs != crs_code:
+                if lines[ndx].crs != crs:
                     raise CRSCodeException("All lines must have the same CRS code")
 
             self._lines = lines
-            self.crs = crs_code
+            self.crs = crs
 
     @property
     def lines(self):
