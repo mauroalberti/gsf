@@ -2,7 +2,7 @@
 
 from math import isnan, isinf
 
-from ..defaults.typing import *
+from ..defaults.types import *
 
 
 def areClose(a: float, b: float,

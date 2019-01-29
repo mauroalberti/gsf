@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from ..vectorial.vectorial import Point
+from pygsf.spatial.vectorial.vectorial import Point
 
 
 class RectangularDomain(object):

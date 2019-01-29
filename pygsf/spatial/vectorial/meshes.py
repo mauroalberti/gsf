@@ -4,9 +4,10 @@
 from math import radians, sin, cos
 import json
 
-from numpy import *  # general import for compatibility with formula input
+from numpy import linspace, dot, array, size
 
-from ..exceptions import *
+from ..exceptions import AnaliticSurfaceCalcException, AnaliticSurfaceIOException
+
 from .vectorial import Segment
 from ...mathematics.scalars import areClose
 from ...mathematics.transformations import deformMatrices
@@ -59,10 +60,9 @@ class TriangBeam(object):
         :param vector_1:
         :param vector_2:
         """
-        """
-        assert almost_zero(versor_1.length() - 1.0)
-        assert almost_zero(versor_2.length() - 1.0)
-        """
+
+        # assert almost_zero(versor_1.length() - 1.0)
+        # assert almost_zero(versor_2.length() - 1.0)
 
         self._apex = apex_pt3d
         self._versor_1 = vector_1.versor_full()
@@ -82,9 +82,6 @@ class TriangBeam(object):
         :param pt_3d:
         :return:
         """
-        """
-        angles
-        """
 
         vector_pt = Segment(self._apex, pt_3d).vector()
 
@@ -93,7 +90,7 @@ class TriangBeam(object):
 
         return angle_side_1, angle_side_2
 
-    def is_within_fascio(self, pt_3d):
+    def is_within_fan(self, pt_3d):
         """
 
         :param pt_3d:
@@ -155,7 +152,7 @@ class CartesianTriangle(object):
             versor_2 = versor3d(pt_1, pt_3)
 
             fascio = TriangBeam(apex, versor_1, versor_2)
-            if not fascio.is_within_fascio(pt_3d):
+            if not fascio.is_within_fan(pt_3d):
                 return False
             else:
                 return True

@@ -3,7 +3,7 @@
 
 from math import atan2, degrees
 
-from ..defaults.typing import *
+from ..defaults.types import *
 
 
 def mod360(val: float) -> float:

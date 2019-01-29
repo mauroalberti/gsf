@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from math  import floor
+from typing import Optional, Tuple, Sequence, List
+
+from math import floor
 import numpy as np
 
 from .scalars import *
-from .interpolations import interp_bilinear as s_interp_bilinear, interp_linear
+from .interpolations import scalars_bilin_interp as s_interp_bilinear, interp_linear
 
 
 def arrToTuple(arr1D: 'array[Number]') -> Tuple[float, ...]:
@@ -114,7 +116,7 @@ def arraysSameShape(
     return a_array.shape == b_array.shape
 
 
-def interp_bilinear(arr: 'array', i: Number, j: Number) -> Optional[float]:
+def array_bilin_interp(arr: 'array', i: Number, j: Number) -> Optional[float]:
     """
     Interpolate the z value at a given i,j values couple.
     Interpolation method: bilinear.

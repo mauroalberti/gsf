@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
+from typing import Callable, List
+
 from math import sin, cos
 import numpy as np
 
+from ...defaults.types import Number
 from ...mathematics.exceptions import InputValuesException
-from .geotransform import *
 
-
+from .geotransform import GeoTransform, ijPixToxyGeogr
 
 
 def ij_transfer_func(

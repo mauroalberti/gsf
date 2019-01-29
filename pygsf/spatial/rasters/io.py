@@ -5,7 +5,7 @@ import os
 
 import numpy as np
 
-from ...defaults.typing import *
+from ...defaults.types import *
 from ...defaults.constants import *
 from ...mathematics.scalars import areClose
 from .geoarray import GeoArray

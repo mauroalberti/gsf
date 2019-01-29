@@ -2,84 +2,59 @@
 
 
 from math import asin
-import copy
-#import xml.dom.minidom
 
-from .exceptions import GPXIOException
-
-from ..mathematics.statistics import get_statistics
-from ..geography.earth import projectionType
 from ..spatial.vectorial.vectorial import *
-from ..spatial.vectorial.geodetic import *
-
-#from ..libs_utils.qgis.projections import multiline_project
-#from ..libs_utils.qgis.qgs_tools import get_project_crs, line_geoms_attrs, get_zs_from_dem
+from ..spatial.geodetic import *
+from ..orientations.orientations import Axis
 
 
-def params_polar(self, pts: List[Point]) -> Tuple[List[float], List[float], List[float]]:
+def profile_params(profile: Line) -> Tuple[List[float], List[float], List[float]]:
     """
     Calculates profile parameters for polar projections source datasets.
 
-    :param pts: the points.
-    :type pts: List of Point instances.
+    :param profile: the profile line.
+    :type profile: Line.
     :return: three profile parameters: horizontal distances, 3D distances, directional slopes
     :rtype: Tuple of three floats lists.
     """
 
-    for profile_ndx in range(len(self.zs)):
+    # calculate 3D distances between consecutive points
 
-        zs = self.zs[profile_ndx]
+    if profile.crs == epsg_4326_str:
 
         # convert original values into ECEF values (x, y, z, time in ECEF global coordinate system)
+        ecef_ln = profile.wgs842ecef()
 
-        ecef_pt = [PolarSTPoint(lat, lon, elev, time).ecef_stpt() for lat, lon, elev, time in zip(xs, ys, zs, times)]
+        dist_3d_values = ecef_ln.step_lengths_3d()
 
-        # calculate 3D distances between consecutive points
+    else:
 
-        dist_3D_values = [np.nan]
-        for ndx in range(1, self.num_pnts):
-            dist_3D_values.append(ecef_pt[ndx].dist3DWith(ecef_pt[ndx - 1]))
+        dist_3d_values = profile.step_lengths_3d()
 
-        # calculate delta elevations between consecutive points
+    # calculate delta elevations between consecutive points
 
-        delta_elev_values = [np.nan]
-        for ndx in range(1, self.num_pnts):
-            delta_elev_values.append(zs[ndx] - zs[ndx - 1])
+    delta_elev_values = profile.step_delta_z()
 
-        # calculate slope along track
+    # calculate slope along section
 
-        dir_slopes = []
-        for delta_elev, dist_3D in zip(delta_elev_values, dist_3D_values):
-            try:
-                slope = degrees(asin(delta_elev / dist_3D))
-            except:
-                slope = 0.0
-            dir_slopes.append(slope)
+    dir_slopes_rads = []
+    for delta_elev, dist_3D in zip(delta_elev_values, dist_3d_values):
+        try:
+            slope_rads = asin(delta_elev / dist_3D)
+        except:
+            slope_rads = 0.0
+        dir_slopes_rads.append(slope_rads)
 
-        # calculate horizontal distance along track
+    # calculate horizontal distance along section
 
-        horiz_dist_values = []
-        for slope, dist_3D in zip(dir_slopes, dist_3D_values):
-            try:
-                horiz_dist_values.append(dist_3D * cos(radians(slope)))
-            except:
-                horiz_dist_values.append(np.nan)
+    horiz_dist_values = []
+    for slope_rads, dist_3D in zip(dir_slopes_rads, dist_3d_values):
+        try:
+            horiz_dist_values.append(dist_3D * cos(slope_rads))
+        except:
+            horiz_dist_values.append(np.nan)
 
-        """
-        # defines the cumulative 2D distance values
-
-        cum_distances_2D = [0.0]
-        for ndx in range(1, len(horiz_dist_values)):
-            cum_distances_2D.append(cum_distances_2D[-1] + horiz_dist_values[ndx])
-
-        # defines the cumulative 3D distance values
-
-        cum_distances_3D = [0.0]
-        for ndx in range(1, len(dist_3D_values)):
-            cum_distances_3D.append(cum_distances_3D[-1] + dist_3D_values[ndx])
-        """
-
-    return horiz_dist_values, dist_3D_values, dir_slopes
+    return horiz_dist_values, dist_3d_values, dir_slopes_rads
 
 
 class GeoProfilesSet(object):
@@ -377,148 +352,6 @@ class GeoProfile(object):
         self.geosurfaces_ids.append(lIds)
 
 
-class TopoProfiles(object):
-    """
-    A set of topographic profiles created from a
-    single planar profile trace and a set of source elevations
-    data (for instance, a pair of dems).
-    """
-
-    def __init__(self,
-                 crs_authid: str,
-                 profile_source: str,
-                 source_names: List[str],
-                 xs: List[float],
-                 ys: List[float],
-                 zs: List[List[float]],
-                 times: List[float],
-                 inverted: bool):
-        """
-        Creates the topoprofile instance.
-
-        :param crs_authid: the CRS authid. E.g.: "EPSG:4326".
-        :type crs_authid: basestring.
-        :param profile_source: the source type of the elevations, i.e., DEMs or GPS.
-        :type profile_source: basestring.
-        :param source_names: list of data sources names.
-        :type source_names: list of basestrings.
-        :param xs:
-        :param ys:
-        :param zs:
-        :param times:
-        :param inverted:
-        """
-
-
-        self.crs_authid = crs_authid
-        self.profile_source = profile_source
-        self.source_names = source_names
-        self.xs = xs
-        self.ys = ys
-        self.zs = zs
-        self.times = times
-        self.inverted = inverted
-
-        ###
-
-        if projectionType(self.crs_authid) == "polar":
-            self.profile_s, self.profiles_s3ds, self.profiles_dirslopes = self.params_polar()
-        else:
-            self.profile_s = np.asarray(source_trace.incremental_length_2d())
-
-            self.profiles_dirslopes = [np.asarray(line.slopes()) for line in topo_lines]
-
-            self.profiles_s3ds = [np.asarray(line.incremental_length_3d()) for line in topo_lines]
-
-            """
-            self.dem_params = [DEMParams(dem, params) for (dem, params) in
-                               zip(source_dems, dem_parameters)]
-            self.gpx_params = None                  
-            """
-
-    @property
-    def num_pnts(self) -> int:
-        """
-        Returns the number of points in the profile.
-        """
-
-        return len(self.xs)
-
-    def max_s(self) -> float:
-        """
-        Return the horizontal length of the topographic profile trace.
-
-        :return: the length of the profile.
-        :rtype: float
-        """
-
-        return self.profile_s[-1]
-
-    def min_z(self) -> float:
-        """
-        Returns the minimum elevation value in the
-        set of stored topographic profiles.
-
-        :return:
-        """
-
-        return float(min([np.nanmin(prof_elev) for prof_elev in self.profiles_elevs]))
-
-    def max_z(self) -> float:
-        """
-        Return the maximum elevation in the set of stored topographic profiles.
-
-        :return: the maximum elevation in the profiles.
-        :rtype: float.
-        """
-
-        return float(max([np.nanmax(prof_elev) for prof_elev in self.profiles_elevs]))
-
-    @property
-    def absolute_slopes(self) -> List[np.ndarray]:
-        """
-        Returns a list of the absolute slopes of the stored topographic profiles.
-
-        :return: a list of the absolute slopes of the stored topographic profiles.
-        :rtype: list of nd.arrays.
-        """
-
-        return [np.fabs(prof_dirslopes) for prof_dirslopes in self.profiles_dirslopes]
-
-    @property
-    def statistics_elev(self) -> List(Dict):
-        """
-        Return statistics (min, max, mean, var, std) for elevations in stored topographic profiles.
-
-        :return: statistics values.
-        :rtype: List of dictionaries, one for each topographic profile.
-        """
-
-        return [get_statistics(prof_elev) for prof_elev in self.profiles_elevs]
-
-    @property
-    def statistics_dirslopes(self) -> List(Dict):
-        """
-        Return statistics (min, max, mean, var, std) for directional slopes of stored topographic profiles.
-
-        :return: statistics values.
-        :rtype: List of dictionaries, one for each topographic profile.
-        """
-
-        return [get_statistics(prof_dirslopes) for prof_dirslopes in self.profiles_dirslopes]
-
-    @property
-    def statistics_slopes(self) -> List(Dict):
-        """
-        Return statistics (min, max, mean, var, std) for absolute slopes of stored topographic profiles.
-
-        :return: statistics values.
-        :rtype: List of dictionaries, one for each topographic profile.
-        """
-
-        return [get_statistics(prof_abs_slopes) for prof_abs_slopes in self.absolute_slopes]
-
-
 class PlaneAttitude(object):
 
     def __init__(self, rec_id, source_point_3d, source_geol_plane, point_3d, slope_rad, dwnwrd_sense, sign_hor_dist):
@@ -599,82 +432,6 @@ def intersection_distances_by_profile_start_list(profile_line, intersections):
     return distance_from_profile_start_list
 
 
-def profile_polygon_intersection(profile_qgsgeometry, polygon_layer, inters_polygon_classifaction_field_ndx):
-    """
-
-    :param profile_qgsgeometry:
-    :param polygon_layer:
-    :param inters_polygon_classifaction_field_ndx:
-    :return:
-    """
-
-    intersection_polyline_polygon_crs_list = []
-
-    if polygon_layer.selectedFeatureCount() > 0:
-        features = polygon_layer.selectedFeatures()
-    else:
-        features = polygon_layer.getFeatures()
-
-    for polygon_feature in features:
-        # retrieve every (selected) feature with its geometry and attributes
-
-        # fetch geometry
-        poly_geom = polygon_feature.geometry()
-
-        intersection_qgsgeometry = poly_geom.intersection(profile_qgsgeometry)
-
-        try:
-            if intersection_qgsgeometry.isEmpty():
-                continue
-        except:
-            try:
-                if intersection_qgsgeometry.isGeosEmpty():
-                    continue
-            except:
-                return False, "Missing function for checking empty geometries.\nPlease upgrade QGIS"
-
-        if inters_polygon_classifaction_field_ndx >= 0:
-            attrs = polygon_feature.attributes()
-            polygon_classification = attrs[inters_polygon_classifaction_field_ndx]
-        else:
-            polygon_classification = None
-
-        if intersection_qgsgeometry.isMultipart():
-            lines = intersection_qgsgeometry.asMultiPolyline()
-        else:
-            lines = [intersection_qgsgeometry.asPolyline()]
-
-        for line in lines:
-            intersection_polyline_polygon_crs_list.append([polygon_classification, line])
-
-    return True, intersection_polyline_polygon_crs_list
-
-
-def extract_multiline2d_list(structural_line_layer, project_crs):
-    """
-
-    :param structural_line_layer:
-    :param project_crs:
-    :return:
-    """
-
-    line_orig_crs_geoms_attrs = line_geoms_attrs(structural_line_layer)
-
-    line_orig_geom_list3 = [geom_data[0] for geom_data in line_orig_crs_geoms_attrs]
-    line_orig_crs_MultiLine2D_list = [xytuple_l2_to_MultiLine(xy_list2) for xy_list2 in line_orig_geom_list3]
-    line_orig_crs_clean_MultiLine2D_list = [multiline_2d.remove_coincident_points() for multiline_2d in
-                                            line_orig_crs_MultiLine2D_list]
-
-    # get CRS information
-    structural_line_layer_crs = structural_line_layer.crs()
-
-    # project input line layer to project CRS
-    line_proj_crs_MultiLine2D_list = [multiline_project(multiline2d, structural_line_layer_crs, project_crs) for
-                                          multiline2d in line_orig_crs_clean_MultiLine2D_list]
-
-    return line_proj_crs_MultiLine2D_list
-
-
 def define_plot_structural_segment(structural_attitude, profile_length, vertical_exaggeration, segment_scale_factor=70.0):
     """
 
@@ -719,38 +476,164 @@ def define_plot_structural_segment(structural_attitude, profile_length, vertical
     return structural_segment_s, structural_segment_z
 
 
-def calculate_projected_3d_pts(canvas, struct_pts, structural_pts_crs, demObj):
+
+def calculate_distance_with_sign(projected_point, section_init_pt, section_vector):
     """
 
-    :param canvas:
-    :param struct_pts:
-    :param structural_pts_crs:
-    :param demObj:
+    :param projected_point:
+    :param section_init_pt:
+    :param section_vector:
     :return:
     """
 
-    demCrs = demObj.params.crs
+    assert projected_point.z != np.nan
+    assert projected_point.z is not None
 
-    # check if on-the-fly-projection is set on
-    project_crs = get_project_crs(canvas)
+    projected_vector = Segment(section_init_pt, projected_point).vector()
+    cos_alpha = section_vector.cos_angle(projected_vector)
 
-    # set points in the project crs
-    if structural_pts_crs != project_crs:
-        struct_pts_in_prj_crs = calculate_pts_in_projection(struct_pts, structural_pts_crs, project_crs)
+    return projected_vector.len3D * cos_alpha
+
+
+def get_intersection_slope(intersection_versor_3d, section_vector):
+    """
+
+    :param intersection_versor_3d:
+    :param section_vector:
+    :return:
+    """
+
+    slope_radians = abs(radians(intersection_versor_3d.slope))
+    scalar_product_for_downward_sense = section_vector.sp(intersection_versor_3d.downward)
+    if scalar_product_for_downward_sense > 0.0:
+        intersection_downward_sense = "right"
+    elif scalar_product_for_downward_sense == 0.0:
+        intersection_downward_sense = "vertical"
     else:
-        struct_pts_in_prj_crs = copy.deepcopy(struct_pts)
+        intersection_downward_sense = "left"
 
-        # project the source points from point layer crs to DEM crs
-    # if the two crs are different
-    if structural_pts_crs != demCrs:
-        struct_pts_in_dem_crs = calculate_pts_in_projection(struct_pts, structural_pts_crs, demCrs)
+    return slope_radians, intersection_downward_sense
+
+
+def calculate_intersection_versor(section_cartes_plane, structural_cartes_plane):
+    """
+
+    :param section_cartes_plane:
+    :param structural_cartes_plane:
+    :return:
+    """
+
+    return section_cartes_plane.inters_versor(structural_cartes_plane)
+
+
+def calculate_nearest_intersection(intersection_versor_3d, section_cartes_plane, structural_cartes_plane,
+                                   structural_pt):
+    """
+
+    :param intersection_versor_3d:
+    :param section_cartes_plane:
+    :param structural_cartes_plane:
+    :param structural_pt:
+    :return:
+    """
+
+    dummy_inters_point = section_cartes_plane.inters_point(structural_cartes_plane)
+    dummy_structural_vector = Segment(dummy_inters_point, structural_pt).vector()
+    dummy_distance = dummy_structural_vector.vDot(intersection_versor_3d)
+    offset_vector = intersection_versor_3d.scale(dummy_distance)
+
+    return Point(dummy_inters_point.x + offset_vector.x,
+                 dummy_inters_point.y + offset_vector.y,
+                 dummy_inters_point.z + offset_vector.z)
+
+
+def calculate_axis_intersection(map_axis, section_cartes_plane, structural_pt):
+    """
+
+    :param map_axis:
+    :param section_cartes_plane:
+    :param structural_pt:
+    :return:
+    """
+
+    axis_versor = map_axis.as_vect().versor
+    l, m, n = axis_versor.x, axis_versor.y, axis_versor.z
+    axis_param_line = ParamLine3D(structural_pt, l, m, n)
+    return axis_param_line.intersect_cartes_plane(section_cartes_plane)
+
+
+def map_measure_to_section(structural_rec, section_data, map_axis=None):
+    """
+
+    :param structural_rec:
+    :param section_data:
+    :param map_axis:
+    :return:
+    """
+
+    # extract source data
+    structural_pt, structural_plane, structural_pt_id = structural_rec
+    section_init_pt, section_cartes_plane, section_vector = section_data['init_pt'], section_data['cartes_plane'], \
+                                                            section_data['vector']
+
+    # transform geological plane attitude into Cartesian plane
+    structural_cartes_plane = structural_plane.plane(structural_pt)
+
+    ## intersection versor
+    intersection_versor_3d = calculate_intersection_versor(section_cartes_plane, structural_cartes_plane)
+
+    # calculate slope of geological plane onto section plane
+    slope_radians, intersection_downward_sense = get_intersection_slope(intersection_versor_3d, section_vector)
+
+    # intersection point
+    if map_axis is None:
+        intersection_point_3d = calculate_nearest_intersection(intersection_versor_3d, section_cartes_plane,
+                                                               structural_cartes_plane, structural_pt)
     else:
-        struct_pts_in_dem_crs = copy.deepcopy(struct_pts)
+        intersection_point_3d = calculate_axis_intersection(map_axis, section_cartes_plane, structural_pt)
 
-    # - 3D structural points, with x, y, and z extracted from the current DEM
-    struct_pts_z = get_zs_from_dem(struct_pts_in_dem_crs, demObj)
+    # horizontal spat_distance between projected structural point and profile start
+    signed_distance_from_section_start = calculate_distance_with_sign(intersection_point_3d, section_init_pt,
+                                                                      section_vector)
 
-    assert len(struct_pts_in_prj_crs) == len(struct_pts_z)
+    # solution for current structural point
+    return PlaneAttitude(structural_pt_id,
+                         structural_pt,
+                         structural_plane,
+                         intersection_point_3d,
+                         slope_radians,
+                         intersection_downward_sense,
+                         signed_distance_from_section_start)
 
-    return [Point(pt.x, pt.y, z) for (pt, z) in zip(struct_pts_in_prj_crs, struct_pts_z)]
+
+def map_struct_pts_on_section(structural_data, section_data, mapping_method):
+    """
+    defines:
+        - 2D x-y location in section
+        - plane-plane segment intersection
+
+    :param structural_data:
+    :param section_data:
+    :param mapping_method:
+    :return:
+    """
+
+
+    if mapping_method['method'] == 'nearest':
+        return [map_measure_to_section(structural_rec, section_data) for structural_rec in structural_data]
+
+    if mapping_method['method'] == 'common axis':
+        map_axis = Axis(mapping_method['trend'], mapping_method['plunge'])
+        return [map_measure_to_section(structural_rec, section_data, map_axis) for structural_rec in structural_data]
+
+    if mapping_method['method'] == 'individual axes':
+        assert len(mapping_method['individual_axes_values']) == len(structural_data)
+        result = []
+        for structural_rec, (trend, plunge) in zip(structural_data, mapping_method['individual_axes_values']):
+            try:
+                map_axis = Axis(trend, plunge)
+                result.append(map_measure_to_section(structural_rec, section_data, map_axis))
+            except:
+                continue
+        return result
 

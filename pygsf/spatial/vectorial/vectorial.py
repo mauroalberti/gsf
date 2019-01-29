@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from math import sqrt
-import numpy as np
-from numpy import isfinite
 
 from ..constants import MIN_SEPARATION_THRESHOLD, MIN_SCALAR_VALUE
 from ...mathematics.vectors import *
 from ..exceptions import CRSCodeException
 from ...orientations.defaults import *
+from ..geodetic import epsg_4326_str, epsg_4978_str, geodetic2ecef
 
 array = np.array
 
@@ -18,7 +16,13 @@ class Point(object):
     Dimensions: 4D (space-time)
     """
 
-    def __init__(self, x: [int, float], y: [int, float], z: [int, float]=0.0, t: [int, float]=0.0, crs_code: str= ""):
+    def __init__(
+        self,
+        x: [int, float],
+        y: [int, float],
+        z: [int, float]=0.0,
+        t: [int, float]=0.0,
+        crs: str= ""):
         """
         Construct a Point instance.
 
@@ -30,8 +34,8 @@ class Point(object):
         :type z: int or float.
         :param t: point time coordinate.
         :type t: int or float.
-        :param crs_code: CRS code.
-        :type crs_code: basestring.
+        :param crs: CRS code.
+        :type crs: basestring.
         """
 
         vals = [x, y, z, t]
@@ -44,7 +48,7 @@ class Point(object):
         self._y = float(y)
         self._z = float(z)
         self._t = float(t)
-        self._crs = crs_code
+        self._crs = crs
 
     @property
     def x(self) -> float:
@@ -182,6 +186,15 @@ class Point(object):
 
         return self.x, self.y, self.z, self.t, self.crs
 
+    def clone(self) -> 'Point':
+        """
+        Clone a point.
+
+        :return: a new point.
+        :rtype: Point.
+        """
+
+        return Point(*self.a)
 
     def toXYZ(self) -> Tuple[float, float, float]:
         """
@@ -262,7 +275,6 @@ class Point(object):
         """
 
         return Point(0.0, self.y, self.z, self.t, self.crs)
-
 
     def deltaX(self, another: 'Point') -> Optional[float]:
         """
@@ -491,6 +503,29 @@ class Point(object):
         """
 
         return Vect(self.x, self.y, self.z)
+
+    def wgs842ecef(self) -> Optional['Point']:
+        """
+        Converts from WGS84 to ECEF reference system, provided its CRS is EPSG:4326.
+
+        :return: the point with ECEF coordinates (EPSG:4978).
+        :rtype: optional Point.
+        """
+
+        if self.crs != epsg_4326_str:
+            return None
+
+        x, y, z = geodetic2ecef(
+            lat=self.y,
+            lon=self.x,
+            height=self.z)
+
+        return Point(
+            x=x,
+            y=y,
+            z=z,
+            t=self.t,
+            crs=epsg_4978_str)
 
 
 class CPlane(object):
@@ -1000,12 +1035,14 @@ class Line(object):
     A list of Point objects, all with the same CRS code.
     """
 
-    def __init__(self, pts=None):
+    def __init__(self, pts: List[Point]=None, crs: str=""):
         """
         Creates the Line instance, when all the provided points have the same CRS codes.
 
         :param pts: a list of points
         :type pts: List of Point instances.
+        :param crs: the CRS code of the points.
+        :type crs: basestring.
         :return: a Line instance.
         :rtype: Line.
         :raises: CRSCodeException.
@@ -1014,16 +1051,14 @@ class Line(object):
 
         if pts is None:
             pts = []
-            init_crs_code = None
-        else:
-            init_crs_code = pts[0].crs
-            for ndx in range(1, len(pts)):
-                pt = pts[ndx]
-                if pt.crs != init_crs_code:
-                    raise CRSCodeException("All points must have the same CRS code")
+
+        for ndx in range(len(pts)):
+            pt = pts[ndx]
+            if pt.crs != crs:
+                raise CRSCodeException("All points must have the same '{}' CRS code".format(crs))
 
         self._pts = pts
-        self._crs = init_crs_code
+        self._crs = crs
 
     @property
     def pts(self):
@@ -1042,7 +1077,9 @@ class Line(object):
 
     def clone(self):
 
-        return Line(map(lambda pt: pt.clone(), self.pts))
+        return Line(
+            pts=[pt.clone() for pt in self.pts],
+            crs=self.crs)
 
     def add_pt(self, pt):
         """
@@ -1226,6 +1263,55 @@ class Line(object):
             length += self.pts[ndx].dist2DWith(self.pts[ndx + 1])
         return length
 
+    def step_delta_z(self) -> List[float]:
+        """
+        Return the difference in elevation between consecutive points:
+        z[ndx+1] - z[ndx]
+
+        :return: a list of height differences.
+        :rtype: list of floats.
+        """
+
+        delta_z = []
+        for ndx in range(self.num_pts - 1):
+            delta_z.append(self.pts[ndx + 1].z - self.pts[ndx].z)
+
+        return delta_z
+
+    def step_lengths_3d(self) -> List[float]:
+        """
+        Returns the point-to-point 3D distances.
+
+        :return: the individual 3D segment lengths.
+        :rtype: list of floats.
+
+        Examples:
+        """
+
+        step_length_list = []
+        for ndx in range(self.num_pts - 1):
+            length = self.pts[ndx].dist3DWith(self.pts[ndx + 1])
+            step_length_list.append(length)
+
+        return step_length_list
+
+    def step_lengths_2d(self) -> List[float]:
+        """
+        Returns the point-to-point 2D distances.
+
+        :return: the individual 2D segment lengths.
+        :rtype: list of floats.
+
+        Examples:
+        """
+
+        step_length_list = []
+        for ndx in range(self.num_pts - 1):
+            length = self.pts[ndx].dist2DWith(self.pts[ndx + 1])
+            step_length_list.append(length)
+
+        return step_length_list
+
     def incremental_length_3d(self):
 
         incremental_length_list = []
@@ -1268,6 +1354,23 @@ class Line(object):
     def absolute_slopes(self):
 
         return map(abs, self.slopes())
+
+    def wgs842ecef(self) -> Optional['Line']:
+        """
+        Converts from WGS84 to ECEF reference system, provided its CRS is EPSG:4326.
+
+        :return: a line with ECEF coordinates (EPSG:4978).
+        :rtype: optional Line.
+        """
+
+        if self.crs != epsg_4326_str:
+            return None
+
+        pts = [pt.wgs842ecf() for pt in self.pts]
+
+        return Line(
+            pts=pts,
+            crs=epsg_4978_str)
 
 
 class MultiLine(object):

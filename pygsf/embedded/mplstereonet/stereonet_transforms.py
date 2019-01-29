@@ -3,6 +3,7 @@ from matplotlib.path import Path
 from matplotlib.transforms import Transform
 
 class BaseStereonetTransform(Transform):
+
     """An abstract base class for all forward and inverse transforms relating
     to stereonets. Not meant to be initiated directly."""
     input_dims = 2

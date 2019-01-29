@@ -1,11 +1,21 @@
 # -*- coding: utf-8 -*-
 
+from typing import Tuple, Optional, Dict, List
+
 import math
+import numpy as np
 from numpy import array
 
-from pygsf.spatial.exceptions import *
-from .fields import *
-from ..generics.general import *
+from ...defaults.types import Number
+
+from ..vectorial.vectorial import Point
+from ...mathematics.arrays import array_bilin_interp
+from .geotransform import xyGeogrToijPix, gtToxyCellCenters, gtEquiv
+from .geotransform import GeoTransform, ijPixToxyGeogr
+
+from ..exceptions import GeoArrayIOException
+from ..general import prjEquiv
+from .fields import magnitude, orients_d, divergence, curl_module, magn_grads, magn_grad_along_flowlines
 
 
 def ijPixToijArray(i_pix: Number, j_pix: Number) -> Tuple[Number, Number]:
@@ -320,7 +330,7 @@ class GeoArray(object):
 
         i, j = self.xyToijArr(x, y)
 
-        inter_res = interp_bilinear(self._levels[level_ndx], i, j)
+        inter_res = array_bilin_interp(self._levels[level_ndx], i, j)
 
         if inter_res is None:
             return None

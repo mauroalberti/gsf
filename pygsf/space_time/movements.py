@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from ..defaults.typing import *
+from ..defaults.types import *
 from ..spatial.vectorial.vectorial import Point
 from ..spatial.rasters.geoarray import GeoArray
 

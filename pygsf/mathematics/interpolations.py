@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from ..defaults.typing import Number
+from ..defaults.types import Number
 
 
 def interp_linear(frac_s: Number, v0: Number, v1:Number) -> Number:
@@ -35,7 +35,7 @@ def interp_linear(frac_s: Number, v0: Number, v1:Number) -> Number:
     return v0 + frac_s * delta_z
 
 
-def interp_bilinear(i: Number, j: Number, v00: Number, v01: Number, v10: Number, v11: Number) -> Number:
+def scalars_bilin_interp(i: Number, j: Number, v00: Number, v01: Number, v10: Number, v11: Number) -> Number:
     """
     Return an interpolated number based on a bilinear interpolation.
 
@@ -51,7 +51,7 @@ def interp_bilinear(i: Number, j: Number, v00: Number, v01: Number, v10: Number,
     :type v10: Number.
     :param v11: the z value of the (i=1, j=1) cell center.
     :type v11: Number.
-    :return: the interpèolated z value.
+    :return: the interpolated z value.
     :rtype: Number.
     """
 
