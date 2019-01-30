@@ -3,7 +3,7 @@
 from math import atan, isfinite, sqrt, degrees, acos
 from numpy import isfinite, array
 
-from pygsf.defaults.maths import MIN_VECTOR_MAGNITUDE, MIN_SCALAR_VALUE
+from ..defaults.maths import MIN_VECTOR_MAGNITUDE, MIN_SCALAR_VALUE
 
 from .exceptions import *
 from .arrays import *

@@ -1,0 +1,134 @@
+pygsf/mathematics/statistics.py:3: error: No library stub file for module 'numpy'
+pygsf/embedded/mplstereonet/stereonet_transforms.py:1: error: No library stub file for module 'numpy'
+pygsf/embedded/mplstereonet/stereonet_transforms.py:2: error: No library stub file for module 'matplotlib.path'
+pygsf/embedded/mplstereonet/stereonet_transforms.py:3: error: No library stub file for module 'matplotlib.transforms'
+pygsf/embedded/mplstereonet/stereonet_math.py:26: error: No library stub file for module 'numpy'
+pygsf/embedded/mplstereonet/convenience_functions.py:101: error: No library stub file for module 'matplotlib.pyplot'
+pygsf/embedded/mplstereonet/convenience_functions.py:101: error: No library stub file for module 'matplotlib'
+pygsf/embedded/mplstereonet/utilities.py:1: error: No library stub file for module 'numpy'
+pygsf/embedded/mplstereonet/contouring.py:1: error: No library stub file for module 'numpy'
+pygsf/embedded/mplstereonet/analysis.py:1: error: No library stub file for module 'numpy'
+pygsf/embedded/mplstereonet/analysis.py:1: note: (Stub files are from https://github.com/python/typeshed)
+pygsf/embedded/mplstereonet/stereonet_axes.py:1: error: No library stub file for module 'numpy'
+pygsf/embedded/mplstereonet/stereonet_axes.py:3: error: No library stub file for module 'matplotlib'
+pygsf/embedded/mplstereonet/stereonet_axes.py:4: error: No library stub file for module 'matplotlib.transforms'
+pygsf/embedded/mplstereonet/stereonet_axes.py:5: error: No library stub file for module 'matplotlib.projections'
+pygsf/embedded/mplstereonet/stereonet_axes.py:6: error: No library stub file for module 'matplotlib.axes'
+pygsf/embedded/mplstereonet/stereonet_axes.py:7: error: No library stub file for module 'matplotlib.ticker'
+pygsf/embedded/mplstereonet/stereonet_axes.py:9: error: No library stub file for module 'matplotlib.path'
+pygsf/embedded/mplstereonet/stereonet_axes.py:10: error: No library stub file for module 'matplotlib.patches'
+pygsf/embedded/mplstereonet/stereonet_axes.py:11: error: No library stub file for module 'matplotlib.collections'
+pygsf/mathematics/arrays.py:6: error: No library stub file for module 'numpy'
+pygsf/tests/test_interpolations.py:8: error: No library stub file for module 'numpy'
+pygsf/spatial/rasters/geotransform.py:3: error: No library stub file for module 'numpy'
+pygsf/spatial/rasters/geotransform.py:15: error: Incompatible default for argument "inRotRow" (default has type "float", argument has type "int")
+pygsf/spatial/rasters/geotransform.py:15: error: Incompatible default for argument "inRotColumn" (default has type "float", argument has type "int")
+pygsf/mathematics/vectors.py:4: error: No library stub file for module 'numpy'
+pygsf/mathematics/vectors.py:4: error: Name 'isfinite' already defined (possibly by an import)
+pygsf/mathematics/vectors.py:48: error: Incompatible default for argument "z" (default has type "float", argument has type "int")
+pygsf/mathematics/vectors.py:77: error: Argument 1 of "__eq__" incompatible with supertype "object"
+pygsf/mathematics/vectors.py:77: note: It is recommended for "__eq__" to work with arbitrary objects, for example:
+pygsf/mathematics/vectors.py:77: note:     def __eq__(self, other: object) -> bool:
+pygsf/mathematics/vectors.py:77: note:         if not isinstance(other, Vect):
+pygsf/mathematics/vectors.py:77: note:             return NotImplemented
+pygsf/mathematics/vectors.py:77: note:         return <logic to compare two Vect instances>
+pygsf/mathematics/vectors.py:96: error: Argument 1 of "__ne__" incompatible with supertype "object"
+pygsf/mathematics/vectors.py:111: error: Name 'numpy' is not defined
+pygsf/mathematics/vectors.py:172: error: Name 'numpy' is not defined
+pygsf/mathematics/vectors.py:646: error: Argument 1 to "acos" has incompatible type "Optional[float]"; expected "SupportsFloat"
+pygsf/mathematics/vectors.py:723: error: Unsupported operand types for - ("float" and "None")
+pygsf/mathematics/vectors.py:723: note: Right operand is of type "Optional[float]"
+pygsf/spatial/vectorial/vectorial.py:21: error: Invalid type
+pygsf/spatial/vectorial/vectorial.py:22: error: Invalid type
+pygsf/spatial/vectorial/vectorial.py:23: error: Invalid type
+pygsf/spatial/vectorial/vectorial.py:24: error: Invalid type
+pygsf/spatial/vectorial/vectorial.py:142: error: Argument 1 of "__eq__" incompatible with supertype "object"
+pygsf/spatial/vectorial/vectorial.py:142: note: It is recommended for "__eq__" to work with arbitrary objects, for example:
+pygsf/spatial/vectorial/vectorial.py:142: note:     def __eq__(self, other: object) -> bool:
+pygsf/spatial/vectorial/vectorial.py:142: note:         if not isinstance(other, Point):
+pygsf/spatial/vectorial/vectorial.py:142: note:             return NotImplemented
+pygsf/spatial/vectorial/vectorial.py:142: note:         return <logic to compare two Point instances>
+pygsf/spatial/vectorial/vectorial.py:162: error: Argument 1 of "__ne__" incompatible with supertype "object"
+pygsf/spatial/vectorial/vectorial.py:227: error: Invalid type "pygsf.spatial.vectorial.vectorial.array"
+pygsf/spatial/vectorial/vectorial.py:394: error: Invalid type
+pygsf/spatial/vectorial/vectorial.py:442: error: Unsupported operand types for >= ("float" and "None")
+pygsf/spatial/vectorial/vectorial.py:442: note: Left operand is of type "Optional[float]"
+pygsf/spatial/vectorial/vectorial.py:444: error: Invalid type
+pygsf/spatial/rasters/fields.py:6: error: No library stub file for module 'numpy'
+pygsf/mathematics/quaternions.py:246: error: Argument 1 of "__eq__" incompatible with supertype "object"
+pygsf/mathematics/quaternions.py:246: note: It is recommended for "__eq__" to work with arbitrary objects, for example:
+pygsf/mathematics/quaternions.py:246: note:     def __eq__(self, other: object) -> bool:
+pygsf/mathematics/quaternions.py:246: note:         if not isinstance(other, Quaternion):
+pygsf/mathematics/quaternions.py:246: note:             return NotImplemented
+pygsf/mathematics/quaternions.py:246: note:         return <logic to compare two Quaternion instances>
+pygsf/mathematics/quaternions.py:269: error: Argument 1 of "__ne__" incompatible with supertype "object"
+pygsf/mathematics/quaternions.py:418: error: Invalid type
+pygsf/mathematics/quaternions.py:599: error: Invalid type
+pygsf/mathematics/quaternions.py:691: error: Item "None" of "Optional[Quaternion]" has no attribute "scalar"
+pygsf/mathematics/quaternions.py:693: error: Name 'numpy' is not defined
+pygsf/mathematics/quaternions.py:704: error: Item "None" of "Optional[Quaternion]" has no attribute "components"
+pygsf/mathematics/frames.py:27: error: Argument 1 to "areClose" has incompatible type "Optional[float]"; expected "float"
+pygsf/tests/test_fields_grads_dirderiv_orients.py:4: error: No library stub file for module 'numpy'
+pygsf/tests/test_fields_divergence_curl_module.py:16: error: Name 'Number' already defined (possibly by an import)
+pygsf/tests/test_fields_divergence_curl_module.py:18: error: Name 'Number' already defined (possibly by an import)
+pygsf/orientations/orientations.py:18: error: Invalid type
+pygsf/orientations/orientations.py:87: error: Invalid type
+pygsf/orientations/orientations.py:159: error: Invalid type
+pygsf/orientations/orientations.py:235: error: Invalid type
+pygsf/orientations/orientations.py:413: error: Invalid type
+pygsf/orientations/orientations.py:449: error: Invalid type
+pygsf/orientations/orientations.py:467: error: Invalid type
+pygsf/orientations/orientations.py:505: error: Invalid type
+pygsf/orientations/orientations.py:1134: error: Invalid type
+pygsf/orientations/orientations.py:1504: error: Invalid type
+pygsf/orientations/orientations.py:1527: error: Invalid type
+pygsf/orientations/orientations.py:1548: error: Invalid type
+pygsf/orientations/orientations.py:1615: error: Invalid type
+pygsf/orientations/orientations.py:1632: error: Invalid type
+pygsf/tests/test_polar_data_svd.py:2: error: No library stub file for module 'numpy'
+pygsf/tests/test_polar_data_svd.py:34: error: Value of type "Optional[Tuple[Any, Any, Any]]" is not indexable
+pygsf/tests/test_polar_data_svd.py:35: error: Value of type "Optional[Tuple[Any, Any, Any]]" is not indexable
+pygsf/tests/test_polar_data_svd.py:36: error: Value of type "Optional[Tuple[Any, Any, Any]]" is not indexable
+pygsf/spatial/rasters/geoarray.py:6: error: No library stub file for module 'numpy'
+pygsf/spatial/rasters/geoarray.py:40: error: Incompatible return value type (got "Tuple[float, float]", expected "Tuple[int, int]")
+pygsf/spatial/rasters/geoarray.py:63: error: Incompatible return value type (got "Tuple[float, float]", expected "Tuple[int, int]")
+pygsf/spatial/rasters/geoarray.py:91: error: Need type annotation for '_levels'
+pygsf/spatial/rasters/geoarray.py:213: error: Argument 1 to "ijPixToijArray" has incompatible type "*Tuple[float, float]"; expected "int"
+pygsf/spatial/rasters/geoarray.py:229: error: Incompatible return value type (got "Tuple[float, float]", expected "Tuple[int, int]")
+pygsf/spatial/rasters/geoarray.py:247: error: Incompatible return value type (got "Tuple[float, float]", expected "Tuple[int, int]")
+pygsf/spatial/rasters/geoarray.py:263: error: Incompatible return value type (got "Tuple[float, float]", expected "Tuple[int, int]")
+pygsf/spatial/rasters/geoarray.py:291: error: Unsupported operand types for / ("None" and "int")
+pygsf/spatial/rasters/geoarray.py:291: note: Left operand is of type "Optional[float]"
+pygsf/orientations/rotations.py:8: error: Name 'Number' already defined (possibly by an import)
+pygsf/orientations/rotations.py:16: error: Invalid type
+pygsf/orientations/rotations.py:63: error: Item "None" of "Optional[Quaternion]" has no attribute "rotAngle"
+pygsf/orientations/rotations.py:64: error: Item "None" of "Optional[Quaternion]" has no attribute "vector"
+pygsf/orientations/rotations.py:66: error: Too many arguments for "RotationAxis"
+pygsf/orientations/rotations.py:84: error: Too many arguments for "RotationAxis"
+pygsf/orientations/rotations.py:194: error: Invalid type
+pygsf/orientations/rotations.py:241: error: Incompatible return value type (got "Optional[Quaternion]", expected "Quaternion")
+pygsf/orientations/rotations.py:330: error: Unsupported left operand type for * ("None")
+pygsf/orientations/rotations.py:330: note: Left operand is of type "Optional[Quaternion]"
+pygsf/orientations/rotations.py:330: error: Item "None" of "Optional[Quaternion]" has no attribute "inverse"
+pygsf/geology/profiles.py:28: error: Item "None" of "Optional[Line]" has no attribute "step_lengths_3d"
+pygsf/geology/faults.py:19: error: Invalid type
+pygsf/geology/faults.py:64: error: Invalid type
+pygsf/geology/faults.py:150: error: Invalid type
+pygsf/geology/faults.py:241: error: Incompatible return value type (got "Sequence[Slick]", expected "List[Slick]")
+pygsf/geology/faults.py:276: error: Too many arguments
+pygsf/geology/faults.py:288: error: Incompatible return value type (got "None", expected "bool")
+pygsf/geology/faults.py:341: error: Item "None" of "Optional[Direct]" has no attribute "angle"
+pygsf/spatial/rasters/io.py:7: error: No library stub file for module 'numpy'
+pygsf/spatial/rasters/io.py:15: error: Incompatible default for argument "esri_nullvalue" (default has type "float", argument has type "int")
+pygsf/spatial/rasters/io.py:57: error: 'None' object is not iterable
+pygsf/mathematics/transformations.py:4: error: No library stub file for module 'numpy'
+pygsf/geology/ptbaxes.py:5: error: Name 'Number' already defined (possibly by an import)
+pygsf/geology/ptbaxes.py:126: error: Item "None" of "Optional[Quaternion]" has no attribute "components"
+pygsf/geology/ptbaxes.py:259: error: Invalid type
+pygsf/tests/test_Runge_Kutta_Fehlberg_interpolation.py:10: error: Name 'Number' already defined (possibly by an import)
+pygsf/tests/test_Runge_Kutta_Fehlberg_interpolation.py:11: error: Name 'Number' already defined (possibly by an import)
+pygsf/tests/src_datasets.py:5: error: Name 'Number' already defined (possibly by an import)
+pygsf/spatial/vectorial/meshes.py:7: error: No library stub file for module 'numpy'
+pygsf/tests/test_ptbaxes.py:8: error: Name 'Number' already defined (possibly by an import)
+pygsf/plotting/stereonets.py:4: error: No library stub file for module 'matplotlib.pyplot'
+pygsf/plotting/stereonets.py:4: error: No library stub file for module 'matplotlib'
