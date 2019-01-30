@@ -1035,7 +1035,7 @@ class Line(object):
     A list of Point objects, all with the same CRS code.
     """
 
-    def __init__(self, pts: List[Point]=None, crs: str=""):
+    def __init__(self, pts: Optional[List[Point]]=None, crs: str=""):
         """
         Creates the Line instance, when all the provided points have the same CRS codes.
 
@@ -1378,19 +1378,17 @@ class MultiLine(object):
     MultiLine is a list of Line objects, each one with the same CRS code
     """
 
-    def __init__(self, lines=None):
+    def __init__(self, lines: Optional[List[Line]]=None, crs: str=""):
 
         if lines is None:
-            self._lines = []
-            self._crs = None
-        else:
-            crs = lines[0].crs
-            for ndx in range(1, len(lines)):
-                if lines[ndx].crs != crs:
-                    raise CRSCodeException("All lines must have the same CRS code")
+            lines = []
 
-            self._lines = lines
-            self.crs = crs
+        for ndx in range(len(lines)):
+            if lines[ndx].crs != crs:
+                raise CRSCodeException("All lines must have the same CRS code")
+
+        self._lines = lines
+        self._crs = crs
 
     @property
     def lines(self):
@@ -1411,13 +1409,13 @@ class MultiLine(object):
 
         if self.num_lines > 0:
             if line.crs != self.crs:
-                raise  CRSCodeException("Added line must have the same CRS code as current multiline")
+                raise CRSCodeException("Added line must have the same CRS code as current multiline")
 
         return MultiLine(self.lines + [line])
 
     def clone(self):
 
-        return MultiLine(self.lines)
+        return MultiLine(self.lines, crs=self.crs)
 
     @property
     def num_tot_pts(self):

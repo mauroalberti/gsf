@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from pygsf.defaults.maths import QUAT_NORMALIZ_TOL, QUAT_DIVISION_TOL
+from ..defaults.maths import QUAT_NORMALIZ_TOL, QUAT_DIVISION_TOL
 
 from .vectors import *
 
