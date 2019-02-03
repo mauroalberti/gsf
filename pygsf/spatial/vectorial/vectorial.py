@@ -1130,6 +1130,10 @@ class Line(object):
 
         return [pt.z for pt in self.pts]
 
+    def z_array(self):
+
+        return np.array(self.z_list)
+
     def xy_lists(self):
 
         return self.x_list, self.y_list
@@ -1155,6 +1159,31 @@ class Line(object):
         return np.nanmax(self.y_list)
 
     @property
+    def z_stats(self):
+        """
+        Returns the line elevation statistics.
+
+        :return:
+        """
+
+        zs_array = self.z_array()
+
+        min = np.nanmin(zs_array)
+        max = np.nanmax(zs_array)
+        mean = np.nanmean(zs_array)
+        var = np.nanvar(zs_array)
+        std = np.nanstd(zs_array)
+
+        stats = dict(min=min,
+                     max=max,
+                     mean=mean,
+                     var=var,
+                     std=std)
+
+        return stats
+
+
+    @property
     def z_min(self):
 
         return np.nanmin(self.z_list)
@@ -1163,10 +1192,6 @@ class Line(object):
     def z_max(self):
 
         return np.nanmax(self.z_list)
-
-    def z_array(self):
-
-        return np.array(self.z_list)
 
     @property
     def z_mean(self):
