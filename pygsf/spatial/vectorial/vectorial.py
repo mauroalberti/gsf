@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from typing import Dict
 
 from ..constants import MIN_SEPARATION_THRESHOLD, MIN_SCALAR_VALUE
 from ...mathematics.vectors import *
+from ...mathematics.statistics import get_statistics
 from ..exceptions import CRSCodeException
 from ...orientations.defaults import *
 from ..geodetic import epsg_4326_str, epsg_4978_str, geodetic2ecef
@@ -1159,29 +1161,15 @@ class Line(object):
         return np.nanmax(self.y_list)
 
     @property
-    def z_stats(self):
+    def z_stats(self) -> Dict:
         """
         Returns the line elevation statistics.
 
-        :return:
+        :return: the statistics parameters: min, max, mean, var, std.
+        :rtype: Dictionary of float values.
         """
 
-        zs_array = self.z_array()
-
-        min = np.nanmin(zs_array)
-        max = np.nanmax(zs_array)
-        mean = np.nanmean(zs_array)
-        var = np.nanvar(zs_array)
-        std = np.nanstd(zs_array)
-
-        stats = dict(min=min,
-                     max=max,
-                     mean=mean,
-                     var=var,
-                     std=std)
-
-        return stats
-
+        return get_statistics(self.z_array())
 
     @property
     def z_min(self):
@@ -1376,9 +1364,31 @@ class Line(object):
 
         return lSlopes
 
-    def absolute_slopes(self):
+    @property
+    def slopes_stats(self) -> Dict:
+        """
+        Returns the line directional slope statistics.
 
-        return map(abs, self.slopes())
+        :return: the statistics parameters: min, max, mean, var, std.
+        :rtype: Dictionary.
+        """
+
+        return get_statistics(self.slopes())
+
+    def abs_slopes(self):
+
+        return [abs(val) for val in self.slopes()]
+
+    @property
+    def abs_slopes_stats(self) -> Dict:
+        """
+        Returns the line absolute slopes statistics.
+
+        :return: the statistics parameters: min, max, mean, var, std.
+        :rtype: Dictionary.
+        """
+
+        return get_statistics(self.abs_slopes())
 
     def wgs842ecef(self) -> Optional['Line']:
         """
@@ -1391,7 +1401,7 @@ class Line(object):
         if self.crs != epsg_4326_str:
             return None
 
-        pts = [pt.wgs842ecf() for pt in self.pts]
+        pts = [pt.wgs842ecef() for pt in self.pts]
 
         return Line(
             pts=pts,
