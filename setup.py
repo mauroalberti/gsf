@@ -20,6 +20,6 @@ setup(
     project_urls={
         "Bug Tracker": "https://github.com/mauroalberti/gsf/issues",
         "Documentation": "https://github.com/mauroalberti/gsf/blob/master/README.md",
-        "Source Code": "https://github.com/mauroalberti/gsf/tree/master/gsf_py",
+        "Source Code": "https://github.com/mauroalberti/gsf/tree/master/https://github.com/mauroalberti/gsf/tree/master/pygsf",
     }
 )

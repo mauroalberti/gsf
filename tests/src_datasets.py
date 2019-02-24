@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-from ..geology.ptbaxes import *
-from ..orientations.rotations import *
+from pygsf.geology.ptbaxes import *
+from pygsf.orientations.rotations import *
 
 
 """
