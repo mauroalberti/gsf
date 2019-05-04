@@ -6,6 +6,8 @@ import unittest
 from pygsf.mathematics.scalars import areClose
 from pygsf.mathematics.quaternions import Quaternion
 
+from src_datasets import *
+
 
 q_case_1 = Quaternion(3.2, 17.4, 9.25, -8.47)
 

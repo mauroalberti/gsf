@@ -116,7 +116,7 @@ class Vect(object):
 
         Examples:
           >>> Vect(4, 3, 7).a
-          array([4., 3., 7.])
+          array([ 4.,  3.,  7.])
         """
 
         return np.copy(self._a)
@@ -177,7 +177,7 @@ class Vect(object):
 
         Examples:
           >>> Vect(1, 2, 3).toArray()
-          array([1., 2., 3.])
+          array([ 1., 2., 3.])
         """
 
         return self.a
