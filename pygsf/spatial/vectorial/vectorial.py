@@ -233,8 +233,8 @@ class Point(object):
         :return: Numpy array
 
         Examples:
-          >>> Point(1, 2, 3).toArray()
-          array([ 1., 2., 3., 0.])
+          >>> np.allclose(Point(1, 2, 3).toArray(), array([ 1., 2., 3., 0.]))
+          True
         """
 
         return np.asarray(self.toXYZT())
@@ -671,17 +671,13 @@ class CPlane(object):
           Point(0.0000, 0.0000, 1.0000, 0.0000, '')
         """
 
-        a = pointSolution(array([self.a, self.b, self.c]),
-                                     array([-self.d]))
-        print(type(a))
-        print(a)
         point = Point(*pointSolution(array([[self.a, self.b, self.c]]),
                                      array([-self.d])))
         return point
 
     def intersVersor(self, another):
         """
-        Return intersection versor for two inttersecting planes.
+        Return intersection versor for two intersecting planes.
 
         Examples:
           >>> a = CPlane(1, 0, 0, 0)

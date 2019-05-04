@@ -182,13 +182,9 @@ def pointSolution(a_array: 'array[Number]', b_array: 'array[Number]'):
     Examples:
     """
 
-    print("a_array", a_array)
-    print("b_array", b_array)
-
     try:
         return np.linalg.lstsq(a_array, b_array, rcond=None)[0]
-    except Exception as e:
-        print(e)
+    except:
         return None, None, None
 
 

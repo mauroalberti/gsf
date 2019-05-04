@@ -115,8 +115,8 @@ class Vect(object):
         :return: double array of x, y, z values
 
         Examples:
-          >>> Vect(4, 3, 7).a
-          array([ 4.,  3.,  7.])
+          >>> np.allclose(Vect(4, 3, 7).a, array([ 4.,  3.,  7.]))
+          True
         """
 
         return np.copy(self._a)
@@ -176,8 +176,8 @@ class Vect(object):
         :return: Numpy array
 
         Examples:
-          >>> Vect(1, 2, 3).toArray()
-          array([ 1., 2., 3.])
+          >>> np.allclose(Vect(1, 2, 3).toArray(), array([ 1., 2., 3.]))
+          True
         """
 
         return self.a
