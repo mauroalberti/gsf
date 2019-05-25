@@ -1037,7 +1037,7 @@ class Line(object):
     A list of Point objects, all with the same CRS code.
     """
 
-    def __init__(self, pts: Optional[List[Point]]=None, crs: str=""):
+    def __init__(self, pts: Optional[List[Point]] = None, crs: str = ""):
         """
         Creates the Line instance, when all the provided points have the same CRS codes.
 
@@ -1062,6 +1062,27 @@ class Line(object):
         self._pts = pts
         self._crs = crs
 
+    @classmethod
+    def fromPointList(cls, pt_list: List[List[float]], crs: str = "") -> 'Line':
+        """
+        Create a Line instance from a list of x, y and optional z values.
+
+        Example:
+          >>> Line.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          Line with 3 points: (0.0000, 0.0000, 0.0000) ... (0.0000, 1.0000, 0.0000) - crs: undefined
+        """
+
+        pts = []
+        for vals in pt_list:
+            if len(vals) == 2:
+                pt = Point(vals[0], vals[1])
+            else:
+                pt = Point(vals[0], vals[1], vals[2])
+
+            pts.append(pt)
+
+        return cls(pts, crs)
+
     @property
     def pts(self):
 
@@ -1076,6 +1097,61 @@ class Line(object):
     def num_pts(self):
 
         return len(self.pts)
+
+    @property
+    def first_pt(self) -> Optional[Point]:
+        """
+        Return the first point of a Line or None when no points.
+
+        :return: the first point or None.
+        :rtype: optional Point instance.
+        """
+
+        if self.num_pts >= 1:
+            return self.pts[0]
+        else:
+            return None
+
+    @property
+    def last_pt(self) -> Optional[Point]:
+        """
+        Return the last point of a Line or None when no points.
+
+        :return: the last point or None.
+        :rtype: optional Point instance.
+        """
+
+        if self.num_pts >= 1:
+            return self.pts[-1]
+        else:
+            return None
+
+    def __repr__(self) -> str:
+        """
+        Represents a Line instance as a shortened text.
+
+        :return: a textual shortened representation of a Line instance.
+        :rtype: str.
+        """
+
+        num_points = self.num_pts
+        crs = self.crs
+        if not crs:
+            crs = "undefined"
+
+        if num_points == 0:
+            txt = "Empty Line"
+        else:
+            first_pt = self.first_pt
+            x1, y1, z1 = first_pt.x, first_pt.y, first_pt.z
+            if num_points == 1:
+                txt = "Line with unique point: {.4f}.{.4f},{.4f}".format(x1, y1, z1)
+            else:
+                last_pt = self.last_pt
+                x2, y2, z2 = last_pt.x, last_pt.y, last_pt.z
+                txt = "Line with {} points: ({:.4f}, {:.4f}, {:.4f}) ... ({:.4f}, {:.4f}, {:.4f}) - crs: {}".format(num_points, x1, y1, z1, x2, y2, z2, crs)
+
+        return txt
 
     def clone(self):
 
