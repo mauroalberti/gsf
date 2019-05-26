@@ -2,6 +2,8 @@
 
 from typing import Dict
 
+import itertools
+
 from ..constants import MIN_SEPARATION_THRESHOLD, MIN_SCALAR_VALUE
 from ...mathematics.vectors import *
 from ...mathematics.statistics import get_statistics
@@ -1287,8 +1289,6 @@ class Line(object):
         :return: Line instance
         """
 
-        #assert self.num_pts >= 2
-
         new_line = Line(self.pts[:1], crs=self.crs)
         for ndx in range(1, self.num_pts):
             if not self.pts[ndx].isCoinc(new_line.pts[-1]):
@@ -1325,8 +1325,6 @@ class Line(object):
         segments = self.as_segments()
 
         densified_line_list = [segment.densify_2d_segment(sample_distance) for segment in segments]
-
-        #assert len(densified_line_list) > 0
 
         densifyied_multiline = MultiLine(densified_line_list, crs=self.crs)
 
@@ -1370,15 +1368,18 @@ class Line(object):
         :rtype: list of floats.
         """
 
-        delta_z = []
-        for ndx in range(self.num_pts - 1):
-            delta_z.append(self.pts[ndx + 1].z - self.pts[ndx].z)
+        delta_z = [0.0]
+
+        for ndx in range(1, self.num_pts):
+            delta_z.append(self.pts[ndx].z - self.pts[ndx - 1].z)
 
         return delta_z
 
     def step_lengths_3d(self) -> List[float]:
         """
         Returns the point-to-point 3D distances.
+        It is the distance between a point and its previous one.
+        The list has the same lenght as the source point list.
 
         :return: the individual 3D segment lengths.
         :rtype: list of floats.
@@ -1386,9 +1387,9 @@ class Line(object):
         Examples:
         """
 
-        step_length_list = []
-        for ndx in range(self.num_pts - 1):
-            length = self.pts[ndx].dist3DWith(self.pts[ndx + 1])
+        step_length_list = [0.0]
+        for ndx in range(1, self.num_pts):
+            length = self.pts[ndx].dist3DWith(self.pts[ndx - 1])
             step_length_list.append(length)
 
         return step_length_list
@@ -1396,6 +1397,8 @@ class Line(object):
     def step_lengths_2d(self) -> List[float]:
         """
         Returns the point-to-point 2D distances.
+        It is the distance between a point and its previous one.
+        The list has the same lenght as the source point list.
 
         :return: the individual 2D segment lengths.
         :rtype: list of floats.
@@ -1403,34 +1406,32 @@ class Line(object):
         Examples:
         """
 
-        step_length_list = []
-        for ndx in range(self.num_pts - 1):
-            length = self.pts[ndx].dist2DWith(self.pts[ndx + 1])
+        step_length_list = [0.0]
+        for ndx in range(1, self.num_pts):
+            length = self.pts[ndx].dist2DWith(self.pts[ndx - 1])
             step_length_list.append(length)
 
         return step_length_list
 
-    def incremental_length_3d(self):
+    def incremental_length_3d(self) -> List[float]:
+        """
+        Returns the accumulated 3D segment lengths.
 
-        incremental_length_list = []
-        length = 0.0
-        incremental_length_list.append(length)
-        for ndx in range(self.num_pts - 1):
-            length += self.pts[ndx].dist3DWith(self.pts[ndx + 1])
-            incremental_length_list.append(length)
+        :return: accumulated 3D segment lenghts
+        :rtype: list of floats.
+        """
 
-        return incremental_length_list
+        return list(itertools.accumulate(self.step_lengths_3d()))
 
     def incremental_length_2d(self):
+        """
+        Returns the accumulated 2D segment lengths.
 
-        lIncrementalLengths = []
-        length = 0.0
-        lIncrementalLengths.append(length)
-        for ndx in range(self.num_pts - 1):
-            length += self.pts[ndx].dist2DWith(self.pts[ndx + 1])
-            lIncrementalLengths.append(length)
+        :return: accumulated 2D segment lenghts
+        :rtype: list of floats.
+        """
 
-        return lIncrementalLengths
+        return list(itertools.accumulate(self.step_lengths_2d()))
 
     def reverse_direction(self):
 
@@ -1441,11 +1442,10 @@ class Line(object):
 
     def slopes(self):
 
-        lSlopes = []
-        for ndx in range(self.num_pts - 1):
+        lSlopes = [None]
+        for ndx in range(1, self.num_pts):
             vector = Segment(self.pts[ndx], self.pts[ndx + 1]).vector()
             lSlopes.append(-vector.slope)  # minus because vector convention is positive downward
-        lSlopes.append(np.nan)  # slope value for last point is unknown
 
         return lSlopes
 
@@ -1498,7 +1498,7 @@ class MultiLine(object):
     MultiLine is a list of Line objects, each one with the same CRS code
     """
 
-    def __init__(self, lines: Optional[List[Line]]=None, crs: str=""):
+    def __init__(self, lines: Optional[List[Line]] = None, crs: str = ""):
 
         if lines is None:
             lines = []

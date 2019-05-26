@@ -1,7 +1,7 @@
 
 from typing import List, Tuple
 
-from math import asin, cos
+from math import asin, cos, pi
 
 import numpy as np
 
@@ -41,20 +41,24 @@ def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[fl
 
     dir_slopes_rads = []
     for delta_elev, dist_3D in zip(delta_elev_values, dist_3d_values):
-        try:
+        if dist_3D == 0.0:
+            if delta_elev == 0.0:
+                slope_rads = 0.0
+            elif delta_elev < 0.0:
+                slope_rads = - 0.5 * pi
+            else:
+                slope_rads = 0.5 * pi
+        else:
             slope_rads = asin(delta_elev / dist_3D)
-        except:
-            slope_rads = 0.0
+
         dir_slopes_rads.append(slope_rads)
 
     # calculate horizontal distance along section
 
     horiz_dist_values = []
     for slope_rads, dist_3D in zip(dir_slopes_rads, dist_3d_values):
-        try:
-            horiz_dist_values.append(dist_3D * cos(slope_rads))
-        except:
-            horiz_dist_values.append(np.nan)
+
+        horiz_dist_values.append(dist_3D * cos(slope_rads))
 
     return horiz_dist_values, dist_3d_values, dir_slopes_rads
 

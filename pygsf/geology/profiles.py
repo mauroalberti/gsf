@@ -135,7 +135,7 @@ class TopoProfile(object):
         :rtype: list of float values.
         """
 
-        return self.line.incremental_length_2d()
+        return list(itertools.accumulate(self.horiz_dist_values))
 
     @property
     def profile_length(self) -> float:
