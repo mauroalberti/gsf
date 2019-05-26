@@ -7,7 +7,8 @@ from ...mathematics.vectors import *
 from ...mathematics.statistics import get_statistics
 from ..exceptions import CRSCodeException
 from ...orientations.defaults import *
-from ..geodetic import epsg_4326_str, epsg_4978_str, geodetic2ecef
+from ...geodesy.geodetic import epsg_4326_str, epsg_4978_str, geodetic2ecef
+
 
 array = np.array
 
@@ -22,9 +23,9 @@ class Point(object):
         self,
         x: [int, float],
         y: [int, float],
-        z: [int, float]=0.0,
-        t: [int, float]=0.0,
-        crs: str= ""):
+        z: [int, float] = 0.0,
+        t: [int, float] = 0.0,
+        crs: str = ""):
         """
         Construct a Point instance.
 
@@ -465,17 +466,17 @@ class Point(object):
         Create a new object shifted by given amount from the self instance.
 
         Example:
-          >>> Point(1, 1, 1).shift(0.5, 1., 1.5)
-          Point(1.5000, 2.0000, 2.5000, 0.0000, '')
-          >>> Point(1, 2, -1).shift(0.5, 1., 1.5)
-          Point(1.5000, 3.0000, 0.5000, 0.0000, '')
+          >>> Point(1, 1, 1, crs="EPSG:32632").shift(0.5, 1., 1.5)
+          Point(1.5000, 2.0000, 2.5000, 0.0000, 'EPSG:32632')
+          >>> Point(1, 2, -1, crs="EPSG:32632").shift(0.5, 1., 1.5)
+          Point(1.5000, 3.0000, 0.5000, 0.0000, 'EPSG:32632')
        """
 
         return Point(self.x + sx, self.y + sy, self.z + sz, self.t, self.crs)
 
     def shiftByVect(self, v: Vect) -> 'Point':
         """
-        Create a new object shifted from the self instance by given vector.
+        Create a new point shifted from the self instance by given vector.
 
         :param v: the shift vector.
         :type v: Vect.
@@ -483,10 +484,10 @@ class Point(object):
         :rtype: Point.
 
         Example:
-          >>> Point(1, 1, 1).shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 2.0000, 2.5000, 0.0000, '')
-          >>> Point(1, 2, -1).shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 3.0000, 0.5000, 0.0000, '')
+          >>> Point(1, 1, 1, crs="EPSG:32632").shiftByVect(Vect(0.5, 1., 1.5))
+          Point(1.5000, 2.0000, 2.5000, 0.0000, 'EPSG:32632')
+          >>> Point(1, 2, -1, crs="EPSG:32632").shiftByVect(Vect(0.5, 1., 1.5))
+          Point(1.5000, 3.0000, 0.5000, 0.0000, 'EPSG:32632')
        """
 
         sx, sy, sz = v.toXYZ()
@@ -1018,7 +1019,7 @@ class Segment(object):
         vers_2d = vect.versor2D()
         generator_vector = vers_2d.scale(densify_distance)
 
-        interpolated_line = Line([self.start_pt])
+        interpolated_line = Line([self.start_pt], crs=self.crs)
         n = 0
         while True:
             n += 1
@@ -1075,9 +1076,16 @@ class Line(object):
         pts = []
         for vals in pt_list:
             if len(vals) == 2:
-                pt = Point(vals[0], vals[1])
+                pt = Point(
+                    x=vals[0],
+                    y=vals[1],
+                    crs=crs)
             else:
-                pt = Point(vals[0], vals[1], vals[2])
+                pt = Point(
+                    x=vals[0],
+                    y=vals[1],
+                    z=vals[2],
+                    crs=crs)
 
             pts.append(pt)
 
@@ -1279,9 +1287,9 @@ class Line(object):
         :return: Line instance
         """
 
-        assert self.num_pts >= 2
+        #assert self.num_pts >= 2
 
-        new_line = Line(self.pts[:1])
+        new_line = Line(self.pts[:1], crs=self.crs)
         for ndx in range(1, self.num_pts):
             if not self.pts[ndx].isCoinc(new_line.pts[-1]):
                 new_line.add_pt(self.pts[ndx])
@@ -1311,15 +1319,16 @@ class Line(object):
         :return: Line instance
         """
 
-        assert sample_distance > 0.0
+        if sample_distance <= 0.0:
+            raise Exception("Sample distance must be positive. {} received".format(sample_distance))
 
         segments = self.as_segments()
 
         densified_line_list = [segment.densify_2d_segment(sample_distance) for segment in segments]
 
-        assert len(densified_line_list) > 0
+        #assert len(densified_line_list) > 0
 
-        densifyied_multiline = MultiLine(densified_line_list)
+        densifyied_multiline = MultiLine(densified_line_list, crs=self.crs)
 
         densifyied_line = densifyied_multiline.to_line()
 
@@ -1586,7 +1595,7 @@ class MultiLine(object):
 
     def to_line(self):
 
-        return Line([point for line in self.lines for point in line.pts])
+        return Line([point for line in self.lines for point in line.pts], crs=self.crs)
 
     def densify_2d_multiline(self, sample_distance):
 
