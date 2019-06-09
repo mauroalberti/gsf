@@ -1,9 +1,9 @@
 
-from ..spatial.vectorial.vectorial import *
-from ..geodesy.geodetic import *
-from ..geodesy.profiles import profile_parameters
-from ..spatial.vectorial.vectorial import Point, Segment, ParamLine3D
-from ..orientations.orientations import Axis
+from pygsf.spatial.vectorial.vectorial import *
+from pygsf.geodesy.geodetic import *
+from pygsf.geodesy.profiles import profile_parameters
+from pygsf.spatial.vectorial.vectorial import Point, Segment, ParamLine3D
+from pygsf.orientations.orientations import Axis
 
 
 class GeoProfilesSet(object):
@@ -115,7 +115,7 @@ class TopoProfile(object):
         """
         Instantiates a topographic profile object.
 
-        :param line: the topographic profile.
+        :param line: the topographic profile line instance.
         :type line: Line.
         :param inverted: whether the profile is inverted.
         :type inverted: bool.
@@ -126,7 +126,6 @@ class TopoProfile(object):
 
         self.horiz_dist_values, self.dist_3d_values, self.dir_slopes_rads = profile_parameters(self.line)
 
-    @property
     def profile_s(self) -> List[float]:
         """
         Returns the incremental 2D lengths of a profile.
@@ -159,7 +158,6 @@ class TopoProfile(object):
 
         return self.line.length_3d
 
-    @property
     def elevations(self) -> List[float]:
         """
         Returns the elevations of the profile.
@@ -286,7 +284,7 @@ class GeoProfile(object):
         :rtype
         """
 
-        return [topoprofile.profile_s for topoprofile in self.topoprofiles]
+        return [topoprofile.profile_s() for topoprofile in self.topoprofiles]
 
     def profiles_zs(self) -> List[float]:
         """
@@ -296,7 +294,7 @@ class GeoProfile(object):
         :rtype: list of float values.
         """
 
-        return [topoprofile.elevations for topoprofile in self.topoprofiles]
+        return [topoprofile.elevations() for topoprofile in self.topoprofiles]
 
     def profiles_lengths_2d(self) -> List[float]:
         """
