@@ -85,12 +85,32 @@ class GeoArray(object):
         Examples:
         """
 
-        self.gt = inGeotransform
-        self.prj = inProjection
+        self._gt = inGeotransform
+        self._prj = inProjection
         if inLevels is None:
             self._levels = []
         else:
             self._levels = inLevels
+
+    def geotransform(self):
+        """
+        Returns geotransform.
+
+        :return: the geotransform.
+        :rtype: GeoTransform.
+        """
+
+        return self._gt
+
+    def crs(self):
+        """
+        Return the geoarray crs.
+
+        :return: the crs.
+        :rtype: basestring.
+        """
+
+        return self._prj
 
     @property
     def src_cellsize_j(self) -> float:
@@ -103,7 +123,7 @@ class GeoArray(object):
         Examples:
         """
 
-        return abs(self.gt.pixWidth)
+        return abs(self._gt.pixWidth)
 
     @property
     def src_cellsize_i(self) -> float:
@@ -116,7 +136,7 @@ class GeoArray(object):
         Examples:
         """
 
-        return abs(self.gt.pixHeight)
+        return abs(self._gt.pixHeight)
 
     @property
     def levels_num(self) -> int:
@@ -265,7 +285,7 @@ class GeoArray(object):
         Examples:
         """
 
-        return ijPixToijArray(*xyGeogrToijPix(self.gt, x, y))
+        return ijPixToijArray(*xyGeogrToijPix(self._gt, x, y))
 
     def xyToijPix(self, x: Number, y: Number) -> Tuple[Number, Number]:
         """
@@ -281,7 +301,7 @@ class GeoArray(object):
         Examples:
         """
 
-        return xyGeogrToijPix(self.gt, x, y)
+        return xyGeogrToijPix(self._gt, x, y)
 
     def ijArrToxy(self, i: Number, j: Number) -> Tuple[Number, Number]:
         """
@@ -299,7 +319,7 @@ class GeoArray(object):
 
         i_pix, j_pix = ijArrToijPix(i, j)
 
-        return ijPixToxyGeogr(self.gt, i_pix, j_pix)
+        return ijPixToxyGeogr(self._gt, i_pix, j_pix)
 
     def ijPixToxy(self, i: Number, j: Number) -> Tuple[Number, Number]:
         """
@@ -315,7 +335,7 @@ class GeoArray(object):
         Examples:
         """
 
-        return ijPixToxyGeogr(self.gt, i, j)
+        return ijPixToxyGeogr(self._gt, i, j)
 
     @property
     def has_rotation(self) -> bool:
@@ -328,7 +348,7 @@ class GeoArray(object):
         Examples:
         """
 
-        return self.gt.has_rotation
+        return self._gt.has_rotation
 
     def geotransf_cell_sizes(self) -> Tuple[float, float]:
         """
@@ -363,7 +383,7 @@ class GeoArray(object):
             return None
         else:
             num_rows, num_cols = res
-            return gtToxyCellCenters(self.gt, num_rows, num_cols)
+            return gtToxyCellCenters(self._gt, num_rows, num_cols)
 
     def interpolate_bilinear(self, x: Number, y: Number, level_ndx=0) -> Optional[float]:
         """
@@ -412,8 +432,8 @@ class GeoArray(object):
             fld_y=self._levels[ndx_fy])
 
         return GeoArray(
-            inGeotransform=self.gt,
-            inProjection=self.prj,
+            inGeotransform=self._gt,
+            inProjection=self._prj,
             inLevels=[magn]
         )
 
@@ -436,8 +456,8 @@ class GeoArray(object):
             fld_y=self._levels[ndx_fy])
 
         return GeoArray(
-            inGeotransform=self.gt,
-            inProjection=self.prj,
+            inGeotransform=self._gt,
+            inProjection=self._prj,
             inLevels=[orient]
         )
 
@@ -462,8 +482,8 @@ class GeoArray(object):
             cell_size_y=self.src_cellsize_i)
 
         return GeoArray(
-            inGeotransform=self.gt,
-            inProjection=self.prj,
+            inGeotransform=self._gt,
+            inProjection=self._prj,
             inLevels=[div]
         )
 
@@ -488,8 +508,8 @@ class GeoArray(object):
             cell_size_y=self.src_cellsize_i)
 
         return GeoArray(
-            inGeotransform=self.gt,
-            inProjection=self.prj,
+            inGeotransform=self._gt,
+            inProjection=self._prj,
             inLevels=[curl_m])
 
     def magnitude_grads(self, axis: str= '', ndx_fx: int=0, ndx_fy: int=1) -> 'GeoArray':
@@ -525,8 +545,8 @@ class GeoArray(object):
             axis=axis)
 
         return GeoArray(
-            inGeotransform=self.gt,
-            inProjection=self.prj,
+            inGeotransform=self._gt,
+            inProjection=self._prj,
             inLevels=magnitude_gradients)
 
     def grad_flowlines(self, ndx_fx: int=0, ndx_fy: int=1) -> 'GeoArray':
@@ -548,8 +568,8 @@ class GeoArray(object):
             cell_size_y=self.src_cellsize_i)
 
         return GeoArray(
-            inGeotransform=self.gt,
-            inProjection=self.prj,
+            inGeotransform=self._gt,
+            inProjection=self._prj,
             inLevels=[flowln_grad])
 
 

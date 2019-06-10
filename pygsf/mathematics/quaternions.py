@@ -690,7 +690,7 @@ class Quaternion(object):
 
         return 2 * degrees(acos(self.normalize().scalar))
 
-    def toRotMatrix(self) -> 'numpy.array':
+    def toRotMatrix(self) -> 'np.array':
         """
         Computes the rotation matrix from the quaternion xyz.
         Formula as in:

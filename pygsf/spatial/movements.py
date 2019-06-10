@@ -57,8 +57,8 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: Number, start_pt: Point) -> 
         return None, None
 
     k2_pt = Point(
-        start_pt.x + (0.25) * delta_time * k1_vx,
-        start_pt.y + (0.25) * delta_time * k1_vy
+        start_pt.x + 0.25 * delta_time * k1_vx,
+        start_pt.y + 0.25 * delta_time * k1_vy
     )
 
     k2_vx, k2_vy = point_velocity(geoarray, k2_pt)
@@ -86,8 +86,8 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: Number, start_pt: Point) -> 
         return None, None
 
     k5_pt = Point(
-        start_pt.x + (439.0 / 216.0) * delta_time * k1_vx - (8.0) * delta_time * k2_vx + (3680.0 / 513.0) * delta_time * k3_vx - (845.0 / 4104.0) * delta_time * k4_vx,
-        start_pt.y + (439.0 / 216.0) * delta_time * k1_vy - (8.0) * delta_time * k2_vy + (3680.0 / 513.0) * delta_time * k3_vy - (845.0 / 4104.0) * delta_time * k4_vy)
+        start_pt.x + (439.0 / 216.0) * delta_time * k1_vx - 8.0 * delta_time * k2_vx + (3680.0 / 513.0) * delta_time * k3_vx - (845.0 / 4104.0) * delta_time * k4_vx,
+        start_pt.y + (439.0 / 216.0) * delta_time * k1_vy - 8.0 * delta_time * k2_vy + (3680.0 / 513.0) * delta_time * k3_vy - (845.0 / 4104.0) * delta_time * k4_vy)
 
     k5_vx, k5_vy = point_velocity(geoarray, k5_pt)
 
@@ -95,9 +95,9 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: Number, start_pt: Point) -> 
         return None, None
 
     k6_pt = Point(
-        start_pt.x - (8.0 / 27.0) * delta_time * k1_vx + (2.0) * delta_time * k2_vx - (3544.0 / 2565.0) * delta_time * k3_vx + (1859.0 / 4104.0) * delta_time * k4_vx - (
+        start_pt.x - (8.0 / 27.0) * delta_time * k1_vx + 2.0 * delta_time * k2_vx - (3544.0 / 2565.0) * delta_time * k3_vx + (1859.0 / 4104.0) * delta_time * k4_vx - (
                           11.0 / 40.0) * delta_time * k5_vx,
-        start_pt.y - (8.0 / 27.0) * delta_time * k1_vy + (2.0) * delta_time * k2_vy - (3544.0 / 2565.0) * delta_time * k3_vy + (1859.0 / 4104.0) * delta_time * k4_vy - (
+        start_pt.y - (8.0 / 27.0) * delta_time * k1_vy + 2.0 * delta_time * k2_vy - (3544.0 / 2565.0) * delta_time * k3_vy + (1859.0 / 4104.0) * delta_time * k4_vy - (
                           11.0 / 40.0) * delta_time * k5_vy)
 
     k6_vx, k6_vy = point_velocity(geoarray, k6_pt)

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-from math import radians, cos, sin
-
 from ..defaults.maths import QUAT_MAGN_THRESH
 from ..mathematics.quaternions import *
 from .orientations import *

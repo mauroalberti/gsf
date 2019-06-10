@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from math import atan, isfinite, sqrt, degrees, acos
-from numpy import isfinite, array
+
+from numpy import isfinite
 
 from ..defaults.maths import MIN_VECTOR_MAGNITUDE, MIN_SCALAR_VALUE
 
@@ -108,7 +109,7 @@ class Vect(object):
             return not (self == another)
 
     @property
-    def a(self) -> 'numpy.array':
+    def a(self) -> array:
         """
         Return a copy of the object inner array.
 
@@ -169,7 +170,7 @@ class Vect(object):
 
         return self.x, self.y, self.z
 
-    def toArray(self) -> 'numpy.array':
+    def toArray(self) -> array:
         """
         Return a double Numpy array representing the point values.
 
@@ -463,9 +464,9 @@ class Vect(object):
         :return: boolean
 
         Example:
-          >>> Vect(0,0,1).isUpward
+          >>> Vect(0, 0, 1).isUpward
           True
-          >>> Vect(0,0,-0.5).isUpward
+          >>> Vect(0, 0, -0.5).isUpward
           False
           >>> Vect(1, 3, 0).isUpward
           False
@@ -486,9 +487,9 @@ class Vect(object):
         :return: boolean
 
         Example:
-          >>> Vect(0,0,1).isDownward
+          >>> Vect(0, 0, 1).isDownward
           False
-          >>> Vect(0,0,-0.5).isDownward
+          >>> Vect(0, 0, -0.5).isDownward
           True
           >>> Vect(1, 3, 0).isDownward
           False

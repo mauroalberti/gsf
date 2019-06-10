@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, Tuple, Sequence, List
+from typing import Optional, Sequence, List
 
 from math import floor
 import numpy as np
@@ -10,7 +10,7 @@ from .scalars import *
 from .interpolations import scalars_bilin_interp as s_interp_bilinear, interp_linear
 
 
-def arrToTuple(arr1D: 'array[Number]') -> Tuple[float, ...]:
+def arrToTuple(arr1D: array) -> Tuple[float, ...]:
     """
     Converts a 1D arrays into a tuple of floats.
     It assumes a 1D array as input.
@@ -50,10 +50,10 @@ def toFloats(iterable_obj: Sequence[Number]) -> List[float]:
 def arraysAreClose(
         a_array: 'array',
         b_array: 'array',
-        rtol: float=1e-012,
-        atol: float=1e-12,
-        equal_nan: bool=False,
-        equal_inf: bool=False) -> bool:
+        rtol: float = 1e-012,
+        atol: float = 1e-12,
+        equal_nan: bool = False,
+        equal_inf: bool = False) -> bool:
     """
     Check for equivalence between two numpy arrays.
 
@@ -148,27 +148,27 @@ def array_bilin_interp(arr: 'array', i: Number, j: Number) -> Optional[float]:
         return arr[i, j]
     elif i == i_max - 1:
         v0 = arr[i, int(floor(j))]
-        v1 = arr[i, int(floor(j+1))]
+        v1 = arr[i, int(floor(j + 1))]
         return interp_linear(
             frac_s=dj,
             v0=v0,
             v1=v1)
     elif j == j_max - 1:
         v0 = arr[int(floor(i)), j]
-        v1 = arr[int(floor(i+1)), j]
+        v1 = arr[int(floor(i + 1)), j]
         return interp_linear(
             frac_s=di,
             v0=v0,
             v1=v1)
     else:
         v00 = arr[int(floor(i)), int(floor(j))]
-        v01 = arr[int(floor(i)), int(floor(j+1))]
-        v10 = arr[int(floor(i+1)), int(floor(j))]
-        v11 = arr[int(floor(i+1)), int(floor(j+1))]
+        v01 = arr[int(floor(i)), int(floor(j + 1))]
+        v10 = arr[int(floor(i + 1)), int(floor(j))]
+        v11 = arr[int(floor(i + 1)), int(floor(j + 1))]
         return s_interp_bilinear(di, dj, v00, v01, v10, v11)
 
 
-def pointSolution(a_array: 'array[Number]', b_array: 'array[Number]'):
+def pointSolution(a_array: array, b_array: array):
     """
     Finds a non-unique solution for a set of linear equations.
 
@@ -233,6 +233,6 @@ def svd(xyz_array) -> Optional[Tuple['np.array', 'np.array', 'np.array']]:
 
 
 if __name__ == "__main__":
-
     import doctest
+
     doctest.testmod()

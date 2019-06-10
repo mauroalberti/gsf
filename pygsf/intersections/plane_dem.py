@@ -4,9 +4,33 @@ from typing import Tuple, Optional
 
 from ..spatial.rasters.geoarray import GeoArray
 from ..spatial.rasters.fields import *
-from ..spatial.vectorial.geometries import Point, Segment
+from ..spatial.vectorial.geometries import Point, Segment, Line
 
 from ..orientations.orientations import Plane
+
+
+def vertical_profile(ga: GeoArray, resampled_line: Line) -> Optional[Line]:
+
+    crs_geoarray = ga.crs()
+    crs_line = resampled_line.crs()
+
+    if crs_geoarray != crs_line:
+        return None
+
+    lnProfile = Line(crs=crs_line)
+
+    for point in resampled_line.pts:
+        fInterpolatedZVal = ga.interpolate_bilinear(point.x, point.y)
+
+        pt3dt = Point(
+            x=point.x,
+            y=point.y,
+            z=fInterpolatedZVal,
+            crs=crs_line)
+
+        lnProfile.add_pt(pt3dt)
+
+    return lnProfile
 
 
 def ijarr2xyz(ijarr2xy_func: Callable, xy2z_func: Callable, i: float, j: float) -> Tuple[float, float, float]:
@@ -208,7 +232,7 @@ def plane_dem_intersection(
     q_p = array_from_function(
         row_num=row_num,
         col_num=col_num,
-        geotransform=geo_array.gt,
+        geotransform=geo_array.geotransform(),
         z_transfer_func=plane_z_closure)
 
     index_multiplier = 100  # sufficiently large value to ensure a precise slope values

@@ -38,7 +38,7 @@ def formula_to_grid(array_range, array_size, formula):
         raise AnaliticSurfaceCalcException("Error in a-b values")
 
     try:
-        z_list = [eval(formula) for a in a_array for b in b_array]
+        z_list = [eval(formula) for _ in a_array for _ in b_array]
     except:
         raise AnaliticSurfaceCalcException("Error in applying formula to a and b array values")
 

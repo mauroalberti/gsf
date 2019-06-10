@@ -273,7 +273,7 @@ class Fault(object):
             return self._slicks[ndx].s
 
     @property
-    def knownSense(self, ndx: int=0) -> bool:
+    def knownSense(self, ndx: int=0) -> Optional[bool]:
         """
         Check if the Slick instance in the Fault instance has a known movement sense.
 
