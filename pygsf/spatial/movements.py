@@ -3,9 +3,9 @@
 
 from typing import Tuple, Optional
 
-from ..defaults.types import *
-from ..spatial.vectorial.vectorial import Point
-from ..spatial.rasters.geoarray import GeoArray
+from pygsf.defaults.types import *
+from pygsf.spatial.vectorial.geometries import Point
+from pygsf.spatial.rasters.geoarray import GeoArray
 
 
 def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[float], Optional[float]]:

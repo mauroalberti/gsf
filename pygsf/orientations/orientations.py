@@ -4,7 +4,7 @@
 from typing import Callable
 
 from math import radians, pi, tan, atan2, sin, cos
-from ..spatial.vectorial.vectorial import *
+from ..spatial.vectorial.geometries import *
 
 from .exceptions import *
 from .utils import *

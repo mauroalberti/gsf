@@ -8,7 +8,7 @@ from numpy import array
 
 from ...defaults.types import Number
 
-from ..vectorial.vectorial import Point
+from ..vectorial.geometries import Point
 from ...mathematics.arrays import array_bilin_interp
 from .geotransform import xyGeogrToijPix, gtToxyCellCenters, gtEquiv, GeoTransform, ijPixToxyGeogr
 

@@ -5,7 +5,7 @@ from math import asin, cos, pi
 
 import numpy as np
 
-from ..spatial.vectorial.vectorial import Line
+from ..spatial.vectorial.geometries import Line
 
 from .geodetic import epsg_4326_str
 

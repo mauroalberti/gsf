@@ -8,7 +8,7 @@ from numpy import linspace, dot, array, size
 
 from ..exceptions import AnaliticSurfaceCalcException, AnaliticSurfaceIOException
 
-from .vectorial import Segment
+from .geometries import Segment
 from ...mathematics.scalars import areClose
 from ...mathematics.transformations import deformMatrices
 

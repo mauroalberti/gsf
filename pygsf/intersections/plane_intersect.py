@@ -4,7 +4,7 @@ from typing import Tuple, Optional
 
 from ..spatial.rasters.geoarray import GeoArray
 from ..spatial.rasters.fields import *
-from ..spatial.vectorial.vectorial import Point, Segment
+from ..spatial.vectorial.geometries import Point, Segment
 
 from ..orientations.orientations import Plane
 
