@@ -32,7 +32,7 @@ import pygsf
 ```
 ## Docs
 
-There are a few Jupyter notebooks describing some of the features of the module in the docs/notebooks folder.b)
+There are a few Jupyter notebooks describing some of the features of the module in the docs/notebooks folder.
 
 
 
