@@ -176,8 +176,10 @@ class GeoArray(object):
         else:
             return None
 
-    def level_llc(self, level_ndx: int=0) -> Optional[Tuple[int, int]]:
+    def level_llc(self, level_ndx: int = 0) -> Optional[Tuple[int, int]]:
         """
+        Deprecated. Use "band_corners_pixcoords" instead.
+
         Returns the coordinates of the lower-left corner.
 
         :param level_ndx: index of the level (grid) to consider.
@@ -195,6 +197,59 @@ class GeoArray(object):
         llc_i_pix, llc_j_pix = shape[0], 0
 
         return self.ijPixToxy(llc_i_pix, llc_j_pix)
+
+    def band_corners_pixcoords(self, level_ndx: int = 0) -> \
+            Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
+        """
+        Returns the pixel coordinates of the top-left, top-right, bottom-right and bottom-left band corners.
+
+        :param level_ndx: index of the level (grid) to consider.
+        :type level_ndx: int.
+        :return: pixel coordinates of the top-left, top-right, bottom-right and bottom-left band corners.
+        :rtype: four tuples of float pairs.
+
+        Examples:
+          >>> gt = GeoTransform(0, 0, 10, 10)
+          >>> ga = GeoArray(gt, "", [array([[1, 2, 3], [4, 5, 6]])])
+          >>> ga.band_corners_pixcoords()
+          ((0.0, 0.0), (0.0, 3.0), (2.0, 3.0), (2.0, 0.0))
+        """
+
+        shape = self.level_shape(level_ndx)
+        num_rows, num_cols = shape
+
+        top_left_ijpix = (0.0, 0.0)
+        top_right_ijpix = (0.0, float(num_cols))
+        btm_right_ijpix = (float(num_rows), float(num_cols))
+        btm_left_ijpix = (float(num_rows), 0.0)
+
+        return top_left_ijpix, top_right_ijpix, btm_right_ijpix, btm_left_ijpix
+
+    def band_corners_geogcoords(self, level_ndx: int = 0) -> \
+            Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
+        """
+        Returns the geographic coordinates of the top-left, top-right, bottom-right and bottom-left band corners.
+
+        :param level_ndx: index of the level (grid) to consider.
+        :type level_ndx: int.
+        :return: geographic coordinates of the top-left, top-right, bottom-right and bottom-left band corners.
+        :rtype: four tuples of float pairs.
+
+        Examples:
+          >>> gt = GeoTransform(1500, 3000, 10, 10)
+          >>> ga = GeoArray(gt, "", [array([[1, 2, 3], [4, 5, 6]])])
+          >>> ga.band_corners_geogcoords()
+          ((1500.0, 3000.0), (1530.0, 3000.0), (1530.0, 2980.0), (1500.0, 2980.0))
+        """
+
+        top_left_ijpix, top_right_ijpix, btm_right_ijpix, btm_left_ijpix = self.band_corners_pixcoords(level_ndx=level_ndx)
+
+        top_left_geogcoord = self.ijPixToxy(*top_left_ijpix)
+        top_right_geogcoord = self.ijPixToxy(*top_right_ijpix)
+        btm_right_geogcoord = self.ijPixToxy(*btm_right_ijpix)
+        btm_left_geogcoord = self.ijPixToxy(*btm_left_ijpix)
+
+        return top_left_geogcoord, top_right_geogcoord, btm_right_geogcoord, btm_left_geogcoord
 
     def xyToijArr(self, x: Number, y: Number) -> Tuple[Number, Number]:
         """
