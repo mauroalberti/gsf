@@ -32,10 +32,7 @@ import pygsf
 ```
 ## Docs
 
-There are three Jupyter notebooks describing some of the features of the module:
- - [pygsf 1 - spatial data](https://github.com/mauroalberti/gsf/blob/master/notebooks/pygsf%201%20-%20spatial%20data.ipynb)
- - [pygsf 2 - vectors and orientations](https://github.com/mauroalberti/gsf/blob/master/notebooks/pygsf%202%20-%20orientations.ipynb)
- - [pygsf 3 - geology](https://github.com/mauroalberti/gsf/blob/master/notebooks/pygsf%203%20-%20geology.ipynb)
+There are a few Jupyter notebooks describing some of the features of the module in the docs/notebooks folder.b)
 
 
 
