@@ -1481,13 +1481,33 @@ class MultiLine(object):
 
         return len(self.lines())
 
+    def __repr__(self) -> str:
+        """
+        Represents a MultiLine instance as a shortened text.
+
+        :return: a textual shortened representation of a MultiLine instance.
+        :rtype: basestring.
+        """
+
+        num_lines = self.num_lines()
+        num_tot_pts = self.num_tot_pts()
+        crs = self.crs()
+        if not crs:
+            crs = "undefined"
+        else:
+            crs = crs[:100]
+
+        txt = "MultiLine with {} line(s) and {} points\nCrs: {}...".format(num_lines, num_tot_pts, crs)
+
+        return txt
+
     def add(self, line):
 
         if self.num_lines() > 0:
             if line.crs() != self.crs():
                 raise CRSCodeException("Added line must have the same CRS code as current multiline")
 
-        return MultiLine(self.lines() + [line])
+        return MultiLine(self.lines() + [line], crs=self.crs)
 
     def clone(self):
 
@@ -1552,7 +1572,7 @@ class MultiLine(object):
         for line in self.lines():
             lDensifiedLines.append(line.densify_2d_line(sample_distance))
 
-        return MultiLine(lDensifiedLines)
+        return MultiLine(lDensifiedLines, self.crs())
 
     def remove_coincident_points(self):
 
@@ -1560,7 +1580,17 @@ class MultiLine(object):
         for line in self.lines():
             cleaned_lines.append(line.remove_coincident_points())
 
-        return MultiLine(cleaned_lines)
+        return MultiLine(cleaned_lines, self.crs())
+
+    def extract_line(self, ndx: int = 0):
+        """
+        Extracts a line from the multiline instance, based on the provided index.
+
+        :return: Line instance.
+        :rtype: Line.
+        """
+
+        return self.lines()[ndx]
 
 
 class ParamLine3D(object):
