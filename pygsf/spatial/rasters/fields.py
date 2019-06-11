@@ -81,7 +81,7 @@ def array_from_function(
 def grad_j(
         fld: np.ndarray,
         cell_size_j: Number,
-        edge_order: int=2) -> np.ndarray:
+        edge_order: int = 2) -> np.ndarray:
     """
     Calculates the array gradient along the j axis.
 
@@ -103,7 +103,7 @@ def grad_j(
 def grad_i(
         fld: np.ndarray,
         cell_size_i: Number,
-        edge_order: int=2) -> np.ndarray:
+        edge_order: int = 2) -> np.ndarray:
     """
     Calculates the array gradient along the i axis.
 

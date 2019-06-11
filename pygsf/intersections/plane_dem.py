@@ -9,17 +9,24 @@ from ..spatial.vectorial.geometries import Point, Segment, Line
 from ..orientations.orientations import Plane
 
 
-def vertical_profile(ga: GeoArray, resampled_line: Line) -> Optional[Line]:
+def vertical_profile(ga: GeoArray, profile_line: Line) -> Line:
+    """
+    Create vertical profile.
 
-    crs_geoarray = ga.crs()
-    crs_line = resampled_line.crs()
+    :param ga: geoarray
+    :type ga: GeoArray.
+    :param profile_line: the profile line.
+    :type profile_line: Line
+    :return: the profile.
+    :rtype: Line.
+    """
 
-    if crs_geoarray != crs_line:
-        return None
+    crs_line = profile_line.crs()
 
     lnProfile = Line(crs=crs_line)
 
-    for point in resampled_line.pts:
+    for point in profile_line.pts():
+
         fInterpolatedZVal = ga.interpolate_bilinear(point.x, point.y)
 
         pt3dt = Point(
@@ -82,7 +89,7 @@ def xyarr2segmentslope(
         i=i,
         j=j))
 
-    return Segment(start_point, end_point).slope
+    return Segment(start_point, end_point).slope()
 
 
 def segment_intersections_array(
