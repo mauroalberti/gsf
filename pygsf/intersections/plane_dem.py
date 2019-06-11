@@ -109,7 +109,7 @@ def segment_intersections_array(
     :param m_arr2: array storing values of grid 2 segment slopes.
     :param q_arr1: array storing values of grid 1 segment y-axis intersections.
     :param q_arr2: array storing values of grid 2 segment y-axis intersections.
-    :param cell_size: cell size of the two grids along the considered direction. Required the same in the two grids.
+    :param cell_size: cell size of the two rasters along the considered direction. Required the same in the two rasters.
     :param m_delta_tol: optional tolerance for delta between grid 1 and grid 2 segment slopes.
     :param q_delta_tol: optional tolerance for delta between grid 1 and grid 2 segment y-axis intersections.
     :return: array with values of intersection residual indices [0 - 1[

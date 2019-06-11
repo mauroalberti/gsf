@@ -112,6 +112,31 @@ class GeoArray(object):
 
         return self._prj
 
+    def __repr__(self) -> str:
+        """
+        Represents a GeoArray instance as a shortened text.
+
+        :return: a textual shortened representation of a GeoArray instance.
+        :rtype: basestring.
+        """
+
+        num_bands = self.levels_num
+        crs = self.crs()
+        if not crs:
+            crs = "undefined"
+        else:
+            crs = crs[:100]
+        bands_txt = ""
+        for band_ndx in range(num_bands):
+            band = self.level(level_ndx=band_ndx)
+            rows, cols = band.shape
+            min, max = band.min(), band.max()
+            bands_txt += "\nBand {}: {} rows x {} cols; min: {},  max: {}".format(band_ndx+1, rows, cols, min, max)
+
+        txt = "GeoArray with {} band(s)\nCrs: {}...{}".format(num_bands, crs, bands_txt)
+
+        return txt
+
     @property
     def src_cellsize_j(self) -> float:
         """
