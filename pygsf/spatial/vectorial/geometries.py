@@ -8,8 +8,10 @@ from ..constants import MIN_SEPARATION_THRESHOLD, MIN_SCALAR_VALUE
 from ...mathematics.vectors import *
 from ...mathematics.statistics import get_statistics
 from ..exceptions import CRSCodeException
+from ...projections.crs import Crs
+
 from ...orientations.defaults import *
-from ...geodesy.geodetic import epsg_4326_str, epsg_4978_str, geodetic2ecef
+from ...projections.geodetic import epsg_4326_str, epsg_4978_str, geodetic2ecef
 
 
 array = np.array
@@ -27,7 +29,7 @@ class Point(object):
         y: [int, float],
         z: [int, float] = 0.0,
         t: [int, float] = 0.0,
-        crs: str = ""):
+        crs: int = -1):
         """
         Construct a Point instance.
 
@@ -40,7 +42,7 @@ class Point(object):
         :param t: point time coordinate.
         :type t: int or float.
         :param crs: CRS code.
-        :type crs: basestring.
+        :type crs: int.
         """
 
         vals = [x, y, z, t]
@@ -53,7 +55,7 @@ class Point(object):
         self._y = float(y)
         self._z = float(z)
         self._t = float(t)
-        self._crs = crs
+        self._crs = Crs(crs)
 
     @property
     def x(self) -> float:
@@ -64,7 +66,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs="EPSG:4326").x
+          >>> Point(4, 3, 7, crs=4326).x
           4.0
           >>> Point(-0.39, 3, 7).x
           -0.39
@@ -81,7 +83,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs="EPSG:4326").y
+          >>> Point(4, 3, 7, crs=4326).y
           3.0
           >>> Point(-0.39, 17.42, 7).y
           17.42
@@ -98,7 +100,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs="EPSG:4326").z
+          >>> Point(4, 3, 7, crs=4326).z
           7.0
           >>> Point(-0.39, 17.42, 8.9).z
           8.9
@@ -115,7 +117,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs="EPSG:4326").t
+          >>> Point(4, 3, 7, crs=4326).t
           0.0
           >>> Point(-0.39, 17.42, 8.9, 4112).t
           4112.0
@@ -123,25 +125,27 @@ class Point(object):
 
         return self._t
 
-    def crs(self) -> str:
+    def crs(self) -> Crs:
         """
         Return the crs of the current point.
 
-        :return: the CRS code.
-        :rtype: basestring
-
-        Examples:
-          >>> Point(4, 3, 7, crs="EPSG:4326").crs()
-          EPSG:4326
-          >>> Point(4, 3, 7).crs()
-          ''
+        :return: the CRS code as a Csr instance.
+        :rtype: Crs.
         """
 
         return self._crs
 
+    def epsg(self) -> int:
+        """
+        Returns the EPSG code of the point.
+
+        :return: the CRS code.
+        :rtype: int.
+        """
+
     def __repr__(self) -> str:
 
-        return "Point({:.4f}, {:.4f}, {:.4f}, {:.4f}, '{}')".format(self.x, self.y, self.z, self.t, self.crs())
+        return "Point({:.4f}, {:.4f}, {:.4f}, {:.4f}, {})".format(self.x, self.y, self.z, self.t, self.epsg())
 
     def __eq__(self, another: 'Point') -> bool:
         """
@@ -149,10 +153,10 @@ class Point(object):
 
         Example:
           >>> Point(1., 1., 1.) == Point(1, 1, 1)
-          True
-          >>> Point(1., 1., 1., crs="EPSG:4326") == Point(1, 1, 1)
           False
-          >>> Point(1., 1., 1.) == Point(1, 1, -1)
+          >>> Point(1., 1., 1., crs=4326) == Point(1, 1, 1, crs=4326)
+          True
+          >>> Point(1., 1., 1., crs=4326) == Point(1, 1, -1, crs=4326)
           False
         """
 
@@ -170,24 +174,24 @@ class Point(object):
         Example:
           >>> Point(1., 1., 1.) != Point(0., 0., 0.)
           True
-          >>> Point(1., 1., 1., crs="EPSG:4326") != Point(1, 1, 1)
+          >>> Point(1., 1., 1., crs=4326) != Point(1, 1, 1)
           True
         """
 
         return not (self == another)
 
-    def a(self) -> Tuple[float, float, float, float, str]:
+    def a(self) -> Tuple[float, float, float, float, int]:
         """
         Return the individual values of the point.
 
         :return: double array of x, y, z values
 
         Examples:
-          >>> Point(4, 3, 7, crs="EPSG:4326").a()
-          (4.0, 3.0, 7.0, 0.0, 'EPSG:4326')
+          >>> Point(4, 3, 7, crs=4326).a()
+          (4.0, 3.0, 7.0, 0.0, 4326)
         """
 
-        return self.x, self.y, self.z, self.t, self.crs()
+        return self.x, self.y, self.z, self.t, self.epsg()
 
     def clone(self) -> 'Point':
         """
@@ -248,10 +252,10 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pXY()
-          Point(2.0000, 3.0000, 0.0000, 0.0000, '')
+          Point(2.0000, 3.0000, 0.0000, 0.0000, -1)
         """
 
-        return Point(self.x, self.y, 0.0, self.t, self.crs())
+        return Point(self.x, self.y, 0.0, self.t, self.epsg())
 
     def pXZ(self) -> 'Point':
         """
@@ -261,10 +265,10 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pXZ()
-          Point(2.0000, 0.0000, 4.0000, 0.0000, '')
+          Point(2.0000, 0.0000, 4.0000, 0.0000, -1)
         """
 
-        return Point(self.x, 0.0, self.z, self.t, self.crs())
+        return Point(self.x, 0.0, self.z, self.t, self.epsg())
 
     def pYZ(self) -> 'Point':
         """
@@ -274,10 +278,10 @@ class Point(object):
 
         Examples:
           >>> Point(2, 3, 4).pYZ()
-          Point(0.0000, 3.0000, 4.0000, 0.0000, '')
+          Point(0.0000, 3.0000, 4.0000, 0.0000, -1)
         """
 
-        return Point(0.0, self.y, self.z, self.t, self.crs())
+        return Point(0.0, self.y, self.z, self.t, self.epsg())
 
     def deltaX(self, another: 'Point') -> Optional[float]:
         """
@@ -287,9 +291,9 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1, 2, 3).deltaX(Point(4, 7, 1))
+          >>> Point(1, 2, 3, crs=32632).deltaX(Point(4, 7, 1, crs=32632))
           3.0
-          >>> Point(1, 2, 3, crs="EPSG:4326").deltaX(Point(4, 7, 1)) is None
+          >>> Point(1, 2, 3, crs=4326).deltaX(Point(4, 7, 1)) is None
           True
         """
 
@@ -306,9 +310,9 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1, 2, 3).deltaY(Point(4, 7, 1))
+          >>> Point(1, 2, 3, crs=32632).deltaY(Point(4, 7, 1, crs=32632))
           5.0
-          >>> Point(1, 2, 3, crs="EPSG:4326").deltaY(Point(4, 7, 1)) is None
+          >>> Point(1, 2, 3, crs=4326).deltaY(Point(4, 7, 1)) is None
           True
         """
 
@@ -325,9 +329,9 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1, 2, 3).deltaZ(Point(4, 7, 1))
+          >>> Point(1, 2, 3, crs=32632).deltaZ(Point(4, 7, 1, crs=32632))
           -2.0
-          >>> Point(1, 2, 3, crs="EPSG:4326").deltaZ(Point(4, 7, 1)) is None
+          >>> Point(1, 2, 3, crs=4326).deltaZ(Point(4, 7, 1)) is None
           True
         """
 
@@ -353,6 +357,7 @@ class Point(object):
     def dist3DWith(self, another: 'Point') -> Optional[float]:
         """
         Calculate Euclidean spatial distance between two points.
+        TODO: consider case of polar CRS
 
         :param another: another Point instance.
         :type another: Point.
@@ -360,12 +365,12 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1., 1., 1.).dist3DWith(Point(4., 5., 1,))
+          >>> Point(1., 1., 1., crs=32632).dist3DWith(Point(4., 5., 1,, crs=32632))
           5.0
-          >>> Point(1, 1, 1, crs="EPSG:32632").dist3DWith(Point(4, 5, 1, crs="EPSG:32632"))
+          >>> Point(1, 1, 1, crs=32632).dist3DWith(Point(4, 5, 1, crs=32632))
           5.0
-          >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1))
-          5.0
+          >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1)) is None
+          True
         """
 
         if self.crs() != another.crs():
@@ -376,6 +381,7 @@ class Point(object):
     def dist2DWith(self, another: 'Point') -> Optional[float]:
         """
         Calculate horizontal (2D) distance between two points.
+        TODO: consider case of polar CRS
 
         :param another: another Point instance.
         :type another: Point.
@@ -383,9 +389,9 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1., 1., 1.).dist2DWith(Point(4., 5., 7.))
+          >>> Point(1., 1., 1., crs=32632).dist2DWith(Point(4., 5., 7., crs=32632))
           5.0
-          >>> Point(1., 1., 1., crs="EPSG:32632").dist2DWith(Point(4., 5., 7.)) is None
+          >>> Point(1., 1., 1., crs=32632).dist2DWith(Point(4., 5., 7.)) is None
           True
         """
 
@@ -408,7 +414,7 @@ class Point(object):
         """
 
         x, y, z = self.x * scale_factor, self.y * scale_factor, self.z * scale_factor
-        return Point(x, y, z, self.t, self.crs())
+        return Point(x, y, z, self.t, self.epsg())
 
     def invert(self) -> 'Point':
         """
@@ -417,9 +423,9 @@ class Point(object):
 
         Examples:
           >>> Point(1, 1, 1).invert()
-          Point(-1.0000, -1.0000, -1.0000, 0.0000, '')
+          Point(-1.0000, -1.0000, -1.0000, 0.0000, -1)
           >>> Point(2, -1, 4).invert()
-          Point(-2.0000, 1.0000, -4.0000, 0.0000, '')
+          Point(-2.0000, 1.0000, -4.0000, 0.0000, -1)
         """
 
         return self.scale(-1)
@@ -431,11 +437,11 @@ class Point(object):
         Example:
           >>> Point(1., 0., -1.).isCoinc(Point(1., 1.5, -1.))
           False
-          >>> Point(1., 0., 0.).isCoinc(Point(1., 0., 0.))
+          >>> Point(1., 0., 0., crs=32632).isCoinc(Point(1., 0., 0., crs=32632))
           True
-          >>> Point(1.2, 7.4, 1.4).isCoinc(Point(1.2, 7.4, 1.4))
-          True
-          >>> Point(1.2, 7.4, 1.4, crs="EPSG:4326").isCoinc(Point(1.2, 7.4, 1.4)) is None
+          >>> Point(1.2, 7.4, 1.4, crs=32632).isCoinc(Point(1.2, 7.4, 1.4))
+          False
+          >>> Point(1.2, 7.4, 1.4, crs=4326).isCoinc(Point(1.2, 7.4, 1.4)) is None
           True
         """
 
@@ -466,13 +472,13 @@ class Point(object):
         Create a new object shifted by given amount from the self instance.
 
         Example:
-          >>> Point(1, 1, 1, crs="EPSG:32632").shift(0.5, 1., 1.5)
-          Point(1.5000, 2.0000, 2.5000, 0.0000, 'EPSG:32632')
-          >>> Point(1, 2, -1, crs="EPSG:32632").shift(0.5, 1., 1.5)
-          Point(1.5000, 3.0000, 0.5000, 0.0000, 'EPSG:32632')
+          >>> Point(1, 1, 1, crs=32632).shift(0.5, 1., 1.5)
+          Point(1.5000, 2.0000, 2.5000, 0.0000, 32632)
+          >>> Point(1, 2, -1, crs=32632).shift(0.5, 1., 1.5)
+          Point(1.5000, 3.0000, 0.5000, 0.0000, 32632)
        """
 
-        return Point(self.x + sx, self.y + sy, self.z + sz, self.t, self.crs())
+        return Point(self.x + sx, self.y + sy, self.z + sz, self.t, self.epsg())
 
     def shiftByVect(self, v: Vect) -> 'Point':
         """
@@ -484,15 +490,18 @@ class Point(object):
         :rtype: Point.
 
         Example:
-          >>> Point(1, 1, 1, crs="EPSG:32632").shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 2.0000, 2.5000, 0.0000, 'EPSG:32632')
-          >>> Point(1, 2, -1, crs="EPSG:32632").shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 3.0000, 0.5000, 0.0000, 'EPSG:32632')
+          >>> Point(1, 1, 1, crs=32632).shiftByVect(Vect(0.5, 1., 1.5, crs=32632))
+          Point(1.5000, 2.0000, 2.5000, 0.0000, 32632)
+          >>> Point(1, 2, -1, crs=32632).shiftByVect(Vect(0.5, 1., 1.5, crs=32632))
+          Point(1.5000, 3.0000, 0.5000, 0.0000, 32632)
        """
+
+        if self.crs() != v.crs():
+            return None
 
         sx, sy, sz = v.toXYZ()
 
-        return Point(self.x + sx, self.y + sy, self.z + sz, self.t, self.crs())
+        return Point(self.x + sx, self.y + sy, self.z + sz, self.t, self.epsg())
 
     def asVect(self) -> 'Vect':
         """
@@ -505,30 +514,7 @@ class Point(object):
           Vect(0.2000, 1.0000, 6.0000)
         """
 
-        return Vect(self.x, self.y, self.z)
-
-    def wgs842ecef(self) -> Optional['Point']:
-        """
-        Converts from WGS84 to ECEF reference system, provided its CRS is EPSG:4326.
-
-        :return: the point with ECEF coordinates (EPSG:4978).
-        :rtype: optional Point.
-        """
-
-        if self.crs() != epsg_4326_str:
-            return None
-
-        x, y, z = geodetic2ecef(
-            lat=self.y,
-            lon=self.x,
-            height=self.z)
-
-        return Point(
-            x=x,
-            y=y,
-            z=z,
-            t=self.t,
-            crs=epsg_4978_str)
+        return Vect(self.x, self.y, self.z, self.epsg)
 
 
 class CPlane(object):
@@ -542,14 +528,15 @@ class CPlane(object):
 
     """
 
-    def __init__(self, a, b, c, d):
+    def __init__(self, a: float, b: float, c: float, d: float, crs: int = -1):
 
         self._a = float(a)
         self._b = float(b)
         self._c = float(c)
         self._d = float(d)
+        self._crs = Crs(crs)
 
-    def a(self):
+    def a(self) -> float:
         """
         Return a coefficient of a CPlane instance.
 
@@ -560,7 +547,7 @@ class CPlane(object):
 
         return self._a
 
-    def b(self):
+    def b(self) -> float:
         """
         Return b coefficient of a CPlane instance.
 
@@ -571,7 +558,7 @@ class CPlane(object):
 
         return self._b
 
-    def c(self):
+    def c(self) -> float:
         """
         Return a coefficient of a CPlane instance.
 
@@ -582,7 +569,7 @@ class CPlane(object):
 
         return self._c
 
-    def d(self):
+    def d(self) -> float:
         """
         Return a coefficient of a CPlane instance.
 
@@ -593,15 +580,39 @@ class CPlane(object):
 
         return self._d
 
+    def crs(self) -> Crs:
+        """
+        Returns the EPSG code as a Crs instance.
+
+        :return: EPSG code.
+        :rtype: pygsf.projections.crs.Crs
+
+        Example:
+        """
+
+        return self._crs
+
+    def epsg(self) -> int:
+        """
+        Returns the EPSG code.
+
+        :return: EPSG code.
+        :rtype: int
+
+        Example:
+        """
+
+        return self._crs.epsg()
+
     def v(self):
         """
         Return coefficients of a CPlane instance.
 
         Example:
           >>> CPlane(1, 1, 7, -4).v()
-          (1.0, 1.0, 7.0, -4.0)
+          (1.0, 1.0, 7.0, -4.0, -1)
         """
-        return self.a(), self.b(), self.c(), self.d()
+        return self.a(), self.b(), self.c(), self.d(), self.epsg()
 
     @classmethod
     def fromPoints(cls, pt1, pt2, pt3):
@@ -610,10 +621,13 @@ class CPlane(object):
 
         Example:
           >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
-          CPlane(0.0000, 0.0000, 1.0000, 0.0000)
-          >>> CPlane.fromPoints(Point(0, 0, 0), Point(0, 1, 0), Point(0, 0, 1))
-          CPlane(1.0000, 0.0000, 0.0000, 0.0000)
+          CPlane(0.0000, 0.0000, 1.0000, 0.0000, -1)
+          >>> CPlane.fromPoints(Point(0, 0, 0, crs=4326), Point(0, 1, 0, crs=4326), Point(0, 0, 1, crs=4326))
+          CPlane(1.0000, 0.0000, 0.0000, 0.0000, 4326)
         """
+
+        if pt1.crs() != pt2.crs() or pt1.crs() != pt3.crs():
+            return None
 
         matr_a = array(
             [[pt1.y, pt1.z, 1],
@@ -639,11 +653,12 @@ class CPlane(object):
             np.linalg.det(matr_a),
             np.linalg.det(matr_b),
             np.linalg.det(matr_c),
-            np.linalg.det(matr_d))
+            np.linalg.det(matr_d),
+            crs=pt1.epsg())
 
     def __repr__(self):
 
-        return "CPlane({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(*self.v())
+        return "CPlane({:.4f}, {:.4f}, {:.4f}, {:.4f}, {:d})".format(*self.v(), self.crs())
 
     def normVersor(self):
         """
@@ -651,12 +666,12 @@ class CPlane(object):
 
         Examples:
           >>> CPlane(0, 0, 5, -2).normVersor()
-          Vect(0.0000, 0.0000, 1.0000)
-          >>> CPlane(0, 7, 0, 5).normVersor()
-          Vect(0.0000, 1.0000, 0.0000)
+          Vect(0.0000, 0.0000, 1.0000, -1)
+          >>> CPlane(0, 7, 0, 5, crs=32632).normVersor()
+          Vect(0.0000, 1.0000, 0.0000, 32632)
         """
 
-        return Vect(self.a(), self.b(), self.c()).versor()
+        return Vect(self.a(), self.b(), self.c(), crs=self.epsg()).versor()
 
     def toPoint(self):
         """
@@ -664,14 +679,18 @@ class CPlane(object):
 
         Examples:
           >>> CPlane(0, 0, 1, -1).toPoint()
-          Point(0.0000, 0.0000, 1.0000, 0.0000, '')
+          Point(0.0000, 0.0000, 1.0000, 0.0000, -1)
         """
 
-        point = Point(*pointSolution(array([[self.a(), self.b(), self.c()]]),
-                                     array([-self.d()])))
+        point = Point(
+            *pointSolution(
+                array([[self.a(), self.b(), self.c()]]),
+                array([-self.d()])),
+            crs=self.epsg())
+
         return point
 
-    def intersVersor(self, another):
+    def intersVersor(self, another) -> Optional[Vect]:
         """
         Return intersection versor for two intersecting planes.
 
@@ -679,31 +698,37 @@ class CPlane(object):
           >>> a = CPlane(1, 0, 0, 0)
           >>> b = CPlane(0, 0, 1, 0)
           >>> a.intersVersor(b)
-          Vect(0.0000, -1.0000, 0.0000)
+          Vect(0.0000, -1.0000, 0.0000, -1)
         """
+
+        if self.crs() != another.crs():
+            return None
 
         return self.normVersor().vCross(another.normVersor()).versor()
 
-    def intersPoint(self, another):
+    def intersPoint(self, another) -> Optional[Point]:
         """
-        Return point on intersection line (obviously non-unique solution)
+        Return point on intersection line (non-unique solution)
         for two planes.
 
         Examples:
-          >>> a = CPlane(1, 0, 0, 0)
-          >>> b = CPlane(0, 0, 1, 0)
+          >>> a = CPlane(1, 0, 0, 0, crs=32632)
+          >>> b = CPlane(0, 0, 1, 0, crs=32632)
           >>> a.intersPoint(b)
-          Point(0.0000, 0.0000, 0.0000, 0.0000, '')
+          Point(0.0000, 0.0000, 0.0000, 0.0000, 32632)
         """
+
+        if self.crs() != another.crs():
+            return None
 
         # find a point lying on the intersection line (this is a non-unique solution)
         a = array([[self.a(), self.b(), self.c()], [another.a(), another.b(), another.c()]])
         b = array([-self.d(), -another.d()])
         x, y, z = pointSolution(a, b)
 
-        return Point(x, y, z)
+        return Point(x, y, z, self.epsg())
 
-    def pointDistance(self, pt: Point) -> float:
+    def pointDistance(self, pt: Point) -> Optional[float]:
         """
         Calculate the distance between a point and the cartesian plane.
         Distance expression:
@@ -713,51 +738,72 @@ class CPlane(object):
         and x1, y1, and z1 are the point coordinates.
 
         Examples:
-          >>> cpl = CPlane(0, 0, 1, 0)
-          >>> pt = Point(0, 0, 1)
+          >>> cpl = CPlane(0, 0, 1, 0, crs=32632)
+          >>> pt = Point(0, 0, 1, crs=32632)
           >>> cpl.pointDistance(pt)
           1.0
-          >>> pt = Point(0, 0, 0.5)
+          >>> pt = Point(0, 0, 0.5, crs=32632)
           >>> cpl.pointDistance(pt)
           0.5
-          >>> pt = Point(0, 0, -0.5)
+          >>> pt = Point(0, 0, -0.5, crs=32632)
           >>> cpl.pointDistance(pt)
           -0.5
-          >>> pt = Point(10, 20, 0.0)
+          >>> pt = Point(10, 20, 0.0, crs=32632)
           >>> cpl.pointDistance(pt)
           0.0
+          >>> cpl = CPlane(0, 0, 1, 0)
+          >>> pt = Point(10, 20, 0.0)
+          >>> cpl.pointDistance(pt) is None
+          True
         """
+
+        if self.crs() != pt.crs():
+            return None
 
         return self.a() * pt.x + self.b() * pt.y + self.c() * pt.z + self.d()
 
-    def isPointInPlane(self, pt):
+    def isPointInPlane(self, pt) -> Optional[bool]:
         """
         Check whether a point lie in a plane.
 
         Examples:
           >>> pl = CPlane(0, 0, 1, 0)
           >>> pt = Point(0, 1, 0)
+          >>> pl.isPointInPlane(pt) is None
+          True
+          >>> pl = CPlane(0, 0, 1, 0, crs=32632)
+          >>> pt = Point(0, 1, 0, crs=32632)
           >>> pl.isPointInPlane(pt)
           True
         """
+
+        if self.crs() != pt.crs():
+            return None
 
         if abs(self.a() * pt.x + self.b() * pt.y + self.c() * pt.z + self.d()) < MIN_SCALAR_VALUE:
             return True
         else:
             return False
 
-    def angle(self, another):
+    def angle(self, another) -> Optional[float]:
         """
         Calculate angle (in degrees) between two planes.
 
         Examples:
-          >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0))
+          >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0)) is None
+          True
+          >>> CPlane(1,0,0,0, crs=32632).angle(CPlane(0,1,0,0, crs=32632))
           90.0
-          >>> CPlane(1,0,0,0).angle(CPlane(1,0,1,0))
+          >>> CPlane(1,0,0,0, crs=32632).angle(CPlane(1,0,1,0, crs=32632))
           45.0
-          >>> CPlane(1,0,0,0).angle(CPlane(1,0,0,0))
+          >>> CPlane(1,0,0,0, crs=32632).angle(CPlane(1,0,0,0, crs=32632))
           0.0
+          >>> CPlane(1,0,0,0, crs=32632).angle(CPlane(1,0,0,0)) is None
+          True
         """
+
+        if self.crs() != another.crs():
+            return None
 
         angle_degr = self.normVersor().angle(another.normVersor())
         if abs(angle_degr) < MIN_ANGLE_DEGR_VALUE:
@@ -767,7 +813,7 @@ class CPlane(object):
 
         return angle_degr
 
-    def isSubParallel(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD):
+    def isSubParallel(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD) -> Optional[bool]:
         """
         Check that two CPlane are sub-parallel
 
@@ -776,19 +822,20 @@ class CPlane(object):
         :return: Boolean
 
         Examples:
-          >>> CPlane(1,0,0,0).isSubParallel(CPlane(1,0,0,0))
+          >>> CPlane(1,0,0,0).isSubParallel(CPlane(1,0,0,0)) is None
           True
-          >>> CPlane(1,0,0,0).isSubParallel(CPlane(1,0,1,0))
+          >>> CPlane(1,0,0,0).isSubParallel(CPlane(1,0,1,0)) is None
+          True
+          >>> CPlane(1,0,0,0, crs=32632).isSubParallel(CPlane(1,0,0,0, crs=32632))
+          True
+          >>> CPlane(1,0,0,0, crs=32632).isSubParallel(CPlane(1,0,1,0, crs=32632))
           False
         """
 
+        if self.crs() != another.crs():
+            return None
+
         return self.angle(another) < angle_tolerance
-
-
-# TODO class Path
-"""
-The trajectory of a Point with time
-"""
 
 
 class Segment(object):
@@ -812,63 +859,70 @@ class Segment(object):
         if start_pt.crs() != end_pt.crs():
             raise CRSCodeException("Start and end point must have the same CRS code")
 
+        if end_pt.isCoinc(start_pt):
+            raise Exception("Segment start and end points are coincident")
+
         self._start_pt = start_pt
         self._end_pt = end_pt
         self._crs = start_pt.crs()
 
-    def start_pt(self):
+    def start_pt(self) -> Point:
 
         return self._start_pt
 
-    def end_pt(self):
+    def end_pt(self) -> Point:
 
         return self._end_pt
 
-    def crs(self):
+    def crs(self) -> Crs:
 
         return self._crs
 
-    def clone(self):
+    def epsg(self) -> int:
+
+        return self.crs().epsg()
+
+    def clone(self) -> 'Segment':
 
         return Segment(self.start_pt(), self.end_pt())
 
-    def increasing_x(self):
+    def increasing_x(self) -> 'Segment':
 
         if self.end_pt().x < self.start_pt().x:
             return Segment(self.end_pt(), self.start_pt())
         else:
             return self.clone()
 
-    def x_range(self):
+    def x_range(self) -> Tuple[float, float]:
 
         if self.start_pt().x < self.end_pt().x:
             return self.start_pt().x, self.end_pt().x
         else:
             return self.end_pt().x, self.start_pt().x
 
-    def y_range(self):
+    def y_range(self) -> Tuple[float, float]:
 
         if self.start_pt().y < self.end_pt().y:
             return self.start_pt().y, self.end_pt().y
         else:
             return self.end_pt().y, self.start_pt().y
 
-    def z_range(self):
+    def z_range(self) -> Tuple[float, float]:
 
         if self.start_pt().z < self.end_pt().z:
             return self.start_pt().z, self.end_pt().z
         else:
             return self.end_pt().z, self.start_pt().z
 
-    def delta_x(self):
+    def delta_x(self) -> float:
 
         return self.end_pt().x - self.start_pt().x
 
-    def delta_y(self):
+    def delta_y(self) -> float:
 
         return self.end_pt().y - self.start_pt().y
 
-    def delta_z(self):
+    def delta_z(self) -> float:
         """
         Z delta between segment end point and start point.
 
@@ -877,7 +931,7 @@ class Segment(object):
 
         return self.end_pt().z - self.start_pt().z
 
-    def length_2d(self):
+    def length_2d(self) -> float:
         """
         2D length of a segment.
 
@@ -886,37 +940,71 @@ class Segment(object):
 
         return self.start_pt().dist2DWith(self.end_pt())
 
-    def slope(self):
+    def deltaZS(self) -> Optional[float]:
         """
-        Calculates the slope of a segment.
+        Calculates the delta z / delta s of a segment.
 
-        :return: float
+        :return: optional float.
         """
 
-        return self.delta_z() / self.length_2d()
+        len2d = self.length_2d()
 
-    def length_3d(self):
+        if len2d == 0.0:
+            return None
+
+        return self.delta_z() / len2d
+
+    def slope_rad(self) -> Optional[float]:
+        """
+        Calculates the slope in radians of the segment.
+        Positive is downward point, negative upward pointing.
+
+        :return: optional float.
+        """
+
+        delta_zs = self.deltaZS()
+
+        if delta_zs is None:
+            return None
+        else:
+            return - atan(delta_zs)
+
+    def length_3d(self) -> float:
 
         return self.start_pt().dist3DWith(self.end_pt())
 
-    def vector(self):
+    def vector(self) -> Vect:
 
         return Vect(self.delta_x(),
                     self.delta_y(),
-                    self.delta_z())
+                    self.delta_z(),
+                    crs=self.epsg())
 
-    def segment_2d_m(self):
+    def segment_2d_m(self) -> Optional[float]:
 
-        return (self.end_pt().y - self.start_pt().y) / (self.end_pt().x - self.start_pt().x)
+        denom = self.end_pt().x - self.start_pt().x
 
-    def segment_2d_p(self):
+        if denom == 0.0:
+            return None
 
-        return self.start_pt().y - self.segment_2d_m() * self.start_pt().x
+        return (self.end_pt().y - self.start_pt().y) / denom
 
-    def intersection_2d_pt(self, another):
+    def segment_2d_p(self) -> Optional[float]:
 
-        #assert self.length_2d > 0.0
-        #assert another.length_2d > 0.0
+        s2d_m = self.segment_2d_m()
+
+        if s2d_m is None:
+            return None
+
+        return self.start_pt().y - s2d_m * self.start_pt().x
+
+    def intersection_2d_pt(self, another) -> Optional[Point]:
+
+        s_len2d = self.length_2d()
+        a_len2d = another.length_2d()
+
+        if s_len2d == 0.0 or a_len2d == 0.0:
+            return None
 
         if self.start_pt().x == self.end_pt().x:  # self segment parallel to y axis
             x0 = self.start_pt().x
@@ -1709,6 +1797,12 @@ def merge_lines(lines, progress_ids):
     line = MultiLine(line_list).to_line().remove_coincident_points()
 
     return line
+
+
+# TODO class Path
+"""
+The trajectory of a Point with time
+"""
 
 
 if __name__ == "__main__":
