@@ -89,7 +89,7 @@ def xyarr2segmentslope(
         i=i,
         j=j))
 
-    return Segment(start_point, end_point).slope()
+    return Segment(start_point, end_point).deltaZS()
 
 
 def segment_intersections_array(
