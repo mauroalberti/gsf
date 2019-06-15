@@ -542,24 +542,22 @@ class Vect(object):
         else:
             return self.scale(1.0)
 
-
-    @property
-    def slope(self):
+    def slope_degr(self):
         """
         Slope of a vector expressed as degrees.
-        Positive when vector is downward pointing or horizontal,
+        Positive when vector is downward pointing,
         negative when upward pointing.
 
         Example:
-          >>> Vect(1, 0, -1).slope
+          >>> Vect(1, 0, -1).slope_degr()
           45.0
-          >>> Vect(1, 0, 1).slope
+          >>> Vect(1, 0, 1).slope_degr()
           -45.0
-          >>> Vect(0, 1, 0).slope
+          >>> Vect(0, 1, 0).slope_degr()
           0.0
-          >>> Vect(0, 0, 1).slope
+          >>> Vect(0, 0, 1).slope_degr()
           -90.0
-          >>> Vect(0, 0, -1).slope
+          >>> Vect(0, 0, -1).slope_degr()
           90.0
         """
 

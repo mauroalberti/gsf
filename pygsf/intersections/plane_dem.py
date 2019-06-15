@@ -23,7 +23,7 @@ def vertical_profile(ga: GeoArray, profile_line: Line) -> Line:
 
     crs_line = profile_line.crs()
 
-    lnProfile = Line(crs=crs_line)
+    lnProfile = Line(epsg_cd=crs_line)
 
     for point in profile_line.pts():
 
@@ -33,7 +33,7 @@ def vertical_profile(ga: GeoArray, profile_line: Line) -> Line:
             x=point.x,
             y=point.y,
             z=fInterpolatedZVal,
-            crs=crs_line)
+            epsg_cd=crs_line)
 
         lnProfile.add_pt(pt3dt)
 

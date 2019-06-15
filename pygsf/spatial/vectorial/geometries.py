@@ -29,7 +29,7 @@ class Point(object):
         y: [int, float],
         z: [int, float] = 0.0,
         t: [int, float] = 0.0,
-        crs: int = -1):
+        epsg_cd: int = -1):
         """
         Construct a Point instance.
 
@@ -41,8 +41,8 @@ class Point(object):
         :type z: int or float.
         :param t: point time coordinate.
         :type t: int or float.
-        :param crs: CRS code.
-        :type crs: int.
+        :param epsg_cd: CRS EPSG code.
+        :type epsg_cd: int.
         """
 
         vals = [x, y, z, t]
@@ -55,7 +55,7 @@ class Point(object):
         self._y = float(y)
         self._z = float(z)
         self._t = float(t)
-        self._crs = Crs(crs)
+        self._crs = Crs(epsg_cd)
 
     @property
     def x(self) -> float:
@@ -66,7 +66,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs=4326).x
+          >>> Point(4, 3, 7, epsg_cd=4326).x
           4.0
           >>> Point(-0.39, 3, 7).x
           -0.39
@@ -83,7 +83,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs=4326).y
+          >>> Point(4, 3, 7, epsg_cd=4326).y
           3.0
           >>> Point(-0.39, 17.42, 7).y
           17.42
@@ -100,7 +100,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs=4326).z
+          >>> Point(4, 3, 7, epsg_cd=4326).z
           7.0
           >>> Point(-0.39, 17.42, 8.9).z
           8.9
@@ -117,7 +117,7 @@ class Point(object):
         :rtype: float
 
         Examples:
-          >>> Point(4, 3, 7, crs=4326).t
+          >>> Point(4, 3, 7, epsg_cd=4326).t
           0.0
           >>> Point(-0.39, 17.42, 8.9, 4112).t
           4112.0
@@ -143,6 +143,8 @@ class Point(object):
         :rtype: int.
         """
 
+        return self.crs().epsg()
+
     def __repr__(self) -> str:
 
         return "Point({:.4f}, {:.4f}, {:.4f}, {:.4f}, {})".format(self.x, self.y, self.z, self.t, self.epsg())
@@ -154,9 +156,9 @@ class Point(object):
         Example:
           >>> Point(1., 1., 1.) == Point(1, 1, 1)
           False
-          >>> Point(1., 1., 1., crs=4326) == Point(1, 1, 1, crs=4326)
+          >>> Point(1., 1., 1., epsg_cd=4326) == Point(1, 1, 1, epsg_cd=4326)
           True
-          >>> Point(1., 1., 1., crs=4326) == Point(1, 1, -1, crs=4326)
+          >>> Point(1., 1., 1., epsg_cd=4326) == Point(1, 1, -1, epsg_cd=4326)
           False
         """
 
@@ -174,7 +176,7 @@ class Point(object):
         Example:
           >>> Point(1., 1., 1.) != Point(0., 0., 0.)
           True
-          >>> Point(1., 1., 1., crs=4326) != Point(1, 1, 1)
+          >>> Point(1., 1., 1., epsg_cd=4326) != Point(1, 1, 1)
           True
         """
 
@@ -187,7 +189,7 @@ class Point(object):
         :return: double array of x, y, z values
 
         Examples:
-          >>> Point(4, 3, 7, crs=4326).a()
+          >>> Point(4, 3, 7, epsg_cd=4326).a()
           (4.0, 3.0, 7.0, 0.0, 4326)
         """
 
@@ -291,9 +293,9 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1, 2, 3, crs=32632).deltaX(Point(4, 7, 1, crs=32632))
+          >>> Point(1, 2, 3, epsg_cd=32632).deltaX(Point(4, 7, 1, epsg_cd=32632))
           3.0
-          >>> Point(1, 2, 3, crs=4326).deltaX(Point(4, 7, 1)) is None
+          >>> Point(1, 2, 3, epsg_cd=4326).deltaX(Point(4, 7, 1)) is None
           True
         """
 
@@ -310,9 +312,9 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1, 2, 3, crs=32632).deltaY(Point(4, 7, 1, crs=32632))
+          >>> Point(1, 2, 3, epsg_cd=32632).deltaY(Point(4, 7, 1, epsg_cd=32632))
           5.0
-          >>> Point(1, 2, 3, crs=4326).deltaY(Point(4, 7, 1)) is None
+          >>> Point(1, 2, 3, epsg_cd=4326).deltaY(Point(4, 7, 1)) is None
           True
         """
 
@@ -329,9 +331,9 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1, 2, 3, crs=32632).deltaZ(Point(4, 7, 1, crs=32632))
+          >>> Point(1, 2, 3, epsg_cd=32632).deltaZ(Point(4, 7, 1, epsg_cd=32632))
           -2.0
-          >>> Point(1, 2, 3, crs=4326).deltaZ(Point(4, 7, 1)) is None
+          >>> Point(1, 2, 3, epsg_cd=4326).deltaZ(Point(4, 7, 1)) is None
           True
         """
 
@@ -365,9 +367,9 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1., 1., 1., crs=32632).dist3DWith(Point(4., 5., 1,, crs=32632))
+          >>> Point(1., 1., 1., epsg_cd=32632).dist3DWith(Point(4., 5., 1,, crs=32632))
           5.0
-          >>> Point(1, 1, 1, crs=32632).dist3DWith(Point(4, 5, 1, crs=32632))
+          >>> Point(1, 1, 1, epsg_cd=32632).dist3DWith(Point(4, 5, 1, epsg_cd=32632))
           5.0
           >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1)) is None
           True
@@ -389,9 +391,9 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1., 1., 1., crs=32632).dist2DWith(Point(4., 5., 7., crs=32632))
+          >>> Point(1., 1., 1., epsg_cd=32632).dist2DWith(Point(4., 5., 7., epsg_cd=32632))
           5.0
-          >>> Point(1., 1., 1., crs=32632).dist2DWith(Point(4., 5., 7.)) is None
+          >>> Point(1., 1., 1., epsg_cd=32632).dist2DWith(Point(4., 5., 7.)) is None
           True
         """
 
@@ -437,11 +439,11 @@ class Point(object):
         Example:
           >>> Point(1., 0., -1.).isCoinc(Point(1., 1.5, -1.))
           False
-          >>> Point(1., 0., 0., crs=32632).isCoinc(Point(1., 0., 0., crs=32632))
+          >>> Point(1., 0., 0., epsg_cd=32632).isCoinc(Point(1., 0., 0., epsg_cd=32632))
           True
-          >>> Point(1.2, 7.4, 1.4, crs=32632).isCoinc(Point(1.2, 7.4, 1.4))
+          >>> Point(1.2, 7.4, 1.4, epsg_cd=32632).isCoinc(Point(1.2, 7.4, 1.4))
           False
-          >>> Point(1.2, 7.4, 1.4, crs=4326).isCoinc(Point(1.2, 7.4, 1.4)) is None
+          >>> Point(1.2, 7.4, 1.4, epsg_cd=4326).isCoinc(Point(1.2, 7.4, 1.4)) is None
           True
         """
 
@@ -472,9 +474,9 @@ class Point(object):
         Create a new object shifted by given amount from the self instance.
 
         Example:
-          >>> Point(1, 1, 1, crs=32632).shift(0.5, 1., 1.5)
+          >>> Point(1, 1, 1, epsg_cd=32632).shift(0.5, 1., 1.5)
           Point(1.5000, 2.0000, 2.5000, 0.0000, 32632)
-          >>> Point(1, 2, -1, crs=32632).shift(0.5, 1., 1.5)
+          >>> Point(1, 2, -1, epsg_cd=32632).shift(0.5, 1., 1.5)
           Point(1.5000, 3.0000, 0.5000, 0.0000, 32632)
        """
 
@@ -490,9 +492,9 @@ class Point(object):
         :rtype: Point.
 
         Example:
-          >>> Point(1, 1, 1, crs=32632).shiftByVect(Vect(0.5, 1., 1.5, crs=32632))
+          >>> Point(1, 1, 1, epsg_cd=32632).shiftByVect(Vect(0.5, 1., 1.5, crs=32632))
           Point(1.5000, 2.0000, 2.5000, 0.0000, 32632)
-          >>> Point(1, 2, -1, crs=32632).shiftByVect(Vect(0.5, 1., 1.5, crs=32632))
+          >>> Point(1, 2, -1, epsg_cd=32632).shiftByVect(Vect(0.5, 1., 1.5, crs=32632))
           Point(1.5000, 3.0000, 0.5000, 0.0000, 32632)
        """
 
@@ -517,6 +519,31 @@ class Point(object):
         return Vect(self.x, self.y, self.z, self.epsg)
 
 
+def pt_4326_ecef(pt: Point) -> Optional[Point]:
+    """
+    Project a point from EPSG:4326 to ECEF
+
+    :param pt: Point instance.
+    :type pt: Point.
+    :return: the projected Point instance.
+    :rtype: Point.
+    """
+
+    if pt.epsg() != 4326:
+        return None
+
+    lon, lat, height, time = pt.x, pt.y, pt.z, pt.t
+    x, y, z = geodetic2ecef(lat, lon, height)
+
+    return Point(
+        x=x,
+        y=y,
+        z=z,
+        t=time,
+        epsg_cd=4978
+    )
+
+
 class CPlane(object):
     """
     Cartesian plane.
@@ -528,13 +555,13 @@ class CPlane(object):
 
     """
 
-    def __init__(self, a: float, b: float, c: float, d: float, crs: int = -1):
+    def __init__(self, a: float, b: float, c: float, d: float, epsg_cd: int = -1):
 
         self._a = float(a)
         self._b = float(b)
         self._c = float(c)
         self._d = float(d)
-        self._crs = Crs(crs)
+        self._crs = Crs(epsg_cd)
 
     def a(self) -> float:
         """
@@ -604,7 +631,7 @@ class CPlane(object):
 
         return self._crs.epsg()
 
-    def v(self):
+    def v(self) -> Tuple[float, float, float, float, int]:
         """
         Return coefficients of a CPlane instance.
 
@@ -612,17 +639,18 @@ class CPlane(object):
           >>> CPlane(1, 1, 7, -4).v()
           (1.0, 1.0, 7.0, -4.0, -1)
         """
+
         return self.a(), self.b(), self.c(), self.d(), self.epsg()
 
     @classmethod
-    def fromPoints(cls, pt1, pt2, pt3):
+    def fromPoints(cls, pt1, pt2, pt3) -> 'CPlane':
         """
         Create a CPlane from three given Point instances.
 
         Example:
           >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
           CPlane(0.0000, 0.0000, 1.0000, 0.0000, -1)
-          >>> CPlane.fromPoints(Point(0, 0, 0, crs=4326), Point(0, 1, 0, crs=4326), Point(0, 0, 1, crs=4326))
+          >>> CPlane.fromPoints(Point(0, 0, 0, epsg_cd=4326), Point(0, 1, 0, epsg_cd=4326), Point(0, 0, 1, epsg_cd=4326))
           CPlane(1.0000, 0.0000, 0.0000, 0.0000, 4326)
         """
 
@@ -660,20 +688,20 @@ class CPlane(object):
 
         return "CPlane({:.4f}, {:.4f}, {:.4f}, {:.4f}, {:d})".format(*self.v(), self.crs())
 
-    def normVersor(self):
+    def normVersor(self) -> Vect:
         """
         Return the versor normal to the cartesian plane.
 
         Examples:
           >>> CPlane(0, 0, 5, -2).normVersor()
           Vect(0.0000, 0.0000, 1.0000, -1)
-          >>> CPlane(0, 7, 0, 5, crs=32632).normVersor()
+          >>> CPlane(0, 7, 0, 5, epsg_cd=32632).normVersor()
           Vect(0.0000, 1.0000, 0.0000, 32632)
         """
 
         return Vect(self.a(), self.b(), self.c(), crs=self.epsg()).versor()
 
-    def toPoint(self):
+    def toPoint(self) -> Point:
         """
         Returns a point lying in the plane (non-unique solution).
 
@@ -686,7 +714,7 @@ class CPlane(object):
             *pointSolution(
                 array([[self.a(), self.b(), self.c()]]),
                 array([-self.d()])),
-            crs=self.epsg())
+            epsg_cd=self.epsg())
 
         return point
 
@@ -712,8 +740,8 @@ class CPlane(object):
         for two planes.
 
         Examples:
-          >>> a = CPlane(1, 0, 0, 0, crs=32632)
-          >>> b = CPlane(0, 0, 1, 0, crs=32632)
+          >>> a = CPlane(1, 0, 0, 0, epsg_cd=32632)
+          >>> b = CPlane(0, 0, 1, 0, epsg_cd=32632)
           >>> a.intersPoint(b)
           Point(0.0000, 0.0000, 0.0000, 0.0000, 32632)
         """
@@ -738,17 +766,17 @@ class CPlane(object):
         and x1, y1, and z1 are the point coordinates.
 
         Examples:
-          >>> cpl = CPlane(0, 0, 1, 0, crs=32632)
-          >>> pt = Point(0, 0, 1, crs=32632)
+          >>> cpl = CPlane(0, 0, 1, 0, epsg_cd=32632)
+          >>> pt = Point(0, 0, 1, epsg_cd=32632)
           >>> cpl.pointDistance(pt)
           1.0
-          >>> pt = Point(0, 0, 0.5, crs=32632)
+          >>> pt = Point(0, 0, 0.5, epsg_cd=32632)
           >>> cpl.pointDistance(pt)
           0.5
-          >>> pt = Point(0, 0, -0.5, crs=32632)
+          >>> pt = Point(0, 0, -0.5, epsg_cd=32632)
           >>> cpl.pointDistance(pt)
           -0.5
-          >>> pt = Point(10, 20, 0.0, crs=32632)
+          >>> pt = Point(10, 20, 0.0, epsg_cd=32632)
           >>> cpl.pointDistance(pt)
           0.0
           >>> cpl = CPlane(0, 0, 1, 0)
@@ -771,8 +799,8 @@ class CPlane(object):
           >>> pt = Point(0, 1, 0)
           >>> pl.isPointInPlane(pt) is None
           True
-          >>> pl = CPlane(0, 0, 1, 0, crs=32632)
-          >>> pt = Point(0, 1, 0, crs=32632)
+          >>> pl = CPlane(0, 0, 1, 0, epsg_cd=32632)
+          >>> pt = Point(0, 1, 0, epsg_cd=32632)
           >>> pl.isPointInPlane(pt)
           True
         """
@@ -792,13 +820,13 @@ class CPlane(object):
         Examples:
           >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0)) is None
           True
-          >>> CPlane(1,0,0,0, crs=32632).angle(CPlane(0,1,0,0, crs=32632))
+          >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(0,1,0,0, epsg_cd=32632))
           90.0
-          >>> CPlane(1,0,0,0, crs=32632).angle(CPlane(1,0,1,0, crs=32632))
+          >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,1,0, epsg_cd=32632))
           45.0
-          >>> CPlane(1,0,0,0, crs=32632).angle(CPlane(1,0,0,0, crs=32632))
+          >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,0,0, epsg_cd=32632))
           0.0
-          >>> CPlane(1,0,0,0, crs=32632).angle(CPlane(1,0,0,0)) is None
+          >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,0,0)) is None
           True
         """
 
@@ -826,9 +854,9 @@ class CPlane(object):
           True
           >>> CPlane(1,0,0,0).isSubParallel(CPlane(1,0,1,0)) is None
           True
-          >>> CPlane(1,0,0,0, crs=32632).isSubParallel(CPlane(1,0,0,0, crs=32632))
+          >>> CPlane(1,0,0,0, epsg_cd=32632).isSubParallel(CPlane(1,0,0,0, epsg_cd=32632))
           True
-          >>> CPlane(1,0,0,0, crs=32632).isSubParallel(CPlane(1,0,1,0, crs=32632))
+          >>> CPlane(1,0,0,0, epsg_cd=32632).isSubParallel(CPlane(1,0,1,0, epsg_cd=32632))
           False
         """
 
@@ -860,19 +888,19 @@ class Segment(object):
             raise CRSCodeException("Start and end point must have the same CRS code")
 
         if end_pt.isCoinc(start_pt):
-            raise Exception("Segment start and end points are coincident")
+            raise Exception("Start and end points of the segment are coincident")
 
-        self._start_pt = start_pt
-        self._end_pt = end_pt
+        self._start_pt = start_pt.clone()
+        self._end_pt = end_pt.clone()
         self._crs = start_pt.crs()
 
     def start_pt(self) -> Point:
 
-        return self._start_pt
+        return self._start_pt.clone()
 
     def end_pt(self) -> Point:
 
-        return self._end_pt
+        return self._end_pt.clone()
 
     def crs(self) -> Crs:
 
@@ -1000,6 +1028,9 @@ class Segment(object):
 
     def intersection_2d_pt(self, another) -> Optional[Point]:
 
+        if self.crs() != another.crs():
+            return None
+
         s_len2d = self.length_2d()
         a_len2d = another.length_2d()
 
@@ -1008,27 +1039,27 @@ class Segment(object):
 
         if self.start_pt().x == self.end_pt().x:  # self segment parallel to y axis
             x0 = self.start_pt().x
-            try:
-                m1, p1 = another.segment_2d_m(), another.segment_2d_p()
-            except:
+            m1, p1 = another.segment_2d_m(), another.segment_2d_p()
+            if m1 is None:
                 return None
             y0 = m1 * x0 + p1
         elif another.start_pt().x == another.end_pt().x:  # another segment parallel to y axis
             x0 = another.start_pt().x
-            try:
-                m1, p1 = self.segment_2d_m(), self.segment_2d_p()
-            except:
+            m1, p1 = self.segment_2d_m(), self.segment_2d_p()
+            if m1 is None:
                 return None
             y0 = m1 * x0 + p1
         else:  # no segment parallel to y axis
             m0, p0 = self.segment_2d_m(), self.segment_2d_p()
             m1, p1 = another.segment_2d_m(), another.segment_2d_p()
+            if m0 is None or m1 is None:
+                return None
             x0 = (p1 - p0) / (m0 - m1)
             y0 = m0 * x0 + p0
 
-        return Point(x0, y0)
+        return Point(x0, y0, epsg_cd=self.epsg())
 
-    def contains_2d_pt(self, pt2d):
+    def contains_2d_pt(self, pt2d) -> bool:
 
         segment_length2d = self.length_2d()
         segmentstart_pt2d_distance = self.start_pt().dist2DWith(pt2d)
@@ -1040,7 +1071,7 @@ class Segment(object):
         else:
             return True
 
-    def fast_2d_contains_pt(self, pt2d):
+    def fast_2d_contains_pt(self, pt2d) -> bool:
         """
         to work properly, this function requires that the pt lies on the line defined by the segment
         """
@@ -1054,7 +1085,7 @@ class Segment(object):
         else:
             return False
 
-    def scale(self, scale_factor):
+    def scale(self, scale_factor) -> 'Segment':
         """
         Scale a segment by the given scale_factor.
         Start point does not change.
@@ -1067,14 +1098,18 @@ class Segment(object):
         delta_y = self.delta_y() * scale_factor
         delta_z = self.delta_z() * scale_factor
 
-        end_pt = Point(self.start_pt().x + delta_x,
-                       self.start_pt().y + delta_y,
-                       self.start_pt().z + delta_z)
+        end_pt = Point(
+            x=self.start_pt().x + delta_x,
+            y=self.start_pt().y + delta_y,
+            z=self.start_pt().z + delta_z,
+            t=self.end_pt().t,
+            epsg_cd=self.epsg())
 
-        return Segment(self.start_pt(),
-                       end_pt)
+        return Segment(
+            self.start_pt(),
+            end_pt)
 
-    def densify_2d_segment(self, densify_distance):
+    def densify2d_asLine(self, densify_distance) -> 'Line':
         """
         Densify a segment by adding additional points
         separated a distance equal to densify_distance.
@@ -1090,7 +1125,9 @@ class Segment(object):
         vers_2d = vect.versor2D()
         generator_vector = vers_2d.scale(densify_distance)
 
-        interpolated_line = Line([self.start_pt()], crs=self.crs())
+        interpolated_line = Line(
+            pts=[self.start_pt()])
+
         n = 0
         while True:
             n += 1
@@ -1109,14 +1146,14 @@ class Line(object):
     A list of Point objects, all with the same CRS code.
     """
 
-    def __init__(self, pts: Optional[List[Point]] = None, crs: str = ""):
+    def __init__(self, pts: Optional[List[Point]] = None, epsg_cd: int = -1):
         """
         Creates the Line instance, when all the provided points have the same CRS codes.
 
         :param pts: a list of points
         :type pts: List of Point instances.
-        :param crs: the CRS code of the points.
-        :type crs: basestring.
+        :param epsg_cd: the CRS code of the points.
+        :type epsg_cd: int.
         :return: a Line instance.
         :rtype: Line.
         :raises: CRSCodeException.
@@ -1126,22 +1163,33 @@ class Line(object):
         if pts is None:
             pts = []
 
+        for pt in pts:
+            if not isinstance(pt, Point):
+                raise Exception("All input data must be point")
+
+        # when implicit (-1) EPSG line code, initialize it to that of the first point
+
+        if pts and epsg_cd == -1:
+            epsg_cd = pts[0].epsg()
+
+        # check all points have the same CRS
+
         for ndx in range(len(pts)):
             pt = pts[ndx]
-            if pt.crs() != crs:
-                raise CRSCodeException("All points must have the same '{}' CRS code".format(crs))
+            if pt.epsg() != epsg_cd:
+                raise CRSCodeException("All points must have the same '{}' EPSG code".format(epsg_cd))
 
-        self._pts = pts
-        self._crs = crs
+        self._pts = [pt.clone() for pt in pts]
+        self._crs = Crs(epsg_cd)
 
     @classmethod
-    def fromPointList(cls, pt_list: List[List[float]], crs: str = "") -> 'Line':
+    def fromPointList(cls, pt_list: List[List[float]], epsg_cd: int = -1) -> 'Line':
         """
         Create a Line instance from a list of x, y and optional z values.
 
         Example:
           >>> Line.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-          Line with 3 points: (0.0000, 0.0000, 0.0000) ... (0.0000, 1.0000, 0.0000) - crs: undefined
+          Line with 3 points: (0.0000, 0.0000, 0.0000) ... (0.0000, 1.0000, 0.0000) - EPSG: -1
         """
 
         pts = []
@@ -1150,29 +1198,42 @@ class Line(object):
                 pt = Point(
                     x=vals[0],
                     y=vals[1],
-                    crs=crs)
-            else:
+                    epsg_cd=epsg_cd)
+            elif len(vals) == 3:
                 pt = Point(
                     x=vals[0],
                     y=vals[1],
                     z=vals[2],
-                    crs=crs)
+                    epsg_cd=epsg_cd)
+            elif len(vals) == 3:
+                pt = Point(
+                    x=vals[0],
+                    y=vals[1],
+                    z=vals[2],
+                    t=vals[3],
+                    epsg_cd=epsg_cd)
+            else:
+                raise Exception("Point input values should be 2, 3 or 4. {} got ({}).".format(len(vals), vals))
 
             pts.append(pt)
 
-        return cls(pts, crs)
+        return cls(pts, epsg_cd=epsg_cd)
 
     def pts(self):
 
-        return self._pts
+        return [pt.clone() for pt in self._pts]
 
-    def crs(self):
+    def crs(self) -> Crs:
 
         return self._crs
 
+    def epsg(self) -> int:
+
+        return self.crs().epsg()
+
     def num_pts(self):
 
-        return len(self.pts())
+        return len(self._pts)
 
     def first_pt(self) -> Optional[Point]:
         """
@@ -1183,7 +1244,7 @@ class Line(object):
         """
 
         if self.num_pts() >= 1:
-            return self.pts()[0]
+            return self._pts[0].clone()
         else:
             return None
 
@@ -1196,7 +1257,7 @@ class Line(object):
         """
 
         if self.num_pts() >= 1:
-            return self.pts()[-1]
+            return self._pts[-1].clone()
         else:
             return None
 
@@ -1209,99 +1270,103 @@ class Line(object):
         """
 
         num_points = self.num_pts()
-        crs = self.crs()
-        if not crs:
-            crs = "undefined"
+        epsg = self.epsg()
 
         if num_points == 0:
-            txt = "Empty Line"
+            txt = "Empty Line - EPSG: {}".format(epsg)
         else:
             first_pt = self.first_pt()
             x1, y1, z1 = first_pt.x, first_pt.y, first_pt.z
             if num_points == 1:
-                txt = "Line with unique point: {.4f}.{.4f},{.4f}".format(x1, y1, z1)
+                txt = "Line with unique point: {.4f}.{.4f},{.4f} - EPSG: {}".format(x1, y1, z1, epsg)
             else:
                 last_pt = self.last_pt()
                 x2, y2, z2 = last_pt.x, last_pt.y, last_pt.z
-                txt = "Line with {} points: ({:.4f}, {:.4f}, {:.4f}) ... ({:.4f}, {:.4f}, {:.4f}) - crs: {}".format(num_points, x1, y1, z1, x2, y2, z2, crs)
+                txt = "Line with {} points: ({:.4f}, {:.4f}, {:.4f}) ... ({:.4f}, {:.4f}, {:.4f}) - EPSG: {}".format(num_points, x1, y1, z1, x2, y2, z2, epsg)
 
         return txt
 
     def clone(self):
 
         return Line(
-            pts=[pt.clone() for pt in self.pts()],
-            crs=self.crs())
+            pts=self.pts())
 
-    def add_pt(self, pt):
+    def add_pt(self, pt) -> bool:
         """
         In-place transformation of the original Line instance
         by adding a new point at the end.
 
         :param pt: Point
-        :return: self
+        :return: bool. True when added, False otherwise
         """
 
         if self.num_pts() > 0 and pt.crs() != self.crs():
-            raise CRSCodeException("Added point must have the same CRS as original points")
+            return False
 
-        self._pts.append(pt)
-        if self.crs() is None:
-            self._crs = pt.crs()
+        if self.num_pts() == 0 and not self.crs().valid():
+            self._crs = Crs(pt.epsg())
 
-    def add_pts(self, pt_list):
+        self._pts.append(pt.clone())
+        return True
+
+    def add_pts(self, pt_list) -> int:
         """
         In-place transformation of the original Line instance
         by adding a new set of points at the end.
 
-        :param pt_list: list
-        :return: self
+        :param pt_list: list of Points.
+        :type pt_list: List of Point instances.
+        :return: number of added points
+        :rtype: int.
         """
 
-        if self.num_pts() > 0:
-            for pt in pt_list:
-                if pt.crs() != self.crs():
-                    raise CRSCodeException("Added points must have the same CRS as original points")
+        num_added = 0
+        for pt in pt_list:
+            success = self.add_pt(pt)
+            if success:
+                num_added += 1
 
-        self._pts += pt_list
-        if self.crs() is None:
-            self._crs = pt_list[0].crs()
+        return num_added
 
-    def x_list(self):
+    def x_list(self) -> List[float]:
 
-        return [pt.x for pt in self.pts()]
+        return [pt.x for pt in self._pts]
 
-    def y_list(self):
+    def y_list(self) -> List[float]:
 
-        return [pt.y for pt in self.pts()]
+        return [pt.y for pt in self._pts]
 
-    def z_list(self):
+    def z_list(self) -> List[float]:
 
-        return [pt.z for pt in self.pts()]
+        return [pt.z for pt in self._pts]
 
-    def z_array(self):
+    def t_list(self) -> List[float]:
+
+        return [pt.t for pt in self._pts]
+
+    def z_array(self) -> array:
 
         return np.array(self.z_list())
 
-    def xy_lists(self):
+    def xy_lists(self) -> Tuple[List[float], List[float]]:
 
         return self.x_list(), self.y_list()
 
-    def x_min(self):
+    def x_min(self) -> float:
 
-        return np.nanmin(self.x_list())
+        return min(self.x_list())
 
-    def x_max(self):
+    def x_max(self) -> float:
 
-        return np.nanmax(self.x_list())
+        return max(self.x_list())
 
-    def y_min(self):
+    def y_min(self) -> float:
 
-        return np.nanmin(self.y_list())
+        return min(self.y_list())
 
-    def y_max(self):
+    def y_max(self) -> float:
 
-        return np.nanmax(self.y_list())
+        return max(self.y_list())
 
     def z_stats(self) -> Dict:
         """
@@ -1313,37 +1378,39 @@ class Line(object):
 
         return get_statistics(self.z_array())
 
-    def z_min(self):
+    def z_min(self) -> float:
 
-        return np.nanmin(self.z_list())
+        return min(self.z_list())
 
-    def z_max(self):
+    def z_max(self) -> float:
 
-        return np.nanmax(self.z_list())
+        return max(self.z_list())
 
-    def z_mean(self):
+    def z_mean(self) -> float:
 
-        return np.nanmean(self.z_array())
+        return float(np.mean(self.z_array()))
 
-    def z_var(self):
+    def z_var(self) -> float:
 
-        return np.nanvar(self.z_array())
+        return float(np.var(self.z_array()))
 
-    def z_std(self):
+    def z_std(self) -> float:
 
-        return np.nanstd(self.z_array())
+        return float(np.std(self.z_array()))
 
-    def remove_coincident_points(self):
+    def remove_coincident_points(self) -> 'Line':
         """
         Remove coincident successive points
 
         :return: Line instance
         """
 
-        new_line = Line(self.pts()[:1], crs=self.crs())
+        new_line = Line(
+            pts=self.pts()[:1])
+
         for ndx in range(1, self.num_pts()):
-            if not self.pts()[ndx].isCoinc(new_line.pts()[-1]):
-                new_line.add_pt(self.pts()[ndx])
+            if not self._pts[ndx].isCoinc(new_line._pts[-1]):
+                new_line.add_pt(self._pts[ndx])
 
         return new_line
 
@@ -1354,13 +1421,13 @@ class Line(object):
         :return: list of Segment objects
         """
 
-        pts_pairs = zip(self.pts()[:-1], self.pts()[1:])
+        pts_pairs = zip(self._pts[:-1], self._pts[1:])
 
         segments = [Segment(pt_a, pt_b) for (pt_a, pt_b) in pts_pairs]
 
         return segments
 
-    def densify_2d_line(self, sample_distance):
+    def densify_2d_line(self, sample_distance) -> 'Line':
         """
         Densify a line into a new line instance,
         using the provided sample distance.
@@ -1375,9 +1442,9 @@ class Line(object):
 
         segments = self.as_segments()
 
-        densified_line_list = [segment.densify_2d_segment(sample_distance) for segment in segments]
+        densified_line_list = [segment.densify2d_asLine(sample_distance) for segment in segments]
 
-        densifyied_multiline = MultiLine(densified_line_list, crs=self.crs())
+        densifyied_multiline = MultiLine(densified_line_list, epsg_cd=self.epsg())
 
         densifyied_line = densifyied_multiline.to_line()
 
@@ -1385,27 +1452,27 @@ class Line(object):
 
         return densifyied_line_wo_coinc_pts
 
-    def join(self, another):
+    def join(self, another) -> 'Line':
         """
         Joins together two lines and returns the join as a new line without point changes,
         with possible overlapping points
         and orientation mismatches between the two original lines
         """
 
-        return Line(self.pts() + another.pts())
+        return Line(self._pts + another._pts)
 
-    def length_3d(self):
+    def length_3d(self) -> float:
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
-            length += self.pts()[ndx].dist3DWith(self.pts()[ndx + 1])
+            length += self._pts[ndx].dist3DWith(self._pts[ndx + 1])
         return length
 
-    def length_2d(self):
+    def length_2d(self) -> float:
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
-            length += self.pts()[ndx].dist2DWith(self.pts()[ndx + 1])
+            length += self._pts[ndx].dist2DWith(self._pts[ndx + 1])
         return length
 
     def step_delta_z(self) -> List[float]:
@@ -1420,7 +1487,7 @@ class Line(object):
         delta_z = [0.0]
 
         for ndx in range(1, self.num_pts()):
-            delta_z.append(self.pts()[ndx].z - self.pts()[ndx - 1].z)
+            delta_z.append(self._pts[ndx].z - self._pts[ndx - 1].z)
 
         return delta_z
 
@@ -1438,7 +1505,7 @@ class Line(object):
 
         step_length_list = [0.0]
         for ndx in range(1, self.num_pts()):
-            length = self.pts()[ndx].dist3DWith(self.pts()[ndx - 1])
+            length = self._pts[ndx].dist3DWith(self._pts[ndx - 1])
             step_length_list.append(length)
 
         return step_length_list
@@ -1457,7 +1524,7 @@ class Line(object):
 
         step_length_list = [0.0]
         for ndx in range(1, self.num_pts()):
-            length = self.pts()[ndx].dist2DWith(self.pts()[ndx - 1])
+            length = self._pts[ndx].dist2DWith(self._pts[ndx - 1])
             step_length_list.append(length)
 
         return step_length_list
@@ -1472,7 +1539,7 @@ class Line(object):
 
         return list(itertools.accumulate(self.step_lengths_3d()))
 
-    def incremental_length_2d(self):
+    def incremental_length_2d(self) -> List[float]:
         """
         Returns the accumulated 2D segment lengths.
 
@@ -1482,19 +1549,38 @@ class Line(object):
 
         return list(itertools.accumulate(self.step_lengths_2d()))
 
-    def reverse_direction(self):
+    def reverse_direction(self) -> 'Line':
+        """
+        Return a Line instance with reversed point list.
+
+        :return: a new Line instance.
+        :rtype: Line.
+        """
 
         new_line = self.clone()
-        new_line.pts().reverse()  # in-place operation on new_line
+        new_line._pts.reverse()  # in-place operation on new_line
 
         return new_line
 
-    def slopes(self):
+    def slopes_degr(self) -> List[Optional[float]]:
+        """
+        Calculates the slopes (in degrees) of each Line segment.
+        The first value is the slope of the first segment.
+        The last value, always None, is the slope of the segment starting at the last point.
+        The number of elements is equal to the number of points in the Line.
 
-        lSlopes = [None]
-        for ndx in range(1, self.num_pts()):
-            vector = Segment(self.pts()[ndx], self.pts()[ndx + 1]).vector()
-            lSlopes.append(-vector.slope)  # minus because vector convention is positive downward
+        :return: list of slopes (degrees).
+        :rtype: List[Optional[float]].
+        """
+
+        lSlopes = []
+
+        segments = self.as_segments()
+        for segment in segments:
+            vector = segment.vector()
+            lSlopes.append(-vector.slope_degr())  # minus because vector convention is positive downward
+
+        lSlopes.append(None)  # None refers to the slope of the Segment starting with the last point
 
         return lSlopes
 
@@ -1506,11 +1592,11 @@ class Line(object):
         :rtype: Dictionary.
         """
 
-        return get_statistics(self.slopes())
+        return get_statistics(self.slopes_degr())
 
-    def abs_slopes(self):
+    def abs_slopes_degr(self) -> List[Optional[float]]:
 
-        return [abs(val) for val in self.slopes()]
+        return [abs(val) for val in self.slopes_degr()]
 
     def abs_slopes_stats(self) -> Dict:
         """
@@ -1520,24 +1606,25 @@ class Line(object):
         :rtype: Dictionary.
         """
 
-        return get_statistics(self.abs_slopes())
+        return get_statistics(self.abs_slopes_degr())
 
-    def wgs842ecef(self) -> Optional['Line']:
-        """
-        Converts from WGS84 to ECEF reference system, provided its CRS is EPSG:4326.
 
-        :return: a line with ECEF coordinates (EPSG:4978).
-        :rtype: optional Line.
-        """
+def line_wgs84_ecef(line: Line) -> Optional[Line]:
+    """
+    Converts from WGS84 to ECEF reference system, provided its CRS is EPSG:4326.
 
-        if self._crs != epsg_4326_str:
-            return None
+    :return: a line with ECEF coordinates (EPSG:4978).
+    :rtype: optional Line.
+    """
 
-        pts = [pt.wgs842ecef() for pt in self.pts()]
+    if line.epsg() != 4326:
+        return None
 
-        return Line(
-            pts=pts,
-            crs=epsg_4978_str)
+    pts = [pt.wgs842ecef() for pt in line.pts()]
+
+    return Line(
+        pts=pts,
+        epsg_cd=4978)
 
 
 class MultiLine(object):
@@ -1545,17 +1632,17 @@ class MultiLine(object):
     MultiLine is a list of Line objects, each one with the same CRS code
     """
 
-    def __init__(self, lines: Optional[List[Line]] = None, crs: str = ""):
+    def __init__(self, lines: Optional[List[Line]] = None, epsg_cd: str = ""):
 
         if lines is None:
             lines = []
 
         for ndx in range(len(lines)):
-            if lines[ndx].crs() != crs:
+            if lines[ndx].crs() != epsg_cd:
                 raise CRSCodeException("All lines must have the same CRS code")
 
         self._lines = lines
-        self._crs = crs
+        self._crs = epsg_cd
 
     def lines(self):
 
@@ -1595,11 +1682,11 @@ class MultiLine(object):
             if line.crs() != self.crs():
                 raise CRSCodeException("Added line must have the same CRS code as current multiline")
 
-        return MultiLine(self.lines() + [line], crs=self.crs)
+        return MultiLine(self.lines() + [line], epsg_cd=self.crs)
 
     def clone(self):
 
-        return MultiLine(self.lines(), crs=self.crs())
+        return MultiLine(self.lines(), epsg_cd=self.crs())
 
     def num_tot_pts(self):
 
@@ -1652,7 +1739,7 @@ class MultiLine(object):
 
     def to_line(self):
 
-        return Line([point for line in self.lines() for point in line.pts()], crs=self.crs())
+        return Line([point for line in self.lines() for point in line.pts()], epsg_cd=self.crs())
 
     def densify_2d_multiline(self, sample_distance):
 

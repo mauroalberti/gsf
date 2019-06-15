@@ -36,6 +36,6 @@ def nearest_projection(
         x=dummy_inters_pt.x + offset_vector.x,
         y=dummy_inters_pt.y + offset_vector.y,
         z=dummy_inters_pt.z + offset_vector.z,
-        crs=crs)
+        epsg_cd=crs)
 
 

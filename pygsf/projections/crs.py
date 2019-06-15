@@ -9,14 +9,9 @@ class Crs(object):
 
     """
 
-    @staticmethod
-    def undefined():
+    def __init__(self, epsg_cd: int = -1):
 
-        return
-
-    def __init__(self, epsg: int = -1):
-
-        self._epsg = int(epsg)
+        self._epsg = int(epsg_cd)
 
     def epsg(self):
 

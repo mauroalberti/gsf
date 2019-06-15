@@ -59,8 +59,6 @@ def geodetic2ecef(lat: float, lon: float, height: float) -> Tuple[float, float, 
 
     return x, y, z
 
-# -*- coding: utf-8 -*-
-
 
 latitude_one_degree_45degr_meters = 111131.745  #  source: http://www.csgnetwork.com/degreelenllavcalc.html, consulted on 2018-12-23
 
