@@ -310,15 +310,15 @@ def rotVectByQuater(quat: Quaternion, vect: Vect) -> Vect:
     Example:
       >>> q = Quaternion.i()  # rotation of 180° around the x axis
       >>> rotVectByQuater(q, Vect(0, 1, 0))
-      Vect(0.0000, -1.0000, 0.0000)
+      Vect(0.0000, -1.0000, 0.0000, EPSG: -1)
       >>> rotVectByQuater(q, Vect(0, 1, 1))
-      Vect(0.0000, -1.0000, -1.0000)
+      Vect(0.0000, -1.0000, -1.0000, EPSG: -1)
       >>> q = Quaternion.k()  # rotation of 180° around the z axis
       >>> rotVectByQuater(q, Vect(0, 1, 1))
-      Vect(0.0000, -1.0000, 1.0000)
+      Vect(0.0000, -1.0000, 1.0000, EPSG: -1)
       >>> q = Quaternion.j()  # rotation of 180° around the y axis
       >>> rotVectByQuater(q, Vect(1, 0, 1))
-      Vect(-1.0000, 0.0000, -1.0000)
+      Vect(-1.0000, 0.0000, -1.0000, EPSG: -1)
     """
 
     q = quat.normalize()

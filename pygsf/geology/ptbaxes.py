@@ -167,7 +167,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).PVersor
-          Vect(-0.0000, 1.0000, 0.0000)
+          Vect(-0.0000, 1.0000, 0.0000, EPSG: -1)
         """
 
         return self._p_versor
@@ -181,7 +181,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).TVersor
-          Vect(1.0000, 0.0000, -0.0000)
+          Vect(1.0000, 0.0000, -0.0000, EPSG: -1)
         """
 
         return self._t_versor
@@ -195,7 +195,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).BVersor
-          Vect(0.0000, 0.0000, 1.0000)
+          Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
         """
 
         return self.TVersor.vCross(self.PVersor)

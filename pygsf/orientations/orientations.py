@@ -672,11 +672,11 @@ class Direct(object):
 
         Examples:
           >>> Direct.fromAzPl(0, 90).asVersor()
-          Vect(0.0000, 0.0000, -1.0000)
+          Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
           >>> Direct.fromAzPl(0, -90).asVersor()
-          Vect(0.0000, 0.0000, 1.0000)
+          Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
           >>> Direct.fromAzPl(90, 90).asVersor()
-          Vect(0.0000, 0.0000, -1.0000)
+          Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
         """
 
         az, pl = self.r
@@ -947,11 +947,11 @@ class Direct(object):
 
         Examples:
           >>> Direct.fromAzPl(0, 0).normVersor(Direct.fromAzPl(90, 0))
-          Vect(0.0000, 0.0000, -1.0000)
+          Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
           >>> Direct.fromAzPl(45, 0).normVersor(Direct.fromAzPl(310, 0))
-          Vect(0.0000, 0.0000, 1.0000)
+          Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
           >>> Direct.fromAzPl(0, 0).normVersor(Direct.fromAzPl(90, 90))
-          Vect(-1.0000, 0.0000, -0.0000)
+          Vect(-1.0000, 0.0000, -0.0000, EPSG: -1)
           >>> Direct.fromAzPl(315, 45).normVersor(Direct.fromAzPl(315, 44.5)) is None
           True
         """
@@ -1646,24 +1646,24 @@ class Plane(object):
 
         return self.da > (90.0 - dip_angle_threshold)
 
-    def toCPlane(self, point):
+    def toCPlane(self, pt):
         """
         Given a Plane instance and a provided Point instance,
         calculate the corresponding Plane instance.
 
         Example:
           >>> Plane(0, 0).toCPlane(Point(0, 0, 0))
-          CPlane(0.0000, 0.0000, 1.0000, -0.0000)
+          CPlane(0.0000, 0.0000, 1.0000, -0.0000, -1)
           >>> Plane(90, 45).toCPlane(Point(0, 0, 0))
-          CPlane(0.7071, 0.0000, 0.7071, -0.0000)
+          CPlane(0.7071, 0.0000, 0.7071, -0.0000, -1)
           >>> Plane(0, 90).toCPlane(Point(0, 0, 0))
-          CPlane(0.0000, 1.0000, -0.0000, -0.0000)
+          CPlane(0.0000, 1.0000, -0.0000, -0.0000, -1)
         """
 
         normal_versor = self.normDirectFrwrd().asVersor()
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
-        d = - (a * point.x + b * point.y + c * point.z)
-        return CPlane(a, b, c, d)
+        d = - (a * pt.x + b * pt.y + c * pt.z)
+        return CPlane(a, b, c, d, epsg_cd=pt.epsg())
 
     def slope_x_dir(self) -> float:
         """

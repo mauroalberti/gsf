@@ -9,6 +9,8 @@ from ..defaults.maths import MIN_VECTOR_MAGNITUDE, MIN_SCALAR_VALUE
 from .exceptions import *
 from .arrays import *
 
+from ..projections.crs import Crs
+
 
 def normXYZ(x: Number, y: Number, z: Number) -> Tuple:
     """
@@ -46,13 +48,13 @@ class Vect(object):
     z axis -> Up
     """
 
-    def __init__(self, x: Number, y: Number, z: Number = 0.0):
+    def __init__(self, x: Number, y: Number, z: Number = 0.0, epsg_cd: int = -1):
         """
         Vect constructor.
 
         Example;
           >>> Vect(1, 0, 1)
-          Vect(1.0000, 0.0000, 1.0000)
+          Vect(1.0000, 0.0000, 1.0000, EPSG: -1)
           >>> Vect(1, np.nan, 1)
           Traceback (most recent call last):
           ...
@@ -61,10 +63,10 @@ class Vect(object):
           Traceback (most recent call last):
           ...
           pygsf.mathematics.exceptions.VectorInputException: Input values must be finite
-          >>> Vect(0, 0, 0)
-          Vect(0.0000, 0.0000, 0.0000)
-          >>> Vect(2.2, -19.7)
-          Vect(2.2000, -19.7000, 0.0000)
+          >>> Vect(0, 0, 0, epsg_cd=32648)
+          Vect(0.0000, 0.0000, 0.0000, EPSG: 32648)
+          >>> Vect(2.2, -19.7, epsg_cd=32648)
+          Vect(2.2000, -19.7000, 0.0000, EPSG: 32648)
         """
 
         vals = [x, y, z]
@@ -72,8 +74,9 @@ class Vect(object):
             raise VectorInputException("Input values must be integer of float")
         elif not all(map(isfinite, vals)):
             raise VectorInputException("Input values must be finite")
-        else:
-            self._a = array(vals, dtype=np.float64)
+
+        self._a = array(vals, dtype=np.float64)
+        self._crs = Crs(epsg_cd)
 
     def __eq__(self, another: 'Vect') -> bool:
         """
@@ -92,7 +95,8 @@ class Vect(object):
             return all([
                 self.x == another.x,
                 self.y == another.y,
-                self.z == another.z])
+                self.z == another.z,
+                self.epsg() == another.epsg()])
 
     def __ne__(self, another: 'Vect') -> bool:
         """
@@ -156,6 +160,26 @@ class Vect(object):
         """
         return self.a[2]
 
+    def crs(self) -> Crs:
+        """
+        Returns the crs of the Vector.
+
+        :return: the crs.
+        :rtype: Crs.
+        """
+
+        return self._crs
+
+    def epsg(self) -> int:
+        """
+        Returns the EPSG code of the Vector instance.
+
+        :return: EPSG code.
+        :rtype: int.
+        """
+
+        return self._crs.epsg()
+
     def toXYZ(self) -> Tuple[float, float, float]:
         """
         Returns the spatial components as a tuple of three values.
@@ -191,10 +215,10 @@ class Vect(object):
 
         Examples:
           >>> Vect(2, 3, 4).pXY()
-          Vect(2.0000, 3.0000, 0.0000)
+          Vect(2.0000, 3.0000, 0.0000, EPSG: -1)
         """
 
-        return self.__class__(self.x, self.y, 0.0)
+        return self.__class__(self.x, self.y, 0.0, epsg_cd=self.epsg())
 
     def pXZ(self) -> 'Vect':
         """
@@ -203,11 +227,11 @@ class Vect(object):
         :return: projected object instance
 
         Examples:
-          >>> Vect(2, 3, 4).pXZ()
-          Vect(2.0000, 0.0000, 4.0000)
+          >>> Vect(2, 3, 4, epsg_cd=2000).pXZ()
+          Vect(2.0000, 0.0000, 4.0000, EPSG: 2000)
         """
 
-        return self.__class__(self.x, 0.0, self.z)
+        return self.__class__(self.x, 0.0, self.z, epsg_cd=self.epsg())
 
     def pYZ(self) -> 'Vect':
         """
@@ -217,10 +241,10 @@ class Vect(object):
 
         Examples:
           >>> Vect(2, 3, 4).pYZ()
-          Vect(0.0000, 3.0000, 4.0000)
+          Vect(0.0000, 3.0000, 4.0000, EPSG: -1)
         """
 
-        return self.__class__(0.0, self.y, self.z)
+        return self.__class__(0.0, self.y, self.z, epsg_cd=self.epsg())
 
     @property
     def len3D(self) -> float:
@@ -251,125 +275,137 @@ class Vect(object):
 
         return sqrt(self.x * self.x + self.y * self.y)
 
-    def deltaX(self, another: 'Vect') -> float:
+    def deltaX(self, another: 'Vect') -> Optional[float]:
         """
         Delta between x components of two Vect Instances.
 
-        :return: difference value
-        :rtype: float
+        :return: x difference value.
+        :rtype: Optional[float].
 
         Examples:
-          >>> Vect(1, 2, 3).deltaX(Vect(4, 7, 1))
+          >>> Vect(1, 2, 3, epsg_cd=2000).deltaX(Vect(4, 7, 1, epsg_cd=2000))
           3.0
         """
 
         if not isinstance(another, Vect):
-            raise VectorInputException("Input instance must be of type Vect")
-        else:
-            return another.x - self.x
+            return None
 
-    def deltaY(self, another: 'Vect') -> float:
+        if self.epsg() != another.epsg():
+            return None
+
+        return another.x - self.x
+
+    def deltaY(self, another: 'Vect') -> Optional[float]:
         """
         Delta between y components of two Vect Instances.
 
-        :return: difference value
-        :rtype: float
+        :return: y difference value.
+        :rtype: Optional[float].
 
         Examples:
-          >>> Vect(1, 2, 3).deltaY(Vect(4, 7, 1))
+          >>> Vect(1, 2, 3, epsg_cd=2000).deltaY(Vect(4, 7, 1, epsg_cd=2000))
           5.0
         """
 
         if not isinstance(another, Vect):
-            raise VectorInputException("Input instance must be of type Vect")
-        else:
-            return another.y - self.y
+            return None
 
-    def deltaZ(self, another: 'Vect') -> float:
+        if self.epsg() != another.epsg():
+            return None
+
+        return another.y - self.y
+
+    def deltaZ(self, another: 'Vect') -> Optional[float]:
         """
         Delta between x components of two Vect Instances.
 
-        :return: difference value
-        :rtype: float
+        :return: z difference value.
+        :rtype: Optional[float].
 
         Examples:
-          >>> Vect(1, 2, 3).deltaZ(Vect(4, 7, 1))
+          >>> Vect(1, 2, 3, epsg_cd=2000).deltaZ(Vect(4, 7, 1, epsg_cd=2000))
           -2.0
         """
 
         if not isinstance(another, Vect):
-            raise VectorInputException("Input instance must be of type Vect")
-        else:
-            return another.z - self.z
+            return None
 
-    def scale(self, scale_factor: Number) -> 'Vect':
+        if self.epsg() != another.epsg():
+            return None
+
+        return another.z - self.z
+
+    def scale(self, scale_factor: Number) -> Optional['Vect']:
         """
         Create a scaled object.
 
         Example;
           >>> Vect(1, 0, 1).scale(2.5)
-          Vect(2.5000, 0.0000, 2.5000)
-          >>> Vect(1, 0, 1).scale(np.nan)
-          Traceback (most recent call last):
-          ...
-          pygsf.mathematics.exceptions.VectorInputException: Scale factor must be finite
-          >>> Vect(1, 0, 1).scale(np.inf)
-          Traceback (most recent call last):
-          ...
-          pygsf.mathematics.exceptions.VectorInputException: Scale factor must be finite
+          Vect(2.5000, 0.0000, 2.5000, EPSG: -1)
+          >>> Vect(1, 0, 1).scale(np.nan) is None
+          True
+          >>> Vect(1, 0, 1).scale(np.inf) is None
+          True
         """
 
         if not isinstance(scale_factor, (int, float)):
-            raise VectorInputException("Scale factor must be number")
-        elif not isfinite(scale_factor):
-            raise VectorInputException("Scale factor must be finite")
-        else:
-            x, y, z = arrToTuple(self.a * scale_factor)
-            return self.__class__(x, y, z)
+            return None
+
+        if not isfinite(scale_factor):
+            return None
+
+        x, y, z = arrToTuple(self.a * scale_factor)
+        return self.__class__(x, y, z, epsg_cd=self.epsg())
 
     def invert(self) -> 'Vect':
         """
         Create a new object with inverted direction.
 
         Examples:
-          >>> Vect(1, 1, 1).invert()
-          Vect(-1.0000, -1.0000, -1.0000)
+          >>> Vect(1, 1, 1, epsg_cd=2000).invert()
+          Vect(-1.0000, -1.0000, -1.0000, EPSG: 2000)
           >>> Vect(2, -1, 4).invert()
-          Vect(-2.0000, 1.0000, -4.0000)
+          Vect(-2.0000, 1.0000, -4.0000, EPSG: -1)
         """
 
         return self.scale(-1)
 
     def __repr__(self) -> str:
 
-        return "Vect({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
+        return "Vect({:.4f}, {:.4f}, {:.4f}, EPSG: {})".format(self.x, self.y, self.z, self.epsg())
 
-    def __add__(self, another: 'Vect') -> 'Vect':
+    def __add__(self, another: 'Vect') -> Optional['Vect']:
         """
         Sum of two vectors.
 
         Example:
-          >>> Vect(1, 0, 0) + Vect(0, 1, 1)
-          Vect(1.0000, 1.0000, 1.0000)
-          >>> Vect(1, 1, 1) + Vect(-1, -1, -1)
-          Vect(0.0000, 0.0000, 0.0000)
+          >>> Vect(1, 0, 0, epsg_cd=2000) + Vect(0, 1, 1, epsg_cd=2000)
+          Vect(1.0000, 1.0000, 1.0000, EPSG: 2000)
+          >>> Vect(1, 1, 1, epsg_cd=2000) + Vect(-1, -1, -1, epsg_cd=2000)
+          Vect(0.0000, 0.0000, 0.0000, EPSG: 2000)
         """
 
-        x, y, z = arrToTuple(self.a + another.a)
-        return self.__class__(x, y, z)
+        if self.epsg() != another.epsg():
+            return None
 
-    def __sub__(self, another: 'Vect') -> 'Vect':
+        x, y, z = arrToTuple(self.a + another.a)
+        return self.__class__(x, y, z, self.epsg())
+
+    def __sub__(self, another: 'Vect') -> Optional['Vect']:
         """Return object difference
 
         Example:
-          >>> Vect(1., 1., 1.) - Vect(1., 1., 1.)
-          Vect(0.0000, 0.0000, 0.0000)
-          >>> Vect(1., 1., 3.) - Vect(1., 1., 2.2)
-          Vect(0.0000, 0.0000, 0.8000)
+          >>> Vect(1., 1., 1., epsg_cd=2000) - Vect(1., 1., 1., epsg_cd=2000)
+          Vect(0.0000, 0.0000, 0.0000, EPSG: 2000)
+          >>> Vect(1., 1., 3., epsg_cd=2000) - Vect(1., 1., 2.2, epsg_cd=2000)
+          Vect(0.0000, 0.0000, 0.8000, EPSG: 2000)
         """
 
+        if self.epsg() != another.epsg():
+            return None
+
         x, y, z = arrToTuple(self.a - another.a)
-        return self.__class__(x, y, z)
+        return self.__class__(x, y, z, self.epsg())
 
     @property
     def isAlmostZero(self) -> bool:
@@ -425,9 +461,9 @@ class Vect(object):
 
         Example:
           >>> Vect(5, 0, 0).versor()
-          Vect(1.0000, 0.0000, 0.0000)
+          Vect(1.0000, 0.0000, 0.0000, EPSG: -1)
           >>> Vect(0, 0, -1).versor()
-          Vect(0.0000, 0.0000, -1.0000)
+          Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
           >>> Vect(0, 0, 0).versor() is None
           True
         """
@@ -445,7 +481,7 @@ class Vect(object):
 
         Example:
           >>> Vect(7, 0, 10).versor2D()
-          Vect(1.0000, 0.0000, 0.0000)
+          Vect(1.0000, 0.0000, 0.0000, EPSG: -1)
           >>> Vect(0, 0, 10).versor2D() is None
           True
         """
@@ -508,9 +544,9 @@ class Vect(object):
 
         Example:
           >>> Vect(1, 1, 1).upward()
-          Vect(1.0000, 1.0000, 1.0000)
+          Vect(1.0000, 1.0000, 1.0000, EPSG: -1)
           >>> Vect(-1, -1, -1).upward()
-          Vect(1.0000, 1.0000, 1.0000)
+          Vect(1.0000, 1.0000, 1.0000, EPSG: -1)
           >>> Vect(0, 0, 0).upward() is None
           True
         """
@@ -528,9 +564,9 @@ class Vect(object):
 
         Example:
           >>> Vect(1, 1, 1).downward()
-          Vect(-1.0000, -1.0000, -1.0000)
+          Vect(-1.0000, -1.0000, -1.0000, EPSG: -1)
           >>> Vect(-1, -1, -1).downward()
-          Vect(-1.0000, -1.0000, -1.0000)
+          Vect(-1.0000, -1.0000, -1.0000, EPSG: -1)
           >>> Vect(0, 0, 0).downward() is None
           True
         """
@@ -608,16 +644,22 @@ class Vect(object):
           True
         """
 
+        if not isinstance(another, Vect):
+            return None
+
+        if self.epsg() != another.epsg():
+            return None
+
         if not (self.isValid and another.isValid):
             return None
+
+        val = self.vDot(another) / (self.len3D * another.len3D)
+        if val > 1.0:
+            return 1.0
+        elif val < -1.0:
+            return -1.0
         else:
-            val = self.vDot(another) / (self.len3D * another.len3D)
-            if val > 1.0:
-                return 1.0
-            elif val < -1.0:
-                return -1.0
-            else:
-                return val
+            return val
 
     def angle(self, another: 'Vect', unit='d') -> Optional[float]:
         """
@@ -639,32 +681,44 @@ class Vect(object):
           True
         """
 
+        if not isinstance(another, Vect):
+            return None
+
+        if self.epsg() != another.epsg():
+            return None
+
         if not (self.isValid and another.isValid):
             return None
-        else:
-            angle_rad = acos(self.angleCos(another))
-            if unit == 'd':
-                return degrees(angle_rad)
-            elif unit == 'r':
-                return angle_rad
-            else:
-                raise VectorInputException("Unit must be 'd' or 'r'")
 
-    def vCross(self, another: 'Vect') -> 'Vect':
+        angle_rad = acos(self.angleCos(another))
+        if unit == 'd':
+            return degrees(angle_rad)
+        elif unit == 'r':
+            return angle_rad
+        else:
+            return None
+
+    def vCross(self, another: 'Vect') -> Optional['Vect']:
         """
         Vector product (cross product).
 
         Examples:
           >>> Vect(1, 0, 0).vCross(Vect(0, 1, 0))
-          Vect(0.0000, 0.0000, 1.0000)
+          Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
           >>> Vect(1, 0, 0).vCross(Vect(1, 0, 0))
-          Vect(0.0000, 0.0000, 0.0000)
+          Vect(0.0000, 0.0000, 0.0000, EPSG: -1)
           >>> (Vect(1, 0, 0).vCross(Vect(-1, 0, 0))).isAlmostZero
           True
         """
 
+        if not isinstance(another, Vect):
+            return None
+
+        if self.epsg() != another.epsg():
+            return None
+
         x, y, z = arrToTuple(np.cross(self.a[:3], another.a[:3]))
-        return Vect(x, y, z)
+        return Vect(x, y, z, epsg_cd=self.epsg())
 
     def byMatrix(self, array3x3: 'np.array') -> 'Vect':
         """

@@ -79,9 +79,9 @@ class Quaternion(object):
 
         Examples:
           >>> Quaternion(0.1, 1.2, 3.1, 0.9).vector
-          Vect(1.2000, 3.1000, 0.9000)
+          Vect(1.2000, 3.1000, 0.9000, EPSG: -1)
           >>> Quaternion(6.1, 4.9, 1.03, 5.12).vector
-          Vect(4.9000, 1.0300, 5.1200)
+          Vect(4.9000, 1.0300, 5.1200, EPSG: -1)
         """
 
         return Vect(*self.components()[1:])

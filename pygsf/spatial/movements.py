@@ -123,7 +123,8 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: Number, start_pt: Point) -> 
             9.0 / 50.0) * k5_vy + (2.0 / 55.0) * k6_vy)
     interp_pt = Point(
         interp_x,
-        interp_y)
+        interp_y,
+        epsg_cd=start_pt.epsg())
 
     interp_pt_error_estim = interp_pt.dist2DWith(temp_pt)
 

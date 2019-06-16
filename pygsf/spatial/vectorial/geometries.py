@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 
-from typing import Dict
+from typing import Dict, Union
+from enum import Enum
 
 import itertools
 
 from ..constants import MIN_SEPARATION_THRESHOLD, MIN_SCALAR_VALUE
 from ...mathematics.vectors import *
 from ...mathematics.statistics import get_statistics
-from ..exceptions import CRSCodeException
 from ...projections.crs import Crs
 
 from ...orientations.defaults import *
-from ...projections.geodetic import epsg_4326_str, epsg_4978_str, geodetic2ecef
+from ...projections.geodetic import geodetic2ecef
+
+from ...utils.lists import find_val
 
 
 array = np.array
+mean = np.mean
+var = np.var
+std = np.std
 
 
 class Point(object):
@@ -367,7 +372,7 @@ class Point(object):
         :rtype: optional float.
 
         Examples:
-          >>> Point(1., 1., 1., epsg_cd=32632).dist3DWith(Point(4., 5., 1,, crs=32632))
+          >>> Point(1., 1., 1., epsg_cd=32632).dist3DWith(Point(4., 5., 1, epsg_cd=32632))
           5.0
           >>> Point(1, 1, 1, epsg_cd=32632).dist3DWith(Point(4, 5, 1, epsg_cd=32632))
           5.0
@@ -410,9 +415,9 @@ class Point(object):
 
         Example;
           >>> Point(1, 0, 1).scale(2.5)
-          Point(2.5000, 0.0000, 2.5000, 0.0000, '')
+          Point(2.5000, 0.0000, 2.5000, 0.0000, -1)
           >>> Point(1, 0, 1).scale(2.5)
-          Point(2.5000, 0.0000, 2.5000, 0.0000, '')
+          Point(2.5000, 0.0000, 2.5000, 0.0000, -1)
         """
 
         x, y, z = self.x * scale_factor, self.y * scale_factor, self.z * scale_factor
@@ -437,15 +442,18 @@ class Point(object):
         Check spatial coincidence of two points
 
         Example:
-          >>> Point(1., 0., -1.).isCoinc(Point(1., 1.5, -1.))
-          False
+          >>> Point(1., 0., -1.).isCoinc(Point(1., 1.5, -1.)) is None
+          True
           >>> Point(1., 0., 0., epsg_cd=32632).isCoinc(Point(1., 0., 0., epsg_cd=32632))
           True
-          >>> Point(1.2, 7.4, 1.4, epsg_cd=32632).isCoinc(Point(1.2, 7.4, 1.4))
-          False
+          >>> Point(1.2, 7.4, 1.4, epsg_cd=32632).isCoinc(Point(1.2, 7.4, 1.4)) is None
+          True
           >>> Point(1.2, 7.4, 1.4, epsg_cd=4326).isCoinc(Point(1.2, 7.4, 1.4)) is None
           True
         """
+
+        if not self.crs().valid() or not another.crs().valid():
+            return None
 
         if self.crs() != another.crs():
             return None
@@ -492,9 +500,9 @@ class Point(object):
         :rtype: Point.
 
         Example:
-          >>> Point(1, 1, 1, epsg_cd=32632).shiftByVect(Vect(0.5, 1., 1.5, crs=32632))
+          >>> Point(1, 1, 1, epsg_cd=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_cd=32632))
           Point(1.5000, 2.0000, 2.5000, 0.0000, 32632)
-          >>> Point(1, 2, -1, epsg_cd=32632).shiftByVect(Vect(0.5, 1., 1.5, crs=32632))
+          >>> Point(1, 2, -1, epsg_cd=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_cd=32632))
           Point(1.5000, 3.0000, 0.5000, 0.0000, 32632)
        """
 
@@ -511,12 +519,12 @@ class Point(object):
 
         Example:
           >>> Point(1, 1, 0).asVect()
-          Vect(1.0000, 1.0000, 0.0000)
+          Vect(1.0000, 1.0000, 0.0000, EPSG: -1)
           >>> Point(0.2, 1, 6).asVect()
-          Vect(0.2000, 1.0000, 6.0000)
+          Vect(0.2000, 1.0000, 6.0000, EPSG: -1)
         """
 
-        return Vect(self.x, self.y, self.z, self.epsg)
+        return Vect(self.x, self.y, self.z, self.epsg())
 
 
 def pt_4326_ecef(pt: Point) -> Optional[Point]:
@@ -643,13 +651,15 @@ class CPlane(object):
         return self.a(), self.b(), self.c(), self.d(), self.epsg()
 
     @classmethod
-    def fromPoints(cls, pt1, pt2, pt3) -> 'CPlane':
+    def fromPoints(cls, pt1, pt2, pt3) -> Optional['CPlane']:
         """
         Create a CPlane from three given Point instances.
 
         Example:
-          >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
-          CPlane(0.0000, 0.0000, 1.0000, 0.0000, -1)
+          >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0)) is None
+          True
+          >>> CPlane.fromPoints(Point(0, 0, 0, epsg_cd=4326), Point(1, 0, 0, epsg_cd=4326), Point(0, 1, 0, epsg_cd=4326))
+          CPlane(0.0000, 0.0000, 1.0000, 0.0000, 4326)
           >>> CPlane.fromPoints(Point(0, 0, 0, epsg_cd=4326), Point(0, 1, 0, epsg_cd=4326), Point(0, 0, 1, epsg_cd=4326))
           CPlane(1.0000, 0.0000, 0.0000, 0.0000, 4326)
         """
@@ -682,7 +692,7 @@ class CPlane(object):
             np.linalg.det(matr_b),
             np.linalg.det(matr_c),
             np.linalg.det(matr_d),
-            crs=pt1.epsg())
+            epsg_cd=pt1.epsg())
 
     def __repr__(self):
 
@@ -694,12 +704,12 @@ class CPlane(object):
 
         Examples:
           >>> CPlane(0, 0, 5, -2).normVersor()
-          Vect(0.0000, 0.0000, 1.0000, -1)
+          Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
           >>> CPlane(0, 7, 0, 5, epsg_cd=32632).normVersor()
-          Vect(0.0000, 1.0000, 0.0000, 32632)
+          Vect(0.0000, 1.0000, 0.0000, EPSG: 32632)
         """
 
-        return Vect(self.a(), self.b(), self.c(), crs=self.epsg()).versor()
+        return Vect(self.a(), self.b(), self.c(), epsg_cd=self.epsg()).versor()
 
     def toPoint(self) -> Point:
         """
@@ -723,10 +733,10 @@ class CPlane(object):
         Return intersection versor for two intersecting planes.
 
         Examples:
-          >>> a = CPlane(1, 0, 0, 0)
-          >>> b = CPlane(0, 0, 1, 0)
+          >>> a = CPlane(1, 0, 0, 0, epsg_cd=2000)
+          >>> b = CPlane(0, 0, 1, 0, epsg_cd=2000)
           >>> a.intersVersor(b)
-          Vect(0.0000, -1.0000, 0.0000, -1)
+          Vect(0.0000, -1.0000, 0.0000, EPSG: 2000)
         """
 
         if self.crs() != another.crs():
@@ -754,7 +764,7 @@ class CPlane(object):
         b = array([-self.d(), -another.d()])
         x, y, z = pointSolution(a, b)
 
-        return Point(x, y, z, self.epsg())
+        return Point(x, y, z, epsg_cd=self.epsg())
 
     def pointDistance(self, pt: Point) -> Optional[float]:
         """
@@ -866,13 +876,24 @@ class CPlane(object):
         return self.angle(another) < angle_tolerance
 
 
+class JoinTypes(Enum):
+    """
+    Enumeration for Line and Segment type.
+    """
+
+    START_START = 1  # start point coincident with start point
+    START_END   = 2  # start point coincident with end point
+    END_START   = 3  # end point coincident with start point
+    END_END     = 4  # end point coincident with end point
+
+
 class Segment(object):
     """
     Segment is a geometric object defined by a straight line between
     two points.
     """
 
-    def __init__(self, start_pt, end_pt):
+    def __init__(self, start_pt: Point, end_pt: Point):
         """
         Creates a segment instance provided the two points have the same CRS code.
 
@@ -884,8 +905,14 @@ class Segment(object):
         :raises: CRSCodeException.
         """
 
+        if not isinstance(start_pt, Point):
+            raise Exception("Start point must be a Point instance")
+
+        if not isinstance(end_pt, Point):
+            raise Exception("Start point must be a Point instance")
+
         if start_pt.crs() != end_pt.crs():
-            raise CRSCodeException("Start and end point must have the same CRS code")
+            raise Exception("Start and end point must have the same CRS code")
 
         if end_pt.isCoinc(start_pt):
             raise Exception("Start and end points of the segment are coincident")
@@ -894,13 +921,21 @@ class Segment(object):
         self._end_pt = end_pt.clone()
         self._crs = start_pt.crs()
 
+    def extract_start_pt(self) -> Point:
+
+        return self._start_pt
+
+    def extract_end_pt(self) -> Point:
+
+        return self._end_pt
+
     def start_pt(self) -> Point:
 
-        return self._start_pt.clone()
+        return self.extract_start_pt().clone()
 
     def end_pt(self) -> Point:
 
-        return self._end_pt.clone()
+        return self.extract_end_pt().clone()
 
     def crs(self) -> Crs:
 
@@ -912,7 +947,7 @@ class Segment(object):
 
     def clone(self) -> 'Segment':
 
-        return Segment(self.start_pt(), self.end_pt())
+        return Segment(self._start_pt, self._end_pt)
 
     def increasing_x(self) -> 'Segment':
 
@@ -1006,7 +1041,7 @@ class Segment(object):
         return Vect(self.delta_x(),
                     self.delta_y(),
                     self.delta_z(),
-                    crs=self.epsg())
+                    epsg_cd=self.epsg())
 
     def segment_2d_m(self) -> Optional[float]:
 
@@ -1177,7 +1212,7 @@ class Line(object):
         for ndx in range(len(pts)):
             pt = pts[ndx]
             if pt.epsg() != epsg_cd:
-                raise CRSCodeException("All points must have the same '{}' EPSG code".format(epsg_cd))
+                raise Exception("All points must have the same '{}' EPSG code".format(epsg_cd))
 
         self._pts = [pt.clone() for pt in pts]
         self._crs = Crs(epsg_cd)
@@ -1219,6 +1254,31 @@ class Line(object):
 
         return cls(pts, epsg_cd=epsg_cd)
 
+    def extract_pts(self):
+
+        return self._pts
+
+    def extract_pt(self, pt_ndx: int) -> Optional[Point]:
+        """
+        Extract the point at index pt_ndx.
+
+        :param pt_ndx: point index.
+        :type pt_ndx: int.
+        :return: the extracted Point instance or None when index out-of-range.
+        :rtype: Optional[Point].
+
+        Examples:
+        """
+
+        num_pts = self.num_pts()
+
+        if num_pts == 0:
+            return None
+        elif pt_ndx not in range(num_pts):
+            return None
+        else:
+            return self._pts[pt_ndx]
+
     def pts(self):
 
         return [pt.clone() for pt in self._pts]
@@ -1235,7 +1295,7 @@ class Line(object):
 
         return len(self._pts)
 
-    def first_pt(self) -> Optional[Point]:
+    def start_pt(self) -> Optional[Point]:
         """
         Return the first point of a Line or None when no points.
 
@@ -1248,7 +1308,7 @@ class Line(object):
         else:
             return None
 
-    def last_pt(self) -> Optional[Point]:
+    def end_pt(self) -> Optional[Point]:
         """
         Return the last point of a Line or None when no points.
 
@@ -1275,12 +1335,12 @@ class Line(object):
         if num_points == 0:
             txt = "Empty Line - EPSG: {}".format(epsg)
         else:
-            first_pt = self.first_pt()
+            first_pt = self.start_pt()
             x1, y1, z1 = first_pt.x, first_pt.y, first_pt.z
             if num_points == 1:
                 txt = "Line with unique point: {.4f}.{.4f},{.4f} - EPSG: {}".format(x1, y1, z1, epsg)
             else:
-                last_pt = self.last_pt()
+                last_pt = self.end_pt()
                 x2, y2, z2 = last_pt.x, last_pt.y, last_pt.z
                 txt = "Line with {} points: ({:.4f}, {:.4f}, {:.4f}) ... ({:.4f}, {:.4f}, {:.4f}) - EPSG: {}".format(num_points, x1, y1, z1, x2, y2, z2, epsg)
 
@@ -1289,22 +1349,26 @@ class Line(object):
     def clone(self):
 
         return Line(
-            pts=self.pts())
+            pts=self._pts,
+            epsg_cd=self.epsg()
+        )
 
     def add_pt(self, pt) -> bool:
         """
         In-place transformation of the original Line instance
         by adding a new point at the end.
 
-        :param pt: Point
-        :return: bool. True when added, False otherwise
+        :param pt: the point to add
+        :type pt: Point.
+        :return: status of addition. True when added, False otherwise.
+        :rtype: bool.
         """
-
-        if self.num_pts() > 0 and pt.crs() != self.crs():
-            return False
 
         if self.num_pts() == 0 and not self.crs().valid():
             self._crs = Crs(pt.epsg())
+
+        if self.num_pts() > 0 and pt.crs() != self.crs():
+            return False
 
         self._pts.append(pt.clone())
         return True
@@ -1352,21 +1416,29 @@ class Line(object):
 
         return self.x_list(), self.y_list()
 
-    def x_min(self) -> float:
+    def x_min(self) -> Optional[float]:
 
-        return min(self.x_list())
+        return find_val(
+            func=min,
+            lst=self.x_list())
 
-    def x_max(self) -> float:
+    def x_max(self) -> Optional[float]:
 
-        return max(self.x_list())
+        return find_val(
+            func=max,
+            lst=self.x_list())
 
-    def y_min(self) -> float:
+    def y_min(self) -> Optional[float]:
 
-        return min(self.y_list())
+        return find_val(
+            func=min,
+            lst=self.y_list())
 
-    def y_max(self) -> float:
+    def y_max(self) -> Optional[float]:
 
-        return max(self.y_list())
+        return find_val(
+            func=max,
+            lst=self.y_list())
 
     def z_stats(self) -> Dict:
         """
@@ -1378,25 +1450,32 @@ class Line(object):
 
         return get_statistics(self.z_array())
 
-    def z_min(self) -> float:
+    def z_min(self) -> Optional[float]:
 
-        return min(self.z_list())
+        return find_val(
+            func=min,
+            lst=self.z_list())
 
-    def z_max(self) -> float:
+    def z_max(self) -> Optional[float]:
 
-        return max(self.z_list())
+        return find_val(
+            func=max,
+            lst=self.z_list())
 
-    def z_mean(self) -> float:
+    def z_mean(self) -> Optional[float]:
 
-        return float(np.mean(self.z_array()))
+        zs = self.z_list()
+        return float(mean(zs)) if zs else None
 
-    def z_var(self) -> float:
+    def z_var(self) -> Optional[float]:
 
-        return float(np.var(self.z_array()))
+        zs = self.z_list()
+        return float(var(zs)) if zs else None
 
-    def z_std(self) -> float:
+    def z_std(self) -> Optional[float]:
 
-        return float(np.std(self.z_array()))
+        zs = self.z_list()
+        return float(std(zs)) if zs else None
 
     def remove_coincident_points(self) -> 'Line':
         """
@@ -1406,7 +1485,7 @@ class Line(object):
         """
 
         new_line = Line(
-            pts=self.pts()[:1])
+            pts=self._pts[:1])
 
         for ndx in range(1, self.num_pts()):
             if not self._pts[ndx].isCoinc(new_line._pts[-1]):
@@ -1609,7 +1688,7 @@ class Line(object):
         return get_statistics(self.abs_slopes_degr())
 
 
-def line_wgs84_ecef(line: Line) -> Optional[Line]:
+def line_4326_ecef(line: Line) -> Optional[Line]:
     """
     Converts from WGS84 to ECEF reference system, provided its CRS is EPSG:4326.
 
@@ -1620,11 +1699,50 @@ def line_wgs84_ecef(line: Line) -> Optional[Line]:
     if line.epsg() != 4326:
         return None
 
-    pts = [pt.wgs842ecef() for pt in line.pts()]
+    pts = [pt_4326_ecef(pt) for pt in line.pts()]
 
     return Line(
         pts=pts,
         epsg_cd=4978)
+
+
+def analizeJoins(first: Union[Line, Segment], second: Union[Line, Segment]) -> List[Optional[JoinTypes]]:
+    """
+    Analyze join types between two lines/segments.
+
+    :param first: a line or segment.
+    :type first: Line or Segment.
+    :param second: a line or segment.
+    :param second: Line or Segment.
+    :return: a list of join types.
+    :rtype: List[Optional[JoinTypes]].
+
+    Examples:
+      >>> first = Segment(Point(x=0,y=0, epsg_cd=32632), Point(x=1,y=0, epsg_cd=32632))
+      >>> second = Segment(Point(x=1,y=0, epsg_cd=32632), Point(x=0,y=0, epsg_cd=32632))
+      >>> analizeJoins(first, second)
+      [<JoinTypes.START_END: 2>, <JoinTypes.END_START: 3>]
+      >>> first = Segment(Point(x=0,y=0, epsg_cd=32632), Point(x=1,y=0, epsg_cd=32632))
+      >>> second = Segment(Point(x=2,y=0, epsg_cd=32632), Point(x=3,y=0, epsg_cd=32632))
+      >>> analizeJoins(first, second)
+      []
+    """
+
+    join_types = []
+
+    if first.start_pt().isCoinc(second.start_pt()):
+        join_types.append(JoinTypes.START_START)
+
+    if first.start_pt().isCoinc(second.end_pt()):
+        join_types.append(JoinTypes.START_END)
+
+    if first.end_pt().isCoinc(second.start_pt()):
+        join_types.append(JoinTypes.END_START)
+
+    if first.end_pt().isCoinc(second.end_pt()):
+        join_types.append(JoinTypes.END_END)
+
+    return join_types
 
 
 class MultiLine(object):
@@ -1632,17 +1750,17 @@ class MultiLine(object):
     MultiLine is a list of Line objects, each one with the same CRS code
     """
 
-    def __init__(self, lines: Optional[List[Line]] = None, epsg_cd: str = ""):
+    def __init__(self, lines: Optional[List[Line]] = None, epsg_cd: int = -1):
 
         if lines is None:
             lines = []
 
         for ndx in range(len(lines)):
             if lines[ndx].crs() != epsg_cd:
-                raise CRSCodeException("All lines must have the same CRS code")
+                raise Exception("All lines must have the same CRS code")
 
         self._lines = lines
-        self._crs = epsg_cd
+        self._crs = Crs(epsg_cd)
 
     def lines(self):
 
@@ -1652,9 +1770,38 @@ class MultiLine(object):
 
         return self._crs
 
+    def epsg(self):
+
+        return self._crs.epsg()
+
     def num_lines(self):
 
         return len(self.lines())
+
+    def num_tot_pts(self) -> int:
+
+        num_points = 0
+        for line in self._lines:
+            num_points += line.num_pts()
+
+        return num_points
+
+    def extract_line(self, ln_ndx: int = 0) -> Optional[Line]:
+        """
+        Extracts a line from the multiline instance, based on the provided index.
+
+        :return: Line instance or None when ln_ndx is out-of-range.
+        :rtype: Optional[Line].
+        """
+
+        num_lines = self.num_lines()
+        if num_lines == 0:
+            return None
+
+        if ln_ndx not in range(num_lines):
+            return None
+
+        return self.lines()[ln_ndx]
 
     def __repr__(self) -> str:
         """
@@ -1666,65 +1813,95 @@ class MultiLine(object):
 
         num_lines = self.num_lines()
         num_tot_pts = self.num_tot_pts()
-        crs = self.crs()
-        if not crs:
-            crs = "undefined"
-        else:
-            crs = crs[:100]
+        epsg = self.epsg()
 
-        txt = "MultiLine with {} line(s) and {} points\nCrs: {}...".format(num_lines, num_tot_pts, crs)
+        txt = "MultiLine with {} line(s) and {} total point(s) - EPSG: {}".format(num_lines, num_tot_pts, epsg)
 
         return txt
 
-    def add(self, line):
+    def add_line(self, line) -> bool:
+        """
+        In-place addition of a Line instance (that is not cloned).
 
-        if self.num_lines() > 0:
-            if line.crs() != self.crs():
-                raise CRSCodeException("Added line must have the same CRS code as current multiline")
+        :param line: the line to add.
+        :type line: Line.
+        :return: status of addition. True when added, False otherwise.
+        :rtype: bool.
+        """
 
-        return MultiLine(self.lines() + [line], epsg_cd=self.crs)
+        if self.num_lines() == 0 and not self.crs().valid():
+            self._crs = line.crs()
 
-    def clone(self):
+        if self.num_lines() > 0 and line.crs() != self.crs():
+            return False
 
-        return MultiLine(self.lines(), epsg_cd=self.crs())
+        self._lines += [line]
+        return True
 
-    def num_tot_pts(self):
+    def clone(self) -> 'MultiLine':
 
-        num_points = 0
-        for line in self.lines():
-            num_points += line.num_pts()
+        return MultiLine(
+            lines=[line.clone() for line in self._lines],
+            epsg_cd=self.epsg()
+        )
 
-        return num_points
+    def x_min(self) -> Optional[float]:
 
-    def x_min(self):
+        if self.num_tot_pts() == 0:
+            return None
+        else:
+            return float(np.nanmin([line.x_min() for line in self.lines()]))
 
-        return np.nanmin([line.x_min for line in self.lines()])
+    def x_max(self) -> Optional[float]:
 
-    def x_max(self):
+        if self.num_tot_pts() == 0:
+            return None
+        else:
+            return float(np.nanmax([line.x_max() for line in self.lines()]))
 
-        return np.nanmax([line.x_max for line in self.lines()])
+    def y_min(self) -> Optional[float]:
 
-    def y_min(self):
+        if self.num_tot_pts() == 0:
+            return None
+        else:
+            return float(np.nanmin([line.y_min() for line in self.lines()]))
 
-        return np.nanmin([line.y_min for line in self.lines()])
+    def y_max(self) -> Optional[float]:
 
-    def y_max(self):
+        if self.num_tot_pts() == 0:
+            return None
+        else:
+            return float(np.nanmax([line.y_max() for line in self.lines()]))
 
-        return np.nanmax([line.y_max for line in self.lines()])
+    def z_min(self) -> Optional[float]:
 
-    def z_min(self):
+        if self.num_tot_pts() == 0:
+            return None
+        else:
+            return float(np.nanmin([line.z_min() for line in self.lines()]))
 
-        return np.nanmin([line.z_min for line in self.lines()])
+    def z_max(self) -> Optional[float]:
 
-    def z_max(self):
+        if self.num_tot_pts() == 0:
+            return None
+        else:
+            return float(np.nanmax([line.z_max() for line in self.lines()]))
 
-        return np.nanmax([line.z_max for line in self.lines()])
+    def is_continuous(self) -> bool:
+        """
+        Checks whether all lines in a multiline are connected.
 
-    def is_continuous(self):
+        :return: whether all lines are connected.
+        :rtype: bool.
+        """
+
+        if len(self._lines) <= 1:
+            return False
 
         for line_ndx in range(len(self._lines) - 1):
-            if not self.lines()[line_ndx].pts()[-1].isCoinc(self.lines()[line_ndx + 1].pts()[0]) or \
-                    not self.lines()[line_ndx].pts()[-1].isCoinc(self.lines()[line_ndx + 1].pts()[-1]):
+            first = self._lines[line_ndx]
+            second = self._lines[line_ndx + 1]
+            if not analizeJoins(first, second):
                 return False
 
         return True
@@ -1732,14 +1909,14 @@ class MultiLine(object):
     def is_unidirectional(self):
 
         for line_ndx in range(len(self.lines()) - 1):
-            if not self.lines()[line_ndx].pts()[-1].isCoinc(self.lines()[line_ndx + 1].pts()[0]):
+            if not self.lines()[line_ndx].extract_pts()[-1].isCoinc(self.lines()[line_ndx + 1].extract_pts()[0]):
                 return False
 
         return True
 
     def to_line(self):
 
-        return Line([point for line in self.lines() for point in line.pts()], epsg_cd=self.crs())
+        return Line([point for line in self._lines for point in line.extract_pts()], epsg_cd=self.epsg())
 
     def densify_2d_multiline(self, sample_distance):
 
@@ -1747,7 +1924,7 @@ class MultiLine(object):
         for line in self.lines():
             lDensifiedLines.append(line.densify_2d_line(sample_distance))
 
-        return MultiLine(lDensifiedLines, self.crs())
+        return MultiLine(lDensifiedLines, self.epsg())
 
     def remove_coincident_points(self):
 
@@ -1755,33 +1932,23 @@ class MultiLine(object):
         for line in self.lines():
             cleaned_lines.append(line.remove_coincident_points())
 
-        return MultiLine(cleaned_lines, self.crs())
-
-    def extract_line(self, ndx: int = 0):
-        """
-        Extracts a line from the multiline instance, based on the provided index.
-
-        :return: Line instance.
-        :rtype: Line.
-        """
-
-        return self.lines()[ndx]
+        return MultiLine(cleaned_lines, self.epsg())
 
 
 class ParamLine3D(object):
     """
     parametric line
     srcPt: source Point
-    l, m, n: .....
+    l, m, n: line coefficients
     """
 
     def __init__(self, srcPt, l, m, n):
 
-        assert -1.0 <= l <= 1.0
-        assert -1.0 <= m <= 1.0
-        assert -1.0 <= n <= 1.0
+        for v in (l, m, n):
+            if not (-1.0 <= v <= 1.0):
+                raise Exception("Parametric line values must be in -1 to 1 range")
 
-        self._srcPt = srcPt
+        self._srcPt = srcPt.clone()
         self._l = l
         self._m = m
         self._n = n
@@ -1806,84 +1973,6 @@ class ParamLine3D(object):
         return Point(x1 - l * k,
                      y1 - m * k,
                      z1 - n * k)
-
-
-def eq_xy_pair(xy_pair_1, xy_pair_2):
-    if xy_pair_1[0] == xy_pair_2[0] and xy_pair_1[1] == xy_pair_2[1]:
-        return True
-
-    return False
-
-
-def remove_equal_consecutive_xypairs(xy_list):
-    out_xy_list = [xy_list[0]]
-
-    for n in range(1, len(xy_list)):
-        if not eq_xy_pair(xy_list[n], out_xy_list[-1]):
-            out_xy_list.append(xy_list[n])
-
-    return out_xy_list
-
-
-def xytuple_list_to_Line(xy_list):
-    return Line([Point(x, y) for (x, y) in xy_list])
-
-
-def xytuple_l2_to_MultiLine(xytuple_list2):
-    # input is a list of list of (x,y) values
-
-    assert len(xytuple_list2) > 0
-    lines_list = []
-    for xy_list in xytuple_list2:
-        assert len(xy_list) > 0
-        lines_list.append(xytuple_list_to_Line(xy_list))
-
-    return MultiLine(lines_list)
-
-
-def merge_line(line):
-    """
-    line: a list of (x,y,z) tuples for line
-    """
-
-    line_type, line_geometry = line
-
-    if line_type == 'multiline':
-        path_line = xytuple_l2_to_MultiLine(line_geometry).to_line()
-    elif line_type == 'line':
-        path_line = xytuple_list_to_Line(line_geometry)
-    else:
-        raise Exception("unknown line type")
-
-    # transformed into a single Line
-
-    return MultiLine([path_line]).to_line().remove_coincident_points()
-
-
-def merge_lines(lines, progress_ids):
-    """
-    lines: a list of list of (x,y,z) tuples for multilines
-    """
-
-    sorted_line_list = [line for (_, line) in sorted(zip(progress_ids, lines))]
-
-    line_list = []
-    for line in sorted_line_list:
-
-        line_type, line_geometry = line
-
-        if line_type == 'multiline':
-            path_line = xytuple_l2_to_MultiLine(line_geometry).to_line()
-        elif line_type == 'line':
-            path_line = xytuple_list_to_Line(line_geometry)
-        else:
-            continue
-        line_list.append(path_line)  # now a list of Lines
-
-    # now the list of Lines is transformed into a single Line
-    line = MultiLine(line_list).to_line().remove_coincident_points()
-
-    return line
 
 
 # TODO class Path

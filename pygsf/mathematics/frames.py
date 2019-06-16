@@ -40,7 +40,7 @@ class RefFrame(object):
 
         Examples:
           >>> RefFrame(Vect(1,0,0), Vect(0,1,0)).x
-          Vect(1.0000, 0.0000, 0.0000)
+          Vect(1.0000, 0.0000, 0.0000, EPSG: -1)
         """
 
         return self._x
@@ -55,7 +55,7 @@ class RefFrame(object):
 
         Examples:
           >>> RefFrame(Vect(1,0,0), Vect(0,1,0)).y
-          Vect(0.0000, 1.0000, 0.0000)
+          Vect(0.0000, 1.0000, 0.0000, EPSG: -1)
         """
 
         return self._y
@@ -70,7 +70,7 @@ class RefFrame(object):
 
         Examples:
           >>> RefFrame(Vect(1,0,0), Vect(0,1,0)).z
-          Vect(0.0000, 0.0000, 1.0000)
+          Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
         """
 
         return self.x.vCross(self.y)

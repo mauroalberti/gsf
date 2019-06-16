@@ -55,9 +55,14 @@ class TestRKFInterpolation(unittest.TestCase):
 
         # geotransform and grid definitions
 
-        rows=100; cols=100
-        size_x = 1; size_y = 1
-        tlx = -50.0; tly = 50.0
+        rows = 100
+        cols = 100
+
+        size_x = 1
+        size_y = 1
+
+        tlx = -50.0
+        tly = 50.0
 
         gt1 = GeoTransform(
             inTopLeftX=tlx,
@@ -96,7 +101,7 @@ class TestRKFInterpolation(unittest.TestCase):
 
         steps = number_of_cycles * (period / time_increm)
 
-        first_pt = Point(0, 20)
+        first_pt = Point(0, 20, epsg_cd=2000)
 
         str_pt = first_pt
         pts_x, pts_y = [first_pt.x], [first_pt.y]

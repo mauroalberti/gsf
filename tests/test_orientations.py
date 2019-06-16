@@ -44,8 +44,8 @@ class TestOrientations(unittest.TestCase):
 
     def test_plane2cplane(self):
 
-        pl = orient.Plane(90, 45).toCPlane(Point(0, 0, 0))
-        assert areClose(pl.angle(CPlane(1, 0, 1, 0)), 0.)
+        pl = orient.Plane(90, 45).toCPlane(Point(0, 0, 0, epsg_cd=2000))
+        assert areClose(pl.angle(CPlane(1, 0, 1, 0, epsg_cd=2000)), 0.)
 
     def test_plane_angle(self):
 
