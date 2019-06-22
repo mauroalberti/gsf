@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from pygsf.orientations.orientations import Plane
+from pygsf.geology.orientations import Plane
 from pygsf.mathematics.arrays import svd
 
 

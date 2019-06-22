@@ -421,7 +421,7 @@ class GeoArray(object):
         :type y: Number.
         :param level_ndx: the index of the used array.
         :type level_ndx: int.
-        :return: a geoarray storing the interpolated z value
+        :return: the interpolated z value.
         :rtype: optional float.
 
         Examples:
@@ -437,6 +437,30 @@ class GeoArray(object):
             return None
         else:
             return inter_res
+
+    def interpolate_bilinear_point(self, pt: Point, level_ndx=0) -> Optional[Point]:
+        """
+        Interpolate the z value at a point, returning a Point with elevation extracted from the DEM.
+        Interpolation method: bilinear.
+
+        :param pt: the positional point.
+        :type pt: Point.
+        :param level_ndx: the index of the used array.
+        :type level_ndx: int.
+        :return: a point with the same x-y position of the input point and with z equal to the interpolated z value.
+        :rtype: optional Point.
+
+        Examples:
+        """
+
+        x, y, epsg_cd = pt.x, pt.y, pt.epsg()
+
+        z = self.interpolate_bilinear(x=x, y=y, level_ndx=level_ndx)
+
+        if z:
+            return Point(x, y, z, epsg_cd=epsg_cd)
+        else:
+            return None
 
     def magnitude_field(self, ndx_fx=0, ndx_fy=1) -> 'GeoArray':
         """

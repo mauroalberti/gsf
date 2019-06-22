@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-
-class RakeInputException(Exception):
-
-    pass
-
-
-class SlickInputTypeException(Exception):
+class OrienInputException(Exception):
     """
-    Exception for slickenline input type.
+    Exception for orientation input.
     """
 
     pass
@@ -17,7 +11,15 @@ class SlickInputTypeException(Exception):
 
 class FaultInputTypeException(Exception):
     """
-    Exception for fault input type.
+    Exception for fault input.
+    """
+
+    pass
+
+
+class SlickInputTypeException(Exception):
+    """
+    Exception for slickenline input.
     """
 
     pass
@@ -25,12 +27,7 @@ class FaultInputTypeException(Exception):
 
 class PTBAxesInputException(Exception):
     """
-    Exception for PTBAxes input
+    Exception for PTB axes input.
     """
 
     pass
-
-
-
-
-

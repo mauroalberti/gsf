@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from ..orientations.rotations import *
+from pygsf.mathematics.rotations import *
 from .faults import *
 
 

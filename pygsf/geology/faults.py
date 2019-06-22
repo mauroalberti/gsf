@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from .defaults import *
-from .exceptions import *
-from ..orientations.orientations import *
+from .orientations import *
 
 
 class Slick(object):

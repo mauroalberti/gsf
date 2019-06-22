@@ -6,7 +6,7 @@ from ..spatial.rasters.geoarray import GeoArray
 from ..spatial.rasters.fields import *
 from ..spatial.vectorial.geometries import Point, Segment, Line
 
-from ..orientations.orientations import Plane
+from pygsf.geology.orientations import Plane
 
 
 def vertical_profile(ga: GeoArray, profile_line: Line) -> Line:
@@ -21,9 +21,9 @@ def vertical_profile(ga: GeoArray, profile_line: Line) -> Line:
     :rtype: Line.
     """
 
-    crs_line = profile_line.crs()
+    epsg_line = profile_line.epsg()
 
-    lnProfile = Line(epsg_cd=crs_line)
+    lnProfile = Line(epsg_cd=epsg_line)
 
     for point in profile_line.pts():
 
@@ -33,7 +33,7 @@ def vertical_profile(ga: GeoArray, profile_line: Line) -> Line:
             x=point.x,
             y=point.y,
             z=fInterpolatedZVal,
-            epsg_cd=crs_line)
+            epsg_cd=epsg_line)
 
         lnProfile.add_pt(pt3dt)
 

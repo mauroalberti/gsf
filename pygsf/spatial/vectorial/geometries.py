@@ -10,7 +10,7 @@ from ...mathematics.vectors import *
 from ...mathematics.statistics import get_statistics
 from ...projections.crs import Crs
 
-from ...orientations.defaults import *
+from pygsf.geology.defaults import *
 from ...projections.geodetic import geodetic2ecef
 
 from ...utils.lists import find_val
@@ -1755,9 +1755,16 @@ class MultiLine(object):
         if lines is None:
             lines = []
 
+        if lines and epsg_cd == -1:
+            epsg_cd = lines[0].epsg()
+
         for ndx in range(len(lines)):
-            if lines[ndx].crs() != epsg_cd:
-                raise Exception("All lines must have the same CRS code")
+            if lines[ndx].epsg() != epsg_cd:
+                raise Exception("Input line with index {} should have EPSG code {} but has {}".format(
+                    ndx,
+                    epsg_cd,
+                    lines[ndx].epsg()
+                ))
 
         self._lines = lines
         self._crs = Crs(epsg_cd)

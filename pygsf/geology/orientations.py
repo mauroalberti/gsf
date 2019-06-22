@@ -4,10 +4,10 @@
 from typing import Callable
 
 from math import radians, pi, tan, sin, cos
-from ..spatial.vectorial.geometries import *
+from pygsf.spatial.vectorial.geometries import *
 
-from .exceptions import *
-from .utils import *
+from pygsf.geology.exceptions import *
+from pygsf.geology.utils import *
 
 
 class Azim(object):
@@ -32,11 +32,11 @@ class Azim(object):
           >>> Azim("10")
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input azimuth value must be int/float
+          pygsf.geology.exceptions.OrienInputException: Input azimuth value must be int/float
           >>> Azim(np.nan)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input azimuth value must be finite
+          pygsf.geology.exceptions.OrienInputException: Input azimuth value must be finite
         """
 
         # unit check
@@ -107,11 +107,11 @@ class Azim(object):
           >>> Azim.fromXY(0, np.nan)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input x and y values must be finite
+          pygsf.geology.exceptions.OrienInputException: Input x and y values must be finite
           >>> Azim.fromXY("10", np.nan)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input x and y values must be integer or float
+          pygsf.geology.exceptions.OrienInputException: Input x and y values must be integer or float
         """
 
         # input vals checks
@@ -169,15 +169,15 @@ class Plunge(object):
           >>> Plunge("10")
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input plunge value must be int/float
+          pygsf.geology.exceptions.OrienInputException: Input plunge value must be int/float
           >>> Plunge(np.nan)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input plunge value must be finite
+          pygsf.geology.exceptions.OrienInputException: Input plunge value must be finite
           >>> Plunge(-100)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input value in degrees must be between -90° and 90°
+          pygsf.geology.exceptions.OrienInputException: Input value in degrees must be between -90° and 90°
          """
 
         # unit check
@@ -253,11 +253,11 @@ class Plunge(object):
           >>> Plunge.fromHZ(-1, 0)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Horizontal component cannot be negative
+          pygsf.geology.exceptions.OrienInputException: Horizontal component cannot be negative
           >>> Plunge.fromHZ(0, 0)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input h and z values cannot be both zero
+          pygsf.geology.exceptions.OrienInputException: Input h and z values cannot be both zero
         """
 
         # input vals check
@@ -429,15 +429,15 @@ class Direct(object):
           >>> Direct.fromAzPl(280, -100)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input value in degrees must be between -90° and 90°
+          pygsf.geology.exceptions.OrienInputException: Input value in degrees must be between -90° and 90°
           >>> Direct.fromAzPl("10", 0)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input azimuth value must be int/float
+          pygsf.geology.exceptions.OrienInputException: Input azimuth value must be int/float
           >>> Direct.fromAzPl(100, np.nan)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input plunge value must be finite
+          pygsf.geology.exceptions.OrienInputException: Input plunge value must be finite
         """
 
         azim = Azim(az, unit=unit)
@@ -491,7 +491,7 @@ class Direct(object):
           >>> Direct.fromXYZ(0, 0, 0)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input components have near-zero values
+          pygsf.geology.exceptions.OrienInputException: Input components have near-zero values
         """
 
         mag, norm_xyz = normXYZ(x, y, z)
@@ -529,7 +529,7 @@ class Direct(object):
           >>> Direct.fromVect(Vect(0, 0, 0))
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Input components have near-zero values
+          pygsf.geology.exceptions.OrienInputException: Input components have near-zero values
         """
 
         x, y, z = vect.toXYZ()
@@ -1153,11 +1153,11 @@ class Plane(object):
           >>> Plane(0, "90", True)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Source dip angle must be number
+          pygsf.geology.exceptions.OrienInputException: Source dip angle must be number
           >>> Plane(0, 900)
           Traceback (most recent call last):
           ...
-          pygsf.orientations.exceptions.OrienInputException: Dip angle must be between 0° and 90°
+          pygsf.geology.exceptions.OrienInputException: Dip angle must be between 0° and 90°
         """
 
         def rhrstrk2dd(rhr_strk):

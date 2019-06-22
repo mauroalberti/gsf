@@ -1,8 +1,5 @@
-
-from ..projections.crs import Crs
-
 from ..spatial.vectorial.geometries import Point, Segment, CPlane
-from ..orientations.orientations import Plane
+from pygsf.geology.orientations import Plane
 
 
 def nearest_projection(

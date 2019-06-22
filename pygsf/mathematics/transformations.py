@@ -3,7 +3,7 @@
 from math import radians, tan, sin, cos
 import numpy as np
 
-from ..orientations.rotations import RotationAxis
+from pygsf.mathematics.rotations import RotationAxis
 
 def matrScaling(scale_factor_x, scale_factor_y, scale_factor_z):
     """
