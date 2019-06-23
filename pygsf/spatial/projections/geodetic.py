@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from typing import Tuple
+
+from typing import Optional, Tuple
 
 from math import sqrt, sin, cos, radians
+
+
+from ..vectorial.geometries import Point, Line
 
 
 # Earth WGS84 parameters
 
 WGS84 = {'semi-major axis': 6378137.0,
          'first eccentricity squared': 6.69437999014e-3}
-
-epsg_4326_str = "EPSG:4326"
-epsg_4978_str = "EPSG:4978"
 
 
 def n_phi(phi_rad: float) -> float:
@@ -99,6 +100,49 @@ def latLengthOneMinuteSecond() -> float:
     """
 
     return latitude_one_degree_45degr_meters / 3600.0
+
+
+def pt_4326_ecef(pt: Point) -> Optional[Point]:
+    """
+    Project a point from EPSG:4326 to ECEF
+
+    :param pt: Point instance.
+    :type pt: Point.
+    :return: the projected Point instance.
+    :rtype: Point.
+    """
+
+    if pt.epsg() != 4326:
+        return None
+
+    lon, lat, height, time = pt.x, pt.y, pt.z, pt.t
+    x, y, z = geodetic2ecef(lat, lon, height)
+
+    return Point(
+        x=x,
+        y=y,
+        z=z,
+        t=time,
+        epsg_cd=4978
+    )
+
+
+def line_4326_ecef(line: Line) -> Optional[Line]:
+    """
+    Converts from WGS84 to ECEF reference system, provided its CRS is EPSG:4326.
+
+    :return: a line with ECEF coordinates (EPSG:4978).
+    :rtype: optional Line.
+    """
+
+    if line.epsg() != 4326:
+        return None
+
+    pts = [pt_4326_ecef(pt) for pt in line.pts()]
+
+    return Line(
+        pts=pts,
+        epsg_cd=4978)
 
 
 if __name__ == "__main__":

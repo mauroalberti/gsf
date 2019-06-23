@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from pygsf.defaults.maths import QUAT_MAGN_THRESH
-from pygsf.mathematics.quaternions import *
-from pygsf.geology.orientations import *
+
+from ..mathematics.defaults import QUAT_MAGN_THRESH
+
+from ..spatial.quaternions import *
+
+from .orientations import *
 
 
 class RotationAxis(object):

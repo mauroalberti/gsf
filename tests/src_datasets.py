@@ -2,7 +2,7 @@
 
 
 from pygsf.geology.ptbaxes import *
-from pygsf.mathematics.rotations import *
+from pygsf.geology.rotations import *
 
 
 """

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 
 min_epsg_crs_code = 2000  # checked 2019-06-14 in EPSG database
 

@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
+
 from math import radians, tan, sin, cos
+
 import numpy as np
 
-from pygsf.mathematics.rotations import RotationAxis
+
+from .rotations import RotationAxis
+
 
 def matrScaling(scale_factor_x, scale_factor_y, scale_factor_z):
     """

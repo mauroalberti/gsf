@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+
 from typing import Tuple
 
 from math import isnan, isinf
+
 
 from ..defaults.types import *
 

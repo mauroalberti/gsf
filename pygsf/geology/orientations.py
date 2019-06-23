@@ -4,10 +4,13 @@
 from typing import Callable
 
 from math import radians, pi, tan, sin, cos
-from pygsf.spatial.vectorial.geometries import *
 
-from pygsf.geology.exceptions import *
-from pygsf.geology.utils import *
+
+from ..spatial.vectorial.geometries import *
+
+from .defaults import *
+from .exceptions import *
+from .utils import *
 
 
 class Azim(object):

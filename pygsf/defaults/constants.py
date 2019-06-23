@@ -1,4 +1,0 @@
-
-
-GRID_NULL_VALUE = -99999
-

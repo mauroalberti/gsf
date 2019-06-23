@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-from pygsf.mathematics.rotations import *
 from .faults import *
+from .rotations import *
 
 
 class PTBAxes(object):

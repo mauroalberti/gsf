@@ -4,12 +4,11 @@ from math import atan, isfinite, sqrt, degrees, acos
 
 from numpy import isfinite
 
-from ..defaults.maths import MIN_VECTOR_MAGNITUDE, MIN_SCALAR_VALUE
+from ..mathematics.defaults import MIN_VECTOR_MAGNITUDE, MIN_SCALAR_VALUE
+from ..mathematics.exceptions import *
+from ..mathematics.arrays import *
 
-from .exceptions import *
-from .arrays import *
-
-from ..projections.crs import Crs
+from .projections.crs import Crs
 
 
 def normXYZ(x: Number, y: Number, z: Number) -> Tuple:

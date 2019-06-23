@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from pygsf.geology.ptbaxes import *
+from .ptbaxes import *
 
 
 def isDirect(obj) -> bool:

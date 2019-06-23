@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 
 MIN_SEPARATION_THRESHOLD = 1e-10

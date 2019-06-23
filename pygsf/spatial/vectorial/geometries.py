@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 
+
 from typing import Dict, Union
 from enum import Enum
 
 import itertools
 
-from ..constants import MIN_SEPARATION_THRESHOLD, MIN_SCALAR_VALUE
-from ...mathematics.vectors import *
 from ...mathematics.statistics import get_statistics
-from ...projections.crs import Crs
 
-from pygsf.geology.defaults import *
-from ...projections.geodetic import geodetic2ecef
+from ..constants import MIN_SEPARATION_THRESHOLD, MIN_SCALAR_VALUE
+from ..vectors import *
+from ..projections.crs import Crs
 
 from ...utils.lists import find_val
 
@@ -132,13 +131,13 @@ class Point(object):
 
     def crs(self) -> Crs:
         """
-        Return the crs of the current point.
+        Return a copy of the current point CRS.
 
         :return: the CRS code as a Csr instance.
         :rtype: Crs.
         """
 
-        return self._crs
+        return Crs(self._crs.epsg())
 
     def epsg(self) -> int:
         """
@@ -527,31 +526,6 @@ class Point(object):
         return Vect(self.x, self.y, self.z, self.epsg())
 
 
-def pt_4326_ecef(pt: Point) -> Optional[Point]:
-    """
-    Project a point from EPSG:4326 to ECEF
-
-    :param pt: Point instance.
-    :type pt: Point.
-    :return: the projected Point instance.
-    :rtype: Point.
-    """
-
-    if pt.epsg() != 4326:
-        return None
-
-    lon, lat, height, time = pt.x, pt.y, pt.z, pt.t
-    x, y, z = geodetic2ecef(lat, lon, height)
-
-    return Point(
-        x=x,
-        y=y,
-        z=z,
-        t=time,
-        epsg_cd=4978
-    )
-
-
 class CPlane(object):
     """
     Cartesian plane.
@@ -844,36 +818,11 @@ class CPlane(object):
             return None
 
         angle_degr = self.normVersor().angle(another.normVersor())
-        if abs(angle_degr) < MIN_ANGLE_DEGR_VALUE:
-            angle_degr = 0.0
-        elif angle_degr > 90.0:
+
+        if angle_degr > 90.0:
             angle_degr = 180.0 - angle_degr
 
         return angle_degr
-
-    def isSubParallel(self, another, angle_tolerance=PLANE_ANGLE_THRESHOLD) -> Optional[bool]:
-        """
-        Check that two CPlane are sub-parallel
-
-        :param another: a CPlane instance
-        :param angle_tolerance: the maximum allowed divergence angle (in degrees)
-        :return: Boolean
-
-        Examples:
-          >>> CPlane(1,0,0,0).isSubParallel(CPlane(1,0,0,0)) is None
-          True
-          >>> CPlane(1,0,0,0).isSubParallel(CPlane(1,0,1,0)) is None
-          True
-          >>> CPlane(1,0,0,0, epsg_cd=32632).isSubParallel(CPlane(1,0,0,0, epsg_cd=32632))
-          True
-          >>> CPlane(1,0,0,0, epsg_cd=32632).isSubParallel(CPlane(1,0,1,0, epsg_cd=32632))
-          False
-        """
-
-        if self.crs() != another.crs():
-            return None
-
-        return self.angle(another) < angle_tolerance
 
 
 class JoinTypes(Enum):
@@ -889,8 +838,8 @@ class JoinTypes(Enum):
 
 class Segment(object):
     """
-    Segment is a geometric object defined by a straight line between
-    two points.
+    Segment is a geometric object defined by the straight line between
+    two vertices.
     """
 
     def __init__(self, start_pt: Point, end_pt: Point):
@@ -911,15 +860,15 @@ class Segment(object):
         if not isinstance(end_pt, Point):
             raise Exception("Start point must be a Point instance")
 
+        if start_pt.dist3DWith(end_pt) == 0.0:
+            raise Exception("Segment point distance must be greater than zero")
+
         if start_pt.crs() != end_pt.crs():
             raise Exception("Start and end point must have the same CRS code")
 
-        if end_pt.isCoinc(start_pt):
-            raise Exception("Start and end points of the segment are coincident")
-
         self._start_pt = start_pt.clone()
         self._end_pt = end_pt.clone()
-        self._crs = start_pt.crs()
+        self._crs = Crs(start_pt.epsg())
 
     def extract_start_pt(self) -> Point:
 
@@ -939,7 +888,7 @@ class Segment(object):
 
     def crs(self) -> Crs:
 
-        return self._crs
+        return Crs(self._crs.epsg())
 
     def epsg(self) -> int:
 
@@ -996,12 +945,17 @@ class Segment(object):
 
     def length_2d(self) -> float:
         """
-        2D length of a segment.
+        Returns the horizontal length of the segment.
 
-        :return: float.
+        :return: the horizontal length of the segment.
+        :rtype: float.
         """
 
         return self.start_pt().dist2DWith(self.end_pt())
+
+    def length_3d(self) -> float:
+
+        return self.start_pt().dist3DWith(self.end_pt())
 
     def deltaZS(self) -> Optional[float]:
         """
@@ -1031,10 +985,6 @@ class Segment(object):
             return None
         else:
             return - atan(delta_zs)
-
-    def length_3d(self) -> float:
-
-        return self.start_pt().dist3DWith(self.end_pt())
 
     def vector(self) -> Vect:
 
@@ -1144,6 +1094,48 @@ class Segment(object):
             self.start_pt(),
             end_pt)
 
+    def densify2d_asPts(self, densify_distance) -> List[Point]:
+        """
+        Densify a segment by adding additional points
+        separated a distance equal to densify_distance.
+        The result is no longer a Segment instance, instead it is a Line instance.
+
+        :param densify_distance: the distance with which to densify the segment.
+        :type densify_distance: float.
+        :return: the set of densified points.
+        :rtype: List[Point].
+        """
+
+        if not isinstance((densify_distance, [float, int])):
+            raise Exception("Input densify distance must be float or integer")
+
+        if not isfinite(densify_distance):
+            raise Exception("Input densify distance must be finite")
+
+        if densify_distance <= 0.0:
+            raise Exception("Input densify distance must be positive")
+
+        length2d = self.length_2d()
+
+        vect = self.vector()
+        vers_2d = vect.versor2D()
+        generator_vector = vers_2d.scale(densify_distance)
+
+        pts = [self.start_pt()]
+
+        n = 0
+        while True:
+            n += 1
+            new_pt = self.start_pt().shiftByVect(generator_vector.scale(n))
+            distance = self.start_pt().dist2DWith(new_pt)
+            if distance >= length2d:
+                break
+            pts.append(new_pt)
+
+        pts.append(self.end_pt())
+
+        return pts
+
     def densify2d_asLine(self, densify_distance) -> 'Line':
         """
         Densify a segment by adding additional points
@@ -1154,26 +1146,33 @@ class Segment(object):
         :return: Line
         """
 
-        length2d = self.length_2d()
+        pts = self.densify2d_asPts(densify_distance=densify_distance)
 
-        vect = self.vector()
-        vers_2d = vect.versor2D()
-        generator_vector = vers_2d.scale(densify_distance)
+        return Line(
+            pts=pts)
 
-        interpolated_line = Line(
-            pts=[self.start_pt()])
+    def vertical_plane(self) -> Optional[CPlane]:
+        """
+        Returns the vertical Cartesian plane containing the segment.
 
-        n = 0
-        while True:
-            n += 1
-            new_pt = self.start_pt().shiftByVect(generator_vector.scale(n))
-            distance = self.start_pt().dist2DWith(new_pt)
-            if distance >= length2d:
-                break
-            interpolated_line.add_pt(new_pt)
-        interpolated_line.add_pt(self.end_pt())
+        :return: the vertical Cartesian plane containing the segment.
+        :rtype: Optional[CPlane].
+        """
 
-        return interpolated_line
+        if self.length_2d() == 0.0:
+            return None
+
+        # arbitrary point on the same vertical as end point
+
+        section_final_pt_up = self.end_pt().shift(
+            sx=0.0,
+            sy=0.0,
+            sz=1000.0)
+
+        return CPlane.fromPoints(
+            pt1=self.start_pt(),
+            pt2=self.end_pt(),
+            pt3=section_final_pt_up)
 
 
 class Line(object):
@@ -1628,7 +1627,7 @@ class Line(object):
 
         return list(itertools.accumulate(self.step_lengths_2d()))
 
-    def reverse_direction(self) -> 'Line':
+    def reversed(self) -> 'Line':
         """
         Return a Line instance with reversed point list.
 
@@ -1686,24 +1685,6 @@ class Line(object):
         """
 
         return get_statistics(self.abs_slopes_degr())
-
-
-def line_4326_ecef(line: Line) -> Optional[Line]:
-    """
-    Converts from WGS84 to ECEF reference system, provided its CRS is EPSG:4326.
-
-    :return: a line with ECEF coordinates (EPSG:4978).
-    :rtype: optional Line.
-    """
-
-    if line.epsg() != 4326:
-        return None
-
-    pts = [pt_4326_ecef(pt) for pt in line.pts()]
-
-    return Line(
-        pts=pts,
-        epsg_cd=4978)
 
 
 def analizeJoins(first: Union[Line, Segment], second: Union[Line, Segment]) -> List[Optional[JoinTypes]]:

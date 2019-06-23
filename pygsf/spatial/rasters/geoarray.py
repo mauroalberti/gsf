@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 
-from typing import Tuple, Optional, Dict, List
+from typing import Tuple, Optional, List
 
 import math
+
 import numpy as np
 from numpy import array
 
+
 from ...defaults.types import Number
 
-from ..vectorial.geometries import Point
 from ...mathematics.arrays import array_bilin_interp
-from .geotransform import xyGeogrToijPix, gtToxyCellCenters, gtEquiv, GeoTransform, ijPixToxyGeogr
 
+from ..vectorial.geometries import Point
 from ..exceptions import GeoArrayIOException
-from ..general import prjEquiv
+
+from .geotransform import xyGeogrToijPix, gtToxyCellCenters, GeoTransform, ijPixToxyGeogr
 from .fields import magnitude, orients_d, divergence, curl_module, magn_grads, magn_grad_along_flowlines
 
 
@@ -620,57 +622,6 @@ class GeoArray(object):
             inGeotransform=self._gt,
             inProjection=self._prj,
             inLevels=[flowln_grad])
-
-
-def levelCreateParams(gt: GeoTransform, prj: str, data: array) -> Dict:
-    """
-    Create parameter dictionary from level parameters.
-
-    :param gt: the level geotransform.
-    :type gt: GeoTransform.
-    :param prj: the level projection string.
-    :type prj: str.
-    :param data: the level data.
-    :type data: Numpy array.
-    :return: the dictionary of the relevant parameters.
-    :rtype: dictionary.
-
-    Examples:
-    """
-
-    return dict(
-        geotransform=gt,
-        projection=prj,
-        data_shape=data.shape
-    )
-
-
-def levelsEquival(level_params_1: Dict, level_params_2: dict) -> bool:
-    """
-    Compares two level paramenters for equivalence.
-
-    :param level_params_1: the first level dictionary.
-    :type level_params_1: dictionary.
-    :param level_params_2: the second level dictionary.
-    :type level_params_2: dictionary.
-    :return: the equivalence result.
-    :rtype: bool.
-    """
-
-    if not gtEquiv(
-        gt1=level_params_1["geotransform"],
-        gt2=level_params_2["geotransform"]):
-        return False
-
-    if not prjEquiv(
-        prj1=level_params_1["projection"],
-        prj2=level_params_2["projection"]):
-        return False
-
-    if level_params_1["data_shape"] != level_params_2["data_shape"]:
-        return False
-
-    return True
 
 
 if __name__ == "__main__":

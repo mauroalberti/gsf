@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-from ..defaults.maths import QUAT_NORMALIZ_TOL, QUAT_DIVISION_TOL
+from ..mathematics.defaults import QUAT_NORMALIZ_TOL, QUAT_DIVISION_TOL
+from ..mathematics.exceptions import *
 
 from .vectors import *
 
-from .exceptions import *
 
 array = np.array
 

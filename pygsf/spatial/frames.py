@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
-from .vectors import Vect
+from ..mathematics.exceptions import *
+from ..mathematics.scalars import *
 
-from .exceptions import *
-from .scalars import *
+from .vectors import Vect
 
 
 class RefFrame(object):

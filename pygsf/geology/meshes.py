@@ -6,11 +6,13 @@ import json
 
 from numpy import linspace, dot, array, size
 
-from ..exceptions import AnaliticSurfaceCalcException, AnaliticSurfaceIOException
 
-from .geometries import Segment
-from ...mathematics.scalars import areClose
-from ...mathematics.transformations import deformMatrices
+from ..mathematics.scalars import areClose
+
+from ..spatial.exceptions import AnaliticSurfaceCalcException, AnaliticSurfaceIOException
+from ..spatial.vectorial.geometries import Segment
+
+from .transformations import deformMatrices
 
 
 def formula_to_grid(array_range, array_size, formula):

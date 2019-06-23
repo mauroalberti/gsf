@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
+
 from typing import Optional, Sequence, List
 
 from math import floor
+
 import numpy as np
 from numpy import array
+
 
 from .scalars import *
 from .interpolations import scalars_bilin_interp as s_interp_bilinear, interp_linear
