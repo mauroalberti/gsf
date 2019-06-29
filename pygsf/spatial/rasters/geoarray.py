@@ -15,6 +15,7 @@ from ...mathematics.arrays import array_bilin_interp
 from ..vectorial.geometries import Point
 from ..exceptions import GeoArrayIOException
 
+from ..projections.crs import Crs
 from .geotransform import xyGeogrToijPix, gtToxyCellCenters, GeoTransform, ijPixToxyGeogr
 from .fields import magnitude, orients_d, divergence, curl_module, magn_grads, magn_grad_along_flowlines
 
@@ -71,14 +72,14 @@ class GeoArray(object):
     Stores and process georeferenced raster data.
     """
 
-    def __init__(self, inGeotransform: GeoTransform, inProjection: str, inLevels: Optional[List[np.ndarray]]=None) -> None:
+    def __init__(self, inGeotransform: GeoTransform, epsg_cd: int = -1, inLevels: Optional[List[np.ndarray]] = None) -> None:
         """
         GeoArray class constructor.
 
         :param  inGeotransform:  the geotransform
         :type  inGeotransform:  GeoTransform.
-        :param inProjection: the projection
-        :type inProjection: str
+        :param epsg_cd: the projection EPSG code.
+        :type epsg_cd: int
         :param  inLevels:  the nd-array storing the data.
         :type  inLevels:  np.array.
 
@@ -88,7 +89,7 @@ class GeoArray(object):
         """
 
         self._gt = inGeotransform
-        self._prj = inProjection
+        self._crs = Crs(epsg_cd)
         if inLevels is None:
             self._levels = []
         else:
@@ -109,10 +110,32 @@ class GeoArray(object):
         Return the geoarray crs.
 
         :return: the crs.
-        :rtype: basestring.
+        :rtype: Crs.
         """
 
-        return self._prj
+        return self._crs
+
+    def epsg(self):
+        """
+        Return the geoarray crs EPSG code.
+
+        :return: the crs EPSG  code.
+        :rtype: int.
+        """
+
+        return self._crs.epsg()
+
+    def define_epsg(self, epsg_cd: int):
+        """
+        Overwrite the geoarray EPSG code.
+
+        :return:
+        """
+
+        if not isinstance(epsg_cd, int):
+            raise Exception("Provided EPSG code must be integer")
+
+        self._crs = Crs(epsg_cd)
 
     def __repr__(self) -> str:
         """
@@ -123,11 +146,7 @@ class GeoArray(object):
         """
 
         num_bands = self.levels_num
-        crs = self.crs()
-        if not crs:
-            crs = "undefined"
-        else:
-            crs = crs[:100]
+        epsg_code = self.epsg()
         bands_txt = ""
         for band_ndx in range(num_bands):
             band = self.level(level_ndx=band_ndx)
@@ -135,7 +154,7 @@ class GeoArray(object):
             min, max = band.min(), band.max()
             bands_txt += "\nBand {}: {} rows x {} cols; min: {},  max: {}".format(band_ndx+1, rows, cols, min, max)
 
-        txt = "GeoArray with {} band(s)\nCrs: {}...{}".format(num_bands, crs, bands_txt)
+        txt = "GeoArray with {} band(s) - CRS: EPSG: {}\n{}".format(num_bands, epsg_code, bands_txt)
 
         return txt
 
@@ -484,7 +503,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            inProjection=self._prj,
+            epsg_cd=self._crs,
             inLevels=[magn]
         )
 
@@ -508,7 +527,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            inProjection=self._prj,
+            epsg_cd=self._crs,
             inLevels=[orient]
         )
 
@@ -534,7 +553,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            inProjection=self._prj,
+            epsg_cd=self._crs,
             inLevels=[div]
         )
 
@@ -560,7 +579,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            inProjection=self._prj,
+            epsg_cd=self._crs,
             inLevels=[curl_m])
 
     def magnitude_grads(self, axis: str= '', ndx_fx: int=0, ndx_fy: int=1) -> 'GeoArray':
@@ -597,7 +616,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            inProjection=self._prj,
+            epsg_cd=self._crs,
             inLevels=magnitude_gradients)
 
     def grad_flowlines(self, ndx_fx: int=0, ndx_fy: int=1) -> 'GeoArray':
@@ -620,7 +639,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            inProjection=self._prj,
+            epsg_cd=self._crs,
             inLevels=[flowln_grad])
 
 

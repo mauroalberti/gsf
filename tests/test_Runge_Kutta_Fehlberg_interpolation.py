@@ -90,7 +90,7 @@ class TestRKFInterpolation(unittest.TestCase):
 
         ga = GeoArray(
             inGeotransform=gt1,
-            inProjection="undef",
+            epsg_cd="undef",
             inLevels=[fx1, fy1])
 
         time_increm = 1.0e-4
