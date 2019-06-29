@@ -1106,7 +1106,7 @@ class Segment(object):
         :rtype: List[Point].
         """
 
-        if not isinstance((densify_distance, [float, int])):
+        if not isinstance(densify_distance, (float, int)):
             raise Exception("Input densify distance must be float or integer")
 
         if not isfinite(densify_distance):
