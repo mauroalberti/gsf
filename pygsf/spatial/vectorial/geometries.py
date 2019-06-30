@@ -870,6 +870,14 @@ class Segment(object):
         self._end_pt = end_pt.clone()
         self._crs = Crs(start_pt.epsg())
 
+    def crs(self) -> Crs:
+
+        return Crs(self._crs.epsg())
+
+    def epsg(self) -> int:
+
+        return self.crs().epsg()
+
     def extract_start_pt(self) -> Point:
 
         return self._start_pt
@@ -885,14 +893,6 @@ class Segment(object):
     def end_pt(self) -> Point:
 
         return self.extract_end_pt().clone()
-
-    def crs(self) -> Crs:
-
-        return Crs(self._crs.epsg())
-
-    def epsg(self) -> int:
-
-        return self.crs().epsg()
 
     def clone(self) -> 'Segment':
 
@@ -959,7 +959,7 @@ class Segment(object):
 
     def deltaZS(self) -> Optional[float]:
         """
-        Calculates the delta z / delta s of a segment.
+        Calculates the delta z - delta s ratio of a segment.
 
         :return: optional float.
         """
@@ -1093,6 +1093,40 @@ class Segment(object):
         return Segment(
             self.start_pt(),
             end_pt)
+
+    def densify2d_asSteps(self, densify_distance: Union[float, int]) -> Optional[List[float]]:
+        """
+        Defines the list storing the incremental lengths according to the provided densify distance.
+
+        :param densify_distance: the step distance.
+        :type densify_distance: float or int.
+        :return: a list of incremental steps, wtih the last step being equal to the segment lenght.
+        :rtype: Optional[List[float]].
+        """
+
+        if not isinstance(densify_distance, (float, int)):
+            return None
+
+        if not isfinite(densify_distance):
+            return None
+
+        if not densify_distance > 0.0:
+            return None
+
+        segment_length = self.length_2d()
+
+        s_list = []
+        n = 0
+        length = n * densify_distance
+
+        while length < segment_length:
+            s_list.append(length)
+            n += 1
+            length = n * densify_distance
+
+        s_list.append(segment_length)
+
+        return s_list
 
     def densify2d_asPts(self, densify_distance) -> List[Point]:
         """
@@ -1592,7 +1626,7 @@ class Line(object):
         """
         Returns the point-to-point 2D distances.
         It is the distance between a point and its previous one.
-        The list has the same lenght as the source point list.
+        The list has the same length as the source point list.
 
         :return: the individual 2D segment lengths.
         :rtype: list of floats.
