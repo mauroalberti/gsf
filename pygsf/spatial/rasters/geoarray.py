@@ -450,14 +450,7 @@ class GeoArray(object):
 
         i, j = self.xyToijArr(x, y)
 
-        inter_res = array_bilin_interp(self._levels[level_ndx], i, j)
-
-        if inter_res is None:
-            return None
-        elif math.isnan(inter_res):
-            return None
-        else:
-            return inter_res
+        return array_bilin_interp(self._levels[level_ndx], i, j)
 
     def interpolate_bilinear_point(self, pt: Point, level_ndx=0) -> Optional[Point]:
         """

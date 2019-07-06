@@ -3,6 +3,7 @@
 
 from typing import Optional, Sequence, List
 
+import math
 from math import floor
 
 import numpy as np
@@ -120,7 +121,7 @@ def arraysSameShape(
     return a_array.shape == b_array.shape
 
 
-def array_bilin_interp(arr: 'array', i: Number, j: Number) -> Optional[float]:
+def array_bilin_interp(arr: 'array', i: Number, j: Number) -> float:
     """
     Interpolate the z value at a given i,j values couple.
     Interpolation method: bilinear.
@@ -135,8 +136,8 @@ def array_bilin_interp(arr: 'array', i: Number, j: Number) -> Optional[float]:
     :type i: Number.
     :param j: j array index of the point (may be fractional).
     :type j: Number.
-    :return: interpolated z value.
-    :rtype: optional float.
+    :return: interpolated z value (may be math.nan).
+    :rtype: float.
     """
 
     i_max, j_max = arr.shape
@@ -144,9 +145,9 @@ def array_bilin_interp(arr: 'array', i: Number, j: Number) -> Optional[float]:
     dj = j - floor(j)
 
     if i < 0.0 or j < 0.0:
-        return None
+        return math.nan
     elif i > i_max - 1 or j > j_max - 1:
-        return None
+        return math.nan
     elif i == i_max - 1 and j == j_max - 1:
         return arr[i, j]
     elif i == i_max - 1:

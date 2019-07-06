@@ -4,6 +4,7 @@
 from typing import Dict, Union
 from enum import Enum
 
+from array import array
 import itertools
 
 from ...mathematics.statistics import get_statistics
@@ -15,7 +16,7 @@ from ..projections.crs import Crs
 from ...utils.lists import find_val
 
 
-array = np.array
+np_array = np.array
 mean = np.mean
 var = np.var
 std = np.std
@@ -237,14 +238,14 @@ class Point(object):
 
         return self.x, self.y, self.z, self.t
 
-    def toArray(self) -> 'array':
+    def toArray(self) -> 'np_array':
         """
         Return a Numpy array representing the point values (without the crs code).
 
         :return: Numpy array
 
         Examples:
-          >>> np.allclose(Point(1, 2, 3).toArray(), array([ 1., 2., 3., 0.]))
+          >>> np.allclose(Point(1, 2, 3).toArray(), np_array([ 1., 2., 3., 0.]))
           True
         """
 
@@ -641,22 +642,22 @@ class CPlane(object):
         if pt1.crs() != pt2.crs() or pt1.crs() != pt3.crs():
             return None
 
-        matr_a = array(
+        matr_a = np_array(
             [[pt1.y, pt1.z, 1],
              [pt2.y, pt2.z, 1],
              [pt3.y, pt3.z, 1]])
 
-        matr_b = - array(
+        matr_b = - np_array(
             [[pt1.x, pt1.z, 1],
              [pt2.x, pt2.z, 1],
              [pt3.x, pt3.z, 1]])
 
-        matr_c = array(
+        matr_c = np_array(
             [[pt1.x, pt1.y, 1],
              [pt2.x, pt2.y, 1],
              [pt3.x, pt3.y, 1]])
 
-        matr_d = - array(
+        matr_d = - np_array(
             [[pt1.x, pt1.y, pt1.z],
              [pt2.x, pt2.y, pt2.z],
              [pt3.x, pt3.y, pt3.z]])
@@ -696,8 +697,8 @@ class CPlane(object):
 
         point = Point(
             *pointSolution(
-                array([[self.a(), self.b(), self.c()]]),
-                array([-self.d()])),
+                np_array([[self.a(), self.b(), self.c()]]),
+                np_array([-self.d()])),
             epsg_cd=self.epsg())
 
         return point
@@ -734,8 +735,8 @@ class CPlane(object):
             return None
 
         # find a point lying on the intersection line (this is a non-unique solution)
-        a = array([[self.a(), self.b(), self.c()], [another.a(), another.b(), another.c()]])
-        b = array([-self.d(), -another.d()])
+        a = np_array([[self.a(), self.b(), self.c()], [another.a(), another.b(), another.c()]])
+        b = np_array([-self.d(), -another.d()])
         x, y, z = pointSolution(a, b)
 
         return Point(x, y, z, epsg_cd=self.epsg())
@@ -1094,24 +1095,24 @@ class Segment(object):
             self.start_pt(),
             end_pt)
 
-    def densify2d_asSteps(self, densify_distance: Union[float, int]) -> Optional[List[float]]:
+    def densify2d_asSteps(self, densify_distance: Union[float, int]) -> array:
         """
-        Defines the list storing the incremental lengths according to the provided densify distance.
+        Defines the array storing the incremental lengths according to the provided densify distance.
 
         :param densify_distance: the step distance.
         :type densify_distance: float or int.
-        :return: a list of incremental steps, wtih the last step being equal to the segment lenght.
-        :rtype: Optional[List[float]].
+        :return: array storing incremental steps, with the last step being equal to the segment length.
+        :rtype: array.
         """
 
         if not isinstance(densify_distance, (float, int)):
-            return None
+            raise Exception("Densify distance must be float or int")
 
         if not isfinite(densify_distance):
-            return None
+            raise Exception("Densify distance must be finite")
 
         if not densify_distance > 0.0:
-            return None
+            raise Exception("Densify distance must be positive")
 
         segment_length = self.length_2d()
 
@@ -1126,7 +1127,7 @@ class Segment(object):
 
         s_list.append(segment_length)
 
-        return s_list
+        return array('d', s_list)
 
     def densify2d_asPts(self, densify_distance) -> List[Point]:
         """
@@ -1441,9 +1442,9 @@ class Line(object):
 
         return [pt.t for pt in self._pts]
 
-    def z_array(self) -> array:
+    def z_array(self) -> np_array:
 
-        return np.array(self.z_list())
+        return np_array(self.z_list())
 
     def xy_lists(self) -> Tuple[List[float], List[float]]:
 
