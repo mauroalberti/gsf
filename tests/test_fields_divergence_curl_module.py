@@ -7,29 +7,29 @@
 # https://www.khanacademy.org/math/multivariable-calculus/multivariable-derivatives/divergence-and-curl-articles/a/divergence
 # 
 
-# ## Required imports
 
 import unittest
 
-from pygsf.mathematics.arrays import *
-
-from pygsf.spatial.rasters.geotransform import *
-
 from pygsf.spatial.rasters.fields import *
+
+
 
 # Z transfer functions
 
 # These analytical functions define the value of the cells, from the provided x and y geographic coordinates.
 
 def z_func_fx(x, y):
+
     return 2 * x - y
 
 
 def z_func_fy(x, y):
+
     return y * y
 
 
 def z_func_div(x, y):
+
     return 2 + 2 * y
 
 

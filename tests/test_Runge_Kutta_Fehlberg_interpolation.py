@@ -3,6 +3,7 @@
 import unittest
 
 import math
+
 from pygsf.spatial.vectorial.geometries import Point
 from pygsf.spatial.rasters.geoarray import GeoArray
 
@@ -90,7 +91,7 @@ class TestRKFInterpolation(unittest.TestCase):
 
         ga = GeoArray(
             inGeotransform=gt1,
-            epsg_cd="undef",
+            epsg_cd=-1,
             inLevels=[fx1, fy1])
 
         time_increm = 1.0e-4

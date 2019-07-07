@@ -4,7 +4,7 @@
 
 
 import unittest
-
+import math
 import numpy as np
 
 from pygsf.mathematics.scalars import areClose
@@ -87,17 +87,17 @@ class TestBilinearInterpolations(unittest.TestCase):
         assert a_bilinear_interp(
             arr=arr,
             i=-1,
-            j=-1) is None
+            j=-1) is math.nan
 
         assert a_bilinear_interp(
             arr=arr,
             i=2,
-            j=2) is None
+            j=2) is math.nan
 
         assert a_bilinear_interp(
             arr=arr,
             i=0.5,
-            j=1.5) is None
+            j=1.5) is math.nan
 
         assert areClose(a_bilinear_interp(
             arr=arr,

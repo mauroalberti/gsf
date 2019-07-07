@@ -3,9 +3,6 @@
 
 import unittest
 
-from pygsf.mathematics.scalars import areClose
-from pygsf.spatial.quaternions import Quaternion
-
 from src_datasets import *
 
 
