@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from math import sqrt, degrees, acos
 
 from ..mathematics.defaults import QUAT_NORMALIZ_TOL, QUAT_DIVISION_TOL
-from ..mathematics.exceptions import *
 
 from .vectors import *
 
-
-array = np.array
 
 
 class Quaternion(object):
@@ -690,7 +688,7 @@ class Quaternion(object):
 
         return 2 * degrees(acos(self.normalize().scalar))
 
-    def toRotMatrix(self) -> 'np.array':
+    def toRotMatrix(self) -> np.array:
         """
         Computes the rotation matrix from the quaternion xyz.
         Formula as in:
@@ -729,7 +727,7 @@ class Quaternion(object):
         a32 = 2*(q0q1 + q2q3)
         a33 = q0q0 - q1q1 - q2q2 + q3q3
 
-        return array([(a11, a12, a13),
+        return np.array([(a11, a12, a13),
                      (a21, a22, a23),
                      (a31, a32, a33)])
 

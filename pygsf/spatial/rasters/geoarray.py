@@ -2,11 +2,8 @@
 
 from typing import Tuple, Optional, List
 
-import math
-
 import numpy as np
 from numpy import array
-
 
 from ...defaults.types import Number
 
@@ -194,9 +191,9 @@ class GeoArray(object):
 
         Examples:
           >>> gt = GeoTransform(0, 0, 10, 10)
-          >>> GeoArray(gt, "", [array([[1, 2], [3, 4]])]).levels_num
+          >>> GeoArray(gt, -1, [array([[1, 2], [3, 4]])]).levels_num
           1
-          >>> GeoArray(gt, "", [array([[1, 2], [3, 4]]), np.ones((4, 3, 2))]).levels_num
+          >>> GeoArray(gt, -1, [array([[1, 2], [3, 4]]), np.ones((4, 3, 2))]).levels_num
           2
         """
 
@@ -231,9 +228,9 @@ class GeoArray(object):
 
         Examples:
           >>> gt = GeoTransform(0, 0, 10, 10)
-          >>> GeoArray(gt, "", [array([[1, 2], [3, 4]])]).level_shape()
+          >>> GeoArray(gt, -1, [array([[1, 2], [3, 4]])]).level_shape()
           (2, 2)
-          >>> GeoArray(gt, "", [array([[1, 2], [3, 4]]), np.ones((4, 3, 2))]).level_shape(1)
+          >>> GeoArray(gt, -1, [array([[1, 2], [3, 4]]), np.ones((4, 3, 2))]).level_shape(1)
           (4, 3, 2)
         """
 
@@ -276,7 +273,7 @@ class GeoArray(object):
 
         Examples:
           >>> gt = GeoTransform(0, 0, 10, 10)
-          >>> ga = GeoArray(gt, "", [array([[1, 2, 3], [4, 5, 6]])])
+          >>> ga = GeoArray(gt, -1, [array([[1, 2, 3], [4, 5, 6]])])
           >>> ga.band_corners_pixcoords()
           ((0.0, 0.0), (0.0, 3.0), (2.0, 3.0), (2.0, 0.0))
         """
@@ -303,7 +300,7 @@ class GeoArray(object):
 
         Examples:
           >>> gt = GeoTransform(1500, 3000, 10, 10)
-          >>> ga = GeoArray(gt, "", [array([[1, 2, 3], [4, 5, 6]])])
+          >>> ga = GeoArray(gt, -1, [array([[1, 2, 3], [4, 5, 6]])])
           >>> ga.band_corners_geogcoords()
           ((1500.0, 3000.0), (1530.0, 3000.0), (1530.0, 2980.0), (1500.0, 2980.0))
         """
@@ -496,7 +493,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self._crs,
+            epsg_cd=self.epsg(),
             inLevels=[magn]
         )
 

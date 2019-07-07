@@ -3,7 +3,7 @@
 
 from typing import Dict, Union
 from enum import Enum
-
+import math
 from array import array
 import itertools
 
@@ -14,12 +14,6 @@ from ..vectors import *
 from ..projections.crs import Crs
 
 from ...utils.lists import find_val
-
-
-np_array = np.array
-mean = np.mean
-var = np.var
-std = np.std
 
 
 class Point(object):
@@ -53,7 +47,7 @@ class Point(object):
         vals = [x, y, z, t]
         if any(map(lambda val: not isinstance(val, (int, float)), vals)):
             raise VectorInputException("Input values must be integer or float type")
-        if not all(map(isfinite, vals)):
+        if not all(map(math.isfinite, vals)):
             raise VectorInputException("Input values must be finite")
 
         self._x = float(x)
@@ -238,14 +232,14 @@ class Point(object):
 
         return self.x, self.y, self.z, self.t
 
-    def toArray(self) -> 'np_array':
+    def toArray(self) -> 'np.array':
         """
         Return a Numpy array representing the point values (without the crs code).
 
         :return: Numpy array
 
         Examples:
-          >>> np.allclose(Point(1, 2, 3).toArray(), np_array([ 1., 2., 3., 0.]))
+          >>> np.allclose(Point(1, 2, 3).toArray(), np.array([ 1., 2., 3., 0.]))
           True
         """
 
@@ -383,7 +377,7 @@ class Point(object):
         if self.crs() != another.crs():
             return None
         else:
-            return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
+            return math.sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
     def dist2DWith(self, another: 'Point') -> Optional[float]:
         """
@@ -405,7 +399,7 @@ class Point(object):
         if self.crs() != another.crs():
             return None
         else:
-            return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
+            return math.sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
     def scale(self, scale_factor: [int, float]) -> 'Point':
         """
@@ -642,22 +636,22 @@ class CPlane(object):
         if pt1.crs() != pt2.crs() or pt1.crs() != pt3.crs():
             return None
 
-        matr_a = np_array(
+        matr_a = np.array(
             [[pt1.y, pt1.z, 1],
              [pt2.y, pt2.z, 1],
              [pt3.y, pt3.z, 1]])
 
-        matr_b = - np_array(
+        matr_b = - np.array(
             [[pt1.x, pt1.z, 1],
              [pt2.x, pt2.z, 1],
              [pt3.x, pt3.z, 1]])
 
-        matr_c = np_array(
+        matr_c = np.array(
             [[pt1.x, pt1.y, 1],
              [pt2.x, pt2.y, 1],
              [pt3.x, pt3.y, 1]])
 
-        matr_d = - np_array(
+        matr_d = - np.array(
             [[pt1.x, pt1.y, pt1.z],
              [pt2.x, pt2.y, pt2.z],
              [pt3.x, pt3.y, pt3.z]])
@@ -697,8 +691,8 @@ class CPlane(object):
 
         point = Point(
             *pointSolution(
-                np_array([[self.a(), self.b(), self.c()]]),
-                np_array([-self.d()])),
+                np.array([[self.a(), self.b(), self.c()]]),
+                np.array([-self.d()])),
             epsg_cd=self.epsg())
 
         return point
@@ -735,8 +729,8 @@ class CPlane(object):
             return None
 
         # find a point lying on the intersection line (this is a non-unique solution)
-        a = np_array([[self.a(), self.b(), self.c()], [another.a(), another.b(), another.c()]])
-        b = np_array([-self.d(), -another.d()])
+        a = np.array([[self.a(), self.b(), self.c()], [another.a(), another.b(), another.c()]])
+        b = np.array([-self.d(), -another.d()])
         x, y, z = pointSolution(a, b)
 
         return Point(x, y, z, epsg_cd=self.epsg())
@@ -985,7 +979,7 @@ class Segment(object):
         if delta_zs is None:
             return None
         else:
-            return - atan(delta_zs)
+            return - math.atan(delta_zs)
 
     def vector(self) -> Vect:
 
@@ -1108,7 +1102,7 @@ class Segment(object):
         if not isinstance(densify_distance, (float, int)):
             raise Exception("Densify distance must be float or int")
 
-        if not isfinite(densify_distance):
+        if not math.isfinite(densify_distance):
             raise Exception("Densify distance must be finite")
 
         if not densify_distance > 0.0:
@@ -1144,7 +1138,7 @@ class Segment(object):
         if not isinstance(densify_distance, (float, int)):
             raise Exception("Input densify distance must be float or integer")
 
-        if not isfinite(densify_distance):
+        if not math.isfinite(densify_distance):
             raise Exception("Input densify distance must be finite")
 
         if densify_distance <= 0.0:
@@ -1442,9 +1436,9 @@ class Line(object):
 
         return [pt.t for pt in self._pts]
 
-    def z_array(self) -> np_array:
+    def z_array(self) -> np.array:
 
-        return np_array(self.z_list())
+        return np.array(self.z_list())
 
     def xy_lists(self) -> Tuple[List[float], List[float]]:
 
@@ -1499,17 +1493,17 @@ class Line(object):
     def z_mean(self) -> Optional[float]:
 
         zs = self.z_list()
-        return float(mean(zs)) if zs else None
+        return float(np.mean(zs)) if zs else None
 
     def z_var(self) -> Optional[float]:
 
         zs = self.z_list()
-        return float(var(zs)) if zs else None
+        return float(np.var(zs)) if zs else None
 
     def z_std(self) -> Optional[float]:
 
         zs = self.z_list()
-        return float(std(zs)) if zs else None
+        return float(np.std(zs)) if zs else None
 
     def remove_coincident_points(self) -> 'Line':
         """

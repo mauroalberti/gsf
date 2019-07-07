@@ -7,17 +7,15 @@ import math
 from math import floor
 
 import numpy as np
-from numpy import array
-
 
 from .scalars import *
 from .interpolations import scalars_bilin_interp as s_interp_bilinear, interp_linear
 
 
-def arrToTuple(arr1D: array) -> Tuple[float, ...]:
+def arrToTuple(arr1D: np.array) -> Tuple[float, ...]:
     """
     Converts a 1D arrays into a tuple of floats.
-    It assumes a 1D array as input.
+    It assumes a 1D np.array as input.
     Modified from: https://stackoverflow.com/questions/10016352/convert-numpy-array-to-tuple
 
     :param arr1D: the 1D-arrays whose components have to be extracted.
@@ -26,7 +24,7 @@ def arrToTuple(arr1D: array) -> Tuple[float, ...]:
     :rtype: tuple of float.
 
     Examples:
-      >>> levels = array([1,2,3,4,5])
+      >>> levels = np.array([1,2,3,4,5])
       >>> arrToTuple(levels)
       (1.0, 2.0, 3.0, 4.0, 5.0)
     """
@@ -52,8 +50,8 @@ def toFloats(iterable_obj: Sequence[Number]) -> List[float]:
 
 
 def arraysAreClose(
-        a_array: 'array',
-        b_array: 'array',
+        a_array: 'np.array',
+        b_array: 'np.array',
         rtol: float = 1e-012,
         atol: float = 1e-12,
         equal_nan: bool = False,
@@ -77,15 +75,15 @@ def arraysAreClose(
     :rtype: bool.
 
     Examples:
-      >>> arraysAreClose(array([1,2,3]), array([1,2,3]))
+      >>> arraysAreClose(np.array([1,2,3]), np.array([1,2,3]))
       True
-      >>> arraysAreClose(array([[1,2,3], [4, 5, 6]]), array([1,2,3]))
+      >>> arraysAreClose(np.array([[1,2,3], [4, 5, 6]]), np.array([1,2,3]))
       False
-      >>> arraysAreClose(array([[1,2,3], [4,5,6]]), array([[1,2,3], [4,5,6]]))
+      >>> arraysAreClose(np.array([[1,2,3], [4,5,6]]), np.array([[1,2,3], [4,5,6]]))
       True
-      >>> arraysAreClose(array([[1,2,np.nan], [4,5,6]]), array([[1,2,np.nan], [4,5,6]]))
+      >>> arraysAreClose(np.array([[1,2,np.nan], [4,5,6]]), np.array([[1,2,np.nan], [4,5,6]]))
       False
-      >>> arraysAreClose(array([[1,2,np.nan], [4,5,6]]), array([[1,2,np.nan], [4,5,6]]), equal_nan=True)
+      >>> arraysAreClose(np.array([[1,2,np.nan], [4,5,6]]), np.array([[1,2,np.nan], [4,5,6]]), equal_nan=True)
       True
     """
     if a_array.shape != b_array.shape:
@@ -99,8 +97,8 @@ def arraysAreClose(
 
 
 def arraysSameShape(
-        a_array: 'array',
-        b_array: 'array') -> bool:
+        a_array: 'np.array',
+        b_array: 'np.array') -> bool:
     """
     Checks that two arrays have the same shape.
 
@@ -121,7 +119,7 @@ def arraysSameShape(
     return a_array.shape == b_array.shape
 
 
-def array_bilin_interp(arr: 'array', i: Number, j: Number) -> float:
+def array_bilin_interp(arr: 'np.array', i: Number, j: Number) -> float:
     """
     Interpolate the z value at a given i,j values couple.
     Interpolation method: bilinear.
@@ -172,7 +170,7 @@ def array_bilin_interp(arr: 'array', i: Number, j: Number) -> float:
         return s_interp_bilinear(di, dj, v00, v01, v10, v11)
 
 
-def pointSolution(a_array: array, b_array: array):
+def pointSolution(a_array: np.array, b_array: np.array):
     """
     Finds a non-unique solution for a set of linear equations.
 

@@ -2,9 +2,7 @@
 
 
 from typing import Tuple
-
-from math import isnan, isinf
-
+import math
 
 from ..defaults.types import *
 
@@ -51,17 +49,17 @@ def areClose(a: float, b: float,
     """
 
     # nan cases
-    if equal_nan and isnan(a) and isnan(b):
+    if equal_nan and math.isnan(a) and math.isnan(b):
         return True
-    elif isnan(a) or isnan(b):
+    elif math.isnan(a) or math.isnan(b):
         return False
 
     # inf cases
-    if equal_inf and isinf(a) and a > 0 and isinf(b) and b > 0:
+    if equal_inf and math.isinf(a) and a > 0 and math.isinf(b) and b > 0:
         return True
-    elif equal_inf and isinf(a) and a < 0 and isinf(b) and b < 0:
+    elif equal_inf and math.isinf(a) and a < 0 and math.isinf(b) and b < 0:
         return True
-    elif isinf(a) or isinf(b):
+    elif math.isinf(a) or math.isinf(b):
         return False
 
     # regular case

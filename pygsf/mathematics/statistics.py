@@ -30,3 +30,4 @@ def get_statistics(vals: Union[List, np.array]) -> Dict:
                  std=std)
 
     return stats
+

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from math import atan, isfinite, sqrt, degrees, acos
-
-from numpy import isfinite
 
 from ..mathematics.defaults import MIN_VECTOR_MAGNITUDE, MIN_SCALAR_VALUE
 from ..mathematics.exceptions import *
@@ -22,13 +19,14 @@ def normXYZ(x: Number, y: Number, z: Number) -> Tuple:
     """
 
     # input vals checks
+
     vals = [x, y, z]
     if not all(map(lambda val: isinstance(val, (int, float)), vals)):
         raise InputValuesException("Input values must be integer or float")
-    elif not all(map(isfinite, vals)):
+    elif not all(map(math.isfinite, vals)):
         raise InputValuesException("Input values must be finite")
 
-    mag = sqrt(x*x + y*y + z*z)
+    mag = math.sqrt(x*x + y*y + z*z)
 
     if mag <= MIN_VECTOR_MAGNITUDE:
         norm_xyz = None
@@ -71,10 +69,10 @@ class Vect(object):
         vals = [x, y, z]
         if any(map(lambda val: not isinstance(val, (int, float)), vals)):
             raise VectorInputException("Input values must be integer of float")
-        elif not all(map(isfinite, vals)):
+        elif not all(map(math.isfinite, vals)):
             raise VectorInputException("Input values must be finite")
 
-        self._a = array(vals, dtype=np.float64)
+        self._a = np.array(vals, dtype=np.float64)
         self._crs = Crs(epsg_cd)
 
     def __eq__(self, another: 'Vect') -> bool:
@@ -112,14 +110,14 @@ class Vect(object):
             return not (self == another)
 
     @property
-    def a(self) -> array:
+    def a(self) -> np.array:
         """
         Return a copy of the object inner array.
 
         :return: double array of x, y, z values
 
         Examples:
-          >>> np.allclose(Vect(4, 3, 7).a, array([ 4.,  3.,  7.]))
+          >>> np.allclose(Vect(4, 3, 7).a, np.array([ 4.,  3.,  7.]))
           True
         """
 
@@ -193,14 +191,14 @@ class Vect(object):
 
         return self.x, self.y, self.z
 
-    def toArray(self) -> array:
+    def toArray(self) -> np.array:
         """
         Return a double Numpy array representing the point values.
 
         :return: Numpy array
 
         Examples:
-          >>> np.allclose(Vect(1, 2, 3).toArray(), array([ 1., 2., 3.]))
+          >>> np.allclose(Vect(1, 2, 3).toArray(), np.array([ 1., 2., 3.]))
           True
         """
 
@@ -258,7 +256,7 @@ class Vect(object):
           5.0
         """
 
-        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+        return math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     @property
     def len2D(self) -> float:
@@ -272,7 +270,7 @@ class Vect(object):
           13.0
         """
 
-        return sqrt(self.x * self.x + self.y * self.y)
+        return math.sqrt(self.x * self.x + self.y * self.y)
 
     def deltaX(self, another: 'Vect') -> Optional[float]:
         """
@@ -350,7 +348,7 @@ class Vect(object):
         if not isinstance(scale_factor, (int, float)):
             return None
 
-        if not isfinite(scale_factor):
+        if not math.isfinite(scale_factor):
             return None
 
         x, y, z = arrToTuple(self.a * scale_factor)
@@ -605,7 +603,7 @@ class Vect(object):
             else:
                 raise Exception("Zero-valued vector")
         else:
-            slope = - degrees(atan(self.z / self.len2D))
+            slope = - math.degrees(math.atan(self.z / self.len2D))
             if abs(slope) > MIN_SCALAR_VALUE:
                 return slope
             else:
@@ -689,9 +687,9 @@ class Vect(object):
         if not (self.isValid and another.isValid):
             return None
 
-        angle_rad = acos(self.angleCos(another))
+        angle_rad = math.acos(self.angleCos(another))
         if unit == 'd':
-            return degrees(angle_rad)
+            return math.degrees(angle_rad)
         elif unit == 'r':
             return angle_rad
         else:
@@ -719,7 +717,7 @@ class Vect(object):
         x, y, z = arrToTuple(np.cross(self.a[:3], another.a[:3]))
         return Vect(x, y, z, epsg_cd=self.epsg())
 
-    def byMatrix(self, array3x3: 'np.array') -> 'Vect':
+    def byMatrix(self, array3x3: np.array) -> 'Vect':
         """
         Matrix multiplication of a vector.
 
