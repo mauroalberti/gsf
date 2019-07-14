@@ -112,7 +112,7 @@ class GeoArray(object):
 
         return self._crs
 
-    def epsg(self):
+    def epsg(self) -> int:
         """
         Return the geoarray crs EPSG code.
 

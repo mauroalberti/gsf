@@ -15,7 +15,7 @@ class Crs(object):
 
         self._epsg = int(epsg_cd)
 
-    def epsg(self):
+    def epsg(self) -> int:
 
         return self._epsg
 

@@ -67,9 +67,11 @@ class Vect(object):
         """
 
         vals = [x, y, z]
+
         if any(map(lambda val: not isinstance(val, (int, float)), vals)):
             raise VectorInputException("Input values must be integer of float")
-        elif not all(map(math.isfinite, vals)):
+
+        if not all(map(math.isfinite, vals)):
             raise VectorInputException("Input values must be finite")
 
         self._a = np.array(vals, dtype=np.float64)
@@ -709,10 +711,10 @@ class Vect(object):
         """
 
         if not isinstance(another, Vect):
-            return None
+            raise Exception("Another instance should be Vect but is {}".format(type(another)))
 
         if self.epsg() != another.epsg():
-            return None
+            raise Exception("Another instance should has EPSG {} but has {}".format(self.epsg(), another.epsg()))
 
         x, y, z = arrToTuple(np.cross(self.a[:3], another.a[:3]))
         return Vect(x, y, z, epsg_cd=self.epsg())

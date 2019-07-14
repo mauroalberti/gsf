@@ -28,6 +28,7 @@ class Slick(object):
         :param time: the absolute or relative timing of the slickeline.
         :type time: float.
         :return: the Slick instance
+        ;:raise: SlickInputTypeException
 
         Example:
           >>> Slick(90, 10)
@@ -160,6 +161,7 @@ class Fault(object):
         :param slickenlines: the slickenlines associated with the fault plane.
         :type slickenlines: list of Slick instances.
         :return: the instantiated fault instance.
+        :raise: FaultInputTypeException.
 
         Example:
           >>> Fault(90, 45, slickenlines=[Slick(90, 45)])
@@ -239,14 +241,23 @@ class Fault(object):
 
         return self._slicks
 
-    def slick(self, ndx: int=0) -> Slick:
+    def slick(self, ndx: int = 0) -> Slick:
         """
         Return the slickenline with the given index associated with the fault.
+
+        :param ndx: the slickenline index.
+        :type ndx: int.
+        :return: the associated slickenline.
+        :rtype: Slick.
+        :raise: FaultInputTypeException.
 
         Example:
           >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).slick()
           Slick(az: 90.00°, pl: 45.00°, known_dir: True, time: 0.0)
         """
+
+        if not isinstance(nxd, int):
+            raise FaultInputTypeException("Slickenline index must be integer")
 
         if not self._slicks:
             raise FaultInputTypeException("No slickenline defined for current Fault instance")

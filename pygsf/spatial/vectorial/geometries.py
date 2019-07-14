@@ -3,7 +3,6 @@
 
 from typing import Dict, Union
 from enum import Enum
-import math
 from array import array
 import itertools
 
@@ -152,6 +151,10 @@ class Point(object):
         """
         Return True if objects are equal.
 
+        :param another: another point.
+        :type another: Point.
+        :raise: Exception.
+
         Example:
           >>> Point(1., 1., 1.) == Point(1, 1, 1)
           False
@@ -160,6 +163,9 @@ class Point(object):
           >>> Point(1., 1., 1., epsg_cd=4326) == Point(1, 1, -1, epsg_cd=4326)
           False
         """
+
+        if not isinstance(another, Point):
+            raise Exception("Another instance must be a Point")
 
         return all([
             self.x == another.x,
@@ -701,12 +707,21 @@ class CPlane(object):
         """
         Return intersection versor for two intersecting planes.
 
+        :param another: another Cartesian plane.
+        :type another: CPlane.
+        :return: the intersection line as a vector.
+        :rtype: Vect.
+        :raise: Exception.
+
         Examples:
           >>> a = CPlane(1, 0, 0, 0, epsg_cd=2000)
           >>> b = CPlane(0, 0, 1, 0, epsg_cd=2000)
           >>> a.intersVersor(b)
           Vect(0.0000, -1.0000, 0.0000, EPSG: 2000)
         """
+
+        if not isinstance(another, CPlane):
+            raise Exception("The argument must be a Cartesian plane")
 
         if self.crs() != another.crs():
             return None
@@ -1787,7 +1802,7 @@ class MultiLine(object):
 
         return self._crs
 
-    def epsg(self):
+    def epsg(self) -> int:
 
         return self._crs.epsg()
 
@@ -1970,10 +1985,19 @@ class ParamLine3D(object):
         self._m = m
         self._n = n
 
-    def intersect_cartes_plane(self, cartes_plane):
+    def intersect_cartes_plane(self, cartes_plane) -> Optional[Point]:
         """
-        Return intersection point between parametric line and Cartesian plane
+        Return intersection point between parametric line and Cartesian plane.
+
+        :param cartes_plane: a Cartesian plane:
+        :type cartes_plane: CPlane.
+        :return: the intersection point between parametric line and Cartesian plane.
+        :rtype: Point.
+        :raise: Exception.
         """
+
+        if not isinstance(cartes_plane, CPlane):
+            raise Exception("Method argument should be a Cartesian plane but is {}".format(type(cartes_plane)))
 
         # line parameters
         x1, y1, z1 = self._srcPt.x, self._srcPt.y, self._srcPt.z
