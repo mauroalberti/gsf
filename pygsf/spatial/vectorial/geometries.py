@@ -2,13 +2,15 @@
 
 
 from typing import Dict, Union
+
+from math import sqrt
 from enum import Enum
 from array import array
 import itertools
 
+from ...mathematics.defaults import MIN_SEPARATION_THRESHOLD
 from ...mathematics.statistics import get_statistics
 
-from ..constants import MIN_SEPARATION_THRESHOLD, MIN_SCALAR_VALUE
 from ..vectors import *
 from ..projections.crs import Crs
 
@@ -157,7 +159,7 @@ class Point(object):
 
         Example:
           >>> Point(1., 1., 1.) == Point(1, 1, 1)
-          False
+          True
           >>> Point(1., 1., 1., epsg_cd=4326) == Point(1, 1, 1, epsg_cd=4326)
           True
           >>> Point(1., 1., 1., epsg_cd=4326) == Point(1, 1, -1, epsg_cd=4326)
@@ -361,51 +363,55 @@ class Point(object):
 
         return another.t - self.t
 
-    def dist3DWith(self, another: 'Point') -> Optional[float]:
+    def dist3DWith(self, another: 'Point') -> float:
         """
         Calculate Euclidean spatial distance between two points.
         TODO: consider case of polar CRS
 
         :param another: another Point instance.
         :type another: Point.
-        :return: the optional distance (when the two points have the same CRS).
-        :rtype: optional float.
+        :return: the distance (when the two points have the same CRS).
+        :rtype: float.
+        :raise: Exception.
 
         Examples:
           >>> Point(1., 1., 1., epsg_cd=32632).dist3DWith(Point(4., 5., 1, epsg_cd=32632))
           5.0
           >>> Point(1, 1, 1, epsg_cd=32632).dist3DWith(Point(4, 5, 1, epsg_cd=32632))
           5.0
-          >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1)) is None
-          True
+          >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1))
+          5.0
         """
 
         if self.crs() != another.crs():
-            return None
-        else:
-            return math.sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
+            raise Exception("Input point should be Point but is {}".format(type(another)))
 
-    def dist2DWith(self, another: 'Point') -> Optional[float]:
+        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
+
+    def dist2DWith(self, another: 'Point') -> float:
         """
         Calculate horizontal (2D) distance between two points.
         TODO: consider case of polar CRS
 
         :param another: another Point instance.
         :type another: Point.
-        :return: the optional 2D distance (when the two points have the same CRS).
-        :rtype: optional float.
+        :return: the 2D distance (when the two points have the same CRS).
+        :rtype: float.
+        :raise: Exception.
 
         Examples:
           >>> Point(1., 1., 1., epsg_cd=32632).dist2DWith(Point(4., 5., 7., epsg_cd=32632))
           5.0
-          >>> Point(1., 1., 1., epsg_cd=32632).dist2DWith(Point(4., 5., 7.)) is None
-          True
+          >>> Point(1., 1., 1., epsg_cd=32632).dist2DWith(Point(4., 5., 7.))
+          Traceback (most recent call last):
+          ...
+          Exception: Input point should be Point but is <class 'pygsf.spatial.vectorial.geometries.Point'>
         """
 
         if self.crs() != another.crs():
-            return None
-        else:
-            return math.sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
+            raise Exception("Input point should be Point but is {}".format(type(another)))
+
+        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
     def scale(self, scale_factor: [int, float]) -> 'Point':
         """
@@ -534,16 +540,28 @@ class CPlane(object):
     ax + by + cz + d = 0
 
     Note: CPlane is locational - its position in space is defined.
-    This contrast with PPlane, defined just by its attitude, but with undefined position
+    This contrast with Plane, defined just by its attitude, but with undefined position
 
     """
 
     def __init__(self, a: float, b: float, c: float, d: float, epsg_cd: int = -1):
 
-        self._a = float(a)
-        self._b = float(b)
-        self._c = float(c)
-        self._d = float(d)
+        if not isinstance(a, (float, int)):
+            raise Exception("Input value a must be float or int but is {}".format(type(a)))
+        if not isinstance(b, (float, int)):
+            raise Exception("Input value b must be float or int but is {}".format(type(b)))
+        if not isinstance(c, (float, int)):
+            raise Exception("Input value c must be float or int but is {}".format(type(c)))
+        if not isinstance(d, (float, int)):
+            raise Exception("Input value d must be float or int but is {}".format(type(d)))
+        if not isinstance(epsg_cd, int):
+            raise Exception("Input value epsg_cd must be int but is {}".format(type(epsg_cd)))
+
+        norm = sqrt(a*a + b*b + c*c)
+        self._a = float(a) / norm
+        self._b = float(b) / norm
+        self._c = float(c) / norm
+        self._d = float(d) / norm
         self._crs = Crs(epsg_cd)
 
     def a(self) -> float:
@@ -563,7 +581,7 @@ class CPlane(object):
 
         Example:
           >>> CPlane(1, 4, 0, 2).b()
-          4.0
+          0.9701425001453319
         """
 
         return self._b
@@ -574,7 +592,7 @@ class CPlane(object):
 
         Example:
           >>> CPlane(1, 0, 5.4, 2).c()
-          5.4
+          0.9832820049844602
         """
 
         return self._c
@@ -620,27 +638,41 @@ class CPlane(object):
 
         Example:
           >>> CPlane(1, 1, 7, -4).v()
-          (1.0, 1.0, 7.0, -4.0, -1)
+          (0.14002800840280097, 0.14002800840280097, 0.9801960588196068, -0.5601120336112039, -1)
         """
 
         return self.a(), self.b(), self.c(), self.d(), self.epsg()
 
     @classmethod
-    def fromPoints(cls, pt1, pt2, pt3) -> Optional['CPlane']:
+    def fromPoints(cls, pt1, pt2, pt3) -> 'CPlane':
         """
         Create a CPlane from three given Point instances.
 
         Example:
-          >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0)) is None
-          True
+          >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
+          CPlane(0.0000, 0.0000, 1.0000, 0.0000, -1)
           >>> CPlane.fromPoints(Point(0, 0, 0, epsg_cd=4326), Point(1, 0, 0, epsg_cd=4326), Point(0, 1, 0, epsg_cd=4326))
           CPlane(0.0000, 0.0000, 1.0000, 0.0000, 4326)
           >>> CPlane.fromPoints(Point(0, 0, 0, epsg_cd=4326), Point(0, 1, 0, epsg_cd=4326), Point(0, 0, 1, epsg_cd=4326))
           CPlane(1.0000, 0.0000, 0.0000, 0.0000, 4326)
+          >>> CPlane.fromPoints(Point(1,2,3), Point(2,3,4), Point(-1,7,-2))
+          CPlane(-0.7956, 0.2387, 0.5569, -1.3524, -1)
         """
 
-        if pt1.crs() != pt2.crs() or pt1.crs() != pt3.crs():
-            return None
+        if not (isinstance(pt1, Point)):
+            raise Exception("First input point should be Point but is {}".format(type(pt1)))
+
+        if not (isinstance(pt2, Point)):
+            raise Exception("Second input point should be Point but is {}".format(type(pt2)))
+
+        if not (isinstance(pt3, Point)):
+            raise Exception("Third input point should be Point but is {}".format(type(pt3)))
+
+        if pt2.crs() != pt1.crs():
+            raise Exception("Second input point should have {} EPSG code like first point but has {}".format(pt1.epsg(), pt2.epsg()))
+
+        if pt3.crs() != pt1.crs():
+            raise Exception("Third input point should have {} EPSG code like first point but has {}".format(pt1.epsg(), pt3.epsg()))
 
         matr_a = np.array(
             [[pt1.y, pt1.z, 1],
@@ -744,13 +776,14 @@ class CPlane(object):
             return None
 
         # find a point lying on the intersection line (this is a non-unique solution)
+
         a = np.array([[self.a(), self.b(), self.c()], [another.a(), another.b(), another.c()]])
         b = np.array([-self.d(), -another.d()])
         x, y, z = pointSolution(a, b)
 
         return Point(x, y, z, epsg_cd=self.epsg())
 
-    def pointDistance(self, pt: Point) -> Optional[float]:
+    def pointDistance(self, pt: Point) -> float:
         """
         Calculate the distance between a point and the cartesian plane.
         Distance expression:
@@ -758,6 +791,12 @@ class CPlane(object):
         where a, b, c and d are plane parameters of the plane equation:
          a * x + b * y + c * z + d = 0
         and x1, y1, and z1 are the point coordinates.
+
+        :param pt: the point to calculate distance with.
+        :type pt: Point.
+        :return: the distance value.
+        :rtype: float.
+        :raise: Exception.
 
         Examples:
           >>> cpl = CPlane(0, 0, 1, 0, epsg_cd=32632)
@@ -773,25 +812,36 @@ class CPlane(object):
           >>> pt = Point(10, 20, 0.0, epsg_cd=32632)
           >>> cpl.pointDistance(pt)
           0.0
-          >>> cpl = CPlane(0, 0, 1, 0)
+          >>> cpl = CPlane(0, 0, 1, 0, epsg_cd=32632)
           >>> pt = Point(10, 20, 0.0)
-          >>> cpl.pointDistance(pt) is None
-          True
+          >>> cpl.pointDistance(pt)
+          Traceback (most recent call last):
+          ...
+          Exception: Input point should have 32632 EPSG code but has -1
         """
 
+        if not (isinstance(pt, Point)):
+            raise Exception("Input point should be Point but is {}".format(type(pt)))
+
         if self.crs() != pt.crs():
-            return None
+            raise Exception("Input point should have {} EPSG code but has {}".format(self.epsg(), pt.epsg()))
 
         return self.a() * pt.x + self.b() * pt.y + self.c() * pt.z + self.d()
 
-    def isPointInPlane(self, pt) -> Optional[bool]:
+    def isPointInPlane(self, pt) -> bool:
         """
-        Check whether a point lie in a plane.
+        Check whether a point lies in the current plane.
+
+        :param pt: the point to check.
+        :type pt: Point.
+        :return: whether the point lies in the current plane.
+        :rtype: bool.
+        :raise: Exception.
 
         Examples:
           >>> pl = CPlane(0, 0, 1, 0)
           >>> pt = Point(0, 1, 0)
-          >>> pl.isPointInPlane(pt) is None
+          >>> pl.isPointInPlane(pt)
           True
           >>> pl = CPlane(0, 0, 1, 0, epsg_cd=32632)
           >>> pt = Point(0, 1, 0, epsg_cd=32632)
@@ -799,33 +849,47 @@ class CPlane(object):
           True
         """
 
-        if self.crs() != pt.crs():
-            return None
+        if not (isinstance(pt, Point)):
+            raise Exception("Input point should be Point but is {}".format(type(pt)))
 
-        if abs(self.a() * pt.x + self.b() * pt.y + self.c() * pt.z + self.d()) < MIN_SCALAR_VALUE:
+        if self.crs() != pt.crs():
+            raise Exception("Input point should have {} EPSG code like the plane but has {}".format(self.epsg(), pt.epsg()))
+
+        if abs(self.pointDistance(pt)) < MIN_SEPARATION_THRESHOLD:
             return True
         else:
             return False
 
-    def angle(self, another) -> Optional[float]:
+    def angle(self, another) -> float:
         """
         Calculate angle (in degrees) between two planes.
 
+        :param another: the CPlane instance to calculate angle with.
+        :type another: CPlane.
+        :return: the angle (in degrees) between the two planes.
+        :rtype: float.
+        :raise: Exception.
+
         Examples:
-          >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0)) is None
-          True
+          >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0))
+          90.0
           >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(0,1,0,0, epsg_cd=32632))
           90.0
           >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,1,0, epsg_cd=32632))
           45.0
           >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,0,0, epsg_cd=32632))
           0.0
-          >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,0,0)) is None
-          True
+          >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,0,0))
+          Traceback (most recent call last):
+          ...
+          Exception: Input plane should have 32632 EPSG code like current point but has -1
         """
 
+        if not (isinstance(another, CPlane)):
+            raise Exception("Input plane should be CPlane but is {}".format(type(another)))
+
         if self.crs() != another.crs():
-            return None
+            raise Exception("Input plane should have {} EPSG code like current point but has {}".format(self.epsg(), another.epsg()))
 
         angle_degr = self.normVersor().angle(another.normVersor())
 
@@ -879,6 +943,19 @@ class Segment(object):
         self._start_pt = start_pt.clone()
         self._end_pt = end_pt.clone()
         self._crs = Crs(start_pt.epsg())
+
+    def __repr__(self) -> str:
+        """
+        Represents a Segment instance.
+
+        :return: the Segment representation.
+        :rtype: str.
+        """
+
+        return "Segment(start_pt={}, end_pt={})".format(
+            self.start_pt(),
+            self.end_pt()
+        )
 
     def crs(self) -> Crs:
 

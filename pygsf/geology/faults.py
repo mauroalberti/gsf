@@ -256,7 +256,7 @@ class Fault(object):
           Slick(az: 90.00°, pl: 45.00°, known_dir: True, time: 0.0)
         """
 
-        if not isinstance(nxd, int):
+        if not isinstance(ndx, int):
             raise FaultInputTypeException("Slickenline index must be integer")
 
         if not self._slicks:
