@@ -3,7 +3,7 @@
 
 from typing import Callable
 
-from math import sqrt, radians, pi, tan, sin, cos, isfinite
+from math import radians, pi, tan, sin, cos, isfinite
 
 
 from ..spatial.vectorial.geometries import *

@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import Optional, Sequence, List
-
-import math
 from math import floor
+from typing import Optional, Sequence, List
 
 import numpy as np
 
-from .scalars import *
 from .interpolations import scalars_bilin_interp as s_interp_bilinear, interp_linear
+from .scalars import *
 
 
 def arrToTuple(arr1D: np.array) -> Tuple[numbers.Real, ...]:

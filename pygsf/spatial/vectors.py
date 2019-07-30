@@ -46,7 +46,11 @@ class Vect(object):
     z axis -> Up
     """
 
-    def __init__(self, x: numbers.Real, y: numbers.Real, z: numbers.Real = 0.0, epsg_cd: numbers.Integral = -1):
+    def __init__(self,
+        x: numbers.Real,
+        y: numbers.Real,
+        z: numbers.Real = 0.0,
+        epsg_cd: numbers.Integral = -1):
         """
         Vect constructor.
 
@@ -342,6 +346,8 @@ class Vect(object):
         Example;
           >>> Vect(1, 0, 1).scale(2.5)
           Vect(2.5000, 0.0000, 2.5000, EPSG: -1)
+          >>> Vect(1, 0, 1, 0.0, 32633).scale(2.5)
+          Vect(2.5000, 0.0000, 2.5000, EPSG: 32633)
           >>> Vect(1, 0, 1).scale(np.nan) is None
           True
           >>> Vect(1, 0, 1).scale(np.inf) is None
@@ -462,8 +468,8 @@ class Vect(object):
         Example:
           >>> Vect(5, 0, 0).versor()
           Vect(1.0000, 0.0000, 0.0000, EPSG: -1)
-          >>> Vect(0, 0, -1).versor()
-          Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
+          >>> Vect(0, 0, -1, epsg_cd=32633).versor()
+          Vect(0.0000, 0.0000, -1.0000, EPSG: 32633)
           >>> Vect(0, 0, 0).versor() is None
           True
         """
@@ -715,7 +721,7 @@ class Vect(object):
             raise Exception("Another instance should be Vect but is {}".format(type(another)))
 
         if self.epsg() != another.epsg():
-            raise Exception("Another instance should has EPSG {} but has {}".format(self.epsg(), another.epsg()))
+            raise Exception("Another instance should have {} EPSG code but has {}".format(self.epsg(), another.epsg()))
 
         x, y, z = arrToTuple(np.cross(self.a[:3], another.a[:3]))
         return Vect(x, y, z, epsg_cd=self.epsg())
