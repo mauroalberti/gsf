@@ -5,8 +5,6 @@ from typing import Tuple, Optional, List
 import numpy as np
 from numpy import array
 
-from ...defaults.types import Number
-
 from ...mathematics.arrays import array_bilin_interp
 
 from ..vectorial.geometries import Point
@@ -17,14 +15,14 @@ from .geotransform import xyGeogrToijPix, gtToxyCellCenters, GeoTransform, ijPix
 from .fields import magnitude, orients_d, divergence, curl_module, magn_grads, magn_grad_along_flowlines
 
 
-def ijPixToijArray(i_pix: Number, j_pix: Number) -> Tuple[Number, Number]:
+def ijPixToijArray(i_pix: numbers.Real, j_pix: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
     """
     Converts from pixel (geotransform-derived) to array indices.
 
     :param i_pix: the geotransform i value.
-    :type i_pix: Number.
+    :type i_pix: numbers.Real.
     :param j_pix: the geotransform j value.
-    :type j_pix: Number.
+    :type j_pix: numbers.Real.
     :return: the array-equivalent i and j indices.
     :rtype: a tuple of two numbers.
 
@@ -40,14 +38,14 @@ def ijPixToijArray(i_pix: Number, j_pix: Number) -> Tuple[Number, Number]:
     return i_pix - 0.5, j_pix - 0.5
 
 
-def ijArrToijPix(i_arr: Number, j_arr: Number) -> Tuple[Number, Number]:
+def ijArrToijPix(i_arr: numbers.Real, j_arr: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
     """
     Converts from array indices to geotransform-related pixel indices.
 
     :param i_arr: the array i value.
-    :type i_arr: Number.
+    :type i_arr: numbers.Real.
     :param j_arr: the array j value.
-    :type j_arr: Number.
+    :type j_arr: numbers.Real.
     :return: the geotransform-equivalent i and j indices.
     :rtype: a tuple of two numbers.
 
@@ -69,14 +67,14 @@ class GeoArray(object):
     Stores and process georeferenced raster data.
     """
 
-    def __init__(self, inGeotransform: GeoTransform, epsg_cd: int = -1, inLevels: Optional[List[np.ndarray]] = None) -> None:
+    def __init__(self, inGeotransform: GeoTransform, epsg_cd: numbers.Integral = -1, inLevels: Optional[List[np.ndarray]] = None) -> None:
         """
         GeoArray class constructor.
 
         :param  inGeotransform:  the geotransform
         :type  inGeotransform:  GeoTransform.
         :param epsg_cd: the projection EPSG code.
-        :type epsg_cd: int
+        :type epsg_cd: numbers.Integral
         :param  inLevels:  the nd-array storing the data.
         :type  inLevels:  np.array.
 
@@ -112,24 +110,24 @@ class GeoArray(object):
 
         return self._crs
 
-    def epsg(self) -> int:
+    def epsg(self) -> numbers.Integral:
         """
         Return the geoarray crs EPSG code.
 
         :return: the crs EPSG  code.
-        :rtype: int.
+        :rtype: numbers.Integral.
         """
 
         return self._crs.epsg()
 
-    def define_epsg(self, epsg_cd: int):
+    def define_epsg(self, epsg_cd: numbers.Integral):
         """
         Overwrite the geoarray EPSG code.
 
         :return:
         """
 
-        if not isinstance(epsg_cd, int):
+        if not isinstance(epsg_cd, numbers.Integral):
             raise Exception("Provided EPSG code must be integer")
 
         self._crs = Crs(epsg_cd)
@@ -156,12 +154,12 @@ class GeoArray(object):
         return txt
 
     @property
-    def src_cellsize_j(self) -> float:
+    def src_cellsize_j(self) -> numbers.Real:
         """
         Get the cell size of the geoarray in the x direction.
 
         :return: cell size in the x (j) direction.
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
         """
@@ -169,12 +167,12 @@ class GeoArray(object):
         return abs(self._gt.pixWidth)
 
     @property
-    def src_cellsize_i(self) -> float:
+    def src_cellsize_i(self) -> numbers.Real:
         """
         Get the cell size of the geoarray in the y direction.
 
         :return: cell size in the y (-i) direction.
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
         """
@@ -182,12 +180,12 @@ class GeoArray(object):
         return abs(self._gt.pixHeight)
 
     @property
-    def levels_num(self) -> int:
+    def levels_num(self) -> numbers.Integral:
         """
         Returns the number of levels (dimensions) of the geoarray.
 
         :return: number of levels.
-        :rtype: int.
+        :rtype: numbers.Integral.
 
         Examples:
           >>> gt = GeoTransform(0, 0, 10, 10)
@@ -199,13 +197,13 @@ class GeoArray(object):
 
         return len(self._levels)
 
-    def level(self, level_ndx: int=0):
+    def level(self, level_ndx: numbers.Integral=0):
         """
         Return the array corresponding to the requested level
         if existing else None.
 
         :param level_ndx: the index of the requested level.
-        :type level_ndx: int.
+        :type level_ndx: numbers.Integral.
         :return: the array or None.
         :rtype: optional array.
 
@@ -217,12 +215,12 @@ class GeoArray(object):
         else:
             return None
 
-    def level_shape(self, level_ndx: int=0) -> Optional[Tuple[int, int]]:
+    def level_shape(self, level_ndx: numbers.Integral=0) -> Optional[Tuple[numbers.Integral, numbers.Integral]]:
         """
         Returns the shape (num. rows and num. columns) of the considered level grid.
 
         :param level_ndx: index of the level (grid) to consider.
-        :type level_ndx: int.
+        :type level_ndx: numbers.Integral.
         :return: number of rows and columns of the specific grid.
         :rtype: optional tuple of two int values.
 
@@ -239,16 +237,16 @@ class GeoArray(object):
         else:
             return None
 
-    def level_llc(self, level_ndx: int = 0) -> Optional[Tuple[int, int]]:
+    def level_llc(self, level_ndx: numbers.Integral = 0) -> Optional[Tuple[numbers.Integral, numbers.Integral]]:
         """
         Deprecated. Use "band_corners_pixcoords" instead.
 
         Returns the coordinates of the lower-left corner.
 
         :param level_ndx: index of the level (grid) to consider.
-        :type level_ndx: int.
+        :type level_ndx: numbers.Integral.
         :return: x and y values of the lower-left corner of the specific grid.
-        :rtype: optional tuple of two int values.
+        :rtype: optional tuple of two numbers.Integral values.
 
         Examples:
         """
@@ -261,15 +259,15 @@ class GeoArray(object):
 
         return self.ijPixToxy(llc_i_pix, llc_j_pix)
 
-    def band_corners_pixcoords(self, level_ndx: int = 0) -> \
-            Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
+    def band_corners_pixcoords(self, level_ndx: numbers.Integral = 0) -> \
+            Tuple[Tuple[numbers.Real, numbers.Real], Tuple[numbers.Real, numbers.Real], Tuple[numbers.Real, numbers.Real], Tuple[numbers.Real, numbers.Real]]:
         """
         Returns the pixel coordinates of the top-left, top-right, bottom-right and bottom-left band corners.
 
         :param level_ndx: index of the level (grid) to consider.
-        :type level_ndx: int.
+        :type level_ndx: numbers.Integral.
         :return: pixel coordinates of the top-left, top-right, bottom-right and bottom-left band corners.
-        :rtype: four tuples of float pairs.
+        :rtype: four tuples of numbers.Real pairs.
 
         Examples:
           >>> gt = GeoTransform(0, 0, 10, 10)
@@ -288,15 +286,15 @@ class GeoArray(object):
 
         return top_left_ijpix, top_right_ijpix, btm_right_ijpix, btm_left_ijpix
 
-    def band_corners_geogcoords(self, level_ndx: int = 0) -> \
-            Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
+    def band_corners_geogcoords(self, level_ndx: numbers.Integral = 0) -> \
+            Tuple[Tuple[numbers.Real, numbers.Real], Tuple[numbers.Real, numbers.Real], Tuple[numbers.Real, numbers.Real], Tuple[numbers.Real, numbers.Real]]:
         """
         Returns the geographic coordinates of the top-left, top-right, bottom-right and bottom-left band corners.
 
         :param level_ndx: index of the level (grid) to consider.
-        :type level_ndx: int.
+        :type level_ndx: numbers.Integral.
         :return: geographic coordinates of the top-left, top-right, bottom-right and bottom-left band corners.
-        :rtype: four tuples of float pairs.
+        :rtype: four tuples of numbers.Real pairs.
 
         Examples:
           >>> gt = GeoTransform(1500, 3000, 10, 10)
@@ -314,48 +312,48 @@ class GeoArray(object):
 
         return top_left_geogcoord, top_right_geogcoord, btm_right_geogcoord, btm_left_geogcoord
 
-    def xyToijArr(self, x: Number, y: Number) -> Tuple[Number, Number]:
+    def xyToijArr(self, x: numbers.Real, y: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
         """
         Converts from geographic to array coordinates.
 
         :param x: x geographic component.
-        :type x: Number.
+        :type x: numbers.Real.
         :param y: y geographic component.
-        :type y: Number.
+        :type y: numbers.Real.
         :return: i and j values referred to array.
-        :type: tuple of two float values.
+        :type: tuple of two numbers.Real values.
 
         Examples:
         """
 
         return ijPixToijArray(*xyGeogrToijPix(self._gt, x, y))
 
-    def xyToijPix(self, x: Number, y: Number) -> Tuple[Number, Number]:
+    def xyToijPix(self, x: numbers.Real, y: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
         """
         Converts from geographic to pixel coordinates.
 
         :param x: x geographic component
-        :type x: Number
+        :type x: numbers.Real
         :param y: y geographic component
-        :type y: Number
+        :type y: numbers.Real
         :return: i and j values referred to grid.
-        :type: tuple of two float values
+        :type: tuple of two numbers.Real values
 
         Examples:
         """
 
         return xyGeogrToijPix(self._gt, x, y)
 
-    def ijArrToxy(self, i: Number, j: Number) -> Tuple[Number, Number]:
+    def ijArrToxy(self, i: numbers.Real, j: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
         """
         Converts from array indices to geographic coordinates.
 
         :param i: i array component.
-        :type i: Number.
+        :type i: numbers.Real.
         :param j: j array component.
-        :type j: Number.
+        :type j: numbers.Real.
         :return: x and y geographic coordinates.
-        :type: tuple of two float values.
+        :type: tuple of two numbers.Real values.
 
         Examples:
         """
@@ -364,16 +362,16 @@ class GeoArray(object):
 
         return ijPixToxyGeogr(self._gt, i_pix, j_pix)
 
-    def ijPixToxy(self, i: Number, j: Number) -> Tuple[Number, Number]:
+    def ijPixToxy(self, i: numbers.Real, j: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
         """
         Converts from grid indices to geographic coordinates.
 
         :param i: i pixel component.
-        :type i: Number.
+        :type i: numbers.Real.
         :param j: j pixel component.
-        :type j: Number.
+        :type j: numbers.Real.
         :return: x and y geographic coordinates.
-        :type: tuple of two float values.
+        :type: tuple of two numbers.Real values.
 
         Examples:
         """
@@ -393,11 +391,11 @@ class GeoArray(object):
 
         return self._gt.has_rotation
 
-    def geotransf_cell_sizes(self) -> Tuple[float, float]:
+    def geotransf_cell_sizes(self) -> Tuple[numbers.Real, numbers.Real]:
         """
         Calculates the geotransformed cell sizes.
 
-        :return: a pair of float values, representing the cell sizes in the j and i directions.
+        :return: a pair of numbers.Real values, representing the cell sizes in the j and i directions.
         """
 
         factor = 100
@@ -408,14 +406,14 @@ class GeoArray(object):
 
         return end_pt_j.dist2DWith(start_pt)/factor, end_pt_i.dist2DWith(start_pt)/factor
 
-    def xy(self, level_ndx: int=0) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+    def xy(self, level_ndx: numbers.Integral=0) -> Optional[Tuple[np.ndarray, np.ndarray]]:
         """
         Returns the two arrays storing respectively the x and the y coordinates
         of the grid cell centers for the chosen level (default is first level).
 
         :param level_ndx: the index of the
         :return: two arrays storing the geographical coordinates of the grid centers.
-        :rtype: tuple made up by two float arrays.
+        :rtype: tuple made up by two numbers.Real arrays.
 
         Examples:
         """
@@ -428,19 +426,19 @@ class GeoArray(object):
             num_rows, num_cols = res
             return gtToxyCellCenters(self._gt, num_rows, num_cols)
 
-    def interpolate_bilinear(self, x: Number, y: Number, level_ndx=0) -> Optional[float]:
+    def interpolate_bilinear(self, x: numbers.Real, y: numbers.Real, level_ndx=0) -> Optional[numbers.Real]:
         """
         Interpolate the z value at a point, given its geographic coordinates.
         Interpolation method: bilinear.
 
         :param x: x geographic coordinate.
-        :type x: Number.
+        :type x: numbers.Real.
         :param y: y geographic coordinate.
-        :type y: Number.
+        :type y: numbers.Real.
         :param level_ndx: the index of the used array.
-        :type level_ndx: int.
+        :type level_ndx: numbers.Integral.
         :return: the interpolated z value.
-        :rtype: optional float.
+        :rtype: optional numbers.Real.
 
         Examples:
         """
@@ -457,7 +455,7 @@ class GeoArray(object):
         :param pt: the positional point.
         :type pt: Point.
         :param level_ndx: the index of the used array.
-        :type level_ndx: int.
+        :type level_ndx: numbers.Integral.
         :return: a point with the same x-y position of the input point and with z equal to the interpolated z value.
         :rtype: optional Point.
 
@@ -572,7 +570,7 @@ class GeoArray(object):
             epsg_cd=self._crs,
             inLevels=[curl_m])
 
-    def magnitude_grads(self, axis: str= '', ndx_fx: int=0, ndx_fy: int=1) -> 'GeoArray':
+    def magnitude_grads(self, axis: str= '', ndx_fx: numbers.Integral=0, ndx_fy: numbers.Integral=1) -> 'GeoArray':
         """
         Calculates the magnitude gradient along the x, y axis or both, of a 2D field as a geoarray.
 
@@ -609,7 +607,7 @@ class GeoArray(object):
             epsg_cd=self._crs,
             inLevels=magnitude_gradients)
 
-    def grad_flowlines(self, ndx_fx: int=0, ndx_fy: int=1) -> 'GeoArray':
+    def grad_flowlines(self, ndx_fx: numbers.Integral=0, ndx_fy: numbers.Integral=1) -> 'GeoArray':
         """
         Calculates gradient along flow lines.
 

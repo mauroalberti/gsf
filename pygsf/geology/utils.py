@@ -3,17 +3,19 @@
 
 from typing import Optional
 
+import numbers
+
 from math import atan2, degrees
 
 
-def mod360(val: float) -> float:
+def mod360(val: numbers.Real) -> numbers.Real:
     """
     Return the module 360 of the originila value.
     
-    :param val: value
-    :type val: float
-    :return: value divided by mod 360
-    :rtype: float
+    :param val: value.
+    :type val: numbers.Real.
+    :return: value divided by mod 360.
+    :rtype: numbers.Real.
 
     Examples:
     >>> mod360(10)
@@ -30,7 +32,7 @@ def mod360(val: float) -> float:
     return val % 360.0
 
 
-def opposite_trend(tr: float) -> float:
+def opposite_trend(tr: numbers.Real) -> numbers.Real:
     """
     Calculate the trend opposite to the original one.
     
@@ -52,7 +54,7 @@ def opposite_trend(tr: float) -> float:
     return mod360(tr + 180.0)
 
 
-def angle_east_anticlock(x: float, y: float) -> Optional[float]:
+def angle_east_anticlock(x: numbers.Real, y: numbers.Real) -> Optional[numbers.Real]:
     """
     Calculates the angle (in uDegrees, positive anti-clockwise) in the 2D plane
     given x (East) and y (North) Cartesian xyz.
@@ -83,7 +85,7 @@ def angle_east_anticlock(x: float, y: float) -> Optional[float]:
         return mod360(degrees(atan2(y, x)))
 
 
-def angle_east_clock(x: float, y: float) -> Optional[float]:
+def angle_east_clock(x: numbers.Real, y: numbers.Real) -> Optional[numbers.Real]:
     """
     Calculate the angle from East (in uDegrees, positive clockwise) in the 2D plane
     given x (East) and y (North) Cartesian xyz.
@@ -116,7 +118,7 @@ def angle_east_clock(x: float, y: float) -> Optional[float]:
         return mod360(360.0 - ang)
 
 
-def angle_north_clock(x: float, y: float) -> Optional[float]:
+def angle_north_clock(x: numbers.Real, y: numbers.Real) -> Optional[numbers.Real]:
     """
     Calculate the angle from North (in degrees, positive clockwise) in the 2D plane
     given x (East) and y (North) Cartesian xyz.
@@ -147,14 +149,14 @@ def angle_north_clock(x: float, y: float) -> Optional[float]:
         return mod360(90.0 + ang)
 
 
-def plng2colatTop(plunge: float) -> float:
+def plng2colatTop(plunge: numbers.Real) -> numbers.Real:
     """
     Calculates the colatitude angle from the top.
 
     :param plunge: an angle from -90° (upward-pointing) to 90° (downward-pointing)
-    :type plunge: float
+    :type plunge: numbers.Real.
     :return: the colatitude angle
-    :rtype: float
+    :rtype: numbers.Real.
 
     Examples:
       >>> plng2colatTop(90)
@@ -172,14 +174,14 @@ def plng2colatTop(plunge: float) -> float:
     return 90.0 + plunge
 
 
-def plng2colatBottom(plunge: float) -> float:
+def plng2colatBottom(plunge: numbers.Real) -> numbers.Real:
     """
     Calculates the colatitude angle from the bottom.
 
     :param plunge: an angle from -90° (upward-pointing) to 90° (downward-pointing)
-    :type plunge: float
+    :type plunge: numbers.Real.
     :return: the colatitude angle
-    :rtype: float
+    :rtype: numbers.Real.
 
     Examples:
       >>> plng2colatBottom(90)
@@ -197,7 +199,7 @@ def plng2colatBottom(plunge: float) -> float:
     return 90.0 - plunge
 
 
-def slope(h: float, v: float) -> Optional[float]:
+def slope(h: numbers.Real, v: numbers.Real) -> Optional[numbers.Real]:
     """
     Slope (in decimal degrees) given horizontal and vertical lengths
     both input are assumed positive.

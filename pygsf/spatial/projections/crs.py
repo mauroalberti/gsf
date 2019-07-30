@@ -12,11 +12,11 @@ class Crs(object):
 
     """
 
-    def __init__(self, epsg_cd: int = -1):
+    def __init__(self, epsg_cd: numbers.Integral = -1):
 
         self._epsg = int(epsg_cd)
 
-    def epsg(self) -> int:
+    def epsg(self) -> numbers.Integral:
 
         return self._epsg
 

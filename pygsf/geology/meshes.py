@@ -22,7 +22,7 @@ def formula_to_grid(array_range, array_size, formula):
     :param array_range:
     :param array_size:
     :param formula:
-    :return: three lists of float values
+    :return: three lists of numbers.Real values
     """
 
     # note: b range reversed for conventional j order in arrays

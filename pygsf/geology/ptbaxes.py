@@ -79,7 +79,7 @@ class PTBAxes(object):
             t_axis=Axis.fromVect(t_vector))
 
     @classmethod
-    def fromFaultSlick(cls, fault: Fault, slick_ndx: int=0) -> 'PTBAxes':
+    def fromFaultSlick(cls, fault: Fault, slick_ndx: numbers.Integral=0) -> 'PTBAxes':
         """
         Class method to calculate P-T axes from a FaultSlick instance.
         Return P and T axes and a third Boolean variable,
@@ -256,13 +256,13 @@ class PTBAxes(object):
 
         return self.PAxis.commonPlane(self.TAxis)
 
-    def almostEqual(self, another: 'PTBAxes', tolerance_angle: [int, float]=VECTOR_ANGLE_THRESHOLD) -> bool:
+    def almostEqual(self, another: 'PTBAxes', tolerance_angle: numbers.Real=VECTOR_ANGLE_THRESHOLD) -> bool:
         """
         Checks for equivalence between two PTBAXes instances
         within a given tolerance angle (default is VECTOR_ANGLE_THRESHOLD)
 
         :param another: a PTBAXes instance.
-        :param tolerance_angle: the tolerance angle for the equality check (float)
+        :param tolerance_angle: the tolerance angle for the equality check (numbers.Real)
         :return: Boolean.
 
         Examples:

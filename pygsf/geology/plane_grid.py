@@ -15,7 +15,7 @@ def plane_dem_intersection(
         srcPlaneAttitude: Plane,
         srcPt: Point,
         geo_array: GeoArray,
-        level_ndx: int=0) -> List[Point]:
+        level_ndx: numbers.Integral=0) -> List[Point]:
     """
     Calculates the intersections (as points) between the grid and a planar analytical surface.
 
@@ -32,7 +32,7 @@ def plane_dem_intersection(
     Examples:
     """
 
-    def ijarr2xyz(ijarr2xy_func: Callable, xy2z_func: Callable, i: float, j: float) -> Tuple[float, float, float]:
+    def ijarr2xyz(ijarr2xy_func: Callable, xy2z_func: Callable, i: numbers.Real, j: numbers.Real) -> Tuple[numbers.Real, numbers.Real, numbers.Real]:
         """
         Return a tuple of (x, y, z) values, starting by array indices.
 
@@ -50,10 +50,10 @@ def plane_dem_intersection(
     def xyarr2segmentslope(
             xy2z_func: Callable,
             arrij2xy_func: Callable,
-            i: float,
-            j: float,
+            i: numbers.Real,
+            j: numbers.Real,
             i_start=0.0,
-            j_start=0.0) -> float:
+            j_start=0.0) -> numbers.Real:
         """
         Calculates the segment slope along a gridded direction defined by its end point i, j array coordinates.
         Assumed start point is array coordinates 0, 0.
@@ -65,7 +65,7 @@ def plane_dem_intersection(
         :param i_start: i index of start point. Default is 0.0.
         :param j_start:j index of start point. Default is 0.0.
         :return: segment slope.
-        :rtype: float.
+        :rtype: numbers.Real.
         """
 
         start_point = Point(*ijarr2xyz(
@@ -87,9 +87,9 @@ def plane_dem_intersection(
             m_arr2: np.ndarray,
             q_arr1: np.ndarray,
             q_arr2: np.ndarray,
-            cell_size: float,
-            m_delta_tol: Optional[float] = 1e-6,
-            q_delta_tol: Optional[float] = 1e-6) -> np.ndarray:
+            cell_size: numbers.Real,
+            m_delta_tol: Optional[numbers.Real] = 1e-6,
+            q_delta_tol: Optional[numbers.Real] = 1e-6) -> np.ndarray:
         """
         Creates array that gives the residual index [0-1[ of the intersection between segments along the considered
         array axis (i or j) whose m (slope) and q (y-axis intersection) values along the considered array axis (i or j)

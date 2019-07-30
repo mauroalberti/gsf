@@ -25,28 +25,28 @@ class Point(object):
 
     def __init__(
         self,
-        x: [int, float],
-        y: [int, float],
-        z: [int, float] = 0.0,
-        t: [int, float] = 0.0,
-        epsg_cd: int = -1):
+        x: numbers.Real,
+        y: numbers.Real,
+        z: numbers.Real = 0.0,
+        t: numbers.Real = 0.0,
+        epsg_cd: numbers.Integral = -1):
         """
         Construct a Point instance.
 
         :param x: point x coordinate.
-        :type x: int or float.
+        :type x: numbers.Real.
         :param y: point y coordinate.
-        :type y: int or float.
+        :type y: numbers.Real.
         :param z: point z coordinate.
-        :type z: int or float.
+        :type z: numbers.Real.
         :param t: point time coordinate.
-        :type t: int or float.
+        :type t: numbers.Real.
         :param epsg_cd: CRS EPSG code.
-        :type epsg_cd: int.
+        :type epsg_cd: numbers.Integral.
         """
 
         vals = [x, y, z, t]
-        if any(map(lambda val: not isinstance(val, (int, float)), vals)):
+        if any(map(lambda val: not isinstance(val, numbers.Real), vals)):
             raise VectorInputException("Input values must be integer or float type")
         if not all(map(math.isfinite, vals)):
             raise VectorInputException("Input values must be finite")
@@ -58,12 +58,12 @@ class Point(object):
         self._crs = Crs(epsg_cd)
 
     @property
-    def x(self) -> float:
+    def x(self) -> numbers.Real:
         """
         Return the x coordinate of the current point.
 
         :return: x coordinate.
-        :rtype: float
+        :rtype: numbers.Real
 
         Examples:
           >>> Point(4, 3, 7, epsg_cd=4326).x
@@ -75,12 +75,12 @@ class Point(object):
         return self._x
 
     @property
-    def y(self) -> float:
+    def y(self) -> numbers.Real:
         """
         Return the y coordinate of the current point.
 
         :return: y coordinate.
-        :rtype: float
+        :rtype: numbers.Real
 
         Examples:
           >>> Point(4, 3, 7, epsg_cd=4326).y
@@ -92,12 +92,12 @@ class Point(object):
         return self._y
 
     @property
-    def z(self) -> float:
+    def z(self) -> numbers.Real:
         """
         Return the z coordinate of the current point.
 
         :return: z coordinate.
-        :rtype: float
+        :rtype: numbers.Real
 
         Examples:
           >>> Point(4, 3, 7, epsg_cd=4326).z
@@ -109,12 +109,12 @@ class Point(object):
         return self._z
 
     @property
-    def t(self) -> float:
+    def t(self) -> numbers.Real:
         """
         Return the time coordinate of the current point.
 
         :return: time coordinate.
-        :rtype: float
+        :rtype: numbers.Real
 
         Examples:
           >>> Point(4, 3, 7, epsg_cd=4326).t
@@ -135,12 +135,12 @@ class Point(object):
 
         return Crs(self._crs.epsg())
 
-    def epsg(self) -> int:
+    def epsg(self) -> numbers.Integral:
         """
         Returns the EPSG code of the point.
 
         :return: the CRS code.
-        :rtype: int.
+        :rtype: numbers.Integral.
         """
 
         return self.crs().epsg()
@@ -189,7 +189,7 @@ class Point(object):
 
         return not (self == another)
 
-    def a(self) -> Tuple[float, float, float, float, int]:
+    def a(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Integral]:
         """
         Return the individual values of the point.
 
@@ -212,7 +212,7 @@ class Point(object):
 
         return Point(*self.a())
 
-    def toXYZ(self) -> Tuple[float, float, float]:
+    def toXYZ(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real]:
         """
         Returns the spatial components as a tuple of three values.
 
@@ -226,7 +226,7 @@ class Point(object):
 
         return self.x, self.y, self.z
 
-    def toXYZT(self) -> Tuple[float, float, float, float]:
+    def toXYZT(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real]:
         """
         Returns the spatial and time components as a tuple of four values.
 
@@ -292,12 +292,12 @@ class Point(object):
 
         return Point(0.0, self.y, self.z, self.t, self.epsg())
 
-    def deltaX(self, another: 'Point') -> Optional[float]:
+    def deltaX(self, another: 'Point') -> Optional[numbers.Real]:
         """
         Delta between x components of two Point Instances.
 
         :return: x coordinates difference value.
-        :rtype: optional float.
+        :rtype: optional numbers.Real.
 
         Examples:
           >>> Point(1, 2, 3, epsg_cd=32632).deltaX(Point(4, 7, 1, epsg_cd=32632))
@@ -311,12 +311,12 @@ class Point(object):
         else:
             return another.x - self.x
 
-    def deltaY(self, another: 'Point') -> Optional[float]:
+    def deltaY(self, another: 'Point') -> Optional[numbers.Real]:
         """
         Delta between y components of two Point Instances.
 
         :return: y coordinates difference value.
-        :rtype: optional float.
+        :rtype: optional numbers.Real.
 
         Examples:
           >>> Point(1, 2, 3, epsg_cd=32632).deltaY(Point(4, 7, 1, epsg_cd=32632))
@@ -330,12 +330,12 @@ class Point(object):
         else:
             return another.y - self.y
 
-    def deltaZ(self, another: 'Point') -> Optional[float]:
+    def deltaZ(self, another: 'Point') -> Optional[numbers.Real]:
         """
         Delta between z components of two Point Instances.
 
         :return: z coordinates difference value.
-        :rtype: optional float.
+        :rtype: optional numbers.Real.
 
         Examples:
           >>> Point(1, 2, 3, epsg_cd=32632).deltaZ(Point(4, 7, 1, epsg_cd=32632))
@@ -349,12 +349,12 @@ class Point(object):
         else:
             return another.z - self.z
 
-    def deltaT(self, another: 'Point') -> float:
+    def deltaT(self, another: 'Point') -> numbers.Real:
         """
         Delta between t components of two Point Instances.
 
         :return: difference value
-        :rtype: float
+        :rtype: numbers.Real
 
         Examples:
           >>> Point(1, 2, 3, 17.3).deltaT(Point(4, 7, 1, 42.9))
@@ -363,7 +363,7 @@ class Point(object):
 
         return another.t - self.t
 
-    def dist3DWith(self, another: 'Point') -> float:
+    def dist3DWith(self, another: 'Point') -> numbers.Real:
         """
         Calculate Euclidean spatial distance between two points.
         TODO: consider case of polar CRS
@@ -371,7 +371,7 @@ class Point(object):
         :param another: another Point instance.
         :type another: Point.
         :return: the distance (when the two points have the same CRS).
-        :rtype: float.
+        :rtype: numbers.Real.
         :raise: Exception.
 
         Examples:
@@ -388,7 +388,7 @@ class Point(object):
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
-    def dist2DWith(self, another: 'Point') -> float:
+    def dist2DWith(self, another: 'Point') -> numbers.Real:
         """
         Calculate horizontal (2D) distance between two points.
         TODO: consider case of polar CRS
@@ -396,7 +396,7 @@ class Point(object):
         :param another: another Point instance.
         :type another: Point.
         :return: the 2D distance (when the two points have the same CRS).
-        :rtype: float.
+        :rtype: numbers.Real.
         :raise: Exception.
 
         Examples:
@@ -413,7 +413,7 @@ class Point(object):
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
-    def scale(self, scale_factor: [int, float]) -> 'Point':
+    def scale(self, scale_factor: numbers.Real) -> 'Point':
         """
         Create a scaled object.
         Note: it does not make sense for polar coordinates.
@@ -443,7 +443,7 @@ class Point(object):
 
         return self.scale(-1)
 
-    def isCoinc(self, another: 'Point', tolerance: float = MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
+    def isCoinc(self, another: 'Point', tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
         """
         Check spatial coincidence of two points
 
@@ -466,14 +466,14 @@ class Point(object):
         else:
             return self.dist3DWith(another) <= tolerance
 
-    def already_present(self, pt_list: List['Point'], tolerance: [int, float] = MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
+    def already_present(self, pt_list: List['Point'], tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
         """
         Determines if a point is already in a given point list, using an optional distance separation,
 
         :param pt_list: list of points. May be empty.
         :type pt_list: List of Points.
         :param tolerance: optional maximum distance between near-coincident point pair.
-        :type tolerance: numeric (int, float).
+        :type tolerance: numbers.Real.
         :return: True if already present, False otherwise.
         :rtype: optional boolean.
         """
@@ -483,7 +483,7 @@ class Point(object):
                 return True
         return False
 
-    def shift(self, sx: float, sy: float, sz: float) -> Optional['Point']:
+    def shift(self, sx: numbers.Real, sy: numbers.Real, sz: numbers.Real) -> Optional['Point']:
         """
         Create a new object shifted by given amount from the self instance.
 
@@ -544,17 +544,17 @@ class CPlane(object):
 
     """
 
-    def __init__(self, a: float, b: float, c: float, d: float, epsg_cd: int = -1):
+    def __init__(self, a: numbers.Real, b: numbers.Real, c: numbers.Real, d: numbers.Real, epsg_cd: numbers.Integral = -1):
 
-        if not isinstance(a, (float, int)):
+        if not isinstance(a, numbers.Real):
             raise Exception("Input value a must be float or int but is {}".format(type(a)))
-        if not isinstance(b, (float, int)):
+        if not isinstance(b, numbers.Real):
             raise Exception("Input value b must be float or int but is {}".format(type(b)))
-        if not isinstance(c, (float, int)):
+        if not isinstance(c, numbers.Real):
             raise Exception("Input value c must be float or int but is {}".format(type(c)))
-        if not isinstance(d, (float, int)):
+        if not isinstance(d, numbers.Real):
             raise Exception("Input value d must be float or int but is {}".format(type(d)))
-        if not isinstance(epsg_cd, int):
+        if not isinstance(epsg_cd, numbers.Integral):
             raise Exception("Input value epsg_cd must be int but is {}".format(type(epsg_cd)))
 
         norm = sqrt(a*a + b*b + c*c)
@@ -564,7 +564,7 @@ class CPlane(object):
         self._d = float(d) / norm
         self._crs = Crs(epsg_cd)
 
-    def a(self) -> float:
+    def a(self) -> numbers.Real:
         """
         Return a coefficient of a CPlane instance.
 
@@ -575,7 +575,7 @@ class CPlane(object):
 
         return self._a
 
-    def b(self) -> float:
+    def b(self) -> numbers.Real:
         """
         Return b coefficient of a CPlane instance.
 
@@ -586,7 +586,7 @@ class CPlane(object):
 
         return self._b
 
-    def c(self) -> float:
+    def c(self) -> numbers.Real:
         """
         Return a coefficient of a CPlane instance.
 
@@ -597,7 +597,7 @@ class CPlane(object):
 
         return self._c
 
-    def d(self) -> float:
+    def d(self) -> numbers.Real:
         """
         Return a coefficient of a CPlane instance.
 
@@ -620,19 +620,19 @@ class CPlane(object):
 
         return self._crs
 
-    def epsg(self) -> int:
+    def epsg(self) -> numbers.Integral:
         """
         Returns the EPSG code.
 
         :return: EPSG code.
-        :rtype: int
+        :rtype: numbers.Integral
 
         Example:
         """
 
         return self._crs.epsg()
 
-    def v(self) -> Tuple[float, float, float, float, int]:
+    def v(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Integral]:
         """
         Return coefficients of a CPlane instance.
 
@@ -783,7 +783,7 @@ class CPlane(object):
 
         return Point(x, y, z, epsg_cd=self.epsg())
 
-    def pointDistance(self, pt: Point) -> float:
+    def pointDistance(self, pt: Point) -> numbers.Real:
         """
         Calculate the distance between a point and the cartesian plane.
         Distance expression:
@@ -795,7 +795,7 @@ class CPlane(object):
         :param pt: the point to calculate distance with.
         :type pt: Point.
         :return: the distance value.
-        :rtype: float.
+        :rtype: numbers.Real.
         :raise: Exception.
 
         Examples:
@@ -860,14 +860,14 @@ class CPlane(object):
         else:
             return False
 
-    def angle(self, another) -> float:
+    def angle(self, another) -> numbers.Real:
         """
         Calculate angle (in degrees) between two planes.
 
         :param another: the CPlane instance to calculate angle with.
         :type another: CPlane.
         :return: the angle (in degrees) between the two planes.
-        :rtype: float.
+        :rtype: numbers.Real.
         :raise: Exception.
 
         Examples:
@@ -961,7 +961,7 @@ class Segment(object):
 
         return Crs(self._crs.epsg())
 
-    def epsg(self) -> int:
+    def epsg(self) -> numbers.Integral:
 
         return self.crs().epsg()
 
@@ -992,63 +992,63 @@ class Segment(object):
         else:
             return self.clone()
 
-    def x_range(self) -> Tuple[float, float]:
+    def x_range(self) -> Tuple[numbers.Real, numbers.Real]:
 
         if self.start_pt().x < self.end_pt().x:
             return self.start_pt().x, self.end_pt().x
         else:
             return self.end_pt().x, self.start_pt().x
 
-    def y_range(self) -> Tuple[float, float]:
+    def y_range(self) -> Tuple[numbers.Real, numbers.Real]:
 
         if self.start_pt().y < self.end_pt().y:
             return self.start_pt().y, self.end_pt().y
         else:
             return self.end_pt().y, self.start_pt().y
 
-    def z_range(self) -> Tuple[float, float]:
+    def z_range(self) -> Tuple[numbers.Real, numbers.Real]:
 
         if self.start_pt().z < self.end_pt().z:
             return self.start_pt().z, self.end_pt().z
         else:
             return self.end_pt().z, self.start_pt().z
 
-    def delta_x(self) -> float:
+    def delta_x(self) -> numbers.Real:
 
         return self.end_pt().x - self.start_pt().x
 
-    def delta_y(self) -> float:
+    def delta_y(self) -> numbers.Real:
 
         return self.end_pt().y - self.start_pt().y
 
-    def delta_z(self) -> float:
+    def delta_z(self) -> numbers.Real:
         """
         Z delta between segment end point and start point.
 
-        :return: float.
+        :return: numbers.Real.
         """
 
         return self.end_pt().z - self.start_pt().z
 
-    def length_2d(self) -> float:
+    def length_2d(self) -> numbers.Real:
         """
         Returns the horizontal length of the segment.
 
         :return: the horizontal length of the segment.
-        :rtype: float.
+        :rtype: numbers.Real.
         """
 
         return self.start_pt().dist2DWith(self.end_pt())
 
-    def length_3d(self) -> float:
+    def length_3d(self) -> numbers.Real:
 
         return self.start_pt().dist3DWith(self.end_pt())
 
-    def deltaZS(self) -> Optional[float]:
+    def deltaZS(self) -> Optional[numbers.Real]:
         """
         Calculates the delta z - delta s ratio of a segment.
 
-        :return: optional float.
+        :return: optional numbers.Real.
         """
 
         len2d = self.length_2d()
@@ -1058,12 +1058,12 @@ class Segment(object):
 
         return self.delta_z() / len2d
 
-    def slope_rad(self) -> Optional[float]:
+    def slope_rad(self) -> Optional[numbers.Real]:
         """
         Calculates the slope in radians of the segment.
         Positive is downward point, negative upward pointing.
 
-        :return: optional float.
+        :return: optional numbers.Real.
         """
 
         delta_zs = self.deltaZS()
@@ -1080,7 +1080,7 @@ class Segment(object):
                     self.delta_z(),
                     epsg_cd=self.epsg())
 
-    def segment_2d_m(self) -> Optional[float]:
+    def segment_2d_m(self) -> Optional[numbers.Real]:
 
         denom = self.end_pt().x - self.start_pt().x
 
@@ -1089,7 +1089,7 @@ class Segment(object):
 
         return (self.end_pt().y - self.start_pt().y) / denom
 
-    def segment_2d_p(self) -> Optional[float]:
+    def segment_2d_p(self) -> Optional[numbers.Real]:
 
         s2d_m = self.segment_2d_m()
 
@@ -1162,7 +1162,7 @@ class Segment(object):
         Scale a segment by the given scale_factor.
         Start point does not change.
 
-        :param scale_factor: float
+        :param scale_factor: numbers.Real
         :return: Segment instance
         """
 
@@ -1181,17 +1181,17 @@ class Segment(object):
             self.start_pt(),
             end_pt)
 
-    def densify2d_asSteps(self, densify_distance: Union[float, int]) -> array:
+    def densify2d_asSteps(self, densify_distance: numbers.Real) -> array:
         """
         Defines the array storing the incremental lengths according to the provided densify distance.
 
         :param densify_distance: the step distance.
-        :type densify_distance: float or int.
+        :type densify_distance: numbers.Real.
         :return: array storing incremental steps, with the last step being equal to the segment length.
         :rtype: array.
         """
 
-        if not isinstance(densify_distance, (float, int)):
+        if not isinstance(densify_distance, numbers.Real):
             raise Exception("Densify distance must be float or int")
 
         if not math.isfinite(densify_distance):
@@ -1222,12 +1222,12 @@ class Segment(object):
         The result is no longer a Segment instance, instead it is a Line instance.
 
         :param densify_distance: the distance with which to densify the segment.
-        :type densify_distance: float.
+        :type densify_distance: numbers.Real.
         :return: the set of densified points.
         :rtype: List[Point].
         """
 
-        if not isinstance(densify_distance, (float, int)):
+        if not isinstance(densify_distance, numbers.Real):
             raise Exception("Input densify distance must be float or integer")
 
         if not math.isfinite(densify_distance):
@@ -1263,7 +1263,7 @@ class Segment(object):
         separated a distance equal to densify_distance.
         The result is no longer a Segment instance, instead it is a Line instance.
 
-        :param densify_distance: float
+        :param densify_distance: numbers.Real
         :return: Line
         """
 
@@ -1301,14 +1301,14 @@ class Line(object):
     A list of Point objects, all with the same CRS code.
     """
 
-    def __init__(self, pts: Optional[List[Point]] = None, epsg_cd: int = -1):
+    def __init__(self, pts: Optional[List[Point]] = None, epsg_cd: numbers.Integral = -1):
         """
         Creates the Line instance, when all the provided points have the same CRS codes.
 
         :param pts: a list of points
         :type pts: List of Point instances.
         :param epsg_cd: the CRS code of the points.
-        :type epsg_cd: int.
+        :type epsg_cd: numbers.Integral.
         :return: a Line instance.
         :rtype: Line.
         :raises: CRSCodeException.
@@ -1338,7 +1338,7 @@ class Line(object):
         self._crs = Crs(epsg_cd)
 
     @classmethod
-    def fromPointList(cls, pt_list: List[List[float]], epsg_cd: int = -1) -> 'Line':
+    def fromPointList(cls, pt_list: List[List[numbers.Real]], epsg_cd: numbers.Integral = -1) -> 'Line':
         """
         Create a Line instance from a list of x, y and optional z values.
 
@@ -1378,12 +1378,12 @@ class Line(object):
 
         return self._pts
 
-    def extract_pt(self, pt_ndx: int) -> Optional[Point]:
+    def extract_pt(self, pt_ndx: numbers.Integral) -> Optional[Point]:
         """
         Extract the point at index pt_ndx.
 
         :param pt_ndx: point index.
-        :type pt_ndx: int.
+        :type pt_ndx: numbers.Integral.
         :return: the extracted Point instance or None when index out-of-range.
         :rtype: Optional[Point].
 
@@ -1407,7 +1407,7 @@ class Line(object):
 
         return self._crs
 
-    def epsg(self) -> int:
+    def epsg(self) -> numbers.Integral:
 
         return self.crs().epsg()
 
@@ -1493,7 +1493,7 @@ class Line(object):
         self._pts.append(pt.clone())
         return True
 
-    def add_pts(self, pt_list) -> int:
+    def add_pts(self, pt_list) -> numbers.Integral:
         """
         In-place transformation of the original Line instance
         by adding a new set of points at the end.
@@ -1501,7 +1501,7 @@ class Line(object):
         :param pt_list: list of Points.
         :type pt_list: List of Point instances.
         :return: number of added points
-        :rtype: int.
+        :rtype: numbers.Integral.
         """
 
         num_added = 0
@@ -1512,19 +1512,19 @@ class Line(object):
 
         return num_added
 
-    def x_list(self) -> List[float]:
+    def x_list(self) -> List[numbers.Real]:
 
         return [pt.x for pt in self._pts]
 
-    def y_list(self) -> List[float]:
+    def y_list(self) -> List[numbers.Real]:
 
         return [pt.y for pt in self._pts]
 
-    def z_list(self) -> List[float]:
+    def z_list(self) -> List[numbers.Real]:
 
         return [pt.z for pt in self._pts]
 
-    def t_list(self) -> List[float]:
+    def t_list(self) -> List[numbers.Real]:
 
         return [pt.t for pt in self._pts]
 
@@ -1532,29 +1532,29 @@ class Line(object):
 
         return np.array(self.z_list())
 
-    def xy_lists(self) -> Tuple[List[float], List[float]]:
+    def xy_lists(self) -> Tuple[List[numbers.Real], List[numbers.Real]]:
 
         return self.x_list(), self.y_list()
 
-    def x_min(self) -> Optional[float]:
+    def x_min(self) -> Optional[numbers.Real]:
 
         return find_val(
             func=min,
             lst=self.x_list())
 
-    def x_max(self) -> Optional[float]:
+    def x_max(self) -> Optional[numbers.Real]:
 
         return find_val(
             func=max,
             lst=self.x_list())
 
-    def y_min(self) -> Optional[float]:
+    def y_min(self) -> Optional[numbers.Real]:
 
         return find_val(
             func=min,
             lst=self.y_list())
 
-    def y_max(self) -> Optional[float]:
+    def y_max(self) -> Optional[numbers.Real]:
 
         return find_val(
             func=max,
@@ -1565,34 +1565,34 @@ class Line(object):
         Returns the line elevation statistics.
 
         :return: the statistics parameters: min, max, mean, var, std.
-        :rtype: Dictionary of float values.
+        :rtype: Dictionary of numbers.Real values.
         """
 
         return get_statistics(self.z_array())
 
-    def z_min(self) -> Optional[float]:
+    def z_min(self) -> Optional[numbers.Real]:
 
         return find_val(
             func=min,
             lst=self.z_list())
 
-    def z_max(self) -> Optional[float]:
+    def z_max(self) -> Optional[numbers.Real]:
 
         return find_val(
             func=max,
             lst=self.z_list())
 
-    def z_mean(self) -> Optional[float]:
+    def z_mean(self) -> Optional[numbers.Real]:
 
         zs = self.z_list()
         return float(np.mean(zs)) if zs else None
 
-    def z_var(self) -> Optional[float]:
+    def z_var(self) -> Optional[numbers.Real]:
 
         zs = self.z_list()
         return float(np.var(zs)) if zs else None
 
-    def z_std(self) -> Optional[float]:
+    def z_std(self) -> Optional[numbers.Real]:
 
         zs = self.z_list()
         return float(np.std(zs)) if zs else None
@@ -1632,7 +1632,7 @@ class Line(object):
         using the provided sample distance.
         Returned Line instance has coincident successive points removed.
 
-        :param sample_distance: float
+        :param sample_distance: numbers.Real
         :return: Line instance
         """
 
@@ -1660,21 +1660,21 @@ class Line(object):
 
         return Line(self._pts + another._pts)
 
-    def length_3d(self) -> float:
+    def length_3d(self) -> numbers.Real:
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
             length += self._pts[ndx].dist3DWith(self._pts[ndx + 1])
         return length
 
-    def length_2d(self) -> float:
+    def length_2d(self) -> numbers.Real:
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
             length += self._pts[ndx].dist2DWith(self._pts[ndx + 1])
         return length
 
-    def step_delta_z(self) -> List[float]:
+    def step_delta_z(self) -> List[numbers.Real]:
         """
         Return the difference in elevation between consecutive points:
         z[ndx+1] - z[ndx]
@@ -1690,7 +1690,7 @@ class Line(object):
 
         return delta_z
 
-    def step_lengths_3d(self) -> List[float]:
+    def step_lengths_3d(self) -> List[numbers.Real]:
         """
         Returns the point-to-point 3D distances.
         It is the distance between a point and its previous one.
@@ -1709,7 +1709,7 @@ class Line(object):
 
         return step_length_list
 
-    def step_lengths_2d(self) -> List[float]:
+    def step_lengths_2d(self) -> List[numbers.Real]:
         """
         Returns the point-to-point 2D distances.
         It is the distance between a point and its previous one.
@@ -1728,7 +1728,7 @@ class Line(object):
 
         return step_length_list
 
-    def incremental_length_3d(self) -> List[float]:
+    def incremental_length_3d(self) -> List[numbers.Real]:
         """
         Returns the accumulated 3D segment lengths.
 
@@ -1738,7 +1738,7 @@ class Line(object):
 
         return list(itertools.accumulate(self.step_lengths_3d()))
 
-    def incremental_length_2d(self) -> List[float]:
+    def incremental_length_2d(self) -> List[numbers.Real]:
         """
         Returns the accumulated 2D segment lengths.
 
@@ -1761,7 +1761,7 @@ class Line(object):
 
         return new_line
 
-    def slopes_degr(self) -> List[Optional[float]]:
+    def slopes_degr(self) -> List[Optional[numbers.Real]]:
         """
         Calculates the slopes (in degrees) of each Line segment.
         The first value is the slope of the first segment.
@@ -1769,7 +1769,7 @@ class Line(object):
         The number of elements is equal to the number of points in the Line.
 
         :return: list of slopes (degrees).
-        :rtype: List[Optional[float]].
+        :rtype: List[Optional[numbers.Real]].
         """
 
         lSlopes = []
@@ -1793,7 +1793,7 @@ class Line(object):
 
         return get_statistics(self.slopes_degr())
 
-    def abs_slopes_degr(self) -> List[Optional[float]]:
+    def abs_slopes_degr(self) -> List[Optional[numbers.Real]]:
 
         return [abs(val) for val in self.slopes_degr()]
 
@@ -1852,7 +1852,7 @@ class MultiLine(object):
     MultiLine is a list of Line objects, each one with the same CRS code
     """
 
-    def __init__(self, lines: Optional[List[Line]] = None, epsg_cd: int = -1):
+    def __init__(self, lines: Optional[List[Line]] = None, epsg_cd: numbers.Integral = -1):
 
         if lines is None:
             lines = []
@@ -1879,7 +1879,7 @@ class MultiLine(object):
 
         return self._crs
 
-    def epsg(self) -> int:
+    def epsg(self) -> numbers.Integral:
 
         return self._crs.epsg()
 
@@ -1887,7 +1887,7 @@ class MultiLine(object):
 
         return len(self.lines())
 
-    def num_tot_pts(self) -> int:
+    def num_tot_pts(self) -> numbers.Integral:
 
         num_points = 0
         for line in self._lines:
@@ -1895,7 +1895,7 @@ class MultiLine(object):
 
         return num_points
 
-    def extract_line(self, ln_ndx: int = 0) -> Optional[Line]:
+    def extract_line(self, ln_ndx: numbers.Integral = 0) -> Optional[Line]:
         """
         Extracts a line from the multiline instance, based on the provided index.
 
@@ -1954,42 +1954,42 @@ class MultiLine(object):
             epsg_cd=self.epsg()
         )
 
-    def x_min(self) -> Optional[float]:
+    def x_min(self) -> Optional[numbers.Real]:
 
         if self.num_tot_pts() == 0:
             return None
         else:
             return float(np.nanmin([line.x_min() for line in self.lines()]))
 
-    def x_max(self) -> Optional[float]:
+    def x_max(self) -> Optional[numbers.Real]:
 
         if self.num_tot_pts() == 0:
             return None
         else:
             return float(np.nanmax([line.x_max() for line in self.lines()]))
 
-    def y_min(self) -> Optional[float]:
+    def y_min(self) -> Optional[numbers.Real]:
 
         if self.num_tot_pts() == 0:
             return None
         else:
             return float(np.nanmin([line.y_min() for line in self.lines()]))
 
-    def y_max(self) -> Optional[float]:
+    def y_max(self) -> Optional[numbers.Real]:
 
         if self.num_tot_pts() == 0:
             return None
         else:
             return float(np.nanmax([line.y_max() for line in self.lines()]))
 
-    def z_min(self) -> Optional[float]:
+    def z_min(self) -> Optional[numbers.Real]:
 
         if self.num_tot_pts() == 0:
             return None
         else:
             return float(np.nanmin([line.z_min() for line in self.lines()]))
 
-    def z_max(self) -> Optional[float]:
+    def z_max(self) -> Optional[numbers.Real]:
 
         if self.num_tot_pts() == 0:
             return None

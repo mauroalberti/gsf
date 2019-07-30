@@ -15,7 +15,7 @@ WGS84 = {'semi-major axis': 6378137.0,
          'first eccentricity squared': 6.69437999014e-3}
 
 
-def n_phi(phi_rad: float) -> float:
+def n_phi(phi_rad: numbers.Real) -> numbers.Real:
     """
     It return the N(phi) parameter.
     See: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion#From_geodetic_to_ECEF_coordinates
@@ -23,9 +23,9 @@ def n_phi(phi_rad: float) -> float:
     where phi is the latitude (in radians) and e^2 is the first eccentricity squared.
 
     :param phi_rad: the latitude expressed in radians.
-    :type phi_rad: float.
+    :type phi_rad: numbers.Real.
     :return: the N(phi) value.
-    :rtype: float.
+    :rtype: numbers.Real.
     """
 
     a = WGS84['semi-major axis']
@@ -33,19 +33,19 @@ def n_phi(phi_rad: float) -> float:
     return a / sqrt(1.0 - e_squared * sin(phi_rad) ** 2)
 
 
-def geodetic2ecef(lat: float, lon: float, height: float) -> Tuple[float, float, float]:
+def geodetic2ecef(lat: numbers.Real, lon: numbers.Real, height: numbers.Real) -> Tuple[numbers.Real, numbers.Real, numbers.Real]:
     """
     Converts from geodetic (lat-long-height) to Cartesian ECEF reference system.
     See: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion#From_geodetic_to_ECEF_coordinates
 
     :param lat: latitude.
-    :type lat: float.
+    :type lat: numbers.Real.
     :param lon: longitude.
-    ;:type lon: float.
+    ;:type lon: numbers.Real.
     :param height: height.
-    :type height: float.
+    :type height: numbers.Real.
     :return: x, y and z coordinates.
-    :rtype: tuple of three float values.
+    :rtype: tuple of three numbers.Real values.
     """
 
     e_squared = WGS84['first eccentricity squared']
@@ -82,21 +82,21 @@ def projectionType(id_code):
     return "unknown"
 
 
-def latLengthOneMinutePrime() -> float:
+def latLengthOneMinutePrime() -> numbers.Real:
     """
     Approximate length (in meters) of one minute prime at latitude 45°.
     :return: length in meters.
-    :rtype: float
+    :rtype: numbers.Real
     """
 
     return latitude_one_degree_45degr_meters / 60.0
 
 
-def latLengthOneMinuteSecond() -> float:
+def latLengthOneMinuteSecond() -> numbers.Real:
     """
     Approximate length (in meters) of one minute second at latitude 45°.
     :return: length in meters.
-    :rtype: float
+    :rtype: numbers.Real
     """
 
     return latitude_one_degree_45degr_meters / 3600.0

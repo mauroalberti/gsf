@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import numbers
 
 from ..mathematics.defaults import MIN_VECTOR_MAGNITUDE, MIN_SCALAR_VALUE
 from ..mathematics.exceptions import *
@@ -8,7 +9,7 @@ from ..mathematics.arrays import *
 from .projections.crs import Crs
 
 
-def normXYZ(x: Number, y: Number, z: Number) -> Tuple:
+def normXYZ(x: numbers.Real, y: numbers.Real, z: numbers.Real) -> Tuple:
     """
     Normalize numeric values.
 
@@ -21,7 +22,7 @@ def normXYZ(x: Number, y: Number, z: Number) -> Tuple:
     # input vals checks
 
     vals = [x, y, z]
-    if not all(map(lambda val: isinstance(val, (int, float)), vals)):
+    if not all(map(lambda val: isinstance(val, numbers.Real), vals)):
         raise InputValuesException("Input values must be integer or float")
     elif not all(map(math.isfinite, vals)):
         raise InputValuesException("Input values must be finite")
@@ -45,7 +46,7 @@ class Vect(object):
     z axis -> Up
     """
 
-    def __init__(self, x: Number, y: Number, z: Number = 0.0, epsg_cd: int = -1):
+    def __init__(self, x: numbers.Real, y: numbers.Real, z: numbers.Real = 0.0, epsg_cd: numbers.Integral = -1):
         """
         Vect constructor.
 
@@ -68,7 +69,7 @@ class Vect(object):
 
         vals = [x, y, z]
 
-        if any(map(lambda val: not isinstance(val, (int, float)), vals)):
+        if any(map(lambda val: not isinstance(val, numbers.Real), vals)):
             raise VectorInputException("Input values must be integer of float")
 
         if not all(map(math.isfinite, vals)):
@@ -126,7 +127,7 @@ class Vect(object):
         return np.copy(self._a)
 
     @property
-    def x(self) -> float:
+    def x(self) -> numbers.Real:
         """
         Return x value
 
@@ -138,7 +139,7 @@ class Vect(object):
         return self.a[0]
 
     @property
-    def y(self) -> float:
+    def y(self) -> numbers.Real:
         """
         Return y value
 
@@ -149,7 +150,7 @@ class Vect(object):
         return self.a[1]
 
     @property
-    def z(self) -> float:
+    def z(self) -> numbers.Real:
         """
         Return z value
 
@@ -169,17 +170,17 @@ class Vect(object):
 
         return self._crs
 
-    def epsg(self) -> int:
+    def epsg(self) -> numbers.Integral:
         """
         Returns the EPSG code of the Vector instance.
 
         :return: EPSG code.
-        :rtype: int.
+        :rtype: numbers.Integral.
         """
 
         return self._crs.epsg()
 
-    def toXYZ(self) -> Tuple[float, float, float]:
+    def toXYZ(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real]:
         """
         Returns the spatial components as a tuple of three values.
 
@@ -246,12 +247,12 @@ class Vect(object):
         return self.__class__(0.0, self.y, self.z, epsg_cd=self.epsg())
 
     @property
-    def len3D(self) -> float:
+    def len3D(self) -> numbers.Real:
         """
         Spatial distance of the point from the axis origin.
 
         :return: distance
-        :rtype: float
+        :rtype: numbers.Real
 
         Examples:
           >>> Vect(4.0, 3.0, 0.0).len3D
@@ -261,7 +262,7 @@ class Vect(object):
         return math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     @property
-    def len2D(self) -> float:
+    def len2D(self) -> numbers.Real:
         """
         2D distance of the point from the axis origin.
 
@@ -274,12 +275,12 @@ class Vect(object):
 
         return math.sqrt(self.x * self.x + self.y * self.y)
 
-    def deltaX(self, another: 'Vect') -> Optional[float]:
+    def deltaX(self, another: 'Vect') -> Optional[numbers.Real]:
         """
         Delta between x components of two Vect Instances.
 
         :return: x difference value.
-        :rtype: Optional[float].
+        :rtype: Optional[numbers.Real].
 
         Examples:
           >>> Vect(1, 2, 3, epsg_cd=2000).deltaX(Vect(4, 7, 1, epsg_cd=2000))
@@ -294,12 +295,12 @@ class Vect(object):
 
         return another.x - self.x
 
-    def deltaY(self, another: 'Vect') -> Optional[float]:
+    def deltaY(self, another: 'Vect') -> Optional[numbers.Real]:
         """
         Delta between y components of two Vect Instances.
 
         :return: y difference value.
-        :rtype: Optional[float].
+        :rtype: Optional[numbers.Real].
 
         Examples:
           >>> Vect(1, 2, 3, epsg_cd=2000).deltaY(Vect(4, 7, 1, epsg_cd=2000))
@@ -314,12 +315,12 @@ class Vect(object):
 
         return another.y - self.y
 
-    def deltaZ(self, another: 'Vect') -> Optional[float]:
+    def deltaZ(self, another: 'Vect') -> Optional[numbers.Real]:
         """
         Delta between x components of two Vect Instances.
 
         :return: z difference value.
-        :rtype: Optional[float].
+        :rtype: Optional[numbers.Real].
 
         Examples:
           >>> Vect(1, 2, 3, epsg_cd=2000).deltaZ(Vect(4, 7, 1, epsg_cd=2000))
@@ -334,7 +335,7 @@ class Vect(object):
 
         return another.z - self.z
 
-    def scale(self, scale_factor: Number) -> Optional['Vect']:
+    def scale(self, scale_factor: numbers.Real) -> Optional['Vect']:
         """
         Create a scaled object.
 
@@ -347,7 +348,7 @@ class Vect(object):
           True
         """
 
-        if not isinstance(scale_factor, (int, float)):
+        if not isinstance(scale_factor, numbers.Real):
             return None
 
         if not math.isfinite(scale_factor):
@@ -611,7 +612,7 @@ class Vect(object):
             else:
                 return 0.
 
-    def vDot(self, another: 'Vect') -> float:
+    def vDot(self, another: 'Vect') -> numbers.Real:
         """
         Vector scalar multiplication.
 
@@ -626,7 +627,7 @@ class Vect(object):
 
         return self.x * another.x + self.y * another.y + self.z * another.z
 
-    def angleCos(self, another: 'Vect') -> Optional[float]:
+    def angleCos(self, another: 'Vect') -> Optional[numbers.Real]:
         """
         Return the cosine of the angle between two vectors.
 
@@ -660,7 +661,7 @@ class Vect(object):
         else:
             return val
 
-    def angle(self, another: 'Vect', unit='d') -> Optional[float]:
+    def angle(self, another: 'Vect', unit='d') -> Optional[numbers.Real]:
         """
         Calculate angle between two vectors,
         in 0° - 180° range (as degrees).
@@ -729,12 +730,12 @@ class Vect(object):
         return Vect(x, y, z)
 
     @property
-    def azimuth(self) -> Optional[float]:
+    def azimuth(self) -> Optional[numbers.Real]:
         """
         The azimuth between the Y axis and the vector, calculated clockwise.
 
         :return: angle in degrees.
-        :rtype: optional float.
+        :rtype: optional numbers.Real.
 
         Examples:
           >>> Vect(0, 1, 0).azimuth

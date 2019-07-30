@@ -4,11 +4,11 @@
 from typing import Tuple
 import math
 
-from ..defaults.types import *
+import numbers
 
 
-def areClose(a: float, b: float,
-    rtol: float = 1e-012, atol: float = 1e-12,
+def areClose(a: numbers.Real, b: numbers.Real,
+    rtol: numbers.Real = 1e-012, atol: numbers.Real = 1e-12,
     equal_nan: bool = False, equal_inf: bool = False) -> bool:
     """
     Mimics math.isclose from Python 3.5 (see: https://docs.python.org/3.5/library/math.html)
@@ -66,7 +66,7 @@ def areClose(a: float, b: float,
     return abs(a - b) <= max(rtol * max(abs(a), abs(b)), atol)
 
 
-def apprFloat(val: Number, ndec: int=1) -> float:
+def apprFloat(val: numbers.Real, ndec: numbers.Integral=1) -> numbers.Real:
     """
     Rounds a numeric value to ndec.
 
@@ -88,11 +88,11 @@ def apprFloat(val: Number, ndec: int=1) -> float:
     return rval
 
 
-def apprFTuple(tup: Tuple[float, ...], ndec=1) -> Tuple[float, ...]:
+def apprFTuple(tup: Tuple[numbers.Real, ...], ndec=1) -> Tuple[numbers.Real, ...]:
     """
     Rounds numeric values inside a tuple to ndec decimals
 
-    :param tup: tuple of int/float/exp values
+    :param tup: tuple of numbers.Real values
     :param ndec: number of decimals used
     :return: tuple with rounded numbers
 

@@ -3,13 +3,13 @@
 
 from typing import Tuple, Optional
 
-from ..defaults.types import *
+import numbers
 
 from .vectorial.geometries import Point
 from .rasters.geoarray import GeoArray
 
 
-def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[float], Optional[float]]:
+def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
     """
     Return the velocity components of a 2D-flow field at a point location, based on bilinear interpolation.
 
@@ -18,7 +18,7 @@ def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[float], Opti
     :param pt: the point for which the velocity comnponents are extracted.
     :type pt: Point.
     :return: the x and y velocity components of the flow field at the point location.
-    :rtype: tuple of two float values.
+    :rtype: tuple of two numbers.Real values.
 
     Examples:
     """
@@ -36,7 +36,7 @@ def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[float], Opti
     return vx, vy
 
 
-def interpolate_rkf(geoarray: GeoArray, delta_time: Number, start_pt: Point) -> Tuple[Optional[Point], Optional[float]]:
+def interpolate_rkf(geoarray: GeoArray, delta_time: numbers.Real, start_pt: Point) -> Tuple[Optional[Point], Optional[numbers.Real]]:
     """
     Interpolate point-like object position according to the Runge-Kutta-Fehlberg method.
 
@@ -47,7 +47,7 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: Number, start_pt: Point) -> 
     :param start_pt: the initial point.
     :type start_pt: Point.
     :return: the estimated point-like object position at the incremented time, with the estimation error.
-    :rtype: tuple of optional point and optional float.
+    :rtype: tuple of optional point and optional numbers.Real.
 
     Examples:
     """

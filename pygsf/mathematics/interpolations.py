@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
 
-from ..defaults.types import Number
+import numbers
 
 
-def interp_linear(frac_s: Number, v0: Number, v1:Number) -> Number:
+def interp_linear(frac_s: numbers.Real, v0: numbers.Real, v1:numbers.Real) -> numbers.Real:
     """
     Interpolate a number in a linear way.
 
     :param frac_s: the fractional distance between the start and end point. Range 0-1.
-    :type frac_s: Number.
+    :type frac_s: numbers.Real.
     :param v0: the value at the start point.
-    :type v0: Number.
+    :type v0: numbers.Real.
     :param v1: the value at the end point.
-    ;:type v1: Number.
+    ;:type v1: numbers.Real.
     :return: the interpolated value.
 
     Examples:
@@ -35,24 +35,24 @@ def interp_linear(frac_s: Number, v0: Number, v1:Number) -> Number:
     return v0 + frac_s * delta_z
 
 
-def scalars_bilin_interp(i: Number, j: Number, v00: Number, v01: Number, v10: Number, v11: Number) -> Number:
+def scalars_bilin_interp(i: numbers.Real, j: numbers.Real, v00: numbers.Real, v01: numbers.Real, v10: numbers.Real, v11: numbers.Real) -> numbers.Real:
     """
     Return an interpolated number based on a bilinear interpolation.
 
     :param i: the delta i relative to the preceding cell center.
-    :type i: Number.
+    :type i: numbers.Real.
     :param j: the delta j relative to the preceding cell center.
-    :type j: Number.
+    :type j: numbers.Real.
     :param v00: the z value of the (i=0, j=0) cell center.
-    :type v00: Number.
+    :type v00: numbers.Real.
     :param v01: the z value of the (i=0, j=1) cell center.
-    :type v01: Number.
+    :type v01: numbers.Real.
     :param v10: the z value of the (i=1, j=0) cell center.
-    :type v10: Number.
+    :type v10: numbers.Real.
     :param v11: the z value of the (i=1, j=1) cell center.
-    :type v11: Number.
+    :type v11: numbers.Real.
     :return: the interpolated z value.
-    :rtype: Number.
+    :rtype: numbers.Real.
     """
 
     grid_val_y0 = v00 + (v10 - v00) * i

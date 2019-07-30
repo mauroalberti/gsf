@@ -7,7 +7,7 @@ from math import sin, cos
 import numpy as np
 
 
-from ...defaults.types import Number
+import numbers
 
 from ...mathematics.exceptions import InputValuesException
 
@@ -15,31 +15,31 @@ from .geotransform import GeoTransform, ijPixToxyGeogr
 
 
 def ij_transfer_func(
-        i: Number,
-        j: Number,
+        i: numbers.Real,
+        j: numbers.Real,
         geotransform: GeoTransform,
         z_transfer_func: Callable,
         i_shift=0.5,
-        j_shift=0.5) -> float:
+        j_shift=0.5) -> numbers.Real:
     """
     Return a z value as the result of a function (transfer_func_z) applied to a
     (i+i_shift,j+j_shift) point (i.e., with defaultvalues, the cell center, not the cell top-left corner)
     given a geotransform.
 
     :param  i:  array i (-y) coordinate of a single point.
-    :type  i:  Number.
+    :type  i:  numbers.Real.
     :param  j:  array j (x) coordinate of a single point.
-    :type  j:  Number.
+    :type  j:  numbers.Real.
     :param  geotransform:  geotransform
     :type  geotransform:  GeoTransform.
     :param  z_transfer_func:  function that calculates the z value given x and y input
     :type  z_transfer_func:  function.
     :param i_shift: cell unit shift in the i direction with respect to the cell top-left corner. Default is 0.5, i.e. half the cell size
-    :type i_shift: Number
+    :type i_shift: numbers.Real
     :param j_shift: cell unit shift in the j direction with respect to the cell top-left corner. Default is 0.5, i.e. half the cell size
-    :type j_shift: Number
+    :type j_shift: numbers.Real
     :return: z value
-    :rtype: float.
+    :rtype: numbers.Real.
 
     Examples:
     """
@@ -48,8 +48,8 @@ def ij_transfer_func(
 
 
 def array_from_function(
-        row_num: int,
-        col_num: int,
+        row_num: numbers.Integral,
+        col_num: numbers.Integral,
         geotransform: GeoTransform,
         z_transfer_func: Callable) -> np.ndarray:
     """
@@ -57,16 +57,16 @@ def array_from_function(
     into (x, y) values and then z values.
 
     :param  row_num:  row number of the array to be created.
-    :type  row_num:  int.
+    :type  row_num:  numbers.Integral.
     :param  col_num:  column number of the array to be created.
-    :type  col_num:  int.
+    :type  col_num:  numbers.Integral.
     :param  geotransform:  the used geotransform.
     :type  geotransform:  GeoTransform.
     :param  z_transfer_func:  function that derives z given a (x, y) point.
     :type  z_transfer_func:  Callable.
 
     :return:  array of z values
-    :rtype: np.ndarray of float numbers.
+    :rtype: np.ndarray of numbers.Real numbers.
 
     Examples:
     """
@@ -83,17 +83,17 @@ def array_from_function(
 
 def grad_j(
         fld: np.ndarray,
-        cell_size_j: Number,
-        edge_order: int = 2) -> np.ndarray:
+        cell_size_j: numbers.Real,
+        edge_order: numbers.Integral = 2) -> np.ndarray:
     """
     Calculates the array gradient along the j axis.
 
     :param fld: array.
     :type fld: np.array.
     :param cell_size_j: the cell spacing in the x direction.
-    :type cell_size_j: Number.
+    :type cell_size_j: numbers.Real.
     :param edge_order: the type of edge order used in the Numpy gradient method.
-    :type edge_order: int.
+    :type edge_order: numbers.Integral.
     :return: gradient field.
     :rtype: np.array.
 
@@ -105,17 +105,17 @@ def grad_j(
 
 def grad_i(
         fld: np.ndarray,
-        cell_size_i: Number,
-        edge_order: int = 2) -> np.ndarray:
+        cell_size_i: numbers.Real,
+        edge_order: numbers.Integral = 2) -> np.ndarray:
     """
     Calculates the array gradient along the i axis.
 
     :param fld: array.
     :type fld: np.array.
     :param cell_size_i: the cell spacing in the y direction.
-    :type cell_size_i: Number.
+    :type cell_size_i: numbers.Real.
     :param edge_order: the type of edge order used in the Numpy gradient method.
-    :type edge_order: int.
+    :type edge_order: numbers.Integral.
     :return: gradient field.
     :rtype: np.array.
 
@@ -127,17 +127,17 @@ def grad_i(
 
 def grad_iminus(
         fld: np.ndarray,
-        cell_size_i: Number,
-        edge_order: int=2) -> np.ndarray:
+        cell_size_i: numbers.Real,
+        edge_order: numbers.Integral=2) -> np.ndarray:
     """
     Calculates the array gradient along the -i axis.
 
     :param fld: array.
     :type fld: np.array.
     :param cell_size_i: the cell spacing in the y direction.
-    :type cell_size_i: Number.
+    :type cell_size_i: numbers.Real.
     :param edge_order: the type of edge order used in the Numpy gradient method.
-    :type edge_order: int.
+    :type edge_order: numbers.Integral.
     :return: gradient field.
     :rtype: np.array.
 
@@ -149,25 +149,25 @@ def grad_iminus(
 
 def dir_deriv(
         fld: np.ndarray,
-        cell_size_x: Number,
-        cell_size_y: Number,
-        direct_rad: Number,
-        dx_edge_order: int=2,
-        dy_edge_order: int=2) -> np.ndarray:
+        cell_size_x: numbers.Real,
+        cell_size_y: numbers.Real,
+        direct_rad: numbers.Real,
+        dx_edge_order: numbers.Integral=2,
+        dy_edge_order: numbers.Integral=2) -> np.ndarray:
     """
     Calculates the directional derivative in the provided direction.
 
     :param fld: the field.
     :type fld: Numpy array.
     :param cell_size_x: the cell size along the x axis.
-    :type cell_size_x: Number.
+    :type cell_size_x: numbers.Real.
     :param cell_size_y: the cell size along the y
     :param direct_rad: the direction, expressed as radians.
-    :type direct_rad: Number.
+    :type direct_rad: numbers.Real.
     :param dx_edge_order: the edge order of the gradient along x.
-    :type dx_edge_order: int.
+    :type dx_edge_order: numbers.Integral.
     :param dy_edge_order: the edge order of the gradient along y.
-    :type dy_edge_order: int.
+    :type dy_edge_order: numbers.Integral.
     :return: the directional derivative array.
     :rtype: Numpy array.
     """
@@ -251,8 +251,8 @@ def orients_d(
 def divergence(
         fld_x: np.ndarray,
         fld_y: np.ndarray,
-        cell_size_x: Number,
-        cell_size_y: Number) -> np.ndarray:
+        cell_size_x: numbers.Real,
+        cell_size_y: numbers.Real) -> np.ndarray:
     """
     Calculates the divergence from two 2D arrays:
     the first represents the vector field x component, the second the vector field y component.
@@ -262,9 +262,9 @@ def divergence(
     :param fld_y: vector field y component.
     :type fld_y: np.array.
     :param cell_size_x: the cell spacing in the x direction.
-    :type cell_size_x: Number.
+    :type cell_size_x: numbers.Real.
     :param cell_size_y: the cell spacing in the y direction.
-    :type cell_size_y: Number.
+    :type cell_size_y: numbers.Real.
     :return: divergence field.
     :rtype: np.array.
 
@@ -280,8 +280,8 @@ def divergence(
 def curl_module(
         fld_x: np.ndarray,
         fld_y: np.ndarray,
-        cell_size_x: Number,
-        cell_size_y: Number) -> np.ndarray:
+        cell_size_x: numbers.Real,
+        cell_size_y: numbers.Real) -> np.ndarray:
     """
     Calculates the curl module from two 2D arrays:
     the first represents the vector field x component, the second the vector field y component.
@@ -291,9 +291,9 @@ def curl_module(
     :param fld_y: vector field y component.
     :type fld_y: np.array.
     :param cell_size_x: the cell spacing in the x direction.
-    :type cell_size_x: Number.
+    :type cell_size_x: numbers.Real.
     :param cell_size_y: the cell spacing in the y direction.
-    :type cell_size_y: Number.
+    :type cell_size_y: numbers.Real.
     :return: curl field.
     :rtype: np.array.
 
@@ -309,7 +309,7 @@ def curl_module(
 def magn_grads(
         fld_x: np.ndarray,
         fld_y: np.ndarray,
-        dir_cell_sizes: List[Number],
+        dir_cell_sizes: List[numbers.Real],
         axis: str='') -> List[np.ndarray]:
     """
     Calculates the magnitude gradient along the given direction, based on the field-defining two 2D arrays:
@@ -320,7 +320,7 @@ def magn_grads(
     :param fld_y: vector field y component.
     :type fld_y: np.array.
     :param dir_cell_sizes: list of cell spacing(s) in the considered direction(s).
-    :type dir_cell_sizes: list of Number(s).
+    :type dir_cell_sizes: list of numbers.Real(s).
     :param axis: declares the axis ('x' or 'y') or the axes('', i.e., empty string) for both x and y directions.
     :type axis: str.
     :return: magnitude gradient field(s) along the considered direction.
@@ -344,8 +344,8 @@ def magn_grads(
 def magn_grad_along_flowlines(
         fld_x: np.ndarray,
         fld_y: np.ndarray,
-        cell_size_x: Number,
-        cell_size_y: Number) -> np.ndarray:
+        cell_size_x: numbers.Real,
+        cell_size_y: numbers.Real) -> np.ndarray:
     """
     Calculates gradient along flow lines.
 
@@ -354,9 +354,9 @@ def magn_grad_along_flowlines(
     :param fld_y: vector field y component.
     :type fld_y: np.array.
     :param cell_size_x: the cell spacing in the x direction.
-    :type cell_size_x: Number.
+    :type cell_size_x: numbers.Real.
     :param cell_size_y: the cell spacing in the y direction.
-    :type cell_size_y: Number.
+    :type cell_size_y: numbers.Real.
     :return: the flowline gradient field
     :rtype: np.array.
     """

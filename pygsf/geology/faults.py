@@ -15,18 +15,18 @@ class Slick(object):
     - for a vertical fault: the block individuated by the (formal) dip direction.
     """
 
-    def __init__(self, trend: [int, float], plunge: [int, float], known: bool=True, time: float=0.0):
+    def __init__(self, trend: numbers.Real, plunge: numbers.Real, known: bool=True, time: numbers.Real=0.0):
         """"
         Class constructors from trend, plunge and optional known movement sense flag.
 
         :param trend: the trend of the slickenline
-        :type trend: float
+        :type trend: numbers.Real
         :param plunge: the slickenline plunge
-        :type plunge: float
+        :type plunge: numbers.Real
         :param known: the known movement sense flag
         :type known: bool
         :param time: the absolute or relative timing of the slickeline.
-        :type time: float.
+        :type time: numbers.Real.
         :return: the Slick instance
         ;:raise: SlickInputTypeException
 
@@ -41,13 +41,13 @@ class Slick(object):
           pygsf.geology.exceptions.SlickInputTypeException: Trend must be a number
         """
 
-        if not isinstance(trend, (int, float)):
+        if not isinstance(trend, numbers.Real):
             raise SlickInputTypeException("Trend must be a number")
-        if not isinstance(plunge, (int, float)):
+        if not isinstance(plunge, numbers.Real):
             raise SlickInputTypeException("Plunge must be a number")
         if not isinstance(known, bool):
             raise SlickInputTypeException("Known movement sense must be a boolean")
-        if not isinstance(time, (int, float)):
+        if not isinstance(time, numbers.Real):
             raise SlickInputTypeException("Time must be a number")
 
         if known:
@@ -147,15 +147,15 @@ class Fault(object):
     stored by a list of Slick instances (None when no slickenlines).
     """
 
-    def __init__(self, azim: [int, float], dip_ang: [int, float],
+    def __init__(self, azim: numbers.Real, dip_ang: numbers.Real,
        is_rhr_strike: bool=False, slickenlines: Sequence[Slick]=None):
         """
         Create an instance of a Fault.
 
         :param  azim:  azimuth of the plane (RHR strike or dip direction).
-        :type  azim:  number or string convertible to float.
+        :type  azim:  number or string convertible to numbers.Real.
         :param  dip_ang:  Dip angle of the plane (0-90°).
-        :type  dip_ang:  number or string convertible to float.
+        :type  dip_ang:  number or string convertible to numbers.Real.
         :param is_rhr_strike: if the source azimuth is RHR strike (default is False, i.e. it is dip direction)
         :type is_rhr_strike: bool
         :param slickenlines: the slickenlines associated with the fault plane.
@@ -172,9 +172,9 @@ class Fault(object):
           pygsf.geology.exceptions.FaultInputTypeException: All slickenlines must lie on the plane
         """
 
-        if not isinstance(azim, (int, float)):
+        if not isinstance(azim, numbers.Real):
             raise FaultInputTypeException("Azim must be a number")
-        if not isinstance(dip_ang, (int, float)):
+        if not isinstance(dip_ang, numbers.Real):
             raise FaultInputTypeException("Dip angle must be a number")
 
         if slickenlines is None:
@@ -206,7 +206,7 @@ class Fault(object):
         return self._fltpln
 
     @property
-    def numSlicks(self) -> int:
+    def numSlicks(self) -> numbers.Integral:
         """
         Returns the number of slickenlines.
 
@@ -241,12 +241,12 @@ class Fault(object):
 
         return self._slicks
 
-    def slick(self, ndx: int = 0) -> Slick:
+    def slick(self, ndx: numbers.Integral = 0) -> Slick:
         """
         Return the slickenline with the given index associated with the fault.
 
         :param ndx: the slickenline index.
-        :type ndx: int.
+        :type ndx: numbers.Integral.
         :return: the associated slickenline.
         :rtype: Slick.
         :raise: FaultInputTypeException.
@@ -256,7 +256,7 @@ class Fault(object):
           Slick(az: 90.00°, pl: 45.00°, known_dir: True, time: 0.0)
         """
 
-        if not isinstance(ndx, int):
+        if not isinstance(ndx, numbers.Integral):
             raise FaultInputTypeException("Slickenline index must be integer")
 
         if not self._slicks:
@@ -266,7 +266,7 @@ class Fault(object):
         else:
             return self._slicks[ndx]
 
-    def slickGeom(self, ndx: int=0) -> Optional[Direct]:
+    def slickGeom(self, ndx: numbers.Integral=0) -> Optional[Direct]:
         """
         Return the geometric object (Direct or Axis) associated with slickenline.
 
@@ -283,7 +283,7 @@ class Fault(object):
             return self._slicks[ndx].s
 
     @property
-    def knownSense(self, ndx: int=0) -> Optional[bool]:
+    def knownSense(self, ndx: numbers.Integral=0) -> Optional[bool]:
         """
         Check if the Slick instance in the Fault instance has a known movement sense.
 
@@ -301,13 +301,13 @@ class Fault(object):
         else:
             return self._slicks[ndx].hasKnownSense
 
-    def rake(self, ndx: int=0) -> float:
+    def rake(self, ndx: numbers.Integral=0) -> numbers.Real:
         """
         Calculates the rake (sensu Aki & Richards, 1980) of the slickenline with the given index.
         The slickenlines must have known sense movement.
 
         :return: the rake value
-        :rtype: float
+        :rtype: numbers.Real
 
         Examples:
           >>> Fault(180, 45, slickenlines=[Slick(90, 0)]).rake()
@@ -355,7 +355,7 @@ class Fault(object):
         else:
             return angle
 
-    def isNormal(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld) -> bool:
+    def isNormal(self, ndx: numbers.Integral=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld) -> bool:
         """
         Checks if a fault has normal (downward) movements.
 
@@ -385,7 +385,7 @@ class Fault(object):
         else:
             return False
 
-    def isReverse(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld) -> bool:
+    def isReverse(self, ndx: numbers.Integral=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld) -> bool:
         """
         Checks if a fault has reverse movements.
 
@@ -415,7 +415,7 @@ class Fault(object):
         else:
             return False
 
-    def isRightLateral(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld) -> bool:
+    def isRightLateral(self, ndx: numbers.Integral=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld) -> bool:
         """
         Checks if a fault has right-lateral movements.
 
@@ -448,7 +448,7 @@ class Fault(object):
         else:
             return False
 
-    def isLeftLateral(self, ndx: int=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld) -> bool:
+    def isLeftLateral(self, ndx: numbers.Integral=0, rk_threshold=rake_threshold, dip_angle_threshold=angle_gplane_thrshld) -> bool:
         """
         Checks if a fault has left-lateral movements.
 

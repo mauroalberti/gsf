@@ -12,28 +12,28 @@ class GeoTransform(np.ndarray):
     """
 
     def __new__(cls,
-            inTopLeftX: Number,
-            inTopLeftY: Number,
-            inPixWidth: Number,
-            inPixHeight: Number,
-            inRotRow: Number=0.0,
-            inRotColumn: Number=0.0) -> 'GeoTransform':
+            inTopLeftX: numbers.Real,
+            inTopLeftY: numbers.Real,
+            inPixWidth: numbers.Real,
+            inPixHeight: numbers.Real,
+            inRotRow: numbers.Real=0.0,
+            inRotColumn: numbers.Real=0.0) -> 'GeoTransform':
         """
         Instance creator.
         Note: pixel height input is positive.
 
         :param inTopLeftX: top left corner of the top left pixel of the raster - x coord
-        :type inTopLeftX: Number
+        :type inTopLeftX: numbers.Real
         :param inTopLeftY:: top left corner of the top left pixel of the raster - y coord
-        :type inTopLeftY: Number
+        :type inTopLeftY: numbers.Real
         :param inPixWidth: pixel width
-        :type inPixWidth: Number
+        :type inPixWidth: numbers.Real
         :param inPixHeight: pixel height
-        :type inPixHeight: Number
+        :type inPixHeight: numbers.Real
         :param inRotRow: rotation
-        :type inRotRow: Number
+        :type inRotRow: numbers.Real
         :param inRotColumn: rotation
-        :type inRotColumn: Number
+        :type inRotColumn: numbers.Real
 
         :return: None
 
@@ -52,7 +52,7 @@ class GeoTransform(np.ndarray):
         ], dtype=float).view(cls)
 
     @classmethod
-    def fromGdalGt(cls, gdal_gt: Tuple[float, float, float, float, float, float]) -> 'GeoTransform':
+    def fromGdalGt(cls, gdal_gt: Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Real]) -> 'GeoTransform':
         """
         Creates a Geotransform from a GDAL-convention tuple.
 
@@ -89,12 +89,12 @@ class GeoTransform(np.ndarray):
         return self[0], self[1], self[2], self[3], self[4], self[5]
 
     @property
-    def topLeftX(self) -> float:
+    def topLeftX(self) -> numbers.Real:
         """
         Get top-left corner x value of the rasters.
 
         :return: the top-left corner x value, according to GDAL convention
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
           >>> GeoTransform(1500, 3000, 10, 10, 0, 0).topLeftX
@@ -104,12 +104,12 @@ class GeoTransform(np.ndarray):
         return self[0]
 
     @property
-    def topLeftY(self) -> float:
+    def topLeftY(self) -> numbers.Real:
         """
         Get top-left corner y value of the rasters.
 
         :return:  the top-left corner y value, according to GDAL convention.
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
           >>> GeoTransform(1500, 3000, 10, 10, 0, 0).topLeftY
@@ -119,12 +119,12 @@ class GeoTransform(np.ndarray):
         return self[3]
 
     @property
-    def pixWidth(self) -> float:
+    def pixWidth(self) -> numbers.Real:
         """
         Get East-West size of the rasters cell.
 
         :return:  the East-West size of the rasters cell
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
           >>> GeoTransform(1500, 3000, 10, 10, 0, 0).pixWidth
@@ -134,12 +134,12 @@ class GeoTransform(np.ndarray):
         return self[1]
 
     @property
-    def pixHeight(self) -> float:
+    def pixHeight(self) -> numbers.Real:
         """
         Get North-South size of the rasters cell.
 
         :return:  the North-South size of the rasters cell.
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
           >>> GeoTransform(1500, 3000, 10, 10, 0, 0).pixHeight
@@ -149,12 +149,12 @@ class GeoTransform(np.ndarray):
         return self[5]
 
     @property
-    def rotRow(self) -> float:
+    def rotRow(self) -> numbers.Real:
         """
         Get row rotation GT(2) (see GDAL documentation).
 
         :return:  the rasters rotation value GT(2).
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
           >>> GeoTransform(1500, 3000, 10, 10, 0, 0).rotRow
@@ -164,12 +164,12 @@ class GeoTransform(np.ndarray):
         return self[2]
 
     @property
-    def rotColumn(self) -> float:
+    def rotColumn(self) -> numbers.Real:
         """
         Get column rotation GT(4) (see GDAL documentation).
 
         :return:  the rasters rotation value GT(4).
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
           >>> GeoTransform(1500, 3000, 10, 10, 0, 0).rotColumn
@@ -193,7 +193,7 @@ class GeoTransform(np.ndarray):
         return self.rotRow != 0.0 or self.rotColumn != 0.0
 
 
-def ijPixToxyGeogr(geotransform: GeoTransform, i: Number, j: Number) -> Tuple[float, float]:
+def ijPixToxyGeogr(geotransform: GeoTransform, i: numbers.Real, j: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
     """
     Transforms from pixel to geographic coordinates.
 
@@ -207,9 +207,9 @@ def ijPixToxyGeogr(geotransform: GeoTransform, i: Number, j: Number) -> Tuple[fl
     :param geotransform: the used geotransform.
     :type geotransform: GeoTransform.
     :param i: the pixel i coordinate.
-    :type i: Number.
+    :type i: numbers.Real.
     :param j: the pixel i coordinate.
-    :type i:j Number.
+    :type i:j numbers.Real.
     :return: tuple storing geographic x-y pair
     :rtype: tuple of two floats.
 
@@ -229,7 +229,7 @@ def ijPixToxyGeogr(geotransform: GeoTransform, i: Number, j: Number) -> Tuple[fl
     return Xgeo, Ygeo
 
 
-def xyGeogrToijPix(geotransform: GeoTransform, x: Number, y: Number) -> Tuple[float, float]:
+def xyGeogrToijPix(geotransform: GeoTransform, x: numbers.Real, y: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
     """
     Transforms from geographic to pixel coordinates.
 
@@ -262,9 +262,9 @@ def xyGeogrToijPix(geotransform: GeoTransform, x: Number, y: Number) -> Tuple[fl
     :param geotransform: the input geotransform.
     :type geotransform: GeoTransform.
     :param x: the  geographic x coordinate.
-    :type x: Number.
+    :type x: numbers.Real.
     :param y: the geographic y coordinate.
-    :type y: Number
+    :type y: numbers.Real
     :return: tuple storing pixel x-y pair
     :rtype: tuple of two floats.
 
@@ -286,7 +286,7 @@ def xyGeogrToijPix(geotransform: GeoTransform, x: Number, y: Number) -> Tuple[fl
     return row, col
 
 
-def gtToxyCellCenters(gt: GeoTransform, num_rows: int, num_cols: int) -> Tuple[np.ndarray, np.ndarray]:
+def gtToxyCellCenters(gt: GeoTransform, num_rows: numbers.Integral, num_cols: numbers.Integral) -> Tuple[np.ndarray, np.ndarray]:
     """
     Create two arrays that represent the X and Y geographic coordinates of
     the cells CENTERS (not corners) given the geotransform.
@@ -294,9 +294,9 @@ def gtToxyCellCenters(gt: GeoTransform, num_rows: int, num_cols: int) -> Tuple[n
     :param gt: the source geotransform.
     :type gt: GeoTransform
     :param num_rows: the number of rows.
-    :type num_rows: int.
+    :type num_rows: numbers.Integral.
     :param num_cols: the number of the columns.
-    :type num_cols: int.
+    :type num_cols: numbers.Integral.
     :return: the two Numpy arrays representing the geographic X and Y coordinates.
     :rtype: Numpy array of float64.
 

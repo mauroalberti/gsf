@@ -13,7 +13,7 @@ class RotationAxis(object):
     Rotation axis, expressed by an Orientation and a rotation angle.
     """
 
-    def __init__(self, trend: [int, float], plunge: [int, float], rot_ang: [int, float]):
+    def __init__(self, trend: numbers.Real, plunge: numbers.Real, rot_ang: numbers.Real):
         """
         Constructor.
 
@@ -66,12 +66,12 @@ class RotationAxis(object):
         return RotationAxis(*rot_direct.d, rot_ang)
 
     @classmethod
-    def fromDirect(cls, direct: Direct, angle: float):
+    def fromDirect(cls, direct: Direct, angle: numbers.Real):
         """
         Class constructor from a Direct instance and an angle value.
 
         :param direct: a Direct instance
-        :param angle: float value
+        :param angle: numbers.Real.
         :return: RotationAxis instance
 
         Example:
@@ -84,7 +84,7 @@ class RotationAxis(object):
         return RotationAxis(*direct.d, angle)
 
     @classmethod
-    def fromVect(cls, vector: Vect, angle: float):
+    def fromVect(cls, vector: Vect, angle: numbers.Real):
         """
         Class constructor from a Vect instance and an angle value.
 
@@ -191,7 +191,7 @@ class RotationAxis(object):
         rot_ang = - (180.0 - self.rotAngle) % 360.0
         return RotationAxis.fromDirect(self.dr, rot_ang)
 
-    def strictlyEquival(self, another, angle_tolerance: [int, float]=VECTOR_ANGLE_THRESHOLD) -> bool:
+    def strictlyEquival(self, another, angle_tolerance: numbers.Real=VECTOR_ANGLE_THRESHOLD) -> bool:
         """
         Checks if two RotationAxis are almost equal, based on a strict checking
         of the Direct component and of the rotation angle.
@@ -199,7 +199,7 @@ class RotationAxis(object):
         :param another: another RotationAxis instance, to be compared with
         :type another: RotationAxis
         :parameter angle_tolerance: the tolerance as the angle (in degrees)
-        :type angle_tolerance: int, float
+        :type angle_tolerance: numbers.Real.
         :return: the equivalence (true/false) between the two compared RotationAxis
         :rtype: bool
 

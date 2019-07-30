@@ -12,7 +12,7 @@ from .scalars import *
 from .interpolations import scalars_bilin_interp as s_interp_bilinear, interp_linear
 
 
-def arrToTuple(arr1D: np.array) -> Tuple[float, ...]:
+def arrToTuple(arr1D: np.array) -> Tuple[numbers.Real, ...]:
     """
     Converts a 1D arrays into a tuple of floats.
     It assumes a 1D np.array as input.
@@ -21,7 +21,7 @@ def arrToTuple(arr1D: np.array) -> Tuple[float, ...]:
     :param arr1D: the 1D-arrays whose components have to be extracted.
     :type arr1D: numpy array.
     :return: a tuple derived from the array values extraction.
-    :rtype: tuple of float.
+    :rtype: tuple of numbers.Real.
 
     Examples:
       >>> levels = np.array([1,2,3,4,5])
@@ -32,7 +32,7 @@ def arrToTuple(arr1D: np.array) -> Tuple[float, ...]:
     return tuple(map(float, arr1D))
 
 
-def toFloats(iterable_obj: Sequence[Number]) -> List[float]:
+def toFloats(iterable_obj: Sequence[numbers.Real]) -> List[numbers.Real]:
     """
     Converts an iterable object storing float-compatible values to a list of floats.
 
@@ -52,8 +52,8 @@ def toFloats(iterable_obj: Sequence[Number]) -> List[float]:
 def arraysAreClose(
         a_array: 'np.array',
         b_array: 'np.array',
-        rtol: float = 1e-012,
-        atol: float = 1e-12,
+        rtol: numbers.Real = 1e-012,
+        atol: numbers.Real = 1e-12,
         equal_nan: bool = False,
         equal_inf: bool = False) -> bool:
     """
@@ -119,7 +119,7 @@ def arraysSameShape(
     return a_array.shape == b_array.shape
 
 
-def array_bilin_interp(arr: 'np.array', i: Number, j: Number) -> float:
+def array_bilin_interp(arr: 'np.array', i: numbers.Real, j: numbers.Real) -> numbers.Real:
     """
     Interpolate the z value at a given i,j values couple.
     Interpolation method: bilinear.
@@ -131,11 +131,11 @@ def array_bilin_interp(arr: 'np.array', i: Number, j: Number) -> float:
     :param arr: array with values for which the interpolation will be made.
     :type arr: Numpy array.
     :param i: i array index of the point (may be fractional).
-    :type i: Number.
+    :type i: numbers.Real.
     :param j: j array index of the point (may be fractional).
-    :type j: Number.
+    :type j: numbers.Real.
     :return: interpolated z value (may be math.nan).
-    :rtype: float.
+    :rtype: numbers.Real.
     """
 
     i_max, j_max = arr.shape

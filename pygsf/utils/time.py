@@ -7,7 +7,7 @@ import calendar
 def standard_gpstime_to_seconds(time_str):
     """
     Naive and experimental implementation of a "normal" date-time string from GPX
-    into a float value that should represent seconds since January 1, 1970.
+    into a numbers.Real value that should represent seconds since January 1, 1970.
     Use just as a first , it-could-be-correct, tool.
 
     Example:

@@ -36,7 +36,7 @@ class Quaternion(object):
 
         return "Quaternion({:.5f}, {:.5f}, {:.5f}, {:.5f})".format(self.q[0], self.q[1], self.q[2], self.q[3])
 
-    def components(self) -> Tuple[float, float, float, float]:
+    def components(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real]:
         """
         Returns the quaternion xyz as a float tuple.
 
@@ -51,12 +51,12 @@ class Quaternion(object):
         return self.q[0], self.q[1], self.q[2], self.q[3]
 
     @property
-    def scalar(self) -> float:
+    def scalar(self) -> numbers.Real:
         """
         Return the scalar component of a quaternion.
 
         :return: scalar component
-        :rtype: float
+        :rtype: numbers.Real.
 
         Examples:
           >>> Quaternion(1, 2, 0, 3).scalar
@@ -321,12 +321,12 @@ class Quaternion(object):
 
         return Quaternion.fromArray(self.q - another.q)
 
-    def multByScalar(self, val: Number) -> 'Quaternion':
+    def multByScalar(self, val: numbers.Real) -> 'Quaternion':
         """
         Multiplication of a quaternion by a scalar value.
 
         :param val: scalar multiplicand
-        :type val: int or float
+        :type val: numbers.Real.
         :return: Quaternion instance
 
         Examples:
@@ -336,7 +336,7 @@ class Quaternion(object):
           Quaternion(3.80000, -2.40000, 7.20000, 8.20000)
         """
 
-        if not isinstance(val, (int, float)):
+        if not isinstance(val, numbers.Real):
             raise QuaternionInputException("Multiplier must be int or float")
         
         return Quaternion.fromArray(self.q * val)
@@ -413,13 +413,13 @@ class Quaternion(object):
 
         return self.multByQuater(Quaternion.fromVect(vect))
 
-    def __mul__(self, another: [int, float, Vect, 'Quaternion']) -> 'Quaternion':
+    def __mul__(self, another: [numbers.Real, Vect, 'Quaternion']) -> 'Quaternion':
         """
         Wrapper for quaternion multiplication.
         Some examples are taken from Kuipers, 2002, chp. 5.
 
         :param another: multiplier.
-        :type another: integer, float, Vect or Quaternion.
+        :type another: numbers.Real, Vect or Quaternion.
         :return: multiplied quaternion.
         :rtype: Quaternion.
 
@@ -434,7 +434,7 @@ class Quaternion(object):
           Quaternion(0.00000, 1.00000, 3.00000, 2.00000)
         """
 
-        if isinstance(another, (int, float)):
+        if isinstance(another, numbers.Real):
             return self.multByScalar(another)
         elif isinstance(another, Vect):
             return self.multByVect(another)
@@ -467,12 +467,12 @@ class Quaternion(object):
 
         return Quaternion(a, b, c, d)
 
-    def sqrdNorm(self) -> float:
+    def sqrdNorm(self) -> numbers.Real:
         """
         Squared norm of a quaternion.
 
         :return: quaternion squared norm.
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
           >>> Quaternion(1, 0, 0, 0).sqrdNorm()
@@ -487,12 +487,12 @@ class Quaternion(object):
 
         return self.q[0]**2 + self.q[1]**2 + self.q[2]**2 + self.q[3]**2
 
-    def __abs__(self) -> float:
+    def __abs__(self) -> numbers.Real:
         """
         Quaternion absolute value.
 
         :return: absolute value (magnitude) of the quaternion.
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
           >>> abs(Quaternion(1, 0, 0, 0))
@@ -504,13 +504,13 @@ class Quaternion(object):
         return sqrt(self.sqrdNorm())
 
     @property
-    def norm(self) -> float:
+    def norm(self) -> numbers.Real:
         """
         The norm of the quaternion.
         Equivalent to its absolute value.
 
         :return: absolute value (magnitude) of the quaternion.
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Examples:
           >>> Quaternion(1, 0, 0, 0).norm
@@ -552,12 +552,12 @@ class Quaternion(object):
 
         return abs(1.0 - sqrt(self.sqrdNorm())) < QUAT_NORMALIZ_TOL
 
-    def divByScalar(self, denominator: Number) -> 'Quaternion':
+    def divByScalar(self, denominator: numbers.Real) -> 'Quaternion':
         """
         Division of a quaternion by a scalar.
 
         :param denominator: divisor.
-        :type denominator: int, float
+        :type denominator: numbers.Real.
         :return: division result.
         :rtype: Quaternion.
 
@@ -570,7 +570,7 @@ class Quaternion(object):
           pygsf.mathematics.exceptions.QuaternionCalculationException: Quaternion division by almost zero value
         """
 
-        if not isinstance(denominator, (int, float)):
+        if not isinstance(denominator, numbers.Real):
             raise QuaternionCalculationException("Quaternion divisor must be integer or float")
         elif abs(denominator) < QUAT_DIVISION_TOL:
             raise QuaternionCalculationException("Quaternion division by almost zero value")
@@ -594,7 +594,7 @@ class Quaternion(object):
 
         return self * (another.conjugate.divByScalar(another.sqrdNorm()))
 
-    def __truediv__(self, another: [int, float, 'Quaternion']) -> 'Quaternion':
+    def __truediv__(self, another: [numbers.Real, 'Quaternion']) -> 'Quaternion':
         """
         Wrapper for quaternion division.
         This is only compatible with Python 3.
@@ -611,7 +611,7 @@ class Quaternion(object):
           Quaternion(1.00000, 0.00000, 0.00000, 0.00000)
         """
 
-        if isinstance(another, (int, float)):
+        if isinstance(another, numbers.Real):
             return self.divByScalar(another)
         elif isinstance(another, Quaternion):
             return self.divByQuater(another)
@@ -642,16 +642,16 @@ class Quaternion(object):
             return self / sqrt(self.sqrdNorm())
 
     def isCloseTo(self, another: 'Quaternion',
-        rtol: float=1e-012, atol:float=1e-12, equal_nan: bool=False, equal_inf: bool=False):
+        rtol: numbers.Real=1e-012, atol:numbers.Real=1e-12, equal_nan: bool=False, equal_inf: bool=False):
         """
         Check for quaternion equivalence.
 
         :param another: Quaternion instance.
         :type another: Quaternion.
         :param rtol: relative tolerance
-        :type rtol: float.
+        :type rtol: numbers.Real.
         :param atol: absolute tolerance
-        :type atol: float.
+        :type atol: numbers.Real.
         :param equal_nan: nan values are considered equal to themselves.
         :type equal_nan: bool.
         :param equal_inf: inf values are considered equal to themselves
@@ -672,7 +672,7 @@ class Quaternion(object):
 
         return arraysAreClose(self.q, another.q, rtol, atol, equal_nan, equal_inf)
 
-    def rotAngle(self) -> float:
+    def rotAngle(self) -> numbers.Real:
         """
         Calculate the rotation angle associated with a normalized quaternion.
         Formula from p. 710 in Kagan, Y. Y., 1991. 3-D rotation of double-couple earthquake sources.

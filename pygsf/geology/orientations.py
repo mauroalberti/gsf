@@ -18,7 +18,7 @@ class Azim(object):
     Azim class
     """
 
-    def __init__(self, val: [int, float], unit: str='d'):
+    def __init__(self, val: numbers.Real, unit: str='d'):
         """
         Creates an azimuth instance.
 
@@ -46,7 +46,7 @@ class Azim(object):
         if unit not in ("d", "r"):
             raise OrienInputException("Unit input must be 'd' or 'r'")
 
-        if not (isinstance(val, (int, float))):
+        if not (isinstance(val, numbers.Real)):
             raise OrienInputException("Input azimuth value must be int/float")
         elif not isfinite(val):
             raise OrienInputException("Input azimuth value must be finite")
@@ -87,7 +87,7 @@ class Azim(object):
         return self.a
 
     @classmethod
-    def fromXY(cls, x: [int, float], y: [int, float]) -> 'Azim':
+    def fromXY(cls, x: numbers.Real, y: numbers.Real) -> 'Azim':
         """
         Calculates azimuth given cartesian components.
 
@@ -119,7 +119,7 @@ class Azim(object):
 
         # input vals checks
         vals = [x, y]
-        if not all(map(lambda val: isinstance(val, (int, float)), vals)):
+        if not all(map(lambda val: isinstance(val, numbers.Real), vals)):
             raise OrienInputException("Input x and y values must be integer or float")
         elif not all(map(isfinite, vals)):
             raise OrienInputException("Input x and y values must be finite")
@@ -131,7 +131,7 @@ class Azim(object):
 
         return "Azimuth({:.2f}°)".format(self.d)
 
-    def toXY(self) -> Tuple[float, float]:
+    def toXY(self) -> Tuple[numbers.Real, numbers.Real]:
         """
         Converts an azimuth to x-y components.
 
@@ -159,7 +159,7 @@ class Plunge(object):
     Class representing a plunge
     """
 
-    def __init__(self, val: [int, float], unit: str='d'):
+    def __init__(self, val: numbers.Real, unit: str='d'):
         """
         Creates a Plunge instance.
 
@@ -188,7 +188,7 @@ class Plunge(object):
             raise OrienInputException("Unit input must be 'd' (for degrees) or 'r' (for radians)")
 
         # val check
-        if not (isinstance(val, (int, float))):
+        if not (isinstance(val, numbers.Real)):
             raise OrienInputException("Input plunge value must be int/float")
         elif not isfinite(val):
             raise OrienInputException("Input plunge value must be finite")
@@ -235,7 +235,7 @@ class Plunge(object):
         return self.p
 
     @classmethod
-    def fromHZ(cls, h: [int, float], z: [int, float]) -> 'Plunge':
+    def fromHZ(cls, h: numbers.Real, z: numbers.Real) -> 'Plunge':
         """
         Calculates plunge from h and z components.
 
@@ -266,7 +266,7 @@ class Plunge(object):
         # input vals check
 
         vals = [h, z]
-        if not all(map(lambda val: isinstance(val, (int, float)), vals)):
+        if not all(map(lambda val: isinstance(val, numbers.Real), vals)):
             raise OrienInputException("Input h and z values must be integer or float")
         elif not all(map(isfinite, vals)):
             raise OrienInputException("Input h and z values must be finite")
@@ -413,7 +413,7 @@ class Direct(object):
         return self._pl
 
     @classmethod
-    def fromAzPl(cls, az: [int, float], pl: [int, float], unit='d'):
+    def fromAzPl(cls, az: numbers.Real, pl: numbers.Real, unit='d'):
         """
         Class constructor from trend and plunge.
 
@@ -449,7 +449,7 @@ class Direct(object):
         return cls(azim, plng)
 
     @classmethod
-    def _from_xyz(cls, x: [int, float], y: [int, float], z: [int, float]) -> 'Direct':
+    def _from_xyz(cls, x: numbers.Real, y: numbers.Real, z: numbers.Real) -> 'Direct':
         """
         Private class constructor from three Cartesian values. Note: norm of components is unit.
 
@@ -467,7 +467,7 @@ class Direct(object):
         return cls(az, pl)
 
     @classmethod
-    def fromXYZ(cls, x: [int, float], y: [int, float], z: [int, float]) -> 'Direct':
+    def fromXYZ(cls, x: numbers.Real, y: numbers.Real, z: numbers.Real) -> 'Direct':
         """
         Class constructor from three generic Cartesian values.
 
@@ -542,7 +542,7 @@ class Direct(object):
 
         return "Direct(az: {:.2f}°, pl: {:.2f}°)".format(*self.d)
 
-    def toXYZ(self) -> Tuple[float, float, float]:
+    def toXYZ(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real]:
         """
         Converts a direction to a tuple of x, y and z cartesian components (with unit norm).
 
@@ -624,12 +624,12 @@ class Direct(object):
         return self.__class__.fromAzPl(az, pl, unit='r')
 
     @property
-    def colatNorth(self) -> float:
+    def colatNorth(self) -> numbers.Real:
         """
         Calculates the colatitude from the North (top).
 
         :return: an angle between 0 and 180 (in degrees).
-        :rtype: float
+        :rtype: numbers.Real.
 
         Examples:
           >>> Direct.fromAzPl(320, 90).colatNorth
@@ -647,12 +647,12 @@ class Direct(object):
         return plng2colatTop(self.pl.d)
 
     @property
-    def colatSouth(self) -> float:
+    def colatSouth(self) -> numbers.Real:
         """
         Calculates the colatitude from the South (bottom).
 
         :return: an angle between 0 and 180 (in degrees).
-        :rtype: float
+        :rtype: numbers.Real.
 
         Examples:
           >>> Direct.fromAzPl(320, 90).colatSouth
@@ -1134,7 +1134,7 @@ class Plane(object):
      - dip angle: [0, 90.0]: downward-pointing.
     """
 
-    def __init__(self, azim: [int, float], dip_ang: [int, float], is_rhr_strike: bool=False):
+    def __init__(self, azim: numbers.Real, dip_ang: numbers.Real, is_rhr_strike: bool=False):
         """
         Geological plane constructor.
 
@@ -1173,9 +1173,9 @@ class Plane(object):
 
             return (rhr_strk + 90.0) % 360.0
 
-        if not isinstance(azim, (int, float)):
+        if not isinstance(azim, numbers.Real):
             raise OrienInputException("Source azimuth must be number")
-        if not isinstance(dip_ang, (int, float)):
+        if not isinstance(dip_ang, numbers.Real):
             raise OrienInputException("Source dip angle must be number")
         if not isinstance(is_rhr_strike, bool):
             raise OrienInputException("Source azimuth type must be boolean")
@@ -1504,7 +1504,7 @@ class Plane(object):
 
         return gpl_axis.angle(an_axis)
 
-    def isSubParallel(self, another, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD):
+    def isSubParallel(self, another, angle_tolerance: numbers.Real=PLANE_ANGLE_THRESHOLD):
         """
         Check that two GPlanes are sub-parallel
 
@@ -1527,7 +1527,7 @@ class Plane(object):
 
         return self.angle(another) < angle_tolerance
 
-    def contains(self, direct: Direct, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD) -> bool:
+    def contains(self, direct: Direct, angle_tolerance: numbers.Real=PLANE_ANGLE_THRESHOLD) -> bool:
         """
         Check that a plane contains a direction instance.
 
@@ -1548,7 +1548,7 @@ class Plane(object):
 
         return direct.isSubOrthog(plane_norm, angle_tolerance)
 
-    def isSubOrthog(self, another, angle_tolerance: [int, float]=PLANE_ANGLE_THRESHOLD):
+    def isSubOrthog(self, another, angle_tolerance: numbers.Real=PLANE_ANGLE_THRESHOLD):
         """
         Check that two GPlanes are sub-orthogonal.
 
@@ -1615,12 +1615,12 @@ class Plane(object):
 
         return Direct.fromXYZ(x, y, z)
 
-    def isVLowAngle(self, dip_angle_threshold: [int, float]=angle_gplane_thrshld):
+    def isVLowAngle(self, dip_angle_threshold: numbers.Real=angle_gplane_thrshld):
         """
         Checks if a geological plane is very low angle.
 
         :param dip_angle_threshold: the limit for the plane angle, in degrees
-        :type dip_angle_threshold: int, float
+        :type dip_angle_threshold: numbers.Real.
         :return: bool flag indicating if it is very low angle
 
         Examples:
@@ -1632,12 +1632,12 @@ class Plane(object):
 
         return self.da < dip_angle_threshold
 
-    def isVHighAngle(self, dip_angle_threshold: [int, float]=angle_gplane_thrshld):
+    def isVHighAngle(self, dip_angle_threshold: numbers.Real=angle_gplane_thrshld):
         """
         Checks if a geological plane is very high angle.
 
         :param dip_angle_threshold: the limit for the plane angle, in degrees
-        :type dip_angle_threshold: int, float
+        :type dip_angle_threshold: numbers.Real.
         :return: bool flag indicating if it is very high angle
 
         Examples:
@@ -1668,25 +1668,25 @@ class Plane(object):
         d = - (a * pt.x + b * pt.y + c * pt.z)
         return CPlane(a, b, c, d, epsg_cd=pt.epsg())
 
-    def slope_x_dir(self) -> float:
+    def slope_x_dir(self) -> numbers.Real:
         """
         Calculate the slope of a given plane along the x direction.
         The plane orientation  is expressed following the geological convention.
 
         :return: the slope along the x direction
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Example:
         """
         return - sin(radians(self.dd)) * tan(radians(self.da))
 
-    def slope_y_dir(self) -> float:
+    def slope_y_dir(self) -> numbers.Real:
         """
         Calculate the slope of a given plane along the y direction.
         The plane orientation  is expressed following the geological convention.
 
         :return: the slope along the y direction
-        :rtype: float.
+        :rtype: numbers.Real.
 
         Example:
         """
