@@ -91,7 +91,7 @@ class TestRKFInterpolation(unittest.TestCase):
 
         ga = GeoArray(
             inGeotransform=gt1,
-            epsg_cd=-1,
+            epsg_cd=32633,
             inLevels=[fx1, fy1])
 
         time_increm = 1.0e-4
@@ -102,7 +102,10 @@ class TestRKFInterpolation(unittest.TestCase):
 
         steps = number_of_cycles * (period / time_increm)
 
-        first_pt = Point(0, 20, epsg_cd=2000)
+        first_pt = Point(
+            x=0,
+            y=20,
+            epsg_cd=32633)
 
         str_pt = first_pt
         pts_x, pts_y = [first_pt.x], [first_pt.y]

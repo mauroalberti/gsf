@@ -5,6 +5,7 @@ from typing import Tuple, Optional
 
 import numbers
 
+from ..types.utils import *
 from .vectorial.geometries import Point
 from .rasters.geoarray import GeoArray
 
@@ -36,7 +37,11 @@ def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[numbers.Real
     return vx, vy
 
 
-def interpolate_rkf(geoarray: GeoArray, delta_time: numbers.Real, start_pt: Point) -> Tuple[Optional[Point], Optional[numbers.Real]]:
+def interpolate_rkf(
+        geoarray: GeoArray,
+        delta_time: numbers.Real,
+        start_pt: Point
+    ) -> Tuple[Optional[Point], Optional[numbers.Real]]:
     """
     Interpolate point-like object position according to the Runge-Kutta-Fehlberg method.
 
@@ -52,14 +57,24 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: numbers.Real, start_pt: Poin
     Examples:
     """
 
+    check_type(geoarray, "Geoarray", GeoArray)
+    epsg_cd = geoarray.epsg()
+
+    check_type(delta_time, "Delta time", numbers.Real)
+
+    check_type(start_pt, "Start point", Point)
+    if start_pt.epsg() != epsg_cd:
+        raise Exception("Geoarray has {} EPSG code but start point has {}".format(epsg_cd, start_pt.epsg()))
+
     k1_vx, k1_vy = point_velocity(geoarray, start_pt)
 
     if k1_vx is None or k1_vy is None:
         return None, None
 
     k2_pt = Point(
-        start_pt.x + 0.25 * delta_time * k1_vx,
-        start_pt.y + 0.25 * delta_time * k1_vy
+        x=start_pt.x + 0.25 * delta_time * k1_vx,
+        y=start_pt.y + 0.25 * delta_time * k1_vy,
+        epsg_cd=epsg_cd
     )
 
     k2_vx, k2_vy = point_velocity(geoarray, k2_pt)
@@ -68,8 +83,9 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: numbers.Real, start_pt: Poin
         return None, None
 
     k3_pt = Point(
-        start_pt.x + (3.0 / 32.0) * delta_time * k1_vx + (9.0 / 32.0) * delta_time * k2_vx,
-        start_pt.y + (3.0 / 32.0) * delta_time * k1_vy + (9.0 / 32.0) * delta_time * k2_vy
+        x=start_pt.x + (3.0 / 32.0) * delta_time * k1_vx + (9.0 / 32.0) * delta_time * k2_vx,
+        y=start_pt.y + (3.0 / 32.0) * delta_time * k1_vy + (9.0 / 32.0) * delta_time * k2_vy,
+        epsg_cd=epsg_cd
     )
 
     k3_vx, k3_vy = point_velocity(geoarray, k3_pt)
@@ -78,8 +94,10 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: numbers.Real, start_pt: Poin
         return None, None
 
     k4_pt = Point(
-        start_pt.x + (1932.0 / 2197.0) * delta_time * k1_vx - (7200.0 / 2197.0) * delta_time * k2_vx + (7296.0 / 2197.0) * delta_time * k3_vx,
-        start_pt.y + (1932.0 / 2197.0) * delta_time * k1_vy - (7200.0 / 2197.0) * delta_time * k2_vy + (7296.0 / 2197.0) * delta_time * k3_vy)
+        x=start_pt.x + (1932.0 / 2197.0) * delta_time * k1_vx - (7200.0 / 2197.0) * delta_time * k2_vx + (7296.0 / 2197.0) * delta_time * k3_vx,
+        y=start_pt.y + (1932.0 / 2197.0) * delta_time * k1_vy - (7200.0 / 2197.0) * delta_time * k2_vy + (7296.0 / 2197.0) * delta_time * k3_vy,
+        epsg_cd=epsg_cd
+    )
 
     k4_vx, k4_vy = point_velocity(geoarray, k4_pt)
 
@@ -87,8 +105,10 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: numbers.Real, start_pt: Poin
         return None, None
 
     k5_pt = Point(
-        start_pt.x + (439.0 / 216.0) * delta_time * k1_vx - 8.0 * delta_time * k2_vx + (3680.0 / 513.0) * delta_time * k3_vx - (845.0 / 4104.0) * delta_time * k4_vx,
-        start_pt.y + (439.0 / 216.0) * delta_time * k1_vy - 8.0 * delta_time * k2_vy + (3680.0 / 513.0) * delta_time * k3_vy - (845.0 / 4104.0) * delta_time * k4_vy)
+        x=start_pt.x + (439.0 / 216.0) * delta_time * k1_vx - 8.0 * delta_time * k2_vx + (3680.0 / 513.0) * delta_time * k3_vx - (845.0 / 4104.0) * delta_time * k4_vx,
+        y=start_pt.y + (439.0 / 216.0) * delta_time * k1_vy - 8.0 * delta_time * k2_vy + (3680.0 / 513.0) * delta_time * k3_vy - (845.0 / 4104.0) * delta_time * k4_vy,
+        epsg_cd=epsg_cd
+    )
 
     k5_vx, k5_vy = point_velocity(geoarray, k5_pt)
 
@@ -96,10 +116,12 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: numbers.Real, start_pt: Poin
         return None, None
 
     k6_pt = Point(
-        start_pt.x - (8.0 / 27.0) * delta_time * k1_vx + 2.0 * delta_time * k2_vx - (3544.0 / 2565.0) * delta_time * k3_vx + (1859.0 / 4104.0) * delta_time * k4_vx - (
+        x=start_pt.x - (8.0 / 27.0) * delta_time * k1_vx + 2.0 * delta_time * k2_vx - (3544.0 / 2565.0) * delta_time * k3_vx + (1859.0 / 4104.0) * delta_time * k4_vx - (
                           11.0 / 40.0) * delta_time * k5_vx,
-        start_pt.y - (8.0 / 27.0) * delta_time * k1_vy + 2.0 * delta_time * k2_vy - (3544.0 / 2565.0) * delta_time * k3_vy + (1859.0 / 4104.0) * delta_time * k4_vy - (
-                          11.0 / 40.0) * delta_time * k5_vy)
+        y=start_pt.y - (8.0 / 27.0) * delta_time * k1_vy + 2.0 * delta_time * k2_vy - (3544.0 / 2565.0) * delta_time * k3_vy + (1859.0 / 4104.0) * delta_time * k4_vy - (
+                          11.0 / 40.0) * delta_time * k5_vy,
+        epsg_cd=epsg_cd
+    )
 
     k6_vx, k6_vy = point_velocity(geoarray, k6_pt)
 
@@ -113,8 +135,10 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: numbers.Real, start_pt: Poin
             (25.0 / 216.0) * k1_vy + (1408.0 / 2565.0) * k3_vy + (2197.0 / 4104.0) * k4_vy - (
             1.0 / 5.0) * k5_vy)
     temp_pt = Point(
-        rkf_4o_x,
-        rkf_4o_y)
+        x=rkf_4o_x,
+        y=rkf_4o_y,
+        epsg_cd=epsg_cd
+    )
 
     interp_x = start_pt.x + delta_time * (
             (16.0 / 135.0) * k1_vx + (6656.0 / 12825.0) * k3_vx + (28561.0 / 56430.0) * k4_vx - (
@@ -123,9 +147,10 @@ def interpolate_rkf(geoarray: GeoArray, delta_time: numbers.Real, start_pt: Poin
             (16.0 / 135.0) * k1_vy + (6656.0 / 12825.0) * k3_vy + (28561.0 / 56430.0) * k4_vy - (
             9.0 / 50.0) * k5_vy + (2.0 / 55.0) * k6_vy)
     interp_pt = Point(
-        interp_x,
-        interp_y,
-        epsg_cd=start_pt.epsg())
+        x=interp_x,
+        y=interp_y,
+        epsg_cd=epsg_cd
+    )
 
     interp_pt_error_estim = interp_pt.dist2DWith(temp_pt)
 

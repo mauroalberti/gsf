@@ -346,7 +346,7 @@ class Vect(object):
         Example;
           >>> Vect(1, 0, 1).scale(2.5)
           Vect(2.5000, 0.0000, 2.5000, EPSG: -1)
-          >>> Vect(1, 0, 1, 0.0, 32633).scale(2.5)
+          >>> Vect(1, 0, 1, 32633).scale(2.5)
           Vect(2.5000, 0.0000, 2.5000, EPSG: 32633)
           >>> Vect(1, 0, 1).scale(np.nan) is None
           True

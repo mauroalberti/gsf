@@ -8,6 +8,7 @@ from enum import Enum
 from array import array
 import itertools
 
+from ...types.utils import *
 from ...mathematics.defaults import MIN_SEPARATION_THRESHOLD
 from ...mathematics.statistics import get_statistics
 
@@ -383,8 +384,10 @@ class Point(object):
           5.0
         """
 
+        check_type(another, "Point", Point)
+
         if self.crs() != another.crs():
-            raise Exception("Input point should be Point but is {}".format(type(another)))
+            raise Exception("Input point should have {} EPSG code but has {}".format(self.crs(), another.crs()))
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
@@ -405,11 +408,13 @@ class Point(object):
           >>> Point(1., 1., 1., epsg_cd=32632).dist2DWith(Point(4., 5., 7.))
           Traceback (most recent call last):
           ...
-          Exception: Input point should be Point but is <class 'pygsf.spatial.vectorial.geometries.Point'>
+          Exception: Second point should have 32632 EPSG code but has -1
         """
 
+        check_type(another, "Second point", Point)
+
         if self.crs() != another.crs():
-            raise Exception("Input point should be Point but is {}".format(type(another)))
+            raise Exception("Second point should have {} EPSG code but has {}".format(self.epsg(), another.epsg()))
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
@@ -1030,7 +1035,7 @@ class Segment(object):
 
         return self.end_pt().z - self.start_pt().z
 
-    def length_2d(self) -> numbers.Real:
+    def length2D(self) -> numbers.Real:
         """
         Returns the horizontal length of the segment.
 
@@ -1040,7 +1045,7 @@ class Segment(object):
 
         return self.start_pt().dist2DWith(self.end_pt())
 
-    def length_3d(self) -> numbers.Real:
+    def length3D(self) -> numbers.Real:
 
         return self.start_pt().dist3DWith(self.end_pt())
 
@@ -1051,7 +1056,7 @@ class Segment(object):
         :return: optional numbers.Real.
         """
 
-        len2d = self.length_2d()
+        len2d = self.length2D()
 
         if len2d == 0.0:
             return None
@@ -1080,6 +1085,16 @@ class Segment(object):
                     self.delta_z(),
                     epsg_cd=self.epsg())
 
+    def antivector(self) -> Vect:
+        """
+        Returns the vector pointing from the segment end to the segment start.
+
+        :return: the vector pointing from the segment end to the segment start.
+        :rtype: Vect.
+        """
+
+        return self.vector().invert()
+
     def segment_2d_m(self) -> Optional[numbers.Real]:
 
         denom = self.end_pt().x - self.start_pt().x
@@ -1103,8 +1118,8 @@ class Segment(object):
         if self.crs() != another.crs():
             return None
 
-        s_len2d = self.length_2d()
-        a_len2d = another.length_2d()
+        s_len2d = self.length2D()
+        a_len2d = another.length2D()
 
         if s_len2d == 0.0 or a_len2d == 0.0:
             return None
@@ -1131,20 +1146,52 @@ class Segment(object):
 
         return Point(x0, y0, epsg_cd=self.epsg())
 
-    def contains_2d_pt(self, pt2d) -> bool:
+    def contains_pt(self,
+        pt: Point) -> bool:
+        """
+        Checks whether a point is contained in a segment.
+        It is contained, the angle between
+        :param pt: the point for which to check containement.
+        :return: bool.
+        :raise: Exception.
 
-        segment_length2d = self.length_2d()
-        segmentstart_pt2d_distance = self.start_pt().dist2DWith(pt2d)
-        segmentend_pt2d_distance = self.end_pt().dist2DWith(pt2d)
+        Examples:
+          >>> segment = Segment(Point(0, 0, 0), Point(1, 0, 0),)
+          >>> segment.contains_pt(Point(0, 0, 0))
+          True
+          >>> segment.contains_pt(Point(1, 0, 0))
+          True
+          >>> segment.contains_pt(Point(0.5, 0, 0))
+          True
+          >>> segment.contains_pt(Point(0.5, 0.00001, 0))
+          False
+          >>> segment.contains_pt(Point(0.5, 0, 0.00001))
+          False
+          >>> segment.contains_pt(Point(1.00001, 0, 0))
+          False
+          >>> segment.contains_pt(Point(0.000001, 0, 0))
+          True
+          >>> segment.contains_pt(Point(-0.000001, 0, 0))
+          False
+          >>> segment.contains_pt(Point(0.5, 1000, 1000))
+          False
+        """
 
-        if segmentstart_pt2d_distance > segment_length2d or \
-                segmentend_pt2d_distance > segment_length2d:
-            return False
-        else:
-            return True
+        check_type(pt, "Point", Point)
+
+        segment_length = self.length3D()
+        length_startpt_pt = self.start_pt().dist3DWith(pt)
+        length_endpt_pt = self.end_pt().dist3DWith(pt)
+
+        return areClose(
+            a=segment_length,
+            b=length_startpt_pt + length_endpt_pt
+        )
 
     def fast_2d_contains_pt(self, pt2d) -> bool:
         """
+        Deprecated. Use 'contains_pt'.
+
         to work properly, this function requires that the pt lies on the line defined by the segment
         """
 
@@ -1200,7 +1247,7 @@ class Segment(object):
         if not densify_distance > 0.0:
             raise Exception("Densify distance must be positive")
 
-        segment_length = self.length_2d()
+        segment_length = self.length2D()
 
         s_list = []
         n = 0
@@ -1236,7 +1283,7 @@ class Segment(object):
         if densify_distance <= 0.0:
             raise Exception("Input densify distance must be positive")
 
-        length2d = self.length_2d()
+        length2d = self.length2D()
 
         vect = self.vector()
         vers_2d = vect.versor2D()
@@ -1280,7 +1327,7 @@ class Segment(object):
         :rtype: Optional[CPlane].
         """
 
-        if self.length_2d() == 0.0:
+        if self.length2D() == 0.0:
             return None
 
         # arbitrary point on the same vertical as end point
