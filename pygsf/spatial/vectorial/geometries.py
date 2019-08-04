@@ -448,28 +448,42 @@ class Point(object):
 
         return self.scale(-1)
 
-    def isCoinc(self, another: 'Point', tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
+    def isCoinc(self,
+            another: 'Point',
+            tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+    ) -> bool:
         """
         Check spatial coincidence of two points
 
+        :param another: the point to compare.
+        :type another: Point.
+        :param tolerance: the maximum allowed distance between the two points.
+        :type tolerance: numbers.Real.
+        :return: whether the two points are coincident.
+        :rtype: bool.
+        :raise: Exception.
+
         Example:
-          >>> Point(1., 0., -1.).isCoinc(Point(1., 1.5, -1.)) is None
-          True
+          >>> Point(1., 0., -1.).isCoinc(Point(1., 1.5, -1.))
+          False
           >>> Point(1., 0., 0., epsg_cd=32632).isCoinc(Point(1., 0., 0., epsg_cd=32632))
           True
-          >>> Point(1.2, 7.4, 1.4, epsg_cd=32632).isCoinc(Point(1.2, 7.4, 1.4)) is None
-          True
-          >>> Point(1.2, 7.4, 1.4, epsg_cd=4326).isCoinc(Point(1.2, 7.4, 1.4)) is None
-          True
+          >>> Point(1.2, 7.4, 1.4, epsg_cd=32632).isCoinc(Point(1.2, 7.4, 1.4))
+          Traceback (most recent call last):
+          ...
+          Exception: The first point has 32632 EPSG code while the second has -1
+          >>> Point(1.2, 7.4, 1.4, epsg_cd=4326).isCoinc(Point(1.2, 7.4, 1.4))
+          Traceback (most recent call last):
+          ...
+          Exception: The first point has 4326 EPSG code while the second has -1
         """
 
-        if not self.crs().valid() or not another.crs().valid():
-            return None
+        check_type(another, "Second point", Point)
 
         if self.crs() != another.crs():
-            return None
-        else:
-            return self.dist3DWith(another) <= tolerance
+            raise Exception("The first point has {} EPSG code while the second has {}".format(self.epsg(), another.epsg()))
+
+        return self.dist3DWith(another) <= tolerance
 
     def already_present(self, pt_list: List['Point'], tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD) -> Optional[bool]:
         """
@@ -1341,6 +1355,167 @@ class Segment(object):
             pt1=self.start_pt(),
             pt2=self.end_pt(),
             pt3=section_final_pt_up)
+
+    def same_start(self,
+        another: 'Segment',
+        tol: numbers.Real = 1e-12
+    ) -> bool:
+        """
+        Check whether the two segments have the same start point.
+
+        :param another: a segment to check for.
+        :type another: Segment.
+        :param tol: tolerance for distance between points.
+        :type tol: numbers.Real.
+        :return: whether the two segments have the same start point.
+        :rtype: bool.
+
+        Examples:
+          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+          >>> s2 = Segment(Point(0,0,0), Point(0,1,0))
+          >>> s1.same_start(s2)
+          True
+        """
+
+        return self.start_pt().isCoinc(
+            another=another.start_pt(),
+            tolerance=tol
+        )
+
+    def same_end(self,
+        another: 'Segment',
+        tol: numbers.Real = 1e-12
+    ) -> bool:
+        """
+        Check whether the two segments have the same end point.
+
+        :param another: a segment to check for.
+        :type another: Segment.
+        :param tol: tolerance for distance between points.
+        :type tol: numbers.Real.
+        :return: whether the two segments have the same end point.
+        :rtype: bool.
+
+        Examples:
+          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+          >>> s2 = Segment(Point(2,0,0), Point(1,0,0))
+          >>> s1.same_end(s2)
+          True
+        """
+
+        return self.end_pt().isCoinc(
+            another=another.end_pt(),
+            tolerance=tol)
+
+    def conn_to_other(self,
+        another: 'Segment',
+        tol: numbers.Real = 1e-12
+    ) -> bool:
+        """
+        Check whether the first segment is sequentially connected to the second one.
+
+        :param another: a segment to check for.
+        :type another: Segment.
+        :param tol: tolerance for distance between points.
+        :type tol: numbers.Real.
+        :return: whether the first segment is sequentially connected to the second one.
+        :rtype: bool.
+
+        Examples:
+          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+          >>> s2 = Segment(Point(1,0,0), Point(2,0,0))
+          >>> s1.conn_to_other(s2)
+          True
+        """
+
+        return self.end_pt().isCoinc(
+            another=another.start_pt(),
+            tolerance=tol)
+
+    def other_connected(self,
+        another: 'Segment',
+        tol: numbers.Real = 1e-12
+    ) -> bool:
+        """
+        Check whether the second segment is sequentially connected to the first one.
+
+        :param another: a segment to check for.
+        :type another: Segment.
+        :param tol: tolerance for distance between points.
+        :type tol: numbers.Real.
+        :return: whether the second segment is sequentially connected to the first one.
+        :rtype: bool.
+
+        Examples:
+          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+          >>> s2 = Segment(Point(-1,0,0), Point(0,0,0))
+          >>> s1.other_connected(s2)
+          True
+        """
+
+        return another.end_pt().isCoinc(
+            another=self.start_pt(),
+            tolerance=tol)
+
+    def segment_start_in(self,
+        another: 'Segment'
+    ) -> bool:
+        """
+        Check whether the second segment contains the first segment start point.
+
+        :param another: a segment to check for.
+        :type another: Segment.
+        :return: whether the second segment contains the first segment start point.
+        :rtype: bool.
+
+        Examples:
+          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+          >>> s2 = Segment(Point(-0.5,0,0), Point(0.5,0,0))
+          >>> s1.segment_start_in(s2)
+          True
+          >>> s1 = Segment(Point(0,0,0), Point(1,1,1))
+          >>> s1.segment_start_in(s2)
+          True
+          >>> s1 = Segment(Point(0,1,0), Point(1,1,1))
+          >>> s1.segment_start_in(s2)
+          False
+          >>> s1 = Segment(Point(-1,-1,-1), Point(1,1,1))
+          >>> s1.segment_start_in(s2)
+          False
+        """
+
+        return another.contains_pt(self.start_pt())
+
+    def segment_end_in(self,
+        another: 'Segment'
+    ) -> bool:
+        """
+        Check whether the second segment contains the first segment end point.
+
+        :param another: a segment to check for.
+        :type another: Segment.
+        :return: whether the second segment contains the first segment end point.
+        :rtype: bool.
+
+        Examples:
+          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+          >>> s2 = Segment(Point(-0.5,0,0), Point(0.5,0,0))
+          >>> s1.segment_end_in(s2)
+          False
+          >>> s1 = Segment(Point(0,0,0), Point(1,1,1))
+          >>> s1.segment_end_in(s2)
+          False
+          >>> s1 = Segment(Point(0,1,0), Point(1,1,1))
+          >>> s2 = Segment(Point(1,1,1), Point(0.5,0,0))
+          >>> s1.segment_end_in(s2)
+          True
+          >>> s1 = Segment(Point(-1,-1,3), Point(1,1,3))
+          >>> s2 = Segment(Point(0,2,3), Point(2,0,3))
+          >>> s1.segment_end_in(s2)
+          True
+        """
+
+        return another.contains_pt(self.end_pt())
 
 
 class Line(object):
