@@ -781,7 +781,7 @@ class Direct(object):
 
     def isAbsDipWithin(self, min_val, max_val, min_val_incl=False, max_value_incl=True):
         """
-        Check whether the absolute value of the dip angle of an Direct instance is within a given range
+        Check whether the absolute value of the dip angle of an Direct instance is intersect a given range
         (default: minimum value is not included, maximum value is included).
 
         :param min_val: the minimum dip angle, positive, domain: 0-90°.

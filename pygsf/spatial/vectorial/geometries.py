@@ -9,11 +9,11 @@ from array import array
 import itertools
 
 from ...types.utils import *
-from ...mathematics.defaults import MIN_SEPARATION_THRESHOLD
+from ...mathematics.defaults import *
 from ...mathematics.statistics import get_statistics
 
 from ..vectors import *
-from ..projections.crs import Crs
+from ..projections.crs import *
 
 from ...utils.lists import find_val
 
@@ -1170,7 +1170,7 @@ class Segment(object):
         :raise: Exception.
 
         Examples:
-          >>> segment = Segment(Point(0, 0, 0), Point(1, 0, 0),)
+          >>> segment = Segment(Point(0, 0, 0), Point(1, 0, 0))
           >>> segment.contains_pt(Point(0, 0, 0))
           True
           >>> segment.contains_pt(Point(1, 0, 0))
@@ -1189,6 +1189,20 @@ class Segment(object):
           False
           >>> segment.contains_pt(Point(0.5, 1000, 1000))
           False
+          >>> segment = Segment(Point(0, 0, 0), Point(0, 1, 0))
+          >>> segment.contains_pt(Point(0, 0, 0))
+          True
+          >>> segment.contains_pt(Point(0, 0.5, 0))
+          True
+          >>> segment.contains_pt(Point(0, 1, 0))
+          True
+          >>> segment.contains_pt(Point(0, 1.5, 0))
+          False
+          >>> segment = Segment(Point(0, 0, 0), Point(1, 1, 1))
+          >>> segment.contains_pt(Point(0.5, 0.5, 0.5))
+          True
+          >>> segment.contains_pt(Point(1, 1, 1))
+          True
         """
 
         check_type(pt, "Point", Point)
@@ -1516,6 +1530,39 @@ class Segment(object):
         """
 
         return another.contains_pt(self.end_pt())
+
+
+def point_or_segment(
+        point1: Point,
+        point2: Point,
+        tol: numbers.Real = MIN_POINT_POS_DIFF
+) -> Union[Point, Segment]:
+    """
+    Creates a point or segment based on the points distance.
+
+    :param point1: first input point.
+    :type point1: Point.
+    :param point2: second input point.
+    :type point2: Point.
+    :param tol: distance tolerance between the two points.
+    :type tol: numbers.Real.
+    :return: point or segment based on their distance.
+    :rtype: PointOrSegment.
+    :raise: Exception.
+    """
+
+    check_type(point1, "First point", Point)
+    check_type(point2, "Second point", Point)
+
+    check_crs(point1, point2)
+
+    if point1.dist3DWith(point2) <= tol:
+        return point1.clone()
+    else:
+        return Segment(
+            start_pt=point1,
+            end_pt=point2
+        )
 
 
 class Line(object):

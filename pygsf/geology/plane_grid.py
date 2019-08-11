@@ -115,7 +115,7 @@ def plane_dem_intersection(
 
         inters_with_coincident_starts = np.where(abs(q_arr1 - q_arr2) < q_delta_tol, 0.0, inters_residual_indices)
 
-        # we filter out residual indices that are not within cell span, i.e., not between 0.0 (included) and 1.0 (excluded)
+        # we filter out residual indices that are not intersect cell span, i.e., not between 0.0 (included) and 1.0 (excluded)
 
         inters_intracells_residuals = np.where(
             np.logical_and(inters_with_coincident_starts >= 0.0, inters_with_coincident_starts < 1.0),

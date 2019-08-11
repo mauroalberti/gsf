@@ -72,7 +72,7 @@ class TriangBeam(object):
 
     def fangle_degr(self):
         """
-        angle within fan
+        angle intersect fan
         in the 0 - 180 degrees range
         """
 

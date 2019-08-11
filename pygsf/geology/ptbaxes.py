@@ -259,7 +259,7 @@ class PTBAxes(object):
     def almostEqual(self, another: 'PTBAxes', tolerance_angle: numbers.Real=VECTOR_ANGLE_THRESHOLD) -> bool:
         """
         Checks for equivalence between two PTBAXes instances
-        within a given tolerance angle (default is VECTOR_ANGLE_THRESHOLD)
+        intersect a given tolerance angle (default is VECTOR_ANGLE_THRESHOLD)
 
         :param another: a PTBAXes instance.
         :param tolerance_angle: the tolerance angle for the equality check (numbers.Real)
