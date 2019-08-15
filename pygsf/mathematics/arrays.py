@@ -168,7 +168,11 @@ def array_bilin_interp(arr: 'np.array', i: numbers.Real, j: numbers.Real) -> num
         return s_interp_bilinear(di, dj, v00, v01, v10, v11)
 
 
-def pointSolution(a_array: np.array, b_array: np.array):
+def pointSolution(
+        a_array: np.array,
+        b_array:
+        np.array
+) -> Tuple[Optional[numbers.Real], Optional[numbers.Real], Optional[numbers.Real]]:
     """
     Finds a non-unique solution for a set of linear equations.
 
@@ -176,15 +180,18 @@ def pointSolution(a_array: np.array, b_array: np.array):
     :type a_array: numpy array.
     :param b_array:
     :type b_array: numpy array.
-    :return:
-    :rtype:
+    :return: an optional tuple of solutions
+    :rtype: Tuple[Optional[numbers.Real], Optional[numbers.Real], Optional[numbers.Real]]
 
     Examples:
     """
 
     try:
+
         return np.linalg.lstsq(a_array, b_array, rcond=None)[0]
+
     except:
+
         return None, None, None
 
 

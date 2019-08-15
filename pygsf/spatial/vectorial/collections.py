@@ -93,11 +93,11 @@ def shortest_segment_or_point(
 
     epsg_cd = segment1.epsg()
 
-    p1 = segment1.start_pt()
-    p2 = segment1.end_pt()
+    p1 = segment1.start_pt
+    p2 = segment1.end_pt
 
-    p3 = segment2.start_pt()
-    p4 = segment2.end_pt()
+    p3 = segment2.start_pt
+    p4 = segment2.end_pt
 
     p13 = Point(
         x=p1.x - p3.x,
@@ -288,40 +288,40 @@ class SegmentPair:
 
         if s1_startpt_inside and s2_startpt_inside:
             return point_or_segment(
-                self._s1.start_pt(),
-                self._s2.start_pt()
+                self._s1.start_pt,
+                self._s2.start_pt
             )
 
         if s1_startpt_inside and s2_endpt_inside:
             return point_or_segment(
-                self._s1.start_pt(),
-                self._s2.end_pt()
+                self._s1.start_pt,
+                self._s2.end_pt
             )
 
         if s1_endpt_inside and s2_startpt_inside:
             return point_or_segment(
-                self._s2.start_pt(),
-                self._s1.end_pt()
+                self._s2.start_pt,
+                self._s1.end_pt
 
             )
 
         if s1_endpt_inside and s2_endpt_inside:
             return point_or_segment(
-                self._s1.end_pt(),
-                self._s2.end_pt()
+                self._s1.end_pt,
+                self._s2.end_pt
             )
 
         if s1_startpt_inside:
-            return self._s1.start_pt().clone()
+            return self._s1.start_pt.clone()
 
         if s1_endpt_inside:
-            return self._s1.end_pt().clone()
+            return self._s1.end_pt.clone()
 
         if s2_startpt_inside:
-            return self._s2.start_pt().clone()
+            return self._s2.start_pt.clone()
 
         if s2_endpt_inside:
-            return self._s2.end_pt().clone()
+            return self._s2.end_pt.clone()
 
         shortest_segm_or_pt = shortest_segment_or_point(
             segment1=self._s1,

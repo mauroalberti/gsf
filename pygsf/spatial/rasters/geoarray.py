@@ -102,7 +102,8 @@ class GeoArray(object):
 
         return self._gt
 
-    def crs(self):
+    @property
+    def crs(self) -> Crs:
         """
         Return the geoarray crs.
 

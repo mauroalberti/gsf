@@ -164,6 +164,7 @@ class Vect(object):
         """
         return self.a[2]
 
+    @property
     def crs(self) -> Crs:
         """
         Returns the crs of the Vector.

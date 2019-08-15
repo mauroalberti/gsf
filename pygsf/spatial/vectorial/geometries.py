@@ -126,15 +126,33 @@ class Point(object):
 
         return self._t
 
+    @property
     def crs(self) -> Crs:
         """
-        Return a copy of the current point CRS.
+        Return the current point CRS.
 
         :return: the CRS code as a Csr instance.
         :rtype: Crs.
         """
 
-        return Crs(self._crs.epsg())
+        return self._crs
+
+    def __iter__(self):
+        """
+        Return the elements of a Point.
+
+        :return:
+
+        Examples;
+          >>> x, y, z, t, epsg_cd = Point(1,1)
+          >>> x == 1
+          True
+          >>> y == 1
+          True
+
+        """
+
+        return (i for i in self.a())
 
     def epsg(self) -> numbers.Integral:
         """
@@ -144,7 +162,7 @@ class Point(object):
         :rtype: numbers.Integral.
         """
 
-        return self.crs().epsg()
+        return self.crs.epsg()
 
     def __repr__(self) -> str:
 
@@ -175,7 +193,7 @@ class Point(object):
             self.y == another.y,
             self.z == another.z,
             self.t == another.t,
-            self.crs() == another.crs()])
+            self.crs == another.crs])
 
     def __ne__(self, another: 'Point') -> bool:
         """
@@ -201,7 +219,7 @@ class Point(object):
           (4.0, 3.0, 7.0, 0.0, 4326)
         """
 
-        return self.x, self.y, self.z, self.t, self.epsg()
+        return self.x, self.y, self.z, self.t, self.crs.epsg()
 
     def clone(self) -> 'Point':
         """
@@ -299,18 +317,20 @@ class Point(object):
 
         :return: x coordinates difference value.
         :rtype: optional numbers.Real.
+        :raise: Exception
 
         Examples:
           >>> Point(1, 2, 3, epsg_cd=32632).deltaX(Point(4, 7, 1, epsg_cd=32632))
           3.0
-          >>> Point(1, 2, 3, epsg_cd=4326).deltaX(Point(4, 7, 1)) is None
-          True
+          >>> Point(1, 2, 3, epsg_cd=4326).deltaX(Point(4, 7, 1))
+          Traceback (most recent call last):
+          ....
+          Exception: checked Point instance has -1 EPSG code but 4326 expected
         """
 
-        if self.crs() != another.crs():
-            return None
-        else:
-            return another.x - self.x
+        check_crs(self, another)
+
+        return another.x - self.x
 
     def deltaY(self, another: 'Point') -> Optional[numbers.Real]:
         """
@@ -322,14 +342,15 @@ class Point(object):
         Examples:
           >>> Point(1, 2, 3, epsg_cd=32632).deltaY(Point(4, 7, 1, epsg_cd=32632))
           5.0
-          >>> Point(1, 2, 3, epsg_cd=4326).deltaY(Point(4, 7, 1)) is None
-          True
+          >>> Point(1, 2, 3, epsg_cd=4326).deltaY(Point(4, 7, 1))
+          Traceback (most recent call last):
+          ...
+          Exception: checked Point instance has -1 EPSG code but 4326 expected
         """
 
-        if self.crs() != another.crs():
-            return None
-        else:
-            return another.y - self.y
+        check_crs(self, another)
+
+        return another.y - self.y
 
     def deltaZ(self, another: 'Point') -> Optional[numbers.Real]:
         """
@@ -341,14 +362,15 @@ class Point(object):
         Examples:
           >>> Point(1, 2, 3, epsg_cd=32632).deltaZ(Point(4, 7, 1, epsg_cd=32632))
           -2.0
-          >>> Point(1, 2, 3, epsg_cd=4326).deltaZ(Point(4, 7, 1)) is None
-          True
+          >>> Point(1, 2, 3, epsg_cd=4326).deltaZ(Point(4, 7, 1))
+          Traceback (most recent call last):
+          ....
+          Exception: checked Point instance has -1 EPSG code but 4326 expected
         """
 
-        if self.crs() != another.crs():
-            return None
-        else:
-            return another.z - self.z
+        check_crs(self, another)
+
+        return another.z - self.z
 
     def deltaT(self, another: 'Point') -> numbers.Real:
         """
@@ -386,8 +408,7 @@ class Point(object):
 
         check_type(another, "Point", Point)
 
-        if self.crs() != another.crs():
-            raise Exception("Input point should have {} EPSG code but has {}".format(self.crs(), another.crs()))
+        check_crs(self, another)
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
@@ -408,13 +429,12 @@ class Point(object):
           >>> Point(1., 1., 1., epsg_cd=32632).dist2DWith(Point(4., 5., 7.))
           Traceback (most recent call last):
           ...
-          Exception: Second point should have 32632 EPSG code but has -1
+          Exception: checked Point instance has -1 EPSG code but 32632 expected
         """
 
         check_type(another, "Second point", Point)
 
-        if self.crs() != another.crs():
-            raise Exception("Second point should have {} EPSG code but has {}".format(self.epsg(), another.epsg()))
+        check_crs(self, another)
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
@@ -448,6 +468,28 @@ class Point(object):
 
         return self.scale(-1)
 
+    def reflect_vertical(self) -> 'Point':
+        """
+        Reflect a point along a vertical axis.
+
+        :return: reflected point.
+        :rtype: Point
+
+        Examples:
+          >>> Point(1,1,1).reflect_vertical()
+          Point(-1.0000, -1.0000, 1.0000, 0.0000, -1)
+        """
+
+        x, y, z, t, epsg_cd = self
+
+        return Point(
+            x=-x,
+            y=-y,
+            z=z,
+            t=t,
+            epsg_cd=epsg_cd
+        )
+
     def isCoinc(self,
             another: 'Point',
             tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
@@ -471,17 +513,16 @@ class Point(object):
           >>> Point(1.2, 7.4, 1.4, epsg_cd=32632).isCoinc(Point(1.2, 7.4, 1.4))
           Traceback (most recent call last):
           ...
-          Exception: The first point has 32632 EPSG code while the second has -1
+          Exception: checked Point instance has -1 EPSG code but 32632 expected
           >>> Point(1.2, 7.4, 1.4, epsg_cd=4326).isCoinc(Point(1.2, 7.4, 1.4))
           Traceback (most recent call last):
           ...
-          Exception: The first point has 4326 EPSG code while the second has -1
+          Exception: checked Point instance has -1 EPSG code but 4326 expected
         """
 
         check_type(another, "Second point", Point)
 
-        if self.crs() != another.crs():
-            raise Exception("The first point has {} EPSG code while the second has {}".format(self.epsg(), another.epsg()))
+        check_crs(self, another)
 
         return self.dist3DWith(another) <= tolerance
 
@@ -523,6 +564,7 @@ class Point(object):
         :type v: Vect.
         :return: the shifted point.
         :rtype: Point.
+        :raise: Exception
 
         Example:
           >>> Point(1, 1, 1, epsg_cd=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_cd=32632))
@@ -531,12 +573,13 @@ class Point(object):
           Point(1.5000, 3.0000, 0.5000, 0.0000, 32632)
        """
 
-        if self.crs() != v.crs():
-            return None
+        check_crs(self, v)
+
+        x, y, z, t, epsg_cd = self
 
         sx, sy, sz = v.toXYZ()
 
-        return Point(self.x + sx, self.y + sy, self.z + sz, self.t, self.epsg())
+        return Point(x + sx, y + sy, z + sz, t, epsg_cd)
 
     def asVect(self) -> 'Vect':
         """
@@ -627,9 +670,10 @@ class CPlane(object):
 
         return self._d
 
+    @property
     def crs(self) -> Crs:
         """
-        Returns the EPSG code as a Crs instance.
+        Returns the Crs instance.
 
         :return: EPSG code.
         :rtype: pygsf.projections.crs.Crs
@@ -649,7 +693,7 @@ class CPlane(object):
         Example:
         """
 
-        return self._crs.epsg()
+        return self.crs.epsg()
 
     def v(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Integral]:
         """
@@ -687,11 +731,9 @@ class CPlane(object):
         if not (isinstance(pt3, Point)):
             raise Exception("Third input point should be Point but is {}".format(type(pt3)))
 
-        if pt2.crs() != pt1.crs():
-            raise Exception("Second input point should have {} EPSG code like first point but has {}".format(pt1.epsg(), pt2.epsg()))
+        check_crs(pt2, pt1)
 
-        if pt3.crs() != pt1.crs():
-            raise Exception("Third input point should have {} EPSG code like first point but has {}".format(pt1.epsg(), pt3.epsg()))
+        check_crs(pt3, pt1)
 
         matr_a = np.array(
             [[pt1.y, pt1.z, 1],
@@ -722,7 +764,7 @@ class CPlane(object):
 
     def __repr__(self):
 
-        return "CPlane({:.4f}, {:.4f}, {:.4f}, {:.4f}, {:d})".format(*self.v(), self.crs())
+        return "CPlane({:.4f}, {:.4f}, {:.4f}, {:.4f}, {:d})".format(*self.v(), self.crs)
 
     def normVersor(self) -> Vect:
         """
@@ -771,18 +813,23 @@ class CPlane(object):
           Vect(0.0000, -1.0000, 0.0000, EPSG: 2000)
         """
 
-        if not isinstance(another, CPlane):
-            raise Exception("The argument must be a Cartesian plane")
+        check_type(another, "Argument", CPlane)
 
-        if self.crs() != another.crs():
-            return None
+        check_crs(self, another)
 
         return self.normVersor().vCross(another.normVersor()).versor()
 
-    def intersPoint(self, another) -> Optional[Point]:
+    def intersPoint(self,
+            another) -> Optional[Point]:
         """
         Return point on intersection line (non-unique solution)
         for two planes.
+
+        :param another: the second cartesian plane
+        :type another: CPlane
+        :return: the optional instersection point
+        :rtype: Optional[Point]
+        :raise: Exception
 
         Examples:
           >>> a = CPlane(1, 0, 0, 0, epsg_cd=32632)
@@ -791,8 +838,9 @@ class CPlane(object):
           Point(0.0000, 0.0000, 0.0000, 0.0000, 32632)
         """
 
-        if self.crs() != another.crs():
-            return None
+        check_type(another, "Second plane", CPlane)
+
+        check_crs(self, another)
 
         # find a point lying on the intersection line (this is a non-unique solution)
 
@@ -800,9 +848,14 @@ class CPlane(object):
         b = np.array([-self.d(), -another.d()])
         x, y, z = pointSolution(a, b)
 
-        return Point(x, y, z, epsg_cd=self.epsg())
+        if x is not None and y is not None and z is not None:
+            return Point(x, y, z, epsg_cd=self.epsg())
+        else:
+            return None
 
-    def pointDistance(self, pt: Point) -> numbers.Real:
+    def pointDistance(self,
+        pt: Point
+    ) -> numbers.Real:
         """
         Calculate the distance between a point and the cartesian plane.
         Distance expression:
@@ -836,18 +889,18 @@ class CPlane(object):
           >>> cpl.pointDistance(pt)
           Traceback (most recent call last):
           ...
-          Exception: Input point should have 32632 EPSG code but has -1
+          Exception: checked Point instance has -1 EPSG code but 32632 expected
         """
 
-        if not (isinstance(pt, Point)):
-            raise Exception("Input point should be Point but is {}".format(type(pt)))
+        check_type(pt, "Input point", Point)
 
-        if self.crs() != pt.crs():
-            raise Exception("Input point should have {} EPSG code but has {}".format(self.epsg(), pt.epsg()))
+        check_crs(self, pt)
 
         return self.a() * pt.x + self.b() * pt.y + self.c() * pt.z + self.d()
 
-    def isPointInPlane(self, pt) -> bool:
+    def isPointInPlane(self,
+        pt: Point
+    ) -> bool:
         """
         Check whether a point lies in the current plane.
 
@@ -868,18 +921,18 @@ class CPlane(object):
           True
         """
 
-        if not (isinstance(pt, Point)):
-            raise Exception("Input point should be Point but is {}".format(type(pt)))
+        check_type(pt, "Input point", Point)
 
-        if self.crs() != pt.crs():
-            raise Exception("Input point should have {} EPSG code like the plane but has {}".format(self.epsg(), pt.epsg()))
+        check_crs(self, pt)
 
         if abs(self.pointDistance(pt)) < MIN_SEPARATION_THRESHOLD:
             return True
         else:
             return False
 
-    def angle(self, another) -> numbers.Real:
+    def angle(self,
+        another: 'CPlane'
+    ) -> numbers.Real:
         """
         Calculate angle (in degrees) between two planes.
 
@@ -901,14 +954,12 @@ class CPlane(object):
           >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,0,0))
           Traceback (most recent call last):
           ...
-          Exception: Input plane should have 32632 EPSG code like current point but has -1
+          Exception: checked CPlane instance has -1 EPSG code but 32632 expected
         """
 
-        if not (isinstance(another, CPlane)):
-            raise Exception("Input plane should be CPlane but is {}".format(type(another)))
+        check_type(another, "Second Cartesian plane", CPlane)
 
-        if self.crs() != another.crs():
-            raise Exception("Input plane should have {} EPSG code like current point but has {}".format(self.epsg(), another.epsg()))
+        check_crs(self, another)
 
         angle_degr = self.normVersor().angle(another.normVersor())
 
@@ -947,21 +998,18 @@ class Segment(object):
         :raises: CRSCodeException.
         """
 
-        if not isinstance(start_pt, Point):
-            raise Exception("Start point must be a Point instance")
+        check_type(start_pt, "Start point", Point)
 
-        if not isinstance(end_pt, Point):
-            raise Exception("Start point must be a Point instance")
+        check_type(end_pt, "End point", Point)
+
+        check_crs(start_pt, end_pt)
 
         if start_pt.dist3DWith(end_pt) == 0.0:
             raise Exception("Segment point distance must be greater than zero")
 
-        if start_pt.crs() != end_pt.crs():
-            raise Exception("Start and end point must have the same CRS code")
-
         self._start_pt = start_pt.clone()
         self._end_pt = end_pt.clone()
-        self._crs = Crs(start_pt.epsg())
+        # self._crs = Crs(start_pt.epsg())
 
     def __repr__(self) -> str:
         """
@@ -972,18 +1020,11 @@ class Segment(object):
         """
 
         return "Segment(start_pt={}, end_pt={})".format(
-            self.start_pt(),
-            self.end_pt()
+            self.start_pt,
+            self.end_pt
         )
 
-    def crs(self) -> Crs:
-
-        return Crs(self._crs.epsg())
-
-    def epsg(self) -> numbers.Integral:
-
-        return self.crs().epsg()
-
+    """
     def extract_start_pt(self) -> Point:
 
         return self._start_pt
@@ -991,14 +1032,26 @@ class Segment(object):
     def extract_end_pt(self) -> Point:
 
         return self._end_pt
+    """
 
+    @property
     def start_pt(self) -> Point:
 
-        return self.extract_start_pt().clone()
+        return self._start_pt
 
+    @property
     def end_pt(self) -> Point:
 
-        return self.extract_end_pt().clone()
+        return self._end_pt
+
+    @property
+    def crs(self) -> Crs:
+
+        return self.start_pt.crs
+
+    def epsg(self) -> numbers.Integral:
+
+        return self.crs.epsg()
 
     def clone(self) -> 'Segment':
 
@@ -1006,39 +1059,39 @@ class Segment(object):
 
     def increasing_x(self) -> 'Segment':
 
-        if self.end_pt().x < self.start_pt().x:
-            return Segment(self.end_pt(), self.start_pt())
+        if self.end_pt.x < self.start_pt.x:
+            return Segment(self.end_pt, self.start_pt)
         else:
             return self.clone()
 
     def x_range(self) -> Tuple[numbers.Real, numbers.Real]:
 
-        if self.start_pt().x < self.end_pt().x:
-            return self.start_pt().x, self.end_pt().x
+        if self.start_pt.x < self.end_pt.x:
+            return self.start_pt.x, self.end_pt.x
         else:
-            return self.end_pt().x, self.start_pt().x
+            return self.end_pt.x, self.start_pt.x
 
     def y_range(self) -> Tuple[numbers.Real, numbers.Real]:
 
-        if self.start_pt().y < self.end_pt().y:
-            return self.start_pt().y, self.end_pt().y
+        if self.start_pt.y < self.end_pt.y:
+            return self.start_pt.y, self.end_pt.y
         else:
-            return self.end_pt().y, self.start_pt().y
+            return self.end_pt.y, self.start_pt.y
 
     def z_range(self) -> Tuple[numbers.Real, numbers.Real]:
 
-        if self.start_pt().z < self.end_pt().z:
-            return self.start_pt().z, self.end_pt().z
+        if self.start_pt.z < self.end_pt.z:
+            return self.start_pt.z, self.end_pt.z
         else:
-            return self.end_pt().z, self.start_pt().z
+            return self.end_pt.z, self.start_pt.z
 
     def delta_x(self) -> numbers.Real:
 
-        return self.end_pt().x - self.start_pt().x
+        return self.end_pt.x - self.start_pt.x
 
     def delta_y(self) -> numbers.Real:
 
-        return self.end_pt().y - self.start_pt().y
+        return self.end_pt.y - self.start_pt.y
 
     def delta_z(self) -> numbers.Real:
         """
@@ -1047,7 +1100,7 @@ class Segment(object):
         :return: numbers.Real.
         """
 
-        return self.end_pt().z - self.start_pt().z
+        return self.end_pt.z - self.start_pt.z
 
     def length2D(self) -> numbers.Real:
         """
@@ -1057,11 +1110,11 @@ class Segment(object):
         :rtype: numbers.Real.
         """
 
-        return self.start_pt().dist2DWith(self.end_pt())
+        return self.start_pt.dist2DWith(self.end_pt)
 
     def length3D(self) -> numbers.Real:
 
-        return self.start_pt().dist3DWith(self.end_pt())
+        return self.start_pt.dist3DWith(self.end_pt)
 
     def deltaZS(self) -> Optional[numbers.Real]:
         """
@@ -1111,12 +1164,12 @@ class Segment(object):
 
     def segment_2d_m(self) -> Optional[numbers.Real]:
 
-        denom = self.end_pt().x - self.start_pt().x
+        denom = self.end_pt.x - self.start_pt.x
 
         if denom == 0.0:
             return None
 
-        return (self.end_pt().y - self.start_pt().y) / denom
+        return (self.end_pt.y - self.start_pt.y) / denom
 
     def segment_2d_p(self) -> Optional[numbers.Real]:
 
@@ -1125,12 +1178,20 @@ class Segment(object):
         if s2d_m is None:
             return None
 
-        return self.start_pt().y - s2d_m * self.start_pt().x
+        return self.start_pt.y - s2d_m * self.start_pt.x
 
-    def intersection_2d_pt(self, another) -> Optional[Point]:
+    def intersection_2d_pt(self,
+        another: 'Segment'
+    ) -> Optional[Point]:
+        """
 
-        if self.crs() != another.crs():
-            return None
+        :param another:
+        :return:
+        """
+
+        check_type(another, "Second segment", Segment)
+
+        check_crs(self, another)
 
         s_len2d = self.length2D()
         a_len2d = another.length2D()
@@ -1138,14 +1199,14 @@ class Segment(object):
         if s_len2d == 0.0 or a_len2d == 0.0:
             return None
 
-        if self.start_pt().x == self.end_pt().x:  # self segment parallel to y axis
-            x0 = self.start_pt().x
+        if self.start_pt.x == self.end_pt.x:  # self segment parallel to y axis
+            x0 = self.start_pt.x
             m1, p1 = another.segment_2d_m(), another.segment_2d_p()
             if m1 is None:
                 return None
             y0 = m1 * x0 + p1
-        elif another.start_pt().x == another.end_pt().x:  # another segment parallel to y axis
-            x0 = another.start_pt().x
+        elif another.start_pt.x == another.end_pt.x:  # another segment parallel to y axis
+            x0 = another.start_pt.x
             m1, p1 = self.segment_2d_m(), self.segment_2d_p()
             if m1 is None:
                 return None
@@ -1208,8 +1269,8 @@ class Segment(object):
         check_type(pt, "Point", Point)
 
         segment_length = self.length3D()
-        length_startpt_pt = self.start_pt().dist3DWith(pt)
-        length_endpt_pt = self.end_pt().dist3DWith(pt)
+        length_startpt_pt = self.start_pt.dist3DWith(pt)
+        length_endpt_pt = self.end_pt.dist3DWith(pt)
 
         return areClose(
             a=segment_length,
@@ -1246,14 +1307,14 @@ class Segment(object):
         delta_z = self.delta_z() * scale_factor
 
         end_pt = Point(
-            x=self.start_pt().x + delta_x,
-            y=self.start_pt().y + delta_y,
-            z=self.start_pt().z + delta_z,
-            t=self.end_pt().t,
+            x=self.start_pt.x + delta_x,
+            y=self.start_pt.y + delta_y,
+            z=self.start_pt.z + delta_z,
+            t=self.end_pt.t,
             epsg_cd=self.epsg())
 
         return Segment(
-            self.start_pt(),
+            self.start_pt,
             end_pt)
 
     def densify2d_asSteps(self, densify_distance: numbers.Real) -> array:
@@ -1317,18 +1378,18 @@ class Segment(object):
         vers_2d = vect.versor2D()
         generator_vector = vers_2d.scale(densify_distance)
 
-        pts = [self.start_pt()]
+        pts = [self.start_pt]
 
         n = 0
         while True:
             n += 1
-            new_pt = self.start_pt().shiftByVect(generator_vector.scale(n))
-            distance = self.start_pt().dist2DWith(new_pt)
+            new_pt = self.start_pt.shiftByVect(generator_vector.scale(n))
+            distance = self.start_pt.dist2DWith(new_pt)
             if distance >= length2d:
                 break
             pts.append(new_pt)
 
-        pts.append(self.end_pt())
+        pts.append(self.end_pt)
 
         return pts
 
@@ -1360,14 +1421,14 @@ class Segment(object):
 
         # arbitrary point on the same vertical as end point
 
-        section_final_pt_up = self.end_pt().shift(
+        section_final_pt_up = self.end_pt.shift(
             sx=0.0,
             sy=0.0,
             sz=1000.0)
 
         return CPlane.fromPoints(
-            pt1=self.start_pt(),
-            pt2=self.end_pt(),
+            pt1=self.start_pt,
+            pt2=self.end_pt,
             pt3=section_final_pt_up)
 
     def same_start(self,
@@ -1391,8 +1452,8 @@ class Segment(object):
           True
         """
 
-        return self.start_pt().isCoinc(
-            another=another.start_pt(),
+        return self.start_pt.isCoinc(
+            another=another.start_pt,
             tolerance=tol
         )
 
@@ -1417,8 +1478,8 @@ class Segment(object):
           True
         """
 
-        return self.end_pt().isCoinc(
-            another=another.end_pt(),
+        return self.end_pt.isCoinc(
+            another=another.end_pt,
             tolerance=tol)
 
     def conn_to_other(self,
@@ -1442,8 +1503,8 @@ class Segment(object):
           True
         """
 
-        return self.end_pt().isCoinc(
-            another=another.start_pt(),
+        return self.end_pt.isCoinc(
+            another=another.start_pt,
             tolerance=tol)
 
     def other_connected(self,
@@ -1467,8 +1528,8 @@ class Segment(object):
           True
         """
 
-        return another.end_pt().isCoinc(
-            another=self.start_pt(),
+        return another.end_pt.isCoinc(
+            another=self.start_pt,
             tolerance=tol)
 
     def segment_start_in(self,
@@ -1498,7 +1559,7 @@ class Segment(object):
           False
         """
 
-        return another.contains_pt(self.start_pt())
+        return another.contains_pt(self.start_pt)
 
     def segment_end_in(self,
         another: 'Segment'
@@ -1529,7 +1590,15 @@ class Segment(object):
           True
         """
 
-        return another.contains_pt(self.end_pt())
+        return another.contains_pt(self.end_pt)
+
+    def reflect_vertical(self) -> 'Segment':
+        """
+        Reflect a segment along a vertical axis.
+
+        :return: the mirrored segment
+        :rtype: Segment
+        """
 
 
 def point_or_segment(
@@ -1672,13 +1741,14 @@ class Line(object):
 
         return [pt.clone() for pt in self._pts]
 
+    @property
     def crs(self) -> Crs:
 
         return self._crs
 
     def epsg(self) -> numbers.Integral:
 
-        return self.crs().epsg()
+        return self.crs.epsg()
 
     def num_pts(self):
 
@@ -1724,13 +1794,11 @@ class Line(object):
         if num_points == 0:
             txt = "Empty Line - EPSG: {}".format(epsg)
         else:
-            first_pt = self.start_pt()
-            x1, y1, z1 = first_pt.x, first_pt.y, first_pt.z
+            x1, y1, z1, _, _ = self.start_pt()
             if num_points == 1:
                 txt = "Line with unique point: {.4f}.{.4f},{.4f} - EPSG: {}".format(x1, y1, z1, epsg)
             else:
-                last_pt = self.end_pt()
-                x2, y2, z2 = last_pt.x, last_pt.y, last_pt.z
+                x2, y2, z2, _, _ = self.end_pt()
                 txt = "Line with {} points: ({:.4f}, {:.4f}, {:.4f}) ... ({:.4f}, {:.4f}, {:.4f}) - EPSG: {}".format(num_points, x1, y1, z1, x2, y2, z2, epsg)
 
         return txt
@@ -1753,10 +1821,10 @@ class Line(object):
         :rtype: bool.
         """
 
-        if self.num_pts() == 0 and not self.crs().valid():
+        if self.num_pts() == 0 and not self.crs.valid():
             self._crs = Crs(pt.epsg())
 
-        if self.num_pts() > 0 and pt.crs() != self.crs():
+        if self.num_pts() > 0 and pt.crs != self.crs:
             return False
 
         self._pts.append(pt.clone())
@@ -2101,16 +2169,16 @@ def analizeJoins(first: Union[Line, Segment], second: Union[Line, Segment]) -> L
 
     join_types = []
 
-    if first.start_pt().isCoinc(second.start_pt()):
+    if first.start_pt.isCoinc(second.start_pt):
         join_types.append(JoinTypes.START_START)
 
-    if first.start_pt().isCoinc(second.end_pt()):
+    if first.start_pt.isCoinc(second.end_pt):
         join_types.append(JoinTypes.START_END)
 
-    if first.end_pt().isCoinc(second.start_pt()):
+    if first.end_pt.isCoinc(second.start_pt):
         join_types.append(JoinTypes.END_START)
 
-    if first.end_pt().isCoinc(second.end_pt()):
+    if first.end_pt.isCoinc(second.end_pt):
         join_types.append(JoinTypes.END_END)
 
     return join_types
@@ -2144,7 +2212,8 @@ class MultiLine(object):
 
         return self._lines
 
-    def crs(self):
+    @property
+    def crs(self) -> Crs:
 
         return self._crs
 
@@ -2207,10 +2276,10 @@ class MultiLine(object):
         :rtype: bool.
         """
 
-        if self.num_lines() == 0 and not self.crs().valid():
-            self._crs = line.crs()
+        if self.num_lines() == 0 and not self.crs.valid():
+            self._crs = line.crs
 
-        if self.num_lines() > 0 and line.crs() != self.crs():
+        if self.num_lines() > 0 and line.crs != self.crs:
             return False
 
         self._lines += [line]

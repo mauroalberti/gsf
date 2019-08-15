@@ -50,25 +50,24 @@ class Crs(object):
 
 
 def check_crs(
-    el1,
-    el2
+    template_element,
+    checked_element
 ) -> bool:
     """
     Check whether two spatial elements have the same crs.
 
-    :param el1: first spatial element.
-    :param el2: second spatial element.
+    :param template_element: first spatial element.
+    :param checked_element: second spatial element.
     :param err_msg: the error msg.
     :type err_msg: str.
     :return: whether two spatial elements have the same crs.
     :rtype: bool.
     """
 
-    if el1.crs() != el2.crs():
-        raise Exception("First {} has {} EPSG code while second {} has {}".format(
-            type(el1),
-            el1.epsg(),
-            type(el2),
-            el2.epsg()
+    if checked_element.crs != template_element.crs:
+        raise Exception("checked {} instance has {} EPSG code but {} expected".format(
+            type(checked_element).__name__,
+            checked_element.epsg(),
+            template_element.epsg()
         )
     )
