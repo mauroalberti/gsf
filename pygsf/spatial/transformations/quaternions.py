@@ -2,10 +2,7 @@
 
 from math import sqrt, degrees, acos
 
-from ..mathematics.defaults import QUAT_NORMALIZ_TOL, QUAT_DIVISION_TOL
-
-from .vectors import *
-
+from ..vectors import *
 
 
 class Quaternion(object):
@@ -736,3 +733,6 @@ if __name__ == "__main__":
 
     import doctest
     doctest.testmod()
+QUAT_NORMALIZ_TOL = 1.0e-6
+QUAT_DIVISION_TOL = 1.0e-10
+QUAT_MAGN_THRESH = 1.0e-6

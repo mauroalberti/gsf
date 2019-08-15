@@ -10,7 +10,6 @@ from numpy import array
 from ...mathematics.arrays import array_bilin_interp
 
 from ..vectorial.geometries import Point
-from ..exceptions import GeoArrayIOException
 
 from ..projections.crs import Crs
 from .geotransform import xyGeogrToijPix, gtToxyCellCenters, GeoTransform, ijPixToxyGeogr
@@ -639,3 +638,10 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()
 
+
+class GeoArrayIOException(Exception):
+    """
+    Class for geoarray IO exception
+    """
+
+    pass

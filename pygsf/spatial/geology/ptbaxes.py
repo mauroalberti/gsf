@@ -2,7 +2,7 @@
 
 
 from .faults import *
-from .rotations import *
+from ..transformations.rotations import *
 
 
 class PTBAxes(object):
@@ -24,7 +24,7 @@ class PTBAxes(object):
           >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(80, 0))
           Traceback (most recent call last):
           ...
-          pygsf.geology.exceptions.PTBAxesInputException: P and T axes must be sub-orthogonal
+          pygsf.spatial.geology.exceptions.PTBAxesInputException: P and T axes must be sub-orthogonal
         """
 
         if not (isinstance(p_axis, Axis) and isinstance(t_axis, Axis)):
@@ -59,7 +59,7 @@ class PTBAxes(object):
           >>> PTBAxes.fromVects(p_vector=Vect(0.5, 1, 0), t_vector=Vect(1, 1, 0))
           Traceback (most recent call last):
           ...
-          pygsf.geology.exceptions.PTBAxesInputException: P and T axes must be sub-orthogonal
+          pygsf.spatial.geology.exceptions.PTBAxesInputException: P and T axes must be sub-orthogonal
         """
 
         if not isinstance(t_vector, Vect):
@@ -331,7 +331,10 @@ class PTBAxes(object):
         return Quaternion.fromRotMatr(self.toMatrix())
 
 
-def focmech_rotate(fm: PTBAxes, ra: RotationAxis) -> PTBAxes:
+def focmech_rotate(
+    fm: PTBAxes,
+    ra: RotationAxis
+) -> PTBAxes:
     """
     Rotate a fochal mechanism (a PTBAxes instance) to a new orientation
     via a rotation axis.

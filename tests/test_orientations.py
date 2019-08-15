@@ -3,7 +3,7 @@
 
 import unittest
 
-from pygsf.geology import orientations as orient
+from pygsf.spatial.geology import orientations as orient
 from pygsf.mathematics.scalars import areClose
 from pygsf.spatial.vectorial.geometries import Point, CPlane
 

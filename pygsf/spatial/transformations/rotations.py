@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-from ..mathematics.defaults import QUAT_MAGN_THRESH
+from .quaternions import *
 
-from ..spatial.quaternions import *
+from ..geology.orientations import *
 
-from .orientations import *
+from .quaternions import QUAT_MAGN_THRESH
 
 
 class RotationAxis(object):

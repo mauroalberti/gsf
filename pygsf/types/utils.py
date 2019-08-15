@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 
 def check_type(var, name, expected_type):

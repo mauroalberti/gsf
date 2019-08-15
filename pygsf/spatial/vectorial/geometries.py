@@ -1264,6 +1264,15 @@ class Segment(object):
           True
           >>> segment.contains_pt(Point(1, 1, 1))
           True
+          >>> segment = Segment(Point(1,2,3), Point(9,8,2))
+          >>> segment.contains_pt(segment.pointAt(0.745))
+          True
+          >>> segment.contains_pt(segment.pointAt(1.745))
+          False
+          >>> segment.contains_pt(segment.pointAt(-0.745))
+          False
+          >>> segment.contains_pt(segment.pointAt(0))
+          True
         """
 
         check_type(pt, "Point", Point)
@@ -1293,25 +1302,74 @@ class Segment(object):
         else:
             return False
 
-    def scale(self, scale_factor) -> 'Segment':
+    def pointAt(self,
+        scale_factor: numbers.Real
+    ) -> Point:
         """
-        Scale a segment by the given scale_factor.
-        Start point does not change.
+        Returns a point aligned with the segment
+        and lying at given scale factor, where 1 is segment length
+        ans 0 is segment start.
 
-        :param scale_factor: numbers.Real
-        :return: Segment instance
+        :param scale_factor: the scale factor, where 1 is the segment length.
+        :type scale_factor: numbers.Real
+        :return: Point at scale factor
+        :rtype: Point
+
+        Examples:
+          >>> s = Segment(Point(0,0,0), Point(1,0,0))
+          >>> s.pointAt(0)
+          Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
+          >>> s.pointAt(0.5)
+          Point(0.5000, 0.0000, 0.0000, 0.0000, -1)
+          >>> s.pointAt(1)
+          Point(1.0000, 0.0000, 0.0000, 0.0000, -1)
+          >>> s.pointAt(-1)
+          Point(-1.0000, 0.0000, 0.0000, 0.0000, -1)
+          >>> s.pointAt(-2)
+          Point(-2.0000, 0.0000, 0.0000, 0.0000, -1)
+          >>> s.pointAt(2)
+          Point(2.0000, 0.0000, 0.0000, 0.0000, -1)
+          >>> s = Segment(Point(0,0,0), Point(0,0,1))
+          >>> s.pointAt(0)
+          Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
+          >>> s.pointAt(0.5)
+          Point(0.0000, 0.0000, 0.5000, 0.0000, -1)
+          >>> s.pointAt(1)
+          Point(0.0000, 0.0000, 1.0000, 0.0000, -1)
+          >>> s.pointAt(-1)
+          Point(0.0000, 0.0000, -1.0000, 0.0000, -1)
+          >>> s.pointAt(-2)
+          Point(0.0000, 0.0000, -2.0000, 0.0000, -1)
+          >>> s.pointAt(2)
+          Point(0.0000, 0.0000, 2.0000, 0.0000, -1)
+          >>> s = Segment(Point(0,0,0), Point(1,1,1))
+          >>> s.pointAt(0.5)
+          Point(0.5000, 0.5000, 0.5000, 0.0000, -1)
         """
 
         delta_x = self.delta_x() * scale_factor
         delta_y = self.delta_y() * scale_factor
         delta_z = self.delta_z() * scale_factor
 
-        end_pt = Point(
+        return Point(
             x=self.start_pt.x + delta_x,
             y=self.start_pt.y + delta_y,
             z=self.start_pt.z + delta_z,
             t=self.end_pt.t,
             epsg_cd=self.epsg())
+
+    def scale(self, scale_factor) -> 'Segment':
+        """
+        Scale a segment by the given scale_factor.
+        Start point does not change.
+
+        :param scale_factor: the scale factor, where 1 is the segment length.
+        :type scale_factor: numbers.Real
+        :return: Point at scale factor
+        :rtype: Point
+        """
+
+        end_pt = self.pointAt(scale_factor)
 
         return Segment(
             self.start_pt,
