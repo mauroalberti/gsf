@@ -3,7 +3,6 @@ import numbers
 from typing import Tuple
 
 from .defaults import MIN_VECTOR_MAGNITUDE
-from .exceptions import InputValuesException
 
 
 def normXYZ(x: numbers.Real, y: numbers.Real, z: numbers.Real) -> Tuple:
@@ -20,9 +19,9 @@ def normXYZ(x: numbers.Real, y: numbers.Real, z: numbers.Real) -> Tuple:
 
     vals = [x, y, z]
     if not all(map(lambda val: isinstance(val, numbers.Real), vals)):
-        raise InputValuesException("Input values must be integer or float")
+        raise Exception("Input values must be integer or float")
     elif not all(map(math.isfinite, vals)):
-        raise InputValuesException("Input values must be finite")
+        raise Exception("Input values must be finite")
 
     mag = math.sqrt(x*x + y*y + z*z)
 

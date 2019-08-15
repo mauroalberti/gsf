@@ -94,11 +94,11 @@ class Quaternion(object):
           >>> Quaternion.fromArray(np.array([7.65, -12.34, -1.0]))
           Traceback (most recent call last):
           ...
-          pygsf.mathematics.exceptions.QuaternionInputException: Input array for quaternion must have size of 4
+          Exception: Input array for quaternion must have size of 4
         """
 
         if a.size != 4:
-            raise QuaternionInputException("Input array for quaternion must have size of 4")
+            raise Exception("Input array for quaternion must have size of 4")
 
         obj = cls()
         obj.q = a.astype(np.float64)
@@ -257,7 +257,7 @@ class Quaternion(object):
         """
 
         if not isinstance(another, Quaternion):
-            raise QuaternionInputException("Compared instance must be of Quaternion type")
+            raise Exception("Compared instance must be of Quaternion type")
 
         return ((self.q == another.q) | (np.isnan(self.q) & np.isnan(another.q))).all()
 
@@ -276,7 +276,7 @@ class Quaternion(object):
         """
 
         if not isinstance(another, Quaternion):
-            raise QuaternionInputException("Compared instance must be of Quaternion type")
+            raise Exception("Compared instance must be of Quaternion type")
 
         return not (self == another)
 
@@ -295,7 +295,7 @@ class Quaternion(object):
         """
 
         if not isinstance(another, Quaternion):
-            raise QuaternionInputException("Added instance must be of Quaternion type")
+            raise Exception("Added instance must be of Quaternion type")
 
         return Quaternion.fromArray(self.q + another.q)
 
@@ -314,7 +314,7 @@ class Quaternion(object):
         """
 
         if not isinstance(another, Quaternion):
-            raise QuaternionInputException("Subtracted instance must be of Quaternion type")
+            raise Exception("Subtracted instance must be of Quaternion type")
 
         return Quaternion.fromArray(self.q - another.q)
 
@@ -334,7 +334,7 @@ class Quaternion(object):
         """
 
         if not isinstance(val, numbers.Real):
-            raise QuaternionInputException("Multiplier must be int or float")
+            raise Exception("Multiplier must be int or float")
         
         return Quaternion.fromArray(self.q * val)
 
@@ -369,7 +369,7 @@ class Quaternion(object):
         """
         
         if not isinstance(another, Quaternion):
-            raise QuaternionInputException("Multiplier must be of Quaternion type")
+            raise Exception("Multiplier must be of Quaternion type")
         
         a = + (self.q[0] * another.q[0]) \
             - (self.q[1] * another.q[1]) \
@@ -406,7 +406,7 @@ class Quaternion(object):
         """
 
         if not isinstance(vect, Vect):
-            raise QuaternionInputException("Multiplier must be of Vect type")
+            raise Exception("Multiplier must be of Vect type")
 
         return self.multByQuater(Quaternion.fromVect(vect))
 
@@ -438,7 +438,7 @@ class Quaternion(object):
         elif isinstance(another, Quaternion):
             return self.multByQuater(another)
         else:
-            raise QuaternionCalculationException("Multiplicand is not number or quaternion")
+            raise Exception("Multiplicand is not number or quaternion")
 
     @property
     def conjugate(self) -> 'Quaternion':
@@ -564,13 +564,13 @@ class Quaternion(object):
           >>> Quaternion(1, 1, 3, 0).divByScalar(1e-11)
           Traceback (most recent call last):
           ...
-          pygsf.mathematics.exceptions.QuaternionCalculationException: Quaternion division by almost zero value
+          Exception: Quaternion division by almost zero value
         """
 
         if not isinstance(denominator, numbers.Real):
-            raise QuaternionCalculationException("Quaternion divisor must be integer or float")
+            raise Exception("Quaternion divisor must be integer or float")
         elif abs(denominator) < QUAT_DIVISION_TOL:
-            raise QuaternionCalculationException("Quaternion division by almost zero value")
+            raise Exception("Quaternion division by almost zero value")
         else:
             return Quaternion.fromArray(self.q / denominator)
 
@@ -587,7 +587,7 @@ class Quaternion(object):
         """
 
         if not isinstance(another, Quaternion):
-            raise QuaternionInputException("Multiplier must be of Quaternion type")
+            raise Exception("Multiplier must be of Quaternion type")
 
         return self * (another.conjugate.divByScalar(another.sqrdNorm()))
 
@@ -613,7 +613,7 @@ class Quaternion(object):
         elif isinstance(another, Quaternion):
             return self.divByQuater(another)
         else:
-            raise QuaternionCalculationException("Denominator is not number or quaternion")
+            raise Exception("Denominator is not number or quaternion")
 
     def normalize(self) -> Optional['Quaternion']:
         """
@@ -634,7 +634,7 @@ class Quaternion(object):
         """
 
         if areClose(self.norm, 0.0):
-            raise QuaternionCalculationException("Quaternion is null or near null")
+            raise Exception("Quaternion is null or near null")
         else:
             return self / sqrt(self.sqrdNorm())
 

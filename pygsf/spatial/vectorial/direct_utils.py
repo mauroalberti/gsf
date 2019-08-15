@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from typing import Optional
 
 import numbers
@@ -11,7 +10,7 @@ from math import atan2, degrees
 def mod360(val: numbers.Real) -> numbers.Real:
     """
     Return the module 360 of the originila value.
-    
+
     :param val: value.
     :type val: numbers.Real.
     :return: value divided by mod 360.
@@ -35,7 +34,7 @@ def mod360(val: numbers.Real) -> numbers.Real:
 def opposite_trend(tr: numbers.Real) -> numbers.Real:
     """
     Calculate the trend opposite to the original one.
-    
+
     :return: the opposite trend.
 
     Examples:
@@ -50,7 +49,7 @@ def opposite_trend(tr: numbers.Real) -> numbers.Real:
     >>> opposite_trend(270)
     90.0
     """
-    
+
     return mod360(tr + 180.0)
 
 
@@ -93,7 +92,7 @@ def angle_east_clock(x: numbers.Real, y: numbers.Real) -> Optional[numbers.Real]
     :param x: x component
     :param y: y component
     :return: angle (in decimal degrees) or None
-    
+
     Examples:
       >>> angle_east_clock(0, 0) is None
       True
@@ -207,7 +206,7 @@ def slope(h: numbers.Real, v: numbers.Real) -> Optional[numbers.Real]:
     :param h: the horizontal distance
     :param v: the vertical offset
     :return: the slope in decimal degrees or None
-    
+
     Examples:
       >>> slope(0, 0) is None
       True
@@ -223,9 +222,3 @@ def slope(h: numbers.Real, v: numbers.Real) -> Optional[numbers.Real]:
         return 90.0
     else:
         return degrees(atan2(v, h))
-
-
-if __name__ == "__main__":
-
-    import doctest
-    doctest.testmod()

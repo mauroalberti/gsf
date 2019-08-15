@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-from ..mathematics.exceptions import *
 from ..mathematics.scalars import *
 
 from .vectors import Vect
@@ -22,10 +21,10 @@ class RefFrame(object):
         """
 
         if not (versor_x.isAlmostUnit and versor_y.isAlmostUnit):
-            raise RefFrameInputException("Input vectors must be near unit")
+            raise Exception("Input vectors must be near unit")
 
         if not areClose(versor_x.angle(versor_y), 90.0):
-            raise RefFrameInputException("Input vectors must be sub-orthogonal")
+            raise Exception("Input vectors must be sub-orthogonal")
 
         self._x = versor_x
         self._y = versor_y

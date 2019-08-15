@@ -2,7 +2,9 @@
 
 
 from .faults import *
+
 from ..transformations.rotations import *
+from ..vectorial.direct_utils import *
 
 
 class PTBAxes(object):
@@ -24,14 +26,14 @@ class PTBAxes(object):
           >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(80, 0))
           Traceback (most recent call last):
           ...
-          pygsf.spatial.geology.exceptions.PTBAxesInputException: P and T axes must be sub-orthogonal
+          Exception: P and T axes must be sub-orthogonal
         """
 
         if not (isinstance(p_axis, Axis) and isinstance(t_axis, Axis)):
-            raise PTBAxesInputException("P and T axes must be of type Axis")
+            raise Exception("P and T axes must be of type Axis")
 
         if not p_axis.isSubOrthog(t_axis):
-            raise PTBAxesInputException("P and T axes must be sub-orthogonal")
+            raise Exception("P and T axes must be sub-orthogonal")
 
         b_vect = t_axis.normVersor(p_axis)
 
@@ -59,20 +61,20 @@ class PTBAxes(object):
           >>> PTBAxes.fromVects(p_vector=Vect(0.5, 1, 0), t_vector=Vect(1, 1, 0))
           Traceback (most recent call last):
           ...
-          pygsf.spatial.geology.exceptions.PTBAxesInputException: P and T axes must be sub-orthogonal
+          Exception: P and T axes must be sub-orthogonal
         """
 
         if not isinstance(t_vector, Vect):
-            raise PTBAxesInputException("T vector must be of type Vect")
+            raise Exception("T vector must be of type Vect")
 
         if t_vector.isAlmostZero:
-            raise PTBAxesInputException("T vector cannot be zero-valued")
+            raise Exception("T vector cannot be zero-valued")
 
         if not isinstance(p_vector, Vect):
-            raise PTBAxesInputException("P vector must be of type Vect")
+            raise Exception("P vector must be of type Vect")
 
         if p_vector.isAlmostZero:
-            raise PTBAxesInputException("P vector cannot be zero-valued")
+            raise Exception("P vector cannot be zero-valued")
 
         return cls(
             p_axis=Axis.fromVect(p_vector),
@@ -92,12 +94,12 @@ class PTBAxes(object):
         """
 
         if not isinstance(fault, Fault):
-            raise PTBAxesInputException("First argument for fault input must have type Fault")
+            raise Exception("First argument for fault input must have type Fault")
 
         slick = fault.slick(slick_ndx)
 
         if slick.hasUnknownSense:
-            raise PTBAxesInputException("Slickenline must have knonw movement sense")
+            raise Exception("Slickenline must have knonw movement sense")
 
         s_versor = slick.geom.asVersor()
         f_versor = fault.plane.normDirectFrwrd().asVersor()
@@ -121,7 +123,7 @@ class PTBAxes(object):
         """
 
         if not isinstance(quaternion, Quaternion):
-            raise PTBAxesInputException("Input argument must be of Quaternion type")
+            raise Exception("Input argument must be of Quaternion type")
 
         q0, q1, q2, q3 = quaternion.normalize().components()
 
@@ -281,7 +283,7 @@ class PTBAxes(object):
         """
 
         if not isinstance(another, PTBAxes):
-            raise PTBAxesInputException("Argument must be of PTBAxes type")
+            raise Exception("Argument must be of PTBAxes type")
 
         if not self.PAxis.isSubParallel(another.PAxis, tolerance_angle):
             return False

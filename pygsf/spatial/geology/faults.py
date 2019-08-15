@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-
-from .orientations import *
+from ..vectorial.geometries import *
+from ..vectorial.direct_utils import *
 
 
 class Slick(object):
@@ -27,7 +27,7 @@ class Slick(object):
         :param time: the absolute or relative timing of the slickeline.
         :type time: numbers.Real.
         :return: the Slick instance
-        ;:raise: SlickInputTypeException
+        ;:raise: Exception
 
         Example:
           >>> Slick(90, 10)
@@ -37,17 +37,17 @@ class Slick(object):
           >>> Slick("90", 10, False)
           Traceback (most recent call last):
           ...
-          pygsf.spatial.geology.exceptions.SlickInputTypeException: Trend must be a number
+          Exception: Trend must be a number
         """
 
         if not isinstance(trend, numbers.Real):
-            raise SlickInputTypeException("Trend must be a number")
+            raise Exception("Trend must be a number")
         if not isinstance(plunge, numbers.Real):
-            raise SlickInputTypeException("Plunge must be a number")
+            raise Exception("Plunge must be a number")
         if not isinstance(known, bool):
-            raise SlickInputTypeException("Known movement sense must be a boolean")
+            raise Exception("Known movement sense must be a boolean")
         if not isinstance(time, numbers.Real):
-            raise SlickInputTypeException("Time must be a number")
+            raise Exception("Time must be a number")
 
         if known:
             self.s = Direct.fromAzPl(trend, plunge)
@@ -160,7 +160,7 @@ class Fault(object):
         :param slickenlines: the slickenlines associated with the fault plane.
         :type slickenlines: list of Slick instances.
         :return: the instantiated fault instance.
-        :raise: FaultInputTypeException.
+        :raise: Exception.
 
         Example:
           >>> Fault(90, 45, slickenlines=[Slick(90, 45)])
@@ -168,13 +168,13 @@ class Fault(object):
           >>> Fault(90, 45, slickenlines=[Slick(90, 55)])
           Traceback (most recent call last):
           ...
-          pygsf.spatial.geology.exceptions.FaultInputTypeException: All slickenlines must lie on the plane
+          Exception: All slickenlines must lie on the plane
         """
 
         if not isinstance(azim, numbers.Real):
-            raise FaultInputTypeException("Azim must be a number")
+            raise Exception("Azim must be a number")
         if not isinstance(dip_ang, numbers.Real):
-            raise FaultInputTypeException("Dip angle must be a number")
+            raise Exception("Dip angle must be a number")
 
         if slickenlines is None:
             slickenlines = []
@@ -183,7 +183,7 @@ class Fault(object):
 
         for slickenline in slickenlines:
             if not plane.contains(slickenline.s):
-                raise FaultInputTypeException("All slickenlines must lie on the plane")
+                raise Exception("All slickenlines must lie on the plane")
 
         self._fltpln = plane
         self._slicks = slickenlines
@@ -248,7 +248,7 @@ class Fault(object):
         :type ndx: numbers.Integral.
         :return: the associated slickenline.
         :rtype: Slick.
-        :raise: FaultInputTypeException.
+        :raise: Exception.
 
         Example:
           >>> Fault(90, 45, slickenlines=[Slick(90, 45)]).slick()
@@ -256,12 +256,12 @@ class Fault(object):
         """
 
         if not isinstance(ndx, numbers.Integral):
-            raise FaultInputTypeException("Slickenline index must be integer")
+            raise Exception("Slickenline index must be integer")
 
         if not self._slicks:
-            raise FaultInputTypeException("No slickenline defined for current Fault instance")
+            raise Exception("No slickenline defined for current Fault instance")
         elif ndx > len(self._slicks) - 1:
-            raise FaultInputTypeException("Slickenline index is greater than slickenlines number")
+            raise Exception("Slickenline index is greater than slickenlines number")
         else:
             return self._slicks[ndx]
 
@@ -275,9 +275,9 @@ class Fault(object):
         """
 
         if not self._slicks:
-            raise FaultInputTypeException("No slickenline defined for current Fault instance")
+            raise Exception("No slickenline defined for current Fault instance")
         elif ndx > len(self._slicks) - 1:
-            raise FaultInputTypeException("Slickenline index is greater than slickenlines number")
+            raise Exception("Slickenline index is greater than slickenlines number")
         else:
             return self._slicks[ndx].s
 
@@ -296,7 +296,7 @@ class Fault(object):
         if not self._slicks:
             return None
         elif ndx > len(self._slicks) - 1:
-            raise FaultInputTypeException("Slickenline index is greater than slickenlines number")
+            raise Exception("Slickenline index is greater than slickenlines number")
         else:
             return self._slicks[ndx].hasKnownSense
 
@@ -320,7 +320,7 @@ class Fault(object):
           >>> Fault(180, 45, slickenlines=[Slick(180, 45, False)]).rake()
           Traceback (most recent call last):
           ...
-          pygsf.spatial.geology.exceptions.FaultInputTypeException: Slickeline must have known movement sense
+          Exception: Slickeline must have known movement sense
           >>> Fault(90, 90, slickenlines=[Slick(0, 0)]).rake()
           0.0
           >>> Fault(90, 90, slickenlines=[Slick(90, 90)]).rake()
@@ -344,7 +344,7 @@ class Fault(object):
         """
 
         if not self.knownSense:
-            raise FaultInputTypeException("Slickeline must have known movement sense")
+            raise Exception("Slickeline must have known movement sense")
 
         sl_gv = self.slickGeom(ndx)
         angle = sl_gv.angle(self.plane.rhrStrikeOrien())

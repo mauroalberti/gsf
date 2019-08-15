@@ -2,6 +2,8 @@
 
 
 from pygsf.spatial.geology.ptbaxes import *
+from pygsf.spatial.vectorial.direct_utils import plng2colatBottom
+from pygsf.spatial.vectorial.geometries import Direct, Axis
 
 """
 

@@ -9,7 +9,7 @@ from numpy import array
 
 from ...mathematics.arrays import array_bilin_interp
 
-from ..vectorial.geometries import Point
+from pygsf.spatial.vectorial.geometries import Point
 
 from ..projections.crs import Crs
 from .geotransform import xyGeogrToijPix, gtToxyCellCenters, GeoTransform, ijPixToxyGeogr

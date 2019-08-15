@@ -2,8 +2,7 @@
 
 from math import fabs
 
-
-from .geometries import *
+from .utils import *
 from ..projections.crs import *
 
 

@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import Tuple, Optional
-
-import numbers
-
-from ..types.utils import *
-from .vectorial.geometries import Point
-from .rasters.geoarray import GeoArray
+from ..utils.types import *
+from .rasters.geoarray import *
 
 
 def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:

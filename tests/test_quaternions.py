@@ -3,6 +3,8 @@
 
 import unittest
 
+from pygsf.spatial.geology.ptbaxes import *
+
 from src_datasets import *
 
 

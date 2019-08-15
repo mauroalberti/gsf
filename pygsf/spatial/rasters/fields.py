@@ -9,8 +9,6 @@ import numpy as np
 
 import numbers
 
-from ...mathematics.exceptions import InputValuesException
-
 from .geotransform import GeoTransform, ijPixToxyGeogr
 
 
@@ -325,7 +323,7 @@ def magn_grads(
     :type axis: str.
     :return: magnitude gradient field(s) along the considered direction.
     :rtype: list of np.array.
-    :raises: InputValuesException.
+    :raises: Exception.
 
     Examples:
     """
@@ -338,7 +336,7 @@ def magn_grads(
     elif axis == '':
         return [grad_j(magn, dir_cell_sizes[0]), grad_iminus(magn, dir_cell_sizes[1])]
     else:
-        raise InputValuesException("Axis must be 'x' or 'y' or '' (for both x and y). '{}' given".format(axis))
+        raise Exception("Axis must be 'x' or 'y' or '' (for both x and y). '{}' given".format(axis))
 
 
 def magn_grad_along_flowlines(

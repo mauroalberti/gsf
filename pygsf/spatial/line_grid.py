@@ -4,7 +4,8 @@
 from typing import Optional
 
 from .rasters.geoarray import GeoArray
-from .vectorial.geometries import Point, Line
+from .vectorial.geometries import Line
+from pygsf.spatial.vectorial.geometries import Point
 
 
 def line_on_grid(ga: GeoArray, profile_line: Line) -> Optional[Line]:

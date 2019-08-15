@@ -4,11 +4,10 @@
 from typing import Tuple, Optional
 
 
-from ..rasters.geoarray import GeoArray
-from ..rasters.fields import *
-from ..vectorial.geometries import Point, Segment
-
-from .orientations import Plane
+from .rasters.geoarray import GeoArray
+from .rasters.fields import *
+from .vectorial.geometries import Segment
+from pygsf.spatial.vectorial.geometries import Point, Plane
 
 
 def plane_dem_intersection(

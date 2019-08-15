@@ -3,9 +3,7 @@
 
 from .quaternions import *
 
-from ..geology.orientations import *
-
-from .quaternions import QUAT_MAGN_THRESH
+from ..vectorial.geometries import *
 
 
 class RotationAxis(object):

@@ -2,14 +2,20 @@
 
 
 from typing import Tuple
+
 import math
 
 import numbers
 
 
-def areClose(a: numbers.Real, b: numbers.Real,
-    rtol: numbers.Real = 1e-012, atol: numbers.Real = 1e-12,
-    equal_nan: bool = False, equal_inf: bool = False) -> bool:
+def areClose(
+    a: numbers.Real,
+    b: numbers.Real,
+    rtol: numbers.Real = 1e-012,
+    atol: numbers.Real = 1e-12,
+    equal_nan: bool = False,
+    equal_inf: bool = False
+) -> bool:
     """
     Mimics math.isclose from Python 3.5 (see: https://docs.python.org/3.5/library/math.html)
 
@@ -66,7 +72,10 @@ def areClose(a: numbers.Real, b: numbers.Real,
     return abs(a - b) <= max(rtol * max(abs(a), abs(b)), atol)
 
 
-def apprFloat(val: numbers.Real, ndec: numbers.Integral=1) -> numbers.Real:
+def apprFloat(
+    val: numbers.Real,
+    ndec: numbers.Integral = 1
+) -> numbers.Real:
     """
     Rounds a numeric value to ndec.
 
@@ -88,7 +97,10 @@ def apprFloat(val: numbers.Real, ndec: numbers.Integral=1) -> numbers.Real:
     return rval
 
 
-def apprFTuple(tup: Tuple[numbers.Real, ...], ndec=1) -> Tuple[numbers.Real, ...]:
+def apprFTuple(
+    tup: Tuple[numbers.Real, ...],
+    ndec=1
+) -> Tuple[numbers.Real, ...]:
     """
     Rounds numeric values inside a tuple to ndec decimals
 

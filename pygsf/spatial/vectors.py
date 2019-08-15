@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
+
 import numbers
 
-from ..mathematics.defaults import MIN_SCALAR_VALUE
-from ..mathematics.exceptions import *
-from ..mathematics.arrays import *
+from .projections.crs import *
 
-from .projections.crs import Crs
+from ..mathematics.defaults import *
+from ..mathematics.arrays import *
 
 
 class Vect(object):
@@ -32,11 +32,11 @@ class Vect(object):
           >>> Vect(1, np.nan, 1)
           Traceback (most recent call last):
           ...
-          pygsf.mathematics.exceptions.VectorInputException: Input values must be finite
+          Exception: Input values must be finite
           >>> Vect(1, 0, np.inf)
           Traceback (most recent call last):
           ...
-          pygsf.mathematics.exceptions.VectorInputException: Input values must be finite
+          Exception: Input values must be finite
           >>> Vect(0, 0, 0, epsg_cd=32648)
           Vect(0.0000, 0.0000, 0.0000, EPSG: 32648)
           >>> Vect(2.2, -19.7, epsg_cd=32648)
@@ -46,10 +46,10 @@ class Vect(object):
         vals = [x, y, z]
 
         if any(map(lambda val: not isinstance(val, numbers.Real), vals)):
-            raise VectorInputException("Input values must be integer of float")
+            raise Exception("Input values must be integer of float")
 
         if not all(map(math.isfinite, vals)):
-            raise VectorInputException("Input values must be finite")
+            raise Exception("Input values must be finite")
 
         self._a = np.array(vals, dtype=np.float64)
         self._crs = Crs(epsg_cd)
@@ -66,7 +66,7 @@ class Vect(object):
         """
 
         if not isinstance(another, Vect):
-            raise VectorInputException("Instances must be of the same type")
+            raise Exception("Instances must be of the same type")
         else:
             return all([
                 self.x == another.x,
@@ -84,7 +84,7 @@ class Vect(object):
         """
 
         if not isinstance(another, Vect):
-            raise VectorInputException("Instances must be of the same type")
+            raise Exception("Instances must be of the same type")
         else:
             return not (self == another)
 
