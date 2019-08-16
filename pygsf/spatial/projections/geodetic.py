@@ -8,8 +8,8 @@ import numbers
 
 from math import sqrt, sin, cos, radians
 
-from ..vectorial.geometries import Line
-from pygsf.spatial.vectorial.geometries import Point
+from ..vectorial.geometries import *
+
 
 # Earth WGS84 parameters
 

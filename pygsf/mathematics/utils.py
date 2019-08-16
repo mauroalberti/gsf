@@ -31,3 +31,4 @@ def normXYZ(x: numbers.Real, y: numbers.Real, z: numbers.Real) -> Tuple:
         norm_xyz = x/mag, y/mag, z/mag
 
     return mag, norm_xyz
+

@@ -4,7 +4,11 @@
 import numbers
 
 
-def interp_linear(frac_s: numbers.Real, v0: numbers.Real, v1:numbers.Real) -> numbers.Real:
+def interp_linear(
+        frac_s: numbers.Real,
+        v0: numbers.Real,
+        v1: numbers.Real
+) -> numbers.Real:
     """
     Interpolate a number in a linear way.
 

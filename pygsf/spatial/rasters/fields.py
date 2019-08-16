@@ -9,7 +9,7 @@ import numpy as np
 
 import numbers
 
-from .geotransform import GeoTransform, ijPixToxyGeogr
+from .geotransform import *
 
 
 def ij_transfer_func(

@@ -222,3 +222,4 @@ def slope(h: numbers.Real, v: numbers.Real) -> Optional[numbers.Real]:
         return 90.0
     else:
         return degrees(atan2(v, h))
+

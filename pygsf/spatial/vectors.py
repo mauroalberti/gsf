@@ -755,6 +755,7 @@ class Vect(object):
             return 360.0 - angle
 
 
+
 if __name__ == "__main__":
 
     import doctest

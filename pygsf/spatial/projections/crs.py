@@ -52,16 +52,14 @@ class Crs(object):
 def check_crs(
     template_element,
     checked_element
-) -> bool:
+) -> None:
     """
     Check whether two spatial elements have the same crs.
 
     :param template_element: first spatial element.
     :param checked_element: second spatial element.
-    :param err_msg: the error msg.
-    :type err_msg: str.
     :return: whether two spatial elements have the same crs.
-    :rtype: bool.
+    :rtype: None.
     """
 
     if checked_element.crs != template_element.crs:

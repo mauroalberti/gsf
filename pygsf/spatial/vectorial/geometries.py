@@ -1,27 +1,37 @@
 # -*- coding: utf-8 -*-
 
-
-import numbers
+from functools import singledispatch
 
 import itertools
+
+from enum import Enum
+
+import numbers
 
 from math import *
 
 from array import array
-from enum import Enum
-from math import sqrt
+from typing import List, Callable, Tuple, Optional
 
-from .defaults import *
-from .direct_utils import *
-
-from ..vectors import *
-
-from ...mathematics.defaults import *
-from ...mathematics.utils import *
+import numpy
 
 from ...utils.types import *
 from ...utils.lists import *
+
 from ...mathematics.statistics import *
+from ...mathematics.defaults import *
+from ...mathematics.utils import *
+from ...mathematics.scalars import *
+
+#from ..rasters.fields import *
+#from ..rasters.geoarray import *
+
+from ..transformations.quaternions import *
+
+from ..vectors import *
+
+from .defaults import *
+from .direct_utils import *
 
 
 class Point(object):
@@ -497,7 +507,7 @@ class Point(object):
         Reflect a point along a vertical axis.
 
         :return: reflected point.
-        :rtype: pygsf.spatial.vectorial.geometries.Point
+        :rtype: Point
 
         Examples:
           >>> Point(1,1,1).reflect_vertical()
@@ -709,7 +719,7 @@ class CPlane(object):
         Returns the Crs instance.
 
         :return: EPSG code.
-        :rtype: pygsf.projections.crs.Crs
+        :rtype: Crs
 
         Example:
         """
@@ -859,7 +869,7 @@ class CPlane(object):
         for two planes.
 
         :param another: the second cartesian plane
-        :type another: pygsf.spatial.vectorial.geometries.CPlane
+        :type another: CPlane
         :return: the optional instersection point
         :rtype: Optional[Point]
         :raise: Exception
@@ -1388,7 +1398,7 @@ class Segment(object):
         :param scale_factor: the scale factor, where 1 is the segment length.
         :type scale_factor: numbers.Real
         :return: Point at scale factor
-        :rtype: pygsf.spatial.vectorial.geometries.Point
+        :rtype: Point
         """
 
         end_pt = self.pointAt(scale_factor)
@@ -2733,7 +2743,7 @@ class Plane(object):
         to the original one but with downward plunge.
 
         :return: geological plane
-        :rtype: pygsf.spatial.vectorial.geometries.Plane
+        :rtype: Plane
 
         Examples:
           >>> Plane(0, 45).mirrorVertPPlane()
@@ -4205,3 +4215,767 @@ class Axis(Direct):
         angle_vers = self.asVersor().angle(another.asVersor())
 
         return min(angle_vers, 180.0 - angle_vers)
+
+
+class RotationAxis(object):
+    """
+    Rotation axis, expressed by an Orientation and a rotation angle.
+    """
+
+    def __init__(self, trend: numbers.Real, plunge: numbers.Real, rot_ang: numbers.Real):
+        """
+        Constructor.
+
+        :param trend: Float/Integer
+        :param plunge: Float/Integer
+        :param rot_ang: Float/Integer
+
+        Example:
+        >> RotationAxis(0, 90, 120)
+        RotationAxis(0.0000, 90.0000, 120.0000)
+        """
+
+        self.dr = Direct.fromAzPl(trend, plunge)
+        self.a = float(rot_ang)
+
+    @classmethod
+    def fromQuater(cls, quat: Quaternion):
+        """
+        Calculates the Rotation Axis expressed by a quaternion.
+        The resulting rotation asVect is set to point downward.
+        Examples are taken from Kuipers, 2002, chp. 5.
+
+        :return: RotationAxis instance.
+
+        Examples:
+          >>> RotationAxis.fromQuater(Quaternion(0.5, 0.5, 0.5, 0.5))
+          RotationAxis(45.0000, -35.2644, 120.0000)
+          >>> RotationAxis.fromQuater(Quaternion(sqrt(2)/2, 0.0, 0.0, sqrt(2)/2))
+          RotationAxis(0.0000, -90.0000, 90.0000)
+          >>> RotationAxis.fromQuater(Quaternion(sqrt(2)/2, sqrt(2)/2, 0.0, 0.0))
+          RotationAxis(90.0000, -0.0000, 90.0000)
+        """
+
+        if abs(quat) < QUAT_MAGN_THRESH:
+
+            rot_ang = 0.0
+            rot_direct = Direct.fromAzPl(0.0, 0.0)
+
+        elif areClose(quat.scalar, 1):
+
+            rot_ang = 0.0
+            rot_direct = Direct.fromAzPl(0.0, 0.0)
+
+        else:
+
+            unit_quat = quat.normalize()
+            rot_ang = unit_quat.rotAngle()
+            rot_direct = Direct.fromVect(unit_quat.vector)
+
+        return RotationAxis(*rot_direct.d, rot_ang)
+
+    @classmethod
+    def fromDirect(cls, direct: Direct, angle: numbers.Real):
+        """
+        Class constructor from a Direct instance and an angle value.
+
+        :param direct: a Direct instance
+        :param angle: numbers.Real.
+        :return: RotationAxis instance
+
+        Example:
+          >>> RotationAxis.fromDirect(Direct.fromAzPl(320, 12), 30)
+          RotationAxis(320.0000, 12.0000, 30.0000)
+          >>> RotationAxis.fromDirect(Direct.fromAzPl(315.0, -0.0), 10)
+          RotationAxis(315.0000, -0.0000, 10.0000)
+        """
+
+        return RotationAxis(*direct.d, angle)
+
+    @classmethod
+    def fromVect(cls, vector: Vect, angle: numbers.Real):
+        """
+        Class constructor from a Vect instance and an angle value.
+
+        :param vector: a Vect instance
+        :param angle: float value
+        :return: RotationAxis instance
+
+        Example:
+          >>> RotationAxis.fromVect(Vect(0, 1, 0), 30)
+          RotationAxis(0.0000, -0.0000, 30.0000)
+          >>> RotationAxis.fromVect(Vect(1, 0, 0), 30)
+          RotationAxis(90.0000, -0.0000, 30.0000)
+          >>> RotationAxis.fromVect(Vect(0, 0, -1), 30)
+          RotationAxis(0.0000, 90.0000, 30.0000)
+        """
+
+        direct = Direct.fromVect(vector)
+
+        return RotationAxis.fromDirect(direct, angle)
+
+    def __repr__(self):
+
+        return "RotationAxis({:.4f}, {:.4f}, {:.4f})".format(*self.dr.d, self.a)
+
+    @property
+    def rotAngle(self) -> float:
+        """
+        Returns the rotation angle of the rotation axis.
+
+        :return: rotation angle (Float)
+
+        Example:
+          >>> RotationAxis(10, 15, 230).rotAngle
+          230.0
+        """
+
+        return self.a
+
+    @property
+    def rotDirect(self) -> Direct:
+        """
+        Returns the rotation axis, expressed as a Direct.
+
+        :return: Direct instance
+
+        Example:
+          >>> RotationAxis(320, 40, 15).rotDirect
+          Direct(az: 320.00°, pl: 40.00°)
+          >>> RotationAxis(135, 0, -10).rotDirect
+          Direct(az: 135.00°, pl: 0.00°)
+          >>> RotationAxis(45, 10, 10).rotDirect
+          Direct(az: 45.00°, pl: 10.00°)
+        """
+
+        return self.dr
+
+    @property
+    def versor(self) -> Vect:
+        """
+        Return the versor equivalent to the Rotation geological asVect.
+
+        :return: Vect
+        """
+
+        return self.dr.asVersor()
+
+    def specular(self):
+        """
+        Derives the rotation axis with opposite asVect direction
+        and rotation angle that is the complement to 360°.
+        The resultant rotation is equivalent to the original one.
+
+        :return: RotationAxis instance.
+
+        Example
+          >>> RotationAxis(90, 45, 320).specular()
+          RotationAxis(270.0000, -45.0000, 40.0000)
+          >>> RotationAxis(135, 0, -10).specular()
+          RotationAxis(315.0000, -0.0000, 10.0000)
+          >>> RotationAxis(45, 10, 10).specular()
+          RotationAxis(225.0000, -10.0000, 350.0000)
+        """
+
+        gvect_opp = self.rotDirect.opposite()
+        opposite_angle = (360.0 - self.rotAngle) % 360.0
+
+        return RotationAxis.fromDirect(gvect_opp, opposite_angle)
+
+    def compl180(self):
+        """
+        Creates a new rotation axis that is the complement to 180 of the original one.
+
+        :return: RotationAxis instance.
+
+        Example:
+          >>> RotationAxis(90, 45, 120).compl180()
+          RotationAxis(90.0000, 45.0000, 300.0000)
+          >>> RotationAxis(117, 34, 18).compl180()
+          RotationAxis(117.0000, 34.0000, 198.0000)
+          >>> RotationAxis(117, 34, -18).compl180()
+          RotationAxis(117.0000, 34.0000, 162.0000)
+        """
+
+        rot_ang = - (180.0 - self.rotAngle) % 360.0
+        return RotationAxis.fromDirect(self.dr, rot_ang)
+
+    def strictlyEquival(self, another, angle_tolerance: numbers.Real=VECTOR_ANGLE_THRESHOLD) -> bool:
+        """
+        Checks if two RotationAxis are almost equal, based on a strict checking
+        of the Direct component and of the rotation angle.
+
+        :param another: another RotationAxis instance, to be compared with
+        :type another: RotationAxis
+        :parameter angle_tolerance: the tolerance as the angle (in degrees)
+        :type angle_tolerance: numbers.Real.
+        :return: the equivalence (true/false) between the two compared RotationAxis
+        :rtype: bool
+
+        Examples:
+          >>> ra_1 = RotationAxis(180, 10, 10)
+          >>> ra_2 = RotationAxis(180, 10, 10.5)
+          >>> ra_1.strictlyEquival(ra_2)
+          True
+          >>> ra_3 = RotationAxis(180.2, 10, 10.4)
+          >>> ra_1.strictlyEquival(ra_3)
+          True
+          >>> ra_4 = RotationAxis(184.9, 10, 10.4)
+          >>> ra_1.strictlyEquival(ra_4)
+          False
+        """
+
+        if not self.dr.isSubParallel(another.dr, angle_tolerance):
+            return False
+
+        if not areClose(self.a, another.a, atol=1.0):
+            return False
+
+        return True
+
+    def toRotQuater(self) -> Quaternion:
+        """
+        Converts the rotation axis to the equivalent rotation quaternion.
+
+        :return: the rotation quaternion.
+        :rtype: Quaternion
+        """
+
+        rotation_angle_rad = radians(self.a)
+        rotation_vector = self.dr.asVersor()
+
+        w = cos(rotation_angle_rad / 2.0)
+        x, y, z = rotation_vector.scale(sin(rotation_angle_rad / 2.0)).toXYZ()
+
+        return Quaternion(w, x, y, z).normalize()
+
+    def toRotMatrix(self):
+        """
+        Derives the rotation matrix from the RotationAxis instance.
+
+        :return: 3x3 numpy array
+        """
+
+        rotation_versor = self.versor
+        phi = radians(self.a)
+
+        l = rotation_versor.x
+        m = rotation_versor.y
+        n = rotation_versor.z
+
+        cos_phi = cos(phi)
+        sin_phi = sin(phi)
+
+        a11 = cos_phi + ((l * l) * (1 - cos_phi))
+        a12 = ((l * m) * (1 - cos_phi)) - (n * sin_phi)
+        a13 = ((l * n) * (1 - cos_phi)) + (m * sin_phi)
+
+        a21 = ((l * m) * (1 - cos_phi)) + (n * sin_phi)
+        a22 = cos_phi + ((m * m) * (1 - cos_phi))
+        a23 = ((m * n) * (1 - cos_phi)) - (l * sin_phi)
+
+        a31 = ((l * n) * (1 - cos_phi)) - (m * sin_phi)
+        a32 = ((m * n) * (1 - cos_phi)) + (l * sin_phi)
+        a33 = cos_phi + ((n * n) * (1 - cos_phi))
+
+        return np.array([(a11, a12, a13),
+                         (a21, a22, a23),
+                         (a31, a32, a33)])
+
+    def toMinRotAxis(self):
+        """
+        Calculates the minimum rotation axis from the given quaternion.
+
+        :return: RotationAxis instance.
+        """
+
+        return self if abs(self.rotAngle) <= 180.0 else self.specular()
+
+
+def sortRotations(rotation_axes: List[RotationAxis]) -> List[RotationAxis]:
+    """
+    Sorts a list or rotation axes, based on the rotation angle (absolute value),
+    in an increasing order.
+
+    :param rotation_axes: o list of RotationAxis objects.
+    :return: the sorted list of RotationAxis
+
+    Example:
+      >>> rots = [RotationAxis(110, 14, -23), RotationAxis(42, 13, 17), RotationAxis(149, 87, 13)]
+      >>> sortRotations(rots)
+      [RotationAxis(149.0000, 87.0000, 13.0000), RotationAxis(42.0000, 13.0000, 17.0000), RotationAxis(110.0000, 14.0000, -23.0000)]
+    """
+
+    return sorted(rotation_axes, key=lambda rot_ax: abs(rot_ax.rotAngle))
+
+def rotate(
+        v: Vect,
+        rot_axis: RotationAxis
+) -> 'Vect':
+    """
+    Rotates a vector.
+
+    :param v: the vector to rotate
+    :type v: Vect
+    :param rot_axis: the rotation axis
+    :type rot_axis: RotationAxis
+    :return: the rotated vector
+    :rtype: Vect
+
+    Examples:
+      >>> v = Vect(1,0,1)
+      >>> rotation = RotationAxis(0, -90, 90)
+      >>> rotate(v, rotation)
+      >>> Vect(0, 1, 1, -1)
+    """
+
+    rot_quat = rot_axis.toRotQuater()
+    q = rot_quat.vector
+
+    t = q.scale(2).vCross(v)
+    rot_v = v + t.scale(rot_quat.scalar) + q.vCross(t)
+
+    return rot_v
+
+
+def rotVectByQuater(quat: Quaternion, vect: Vect) -> Vect:
+    """
+    Calculates a rotated solution of a Vect instance given a normalized quaternion.
+    Original formula in Ref. [1].
+    Eq.6: R(qv) = q qv q(-1)
+
+    :param quat: a Quaternion instance
+    :param vect: a Vect instance
+    :return: a rotated Vect instance
+
+    Example:
+      >>> q = Quaternion.i()  # rotation of 180° around the x axis
+      >>> rotVectByQuater(q, Vect(0, 1, 0))
+      Vect(0.0000, -1.0000, 0.0000, EPSG: -1)
+      >>> rotVectByQuater(q, Vect(0, 1, 1))
+      Vect(0.0000, -1.0000, -1.0000, EPSG: -1)
+      >>> q = Quaternion.k()  # rotation of 180° around the z axis
+      >>> rotVectByQuater(q, Vect(0, 1, 1))
+      Vect(0.0000, -1.0000, 1.0000, EPSG: -1)
+      >>> q = Quaternion.j()  # rotation of 180° around the y axis
+      >>> rotVectByQuater(q, Vect(1, 0, 1))
+      Vect(-1.0000, 0.0000, -1.0000, EPSG: -1)
+    """
+
+    q = quat.normalize()
+    qv = Quaternion.fromVect(vect)
+
+    rotated_v = q * (qv * q.inverse)
+
+    return rotated_v.vector
+
+
+
+def shortest_segment_or_point(
+    segment1: Segment,
+    segment2: Segment
+) -> Optional[Union[Segment, Point]]:
+
+    """
+    Calculates the optional shortest segment - or the intesection point - between two segments.
+
+    Adapted from:
+        http://paulbourke.net/geometry/pointlineplane/
+
+    C code from:
+        http://paulbourke.net/geometry/pointlineplane/lineline.c
+[
+    typedef struct {
+    double x,y,z;
+    } XYZ;
+
+    /*
+    Calculate the line segment PaPb that is the shortest route between
+    two lines P1P2 and P3P4. Calculate also the values of mua and mub where
+      Pa = P1 + mua (P2 - P1)
+      Pb = P3 + mub (P4 - P3)
+    Return FALSE if no solution exists.
+    */
+    int LineLineIntersect(
+    XYZ p1,XYZ p2,XYZ p3,XYZ p4,XYZ *pa,XYZ *pb,
+    double *mua, double *mub)
+    {
+    XYZ p13,p43,p21;
+    double d1343,d4321,d1321,d4343,d2121;
+    double numer,denom;
+
+    p13.x = p1.x - p3.x;
+    p13.y = p1.y - p3.y;
+    p13.z = p1.z - p3.z;
+    p43.x = p4.x - p3.x;
+    p43.y = p4.y - p3.y;
+    p43.z = p4.z - p3.z;
+    if (ABS(p43.x) < EPS && ABS(p43.y) < EPS && ABS(p43.z) < EPS)
+      return(FALSE);
+    p21.x = p2.x - p1.x;
+    p21.y = p2.y - p1.y;
+    p21.z = p2.z - p1.z;
+    if (ABS(p21.x) < EPS && ABS(p21.y) < EPS && ABS(p21.z) < EPS)
+      return(FALSE);
+
+    d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
+    d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
+    d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
+    d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
+    d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
+
+    denom = d2121 * d4343 - d4321 * d4321;
+    if (ABS(denom) < EPS)
+      return(FALSE);
+    numer = d1343 * d4321 - d1321 * d4343;
+
+    *mua = numer / denom;
+    *mub = (d1343 + d4321 * (*mua)) / d4343;
+
+    pa->x = p1.x + *mua * p21.x;
+    pa->y = p1.y + *mua * p21.y;
+    pa->z = p1.z + *mua * p21.z;
+    pb->x = p3.x + *mub * p43.x;
+    pb->y = p3.y + *mub * p43.y;
+    pb->z = p3.z + *mub * p43.z;
+
+    return(TRUE);
+    }
+
+    :param segment1: the first segment.
+    :type segment1: Segment.
+    :param segment2: the second segment.
+    :type segment2: Segment.
+    :return: the optional shortest segment or an intersection point.
+    :rtype: Optional[Union[Segment, Point]]
+    """
+
+    check_type(segment1, "First segment", Segment)
+    check_type(segment2, "Second segment", Segment)
+
+    check_crs(segment1, segment2)
+
+    epsg_cd = segment1.epsg()
+
+    p1 = segment1.start_pt
+    p2 = segment1.end_pt
+
+    p3 = segment2.start_pt
+    p4 = segment2.end_pt
+
+    p13 = Point(
+        x=p1.x - p3.x,
+        y=p1.y - p3.y,
+        z=p1.z - p3.z,
+        epsg_cd=epsg_cd
+    )
+
+    p43 = Point(
+        x=p4.x - p3.x,
+        y=p4.y - p3.y,
+        z=p4.z - p3.z,
+        epsg_cd=epsg_cd
+    )
+
+    if p43.asVect().isAlmostZero:
+        return None
+
+    p21 = Point(
+        x=p2.x - p1.x,
+        y=p2.y - p1.y,
+        z=p2.z - p1.z,
+        epsg_cd=epsg_cd
+    )
+
+    if p21.asVect().isAlmostZero:
+        return None
+
+    d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z
+    d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z
+    d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z
+    d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z
+    d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z
+
+    denom = d2121 * d4343 - d4321 * d4321
+
+    if fabs(denom) < MIN_SCALAR_VALUE:
+        return None
+
+    numer = d1343 * d4321 - d1321 * d4343
+
+    mua = numer / denom
+    mub = (d1343 + d4321 * mua) / d4343
+
+    pa = Point(
+        x=p1.x + mua * p21.x,
+        y=p1.y + mua * p21.y,
+        z=p1.z + mua * p21.z,
+        epsg_cd=epsg_cd
+    )
+
+    pb = Point(
+        x=p3.x + mub * p43.x,
+        y=p3.y + mub * p43.y,
+        z=p3.z + mub * p43.z,
+        epsg_cd=epsg_cd
+    )
+
+    return point_or_segment(
+        point1=pa,
+        point2=pb
+    )
+
+
+
+def point_or_segment(
+        point1: Point,
+        point2: Point,
+        tol: numbers.Real = MIN_POINT_POS_DIFF
+) -> Union[Point, Segment]:
+    """
+    Creates a point or segment based on the points distance.
+
+    :param point1: first input point.
+    :type point1: Point.
+    :param point2: second input point.
+    :type point2: Point.
+    :param tol: distance tolerance between the two points.
+    :type tol: numbers.Real.
+    :return: point or segment based on their distance.
+    :rtype: PointOrSegment.
+    :raise: Exception.
+    """
+
+    check_type(point1, "First point", Point)
+    check_type(point2, "Second point", Point)
+
+    check_crs(point1, point2)
+
+    if point1.dist3DWith(point2) <= tol:
+        return point1.clone()
+    else:
+        return Segment(
+            start_pt=point1,
+            end_pt=point2
+        )
+
+
+
+class SegmentPair:
+    """
+    A pair of segments.
+
+    """
+
+    def __init__(self,
+        segment1: Segment,
+        segment2: Segment
+    ):
+        """
+
+        :param segment1:
+        :param segment2:
+        """
+
+        check_type(segment1, "First segment", Segment)
+        check_type(segment2, "Second segment", Segment)
+
+        check_crs(segment1, segment2)
+
+        self._s1 = segment1
+        self._s2 = segment2
+
+    def intersect(self) -> Optional[Union[Point, Segment]]:
+        """
+        Determines the optional point or segment intersection between the segment pair.
+
+        :return: the optional point or segment intersection between the segment pair.
+        :rtype: Optional[Union[Point, Segment]]
+
+        Examples:
+          >>> s2 = Segment(Point(0,0,0), Point(1,0,0))
+          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+          >>> s1 = Segment(Point(-2,0,0), Point(-1,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect() is None
+          True
+          >>> s1 = Segment(Point(-2,0,0), Point(0,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
+          >>> s1 = Segment(Point(-2,0,0), Point(0.5,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.5000, 0.0000, 0.0000, 0.0000, -1))
+          >>> s1 = Segment(Point(-2,0,0), Point(1,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+          >>> s1 = Segment(Point(-2,0,0), Point(2,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+          >>> s1 = Segment(Point(0,0,0), Point(0.5,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.5000, 0.0000, 0.0000, 0.0000, -1))
+          >>> s1 = Segment(Point(0.25,0,0), Point(0.75,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.7500, 0.0000, 0.0000, 0.0000, -1))
+          >>> s1 = Segment(Point(0.25,0,0), Point(1,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+          >>> s1 = Segment(Point(0.25,0,0), Point(1.25,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+          >>> s1 = Segment(Point(0,0,0), Point(1.25,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+          >>> s1 = Segment(Point(1,0,0), Point(1.25,0,0))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Point(1.0000, 0.0000, 0.0000, 0.0000, -1)
+          >>> s2 = Segment(Point(0,0,0), Point(1,1,1))
+          >>> s1 = Segment(Point(0.25,0.25,0.25), Point(0.75,0.75,0.75))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.2500, 0.2500, 0.2500, 0.0000, -1), end_pt=Point(0.7500, 0.7500, 0.7500, 0.0000, -1))
+          >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,1.75,1.75))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Segment(start_pt=Point(0.2500, 0.2500, 0.2500, 0.0000, -1), end_pt=Point(1.0000, 1.0000, 1.0000, 0.0000, -1))
+          >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,0,1.75))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Point(0.2500, 0.2500, 0.2500, 0.0000, -1)
+          >>> s1 = Segment(Point(0.25,1,0.25), Point(0.75,0.75,0.75))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Point(0.7500, 0.7500, 0.7500, 0.0000, -1)
+          >>> s2 = Segment(Point(-1,-1,-1), Point(1,1,1))
+          >>> s1 = Segment(Point(-1,1,1), Point(1,-1,-1))
+          >>> sp = SegmentPair(s1, s2)
+          >>> sp.intersect()
+          Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
+
+        """
+
+        s1_startpt_inside = self._s1.segment_start_in(self._s2)
+        s2_startpt_inside = self._s2.segment_start_in(self._s1)
+
+        s1_endpt_inside = self._s1.segment_end_in(self._s2)
+        s2_endpt_inside = self._s2.segment_end_in(self._s1)
+
+        elements = [s1_startpt_inside, s2_startpt_inside, s1_endpt_inside, s2_endpt_inside]
+
+        if all(elements):
+            return self._s1.clone()
+
+        if s1_startpt_inside and s1_endpt_inside:
+            return self._s1.clone()
+
+        if s2_startpt_inside and s2_endpt_inside:
+            return self._s2.clone()
+
+        if s1_startpt_inside and s2_startpt_inside:
+            return point_or_segment(
+                self._s1.start_pt,
+                self._s2.start_pt
+            )
+
+        if s1_startpt_inside and s2_endpt_inside:
+            return point_or_segment(
+                self._s1.start_pt,
+                self._s2.end_pt
+            )
+
+        if s1_endpt_inside and s2_startpt_inside:
+            return point_or_segment(
+                self._s2.start_pt,
+                self._s1.end_pt
+
+            )
+
+        if s1_endpt_inside and s2_endpt_inside:
+            return point_or_segment(
+                self._s1.end_pt,
+                self._s2.end_pt
+            )
+
+        if s1_startpt_inside:
+            return self._s1.start_pt.clone()
+
+        if s1_endpt_inside:
+            return self._s1.end_pt.clone()
+
+        if s2_startpt_inside:
+            return self._s2.start_pt.clone()
+
+        if s2_endpt_inside:
+            return self._s2.end_pt.clone()
+
+        shortest_segm_or_pt = shortest_segment_or_point(
+            segment1=self._s1,
+            segment2=self._s2
+        )
+
+        if not shortest_segm_or_pt:
+            return None
+
+        if isinstance(shortest_segm_or_pt, Point):
+            return shortest_segm_or_pt
+        else:
+            return None
+
+
+class Segments(list):
+    """
+    Collection of segments, inheriting from list.
+
+    """
+
+    def __init__(self, segments: List[Segment]):
+
+        check_type(segments, "Segments", List)
+        for el in segments:
+            check_type(el, "Segment", Segment)
+
+        super(Segments, self).__init__(segments)
+
+
+class Lines(list):
+    """
+    Collection of lines, inheriting from list.
+
+    """
+
+    def __init__(self, lines: List[Line]):
+
+        check_type(lines, "Lines", List)
+        for el in lines:
+            check_type(el, "Line", Line)
+
+        super(Lines, self).__init__(lines)
+
+
+class MultiLines(list):
+    """
+    Collection of multilines, inheriting from list.
+
+    """
+
+    def __init__(self, multilines: List[MultiLine]):
+
+        check_type(multilines, "MultiLines", List)
+        for el in multilines:
+            check_type(el, "MultiLine", MultiLine)
+
+        super(MultiLines, self).__init__(multilines)
+

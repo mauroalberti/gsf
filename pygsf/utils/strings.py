@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-def clean_string(str):
+def clean_string(strng):
 
-    str = str.replace("\t", "")
-    str = str.replace("\r", "")
-    str = str.replace("\n", "")
+    strng = strng.replace("\t", "")
+    strng = strng.replace("\r", "")
+    strng = strng.replace("\n", "")
 
-    return str
+    return strng
 

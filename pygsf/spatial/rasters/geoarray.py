@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from typing import Tuple, Optional, List
-
 import numbers
 
 import numpy as np
-from numpy import array
 
-from ...mathematics.arrays import array_bilin_interp
+from .fields import *
 
-from pygsf.spatial.vectorial.geometries import Point
+from ..vectorial.geometries import *
 
-from ..projections.crs import Crs
-from .geotransform import xyGeogrToijPix, gtToxyCellCenters, GeoTransform, ijPixToxyGeogr
-from .fields import magnitude, orients_d, divergence, curl_module, magn_grads, magn_grad_along_flowlines
+from ..projections.crs import *
+
+# -*- coding: utf-8 -*-
+
+
+#from ..utils.types import *
 
 
 def ijPixToijArray(i_pix: numbers.Real, j_pix: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
@@ -68,7 +68,11 @@ class GeoArray(object):
     Stores and process georeferenced raster data.
     """
 
-    def __init__(self, inGeotransform: GeoTransform, epsg_cd: numbers.Integral = -1, inLevels: Optional[List[np.ndarray]] = None) -> None:
+    def __init__(self,
+        inGeotransform: GeoTransform,
+        epsg_cd: numbers.Integral = -1,
+        inLevels: Optional[List[np.ndarray]] = None
+    ):
         """
         GeoArray class constructor.
 
@@ -191,9 +195,9 @@ class GeoArray(object):
 
         Examples:
           >>> gt = GeoTransform(0, 0, 10, 10)
-          >>> GeoArray(gt, -1, [array([[1, 2], [3, 4]])]).levels_num
+          >>> GeoArray(gt, -1, [np.array([[1, 2], [3, 4]])]).levels_num
           1
-          >>> GeoArray(gt, -1, [array([[1, 2], [3, 4]]), np.ones((4, 3, 2))]).levels_num
+          >>> GeoArray(gt, -1, [np.array([[1, 2], [3, 4]]), np.ones((4, 3, 2))]).levels_num
           2
         """
 
@@ -228,9 +232,9 @@ class GeoArray(object):
 
         Examples:
           >>> gt = GeoTransform(0, 0, 10, 10)
-          >>> GeoArray(gt, -1, [array([[1, 2], [3, 4]])]).level_shape()
+          >>> GeoArray(gt, -1, [np.array([[1, 2], [3, 4]])]).level_shape()
           (2, 2)
-          >>> GeoArray(gt, -1, [array([[1, 2], [3, 4]]), np.ones((4, 3, 2))]).level_shape(1)
+          >>> GeoArray(gt, -1, [np.array([[1, 2], [3, 4]]), np.ones((4, 3, 2))]).level_shape(1)
           (4, 3, 2)
         """
 
@@ -273,7 +277,7 @@ class GeoArray(object):
 
         Examples:
           >>> gt = GeoTransform(0, 0, 10, 10)
-          >>> ga = GeoArray(gt, -1, [array([[1, 2, 3], [4, 5, 6]])])
+          >>> ga = GeoArray(gt, -1, [np.array([[1, 2, 3], [4, 5, 6]])])
           >>> ga.band_corners_pixcoords()
           ((0.0, 0.0), (0.0, 3.0), (2.0, 3.0), (2.0, 0.0))
         """
@@ -300,7 +304,7 @@ class GeoArray(object):
 
         Examples:
           >>> gt = GeoTransform(1500, 3000, 10, 10)
-          >>> ga = GeoArray(gt, -1, [array([[1, 2, 3], [4, 5, 6]])])
+          >>> ga = GeoArray(gt, -1, [np.array([[1, 2, 3], [4, 5, 6]])])
           >>> ga.band_corners_geogcoords()
           ((1500.0, 3000.0), (1530.0, 3000.0), (1530.0, 2980.0), (1500.0, 2980.0))
         """
@@ -517,7 +521,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self._crs,
+            epsg_cd=self.epsg(),
             inLevels=[orient]
         )
 
@@ -543,7 +547,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self._crs,
+            epsg_cd=self.epsg(),
             inLevels=[div]
         )
 
@@ -569,7 +573,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self._crs,
+            epsg_cd=self.epsg(),
             inLevels=[curl_m])
 
     def magnitude_grads(self, axis: str= '', ndx_fx: numbers.Integral=0, ndx_fy: numbers.Integral=1) -> 'GeoArray':
@@ -584,7 +588,7 @@ class GeoArray(object):
         :type ndx_fy: integer.
         :return: a geoarray storing the magnitude gradient along the x, y axis (or both) field.
         :rtype: GeoArray.
-        :raises: GeoArrayIOException.
+        :raises: Exception.
 
         Examples:
         """
@@ -596,7 +600,7 @@ class GeoArray(object):
         elif axis == '':
             cell_sizes = [self.src_cellsize_j, self.src_cellsize_i]
         else:
-            raise GeoArrayIOException("Axis must be 'x' or 'y. '{}' given".format(axis))
+            raise Exception("Axis must be 'x' or 'y. '{}' given".format(axis))
 
         magnitude_gradients = magn_grads(
             fld_x=self._levels[ndx_fx],
@@ -606,7 +610,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self._crs,
+            epsg_cd=self.epsg(),
             inLevels=magnitude_gradients)
 
     def grad_flowlines(self, ndx_fx: numbers.Integral=0, ndx_fy: numbers.Integral=1) -> 'GeoArray':
@@ -629,19 +633,421 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self._crs,
+            epsg_cd=self.epsg(),
             inLevels=[flowln_grad])
+
+
+def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
+    """
+    Return the velocity components of a 2D-flow field at a point location, based on bilinear interpolation.
+
+    :param geoarray: the flow field expressed as a GeoArray.
+    :type geoarray: GeoArray.
+    :param pt: the point for which the velocity comnponents are extracted.
+    :type pt: Point.
+    :return: the x and y velocity components of the flow field at the point location.
+    :rtype: tuple of two numbers.Real values.
+
+    Examples:
+    """
+
+    x, y, _ = pt.toXYZ()
+    vx = geoarray.interpolate_bilinear(
+        x=x,
+        y=y,
+        level_ndx=0)
+    vy = geoarray.interpolate_bilinear(
+        x=x,
+        y=y,
+        level_ndx=1)
+
+    return vx, vy
+
+
+def interpolate_rkf(
+        geoarray: GeoArray,
+        delta_time: numbers.Real,
+        start_pt: Point
+    ) -> Tuple[Optional[Point], Optional[numbers.Real]]:
+    """
+    Interpolate point-like object position according to the Runge-Kutta-Fehlberg method.
+
+    :param geoarray: the flow field expressed as a GeoArray.
+    :type geoarray: GeoArray.
+    :param delta_time: the flow field expressed as a GeoArray.
+    :type delta_time: GeoArray.
+    :param start_pt: the initial point.
+    :type start_pt: Point.
+    :return: the estimated point-like object position at the incremented time, with the estimation error.
+    :rtype: tuple of optional point and optional numbers.Real.
+
+    Examples:
+    """
+
+    check_type(geoarray, "Geoarray", GeoArray)
+    epsg_cd = geoarray.epsg()
+
+    check_type(delta_time, "Delta time", numbers.Real)
+
+    check_type(start_pt, "Start point", Point)
+    if start_pt.epsg() != epsg_cd:
+        raise Exception("Geoarray has {} EPSG code but start point has {}".format(epsg_cd, start_pt.epsg()))
+
+    k1_vx, k1_vy = point_velocity(geoarray, start_pt)
+
+    if k1_vx is None or k1_vy is None:
+        return None, None
+
+    k2_pt = Point(
+        x=start_pt.x + 0.25 * delta_time * k1_vx,
+        y=start_pt.y + 0.25 * delta_time * k1_vy,
+        epsg_cd=epsg_cd
+    )
+
+    k2_vx, k2_vy = point_velocity(geoarray, k2_pt)
+
+    if k2_vx is None or k2_vy is None:
+        return None, None
+
+    k3_pt = Point(
+        x=start_pt.x + (3.0 / 32.0) * delta_time * k1_vx + (9.0 / 32.0) * delta_time * k2_vx,
+        y=start_pt.y + (3.0 / 32.0) * delta_time * k1_vy + (9.0 / 32.0) * delta_time * k2_vy,
+        epsg_cd=epsg_cd
+    )
+
+    k3_vx, k3_vy = point_velocity(geoarray, k3_pt)
+
+    if k3_vx is None or k3_vy is None:
+        return None, None
+
+    k4_pt = Point(
+        x=start_pt.x + (1932.0 / 2197.0) * delta_time * k1_vx - (7200.0 / 2197.0) * delta_time * k2_vx + (7296.0 / 2197.0) * delta_time * k3_vx,
+        y=start_pt.y + (1932.0 / 2197.0) * delta_time * k1_vy - (7200.0 / 2197.0) * delta_time * k2_vy + (7296.0 / 2197.0) * delta_time * k3_vy,
+        epsg_cd=epsg_cd
+    )
+
+    k4_vx, k4_vy = point_velocity(geoarray, k4_pt)
+
+    if k4_vx is None or k4_vy is None:
+        return None, None
+
+    k5_pt = Point(
+        x=start_pt.x + (439.0 / 216.0) * delta_time * k1_vx - 8.0 * delta_time * k2_vx + (3680.0 / 513.0) * delta_time * k3_vx - (845.0 / 4104.0) * delta_time * k4_vx,
+        y=start_pt.y + (439.0 / 216.0) * delta_time * k1_vy - 8.0 * delta_time * k2_vy + (3680.0 / 513.0) * delta_time * k3_vy - (845.0 / 4104.0) * delta_time * k4_vy,
+        epsg_cd=epsg_cd
+    )
+
+    k5_vx, k5_vy = point_velocity(geoarray, k5_pt)
+
+    if k5_vx is None or k5_vy is None:
+        return None, None
+
+    k6_pt = Point(
+        x=start_pt.x - (8.0 / 27.0) * delta_time * k1_vx + 2.0 * delta_time * k2_vx - (3544.0 / 2565.0) * delta_time * k3_vx + (1859.0 / 4104.0) * delta_time * k4_vx - (
+                          11.0 / 40.0) * delta_time * k5_vx,
+        y=start_pt.y - (8.0 / 27.0) * delta_time * k1_vy + 2.0 * delta_time * k2_vy - (3544.0 / 2565.0) * delta_time * k3_vy + (1859.0 / 4104.0) * delta_time * k4_vy - (
+                          11.0 / 40.0) * delta_time * k5_vy,
+        epsg_cd=epsg_cd
+    )
+
+    k6_vx, k6_vy = point_velocity(geoarray, k6_pt)
+
+    if k6_vx is None or k6_vy is None:
+        return None, None
+
+    rkf_4o_x = start_pt.x + delta_time * (
+            (25.0 / 216.0) * k1_vx + (1408.0 / 2565.0) * k3_vx + (2197.0 / 4104.0) * k4_vx - (
+            1.0 / 5.0) * k5_vx)
+    rkf_4o_y = start_pt.y + delta_time * (
+            (25.0 / 216.0) * k1_vy + (1408.0 / 2565.0) * k3_vy + (2197.0 / 4104.0) * k4_vy - (
+            1.0 / 5.0) * k5_vy)
+    temp_pt = Point(
+        x=rkf_4o_x,
+        y=rkf_4o_y,
+        epsg_cd=epsg_cd
+    )
+
+    interp_x = start_pt.x + delta_time * (
+            (16.0 / 135.0) * k1_vx + (6656.0 / 12825.0) * k3_vx + (28561.0 / 56430.0) * k4_vx - (
+            9.0 / 50.0) * k5_vx + (2.0 / 55.0) * k6_vx)
+    interp_y = start_pt.y + delta_time * (
+            (16.0 / 135.0) * k1_vy + (6656.0 / 12825.0) * k3_vy + (28561.0 / 56430.0) * k4_vy - (
+            9.0 / 50.0) * k5_vy + (2.0 / 55.0) * k6_vy)
+    interp_pt = Point(
+        x=interp_x,
+        y=interp_y,
+        epsg_cd=epsg_cd
+    )
+
+    interp_pt_error_estim = interp_pt.dist2DWith(temp_pt)
+
+    return interp_pt, interp_pt_error_estim
+
+
+
+def line_on_grid(ga: GeoArray, profile_line: Line) -> Optional[Line]:
+    """
+    Calculates a line draped on a grid.
+
+    :param ga: geoarray
+    :type ga: GeoArray.
+    :param profile_line: the profile line.
+    :type profile_line: Line
+    :return: the profile.
+    :rtype: Optional[Line].
+    """
+
+    if ga.crs != profile_line.crs:
+        return None
+
+    epsg_line = profile_line.epsg()
+
+    lnProfile = Line(epsg_cd=epsg_line)
+
+    for point in profile_line.pts():
+
+        z = ga.interpolate_bilinear(point.x, point.y)
+        if z:
+            lnProfile.add_pt(
+                Point(
+                    x=point.x,
+                    y=point.y,
+                    z=z,
+                    epsg_cd=epsg_line)
+            )
+
+    return lnProfile
+
+
+
+def plane_dem_intersection(
+        srcPlaneAttitude: Plane,
+        srcPt: Point,
+        geo_array: GeoArray,
+        level_ndx: numbers.Integral = 0) -> List[Point]:
+    """
+    Calculates the intersections (as points) between the grid and a planar analytical surface.
+
+    :param srcPlaneAttitude: orientation of the surface (currently only planes).
+    :type srcPlaneAttitude: class CPlane.
+    :param srcPt: point, expressed in geographical coordinates, that the plane must contain.
+    :type srcPt: Point.
+    :param geo_array: the input GeoArray storing the used grid.
+    :type geo_array: GeoArray.
+    :param level_ndx: the grid level to use from the provided geoarray. Default is first (index equal to zero).
+    :type level_ndx: integer.
+    :return: list of unique intersecting points.
+
+    Examples:
+    """
+
+    def ijarr2xyz(ijarr2xy_func: Callable, xy2z_func: Callable, i: numbers.Real, j: numbers.Real) -> Tuple[numbers.Real, numbers.Real, numbers.Real]:
+        """
+        Return a tuple of (x, y, z) values, starting by array indices.
+
+        :param ijarr2xy_func: a function converting from array to geographic coordinates.
+        :param xy2z_func: a callable converting from x, y geographic coordinates to a z value.
+        :param i: i index.
+        :param j: j index.
+        :return: Point
+        """
+
+        x, y = ijarr2xy_func(i, j)
+        z = xy2z_func(x, y)
+        return x, y, z
+
+    def xyarr2segmentslope(
+            xy2z_func: Callable,
+            arrij2xy_func: Callable,
+            i: numbers.Real,
+            j: numbers.Real,
+            i_start=0.0,
+            j_start=0.0) -> numbers.Real:
+        """
+        Calculates the segment slope along a gridded direction defined by its end point i, j array coordinates.
+        Assumed start point is array coordinates 0, 0.
+
+        :param xy2z_func: a callable deriving a z value from geographic x-y coordinates..
+        :param arrij2xy_func: a function converting from array coordinates to geographic coordinates.
+        :param i: i index of end point.
+        :param j: j index of end point.
+        :param i_start: i index of start point. Default is 0.0.
+        :param j_start:j index of start point. Default is 0.0.
+        :return: segment slope.
+        :rtype: numbers.Real.
+        """
+
+        start_point = Point(*ijarr2xyz(
+            ijarr2xy_func=arrij2xy_func,
+            xy2z_func=xy2z_func,
+            i=i_start,
+            j=j_start))
+
+        end_point = Point(*ijarr2xyz(
+            ijarr2xy_func=arrij2xy_func,
+            xy2z_func=xy2z_func,
+            i=i,
+            j=j))
+
+        return Segment(start_point, end_point).deltaZS()
+
+    def segment_intersections_array(
+            m_arr1: np.ndarray,
+            m_arr2: np.ndarray,
+            q_arr1: np.ndarray,
+            q_arr2: np.ndarray,
+            cell_size: numbers.Real,
+            m_delta_tol: Optional[numbers.Real] = 1e-6,
+            q_delta_tol: Optional[numbers.Real] = 1e-6) -> np.ndarray:
+        """
+        Creates array that gives the residual index [0-1[ of the intersection between segments along the considered
+        array axis (i or j) whose m (slope) and q (y-axis intersection) values along the considered array axis (i or j)
+        are defined in the two pairs of input arrays.
+
+        :param m_arr1: array storing values of grid 1 segment slopes.
+        :param m_arr2: array storing values of grid 2 segment slopes.
+        :param q_arr1: array storing values of grid 1 segment y-axis intersections.
+        :param q_arr2: array storing values of grid 2 segment y-axis intersections.
+        :param cell_size: cell size of the two rasters along the considered direction. Required the same in the two rasters.
+        :param m_delta_tol: optional tolerance for delta between grid 1 and grid 2 segment slopes.
+        :param q_delta_tol: optional tolerance for delta between grid 1 and grid 2 segment y-axis intersections.
+        :return: array with values of intersection residual indices [0 - 1[
+        """
+
+        # if segments slope are not sub-equal, we calculate the intersection residual slope using the required formula
+
+        inters_residual_indices = np.where(abs(m_arr1 - m_arr2) < m_delta_tol, np.NaN,
+                                           (q_arr2 - q_arr1) / (cell_size * (m_arr1 - m_arr2)))
+
+        # if the elevations at the left cell center are sub-equal,
+        # the residual index is set to 0.0, i.e. there is an intersection at the left cell
+
+        inters_with_coincident_starts = np.where(abs(q_arr1 - q_arr2) < q_delta_tol, 0.0, inters_residual_indices)
+
+        # we filter out residual indices that are not intersect cell span, i.e., not between 0.0 (included) and 1.0 (excluded)
+
+        inters_intracells_residuals = np.where(
+            np.logical_and(inters_with_coincident_starts >= 0.0, inters_with_coincident_starts < 1.0),
+            inters_with_coincident_starts, np.NaN)
+
+        return inters_intracells_residuals
+
+    def arrayTo3DPts(direction: str, arr: np.ndarray, ij2xy_func: Callable, xy2z_func: Callable) -> List[Point]:
+        """
+        Converts an array of along-direction (i- or j-) intra-cell segments [0 -> 1[ into
+        a list of 3D points.
+
+        :param direction: considered intersection direction: 'i' (for i axis) or 'j' (for j axis).
+        :type direction: basestring.
+        :param arr: array of along-direction (i- or j-) intra-cell segments [0 -> 1[.
+        :type arr: numpy ndarray.
+        :param ij2xy_func: function to convert from array indices to x-y geographic coordinates.
+        :type ij2xy_func: function.
+        :param xy2z_func: function that calculates z value given x and y coordinates.
+        :type xy2z_func: function.
+        :return: list of 3D points.
+        :rtype: list of Points.
+        :raise: Exception when direction is not 'i' or 'j'
+        """
+
+        pts = []
+        for i in range(arr.shape[0]):
+            for j in range(arr.shape[1]):
+                val = arr[i, j]
+                if np.isfinite(val):
+                    if direction == 'i':
+                        i_int, j_int = i + val, j
+                    elif direction == 'j':
+                        i_int, j_int = i, j + val
+                    else:
+                        raise Exception('Unexpected array direction value: {}'.format(direction))
+                    x, y = ij2xy_func(i_int, j_int)
+                    z = xy2z_func(x, y)
+                    pts.append(Point(x, y, z))
+
+        return pts
+
+    # dem values as a Numpy array
+
+    q_d = geo_array.level(
+        level_ndx=level_ndx)
+
+    # row and column numbers of the dem
+
+    row_num, col_num = q_d.shape
+
+    # plane closure that, given (x, y), derive z
+
+    plane_z_closure = srcPlaneAttitude.closure_plane_from_geo(srcPt)
+
+    # plane elevations at grid cell centers
+
+    q_p = array_from_function(
+        row_num=row_num,
+        col_num=col_num,
+        geotransform=geo_array.geotransform(),
+        z_transfer_func=plane_z_closure)
+
+    index_multiplier = 100  # sufficiently large value to ensure a precise slope values
+
+    mi_p = xyarr2segmentslope(
+        xy2z_func=plane_z_closure,
+        arrij2xy_func=geo_array.ijArrToxy,
+        i=index_multiplier,
+        j=0) * np.ones((row_num, col_num))
+
+    mj_p = xyarr2segmentslope(
+        xy2z_func=plane_z_closure,
+        arrij2xy_func=geo_array.ijArrToxy,
+        i=0,
+        j=index_multiplier) * np.ones((row_num, col_num))
+
+    # 2D array of DEM segment parameters
+
+    cell_size_j, cell_size_i = geo_array.geotransf_cell_sizes()
+
+    mj_d = grad_j(
+        fld=q_d,
+        cell_size_j=cell_size_j)
+
+    mi_d = grad_iminus(
+        fld=q_d,
+        cell_size_i=cell_size_i)
+
+    # intersection points
+
+    intersection_pts_j = segment_intersections_array(
+        m_arr1=mj_d,
+        m_arr2=mj_p,
+        q_arr1=q_d,
+        q_arr2=q_p,
+        cell_size=cell_size_j)
+
+    intersection_pts_j = arrayTo3DPts(
+        direction='j',
+        arr=intersection_pts_j,
+        ij2xy_func=geo_array.ijArrToxy,
+        xy2z_func=plane_z_closure)
+
+    intersection_pts_i = segment_intersections_array(
+        m_arr1=mi_d,
+        m_arr2=mi_p,
+        q_arr1=q_d,
+        q_arr2=q_p,
+        cell_size=cell_size_i)
+
+    intersection_pts_i = arrayTo3DPts(
+        direction='i',
+        arr=intersection_pts_i,
+        ij2xy_func=geo_array.ijArrToxy,
+        xy2z_func=plane_z_closure)
+
+    unique_pts = intersection_pts_j + intersection_pts_i
+
+    return unique_pts
 
 
 if __name__ == "__main__":
 
     import doctest
     doctest.testmod()
-
-
-class GeoArrayIOException(Exception):
-    """
-    Class for geoarray IO exception
-    """
-
-    pass

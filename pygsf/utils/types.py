@@ -28,3 +28,5 @@ def check_optional_type(var, name, expected_type):
     if var:
         if not (isinstance(var, expected_type)):
             raise Exception("{} should be {} but got {}".format(name, expected_type, type(var)))
+
+

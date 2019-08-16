@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-
 from .faults import *
 
-from ..transformations.rotations import *
+from ..vectorial.geometries import RotationAxis
+
 from ..vectorial.direct_utils import *
 
 

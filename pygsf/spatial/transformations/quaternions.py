@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from typing import Union
+
 from math import sqrt, degrees, acos
 
 from ..vectors import *
@@ -591,7 +593,7 @@ class Quaternion(object):
 
         return self * (another.conjugate.divByScalar(another.sqrdNorm()))
 
-    def __truediv__(self, another: [numbers.Real, 'Quaternion']) -> 'Quaternion':
+    def __truediv__(self, another: Union[numbers.Real, 'Quaternion']) -> 'Quaternion':
         """
         Wrapper for quaternion division.
         This is only compatible with Python 3.

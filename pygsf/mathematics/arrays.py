@@ -117,7 +117,11 @@ def arraysSameShape(
     return a_array.shape == b_array.shape
 
 
-def array_bilin_interp(arr: 'np.array', i: numbers.Real, j: numbers.Real) -> numbers.Real:
+def array_bilin_interp(
+        arr: 'np.array',
+        i: numbers.Real,
+        j: numbers.Real
+) -> numbers.Real:
     """
     Interpolate the z value at a given i,j values couple.
     Interpolation method: bilinear.
