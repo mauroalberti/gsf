@@ -4,6 +4,7 @@
 import numbers
 
 from .projections.crs import *
+from ..utils.types import *
 
 from ..mathematics.defaults import *
 from ..mathematics.arrays import *
@@ -156,6 +157,16 @@ class Vect(object):
         """
 
         return self._crs.epsg()
+
+    def __iter__(self):
+        """
+        Return the elements of a Point.
+
+        :return:
+
+        """
+
+        return (i for i in [self.x, self.y, self.z, self.epsg()])
 
     def toXYZ(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real]:
         """
@@ -353,9 +364,15 @@ class Vect(object):
 
         return "Vect({:.4f}, {:.4f}, {:.4f}, EPSG: {})".format(self.x, self.y, self.z, self.epsg())
 
-    def __add__(self, another: 'Vect') -> Optional['Vect']:
+    def __add__(self, another: 'Vect') -> 'Vect':
         """
         Sum of two vectors.
+
+        :param another: the vector to add
+        :type another: Vect
+        :return: the sum of the two vectors
+        :rtype: Vect
+        :raise: Exception
 
         Example:
           >>> Vect(1, 0, 0, epsg_cd=2000) + Vect(0, 1, 1, epsg_cd=2000)
@@ -364,14 +381,21 @@ class Vect(object):
           Vect(0.0000, 0.0000, 0.0000, EPSG: 2000)
         """
 
-        if self.epsg() != another.epsg():
-            return None
+        check_type(another, "Second vector", Vect)
+
+        check_crs(self, another)
 
         x, y, z = arrToTuple(self.a + another.a)
         return self.__class__(x, y, z, self.epsg())
 
-    def __sub__(self, another: 'Vect') -> Optional['Vect']:
-        """Return object difference
+    def __sub__(self, another: 'Vect') -> 'Vect':
+        """Subtract two vectors.
+
+        :param another: the vector to subtract
+        :type another: Vect
+        :return: the difference between the two vectors
+        :rtype: Vect
+        :raise: Exception
 
         Example:
           >>> Vect(1., 1., 1., epsg_cd=2000) - Vect(1., 1., 1., epsg_cd=2000)
@@ -380,8 +404,9 @@ class Vect(object):
           Vect(0.0000, 0.0000, 0.8000, EPSG: 2000)
         """
 
-        if self.epsg() != another.epsg():
-            return None
+        check_type(another, "Second vector", Vect)
+
+        check_crs(self, another)
 
         x, y, z = arrToTuple(self.a - another.a)
         return self.__class__(x, y, z, self.epsg())
@@ -753,7 +778,6 @@ class Vect(object):
             return angle
         else:
             return 360.0 - angle
-
 
 
 if __name__ == "__main__":

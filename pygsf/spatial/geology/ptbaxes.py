@@ -341,7 +341,7 @@ def focmech_rotate(
     Rotate a fochal mechanism (a PTBAxes instance) to a new orientation
     via a rotation axis.
 
-    :param fm: the focal mechanism to rotate
+    :param fm: the focal mechanism to rotVectByAxis
     :type fm: PTBAxes
     :param ra: the rotation axis
     :type ra: RotationAxis

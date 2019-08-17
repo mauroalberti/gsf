@@ -74,6 +74,19 @@ class Point(object):
         self._t = float(t)
         self._crs = Crs(epsg_cd)
 
+    @classmethod
+    def fromVect(cls,
+        vect: Vect) -> 'Point':
+        """
+
+        :param vect:
+        :return:
+        """
+
+        return cls(
+
+        )
+
     @property
     def x(self) -> numbers.Real:
         """
@@ -240,6 +253,69 @@ class Point(object):
         """
 
         return self.x, self.y, self.z, self.t, self.crs.epsg()
+
+    def __add__(self, another: 'Point') -> 'Point':
+        """
+        Sum of two points.
+
+        :param another: the point to add
+        :type another: Point
+        :return: the sum of the two points
+        :rtype: Point
+        :raise: Exception
+
+        Example:
+          >>> Point(1, 0, 0, epsg_cd=2000) + Point(0, 1, 1, epsg_cd=2000)
+          Point(1.0000, 1.0000, 1.0000, 0.0000, 2000)
+          >>> Point(1, 1, 1, epsg_cd=2000) + Point(-1, -1, -1, epsg_cd=2000)
+          Point(0.0000, 0.0000, 0.0000, 0.0000, 2000)
+        """
+
+        check_type(another, "Second point", Point)
+
+        check_crs(self, another)
+
+        x0, y0, z0, t0, epsg_cd = self
+        x1, y1, z1, t1, _ = another
+
+        return Point(
+            x=x0+x1,
+            y=y0+y1,
+            z=z0+z1,
+            t=t0+t1,
+            epsg_cd=epsg_cd
+        )
+
+    def __sub__(self, another: 'Point') -> 'Point':
+        """Subtract two points.
+
+        :param another: the point to subtract
+        :type another: Point
+        :return: the difference between the two points
+        :rtype: Point
+        :raise: Exception
+
+        Example:
+          >>> Point(1., 1., 1., epsg_cd=2000) - Point(1., 1., 1., epsg_cd=2000)
+          Point(0.0000, 0.0000, 0.0000, 0.0000, 2000)
+          >>> Point(1., 1., 3., epsg_cd=2000) - Point(1., 1., 2.2, epsg_cd=2000)
+          Point(0.0000, 0.0000, 0.8000, 0.0000, 2000)
+        """
+
+        check_type(another, "Second point", Point)
+
+        check_crs(self, another)
+
+        x0, y0, z0, t0, epsg_cd = self
+        x1, y1, z1, t1, _ = another
+
+        return Point(
+            x=x0 - x1,
+            y=y0 - y1,
+            z=z0 - z1,
+            t=t0 - t1,
+            epsg_cd=epsg_cd
+        )
 
     def clone(self) -> 'Point':
         """
@@ -636,6 +712,93 @@ class Point(object):
         """
 
         return Vect(self.x, self.y, self.z, self.epsg())
+
+    def rotate(self,
+        rotation_axis: 'RotationAxis',
+        center_point: 'Point' = None
+        ) -> 'Point':
+        """
+        Rotates a point.
+        :param rotation_axis:
+        :param center_point:
+        :return: the rotated point
+        :rtype: Point
+
+        Examples:
+          >>> pt = Point(0,0,1,10, 32633)
+          >>> rot_axis = RotationAxis(0,0,90)
+          >>> center_pt = Point(0,0,0.5, 0, 32633)
+          >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
+          Point(0.5000, 0.0000, 0.5000, 10.0000, 32633)
+          >>> center_pt = Point(0,0,1, 0, 32633)
+          >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
+          Point(0.0000, 0.0000, 1.0000, 10.0000, 32633)
+          >>> center_pt = Point(0,0,2, 0, 32633)
+          >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
+          Point(-1.0000, 0.0000, 2.0000, 10.0000, 32633)
+          >>> rot_axis = RotationAxis(0,0,180)
+          >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
+          Point(-0.0000, 0.0000, 3.0000, 10.0000, 32633)
+          >>> pt.rotate(rotation_axis=rot_axis)
+          Point(0.0000, 0.0000, -1.0000, 10.0000, 32633)
+          >>> pt = Point(1,1,1,5)
+          >>> rot_axis = RotationAxis(0,90,90)
+          >>> pt.rotate(rotation_axis=rot_axis)
+          Point(1.0000, -1.0000, 1.0000, 5.0000, -1)
+          >>> rot_axis = RotationAxis(0,90,180)
+          >>> pt.rotate(rotation_axis=rot_axis)
+          Point(-1.0000, -1.0000, 1.0000, 5.0000, -1)
+          >>> center_pt = Point(1,1,1)
+          >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
+          Point(1.0000, 1.0000, 1.0000, 5.0000, -1)
+          >>> center_pt = Point(2,2,10)
+          >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
+          Point(3.0000, 3.0000, 1.0000, 5.0000, -1)
+          >>> pt = Point(1,1,2,7.5)
+          >>> rot_axis = RotationAxis(135,0,180)
+          >>> center_pt = Point(0,0,1)
+          >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
+          Point(-1.0000, -1.0000, 0.0000, 7.5000, -1)
+        """
+
+        _, _, _, t, epsg_cd = self
+
+        if not center_point:
+
+            center_point = Point(
+                x=0.0,
+                y=0.0,
+                z=0.0,
+                t=0.0,
+                epsg_cd=epsg_cd
+            )
+
+        check_type(center_point, "Center point", Point)
+
+        check_crs(self, center_point)
+
+        p_diff = self - center_point
+
+        p_vect = p_diff.asVect()
+
+        rot_vect = rotVectByAxis(
+            v=p_vect,
+            rot_axis=rotation_axis
+        )
+
+        x, y, z, epsg_cd = rot_vect
+
+        rot_pt = Point(
+            x=x,
+            y=y,
+            z=z,
+            t=t,
+            epsg_cd=epsg_cd
+        )
+
+        transl_pt = center_point + rot_pt
+
+        return transl_pt
 
 
 class CPlane(object):
@@ -1085,6 +1248,13 @@ class Segment(object):
 
         return self.crs.epsg()
 
+    def __iter__(self):
+        """
+        Return the elements of a Segment.
+        """
+
+        return (i for i in [self.start_pt, self.end_pt])
+
     def clone(self) -> 'Segment':
 
         return Segment(self._start_pt, self._end_pt)
@@ -1254,7 +1424,7 @@ class Segment(object):
         return Point(x0, y0, epsg_cd=self.epsg())
 
     def contains_pt(self,
-                    pt: Point) -> bool:
+        pt: Point) -> bool:
         """
         Checks whether a point is contained in a segment.
         It is contained, the angle between
@@ -1318,7 +1488,8 @@ class Segment(object):
             b=length_startpt_pt + length_endpt_pt
         )
 
-    def fast_2d_contains_pt(self, pt2d) -> bool:
+    def fast_2d_contains_pt(self,
+        pt2d) -> bool:
         """
         Deprecated. Use 'contains_pt'.
 
@@ -1407,7 +1578,8 @@ class Segment(object):
             self.start_pt,
             end_pt)
 
-    def densify2d_asSteps(self, densify_distance: numbers.Real) -> array:
+    def densify2d_asSteps(self,
+        densify_distance: numbers.Real) -> array:
         """
         Defines the array storing the incremental lengths according to the provided densify distance.
 
@@ -1441,7 +1613,8 @@ class Segment(object):
 
         return array('d', s_list)
 
-    def densify2d_asPts(self, densify_distance) -> List[Point]:
+    def densify2d_asPts(self,
+        densify_distance) -> List[Point]:
         """
         Densify a segment by adding additional points
         separated a distance equal to densify_distance.
@@ -1483,7 +1656,8 @@ class Segment(object):
 
         return pts
 
-    def densify2d_asLine(self, densify_distance) -> 'Line':
+    def densify2d_asLine(self,
+        densify_distance) -> 'Line':
         """
         Densify a segment by adding additional points
         separated a distance equal to densify_distance.
@@ -1682,13 +1856,56 @@ class Segment(object):
 
         return another.contains_pt(self.end_pt)
 
-    def reflect_vertical(self) -> 'Segment':
+    def rotate(self,
+        rotation_axis: 'RotationAxis',
+        center_point: 'Point' = None
+        ) -> 'Segment':
         """
-        Reflect a segment along a vertical axis.
-
-        :return: the mirrored segment
+        Rotates a segment.
+        :param rotation_axis:
+        :param center_point:
+        :return: the rotated segment
         :rtype: Segment
+
+        Examples:
+        >>> seg = Segment(Point(0,0,0), Point(0,0,1))
+        >>> rot_ax = RotationAxis(0, 0, 90)
+        >>> seg.rotate(rot_ax)
+        Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+        >>> rot_ax = RotationAxis(0, 0, 180)
+        >>> seg.rotate(rot_ax)
+        Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.0000, 0.0000, -1.0000, 0.0000, -1))
+        >>> centr_pt = Point(0,0,0.5)
+        >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
+        Segment(start_pt=Point(-0.0000, 0.0000, 1.0000, 0.0000, -1), end_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1))
+        >>> seg = Segment(Point(0,0,0), Point(1,1,0))
+        >>> centr_pt = Point(1,0,0)
+        >>> rot_ax = RotationAxis(0, 90, 90)
+        >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
+        Segment(start_pt=Point(1.0000, 1.0000, 0.0000, 0.0000, -1), end_pt=Point(2.0000, 0.0000, -0.0000, 0.0000, -1))
+        >>> seg = Segment(Point(1,1,1), Point(0,0,0))
+        >>> rot_ax = RotationAxis(135, 0, 180)
+        >>> centr_pt = Point(0.5,0.5,0.5)
+        >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
+        Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 1.0000, 1.0000, 0.0000, -1))
         """
+
+        start_pt, end_pt = self
+
+        rotated_start_pt = start_pt.rotate(
+            rotation_axis=rotation_axis,
+            center_point=center_point
+        )
+
+        rotated_end_pt = end_pt.rotate(
+            rotation_axis=rotation_axis,
+            center_point=center_point
+        )
+
+        return Segment(
+            start_pt=rotated_start_pt,
+            end_pt=rotated_end_pt
+        )
 
 
 class Line(object):
@@ -4270,7 +4487,7 @@ class RotationAxis(object):
 
             unit_quat = quat.normalize()
             rot_ang = unit_quat.rotAngle()
-            rot_direct = Direct.fromVect(unit_quat.vector)
+            rot_direct = Direct.fromVect(unit_quat.vector())
 
         return RotationAxis(*rot_direct.d, rot_ang)
 
@@ -4508,12 +4725,23 @@ def sortRotations(rotation_axes: List[RotationAxis]) -> List[RotationAxis]:
 
     return sorted(rotation_axes, key=lambda rot_ax: abs(rot_ax.rotAngle))
 
-def rotate(
-        v: Vect,
-        rot_axis: RotationAxis
-) -> 'Vect':
+
+def rotVectByAxis(
+    v: Vect,
+    rot_axis: RotationAxis
+) -> Vect:
     """
     Rotates a vector.
+
+    Implementation as in:
+    https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    Faster formula:
+    t = 2 q x v
+    v' = v + q0 t + q x t
+    cited as:
+    Janota, A; Šimák, V; Nemec, D; Hrbček, J (2015).
+    "Improving the Precision and Speed of Euler Angles Computation from Low-Cost Rotation Sensor Data".
+    Sensors. 15 (3): 7016–7039. doi:10.3390/s150307016. PMC 4435132. PMID 25806874.
 
     :param v: the vector to rotate
     :type v: Vect
@@ -4525,12 +4753,43 @@ def rotate(
     Examples:
       >>> v = Vect(1,0,1)
       >>> rotation = RotationAxis(0, -90, 90)
-      >>> rotate(v, rotation)
-      >>> Vect(0, 1, 1, -1)
+      >>> rotVectByAxis(v, rotation)
+      Vect(0.0000, 1.0000, 1.0000, EPSG: -1)
+      >>> rotation = RotationAxis(0, 90, 90)
+      >>> rotVectByAxis(v, rotation)
+      Vect(0.0000, -1.0000, 1.0000, EPSG: -1)
+      >>> rotation = RotationAxis(0, -90, 180)
+      >>> rotVectByAxis(v, rotation)
+      Vect(-1.0000, 0.0000, 1.0000, EPSG: -1)
+      >>> rotation = RotationAxis(0, -90, 270)
+      >>> rotVectByAxis(v, rotation)
+      Vect(-0.0000, -1.0000, 1.0000, EPSG: -1)
+      >>> rotation = RotationAxis(90, 0, 90)
+      >>> rotVectByAxis(v, rotation)
+      Vect(1.0000, -1.0000, 0.0000, EPSG: -1)
+      >>> rotation = RotationAxis(90, 0, 180)
+      >>> rotVectByAxis(v, rotation)
+      Vect(1.0000, 0.0000, -1.0000, EPSG: -1)
+      >>> rotation = RotationAxis(90, 0, 270)
+      >>> rotVectByAxis(v, rotation)
+      Vect(1.0000, 1.0000, -0.0000, EPSG: -1)
+      >>> rotation = RotationAxis(90, 0, 360)
+      >>> rotVectByAxis(v, rotation)
+      Vect(1.0000, 0.0000, 1.0000, EPSG: -1)
+      >>> rotation = RotationAxis(0, -90, 90)
+      >>> v = Vect(0,0,3)
+      >>> rotVectByAxis(v, rotation)
+      Vect(0.0000, 0.0000, 3.0000, EPSG: -1)
+      >>> rotation = RotationAxis(90, -45, 180)
+      >>> rotVectByAxis(v, rotation)
+      Vect(3.0000, -0.0000, -0.0000, EPSG: -1)
+      >>> v = Vect(0,0,3, epsg_cd=32633)
+      >>> rotVectByAxis(v, rotation)
+      Vect(3.0000, -0.0000, -0.0000, EPSG: 32633)
     """
 
     rot_quat = rot_axis.toRotQuater()
-    q = rot_quat.vector
+    q = rot_quat.vector(epsg_cd=v.epsg())
 
     t = q.scale(2).vCross(v)
     rot_v = v + t.scale(rot_quat.scalar) + q.vCross(t)
@@ -4567,8 +4826,7 @@ def rotVectByQuater(quat: Quaternion, vect: Vect) -> Vect:
 
     rotated_v = q * (qv * q.inverse)
 
-    return rotated_v.vector
-
+    return rotated_v.vector()
 
 
 def shortest_segment_or_point(

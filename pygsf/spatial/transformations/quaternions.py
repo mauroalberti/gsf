@@ -66,8 +66,8 @@ class Quaternion(object):
 
         return self.q[0]
 
-    @property
-    def vector(self) -> Vect:
+    def vector(self,
+        epsg_cd: numbers.Integral = -1) -> Vect:
         """
         Return the vector component of the quaternion.
 
@@ -75,13 +75,13 @@ class Quaternion(object):
         :rtype: Vect
 
         Examples:
-          >>> Quaternion(0.1, 1.2, 3.1, 0.9).vector
+          >>> Quaternion(0.1, 1.2, 3.1, 0.9).vector()
           Vect(1.2000, 3.1000, 0.9000, EPSG: -1)
-          >>> Quaternion(6.1, 4.9, 1.03, 5.12).vector
+          >>> Quaternion(6.1, 4.9, 1.03, 5.12).vector()
           Vect(4.9000, 1.0300, 5.1200, EPSG: -1)
         """
 
-        return Vect(*self.components()[1:])
+        return Vect(*self.components()[1:], epsg_cd=epsg_cd)
 
     @classmethod
     def fromArray(cls, a) -> 'Quaternion':
@@ -122,7 +122,7 @@ class Quaternion(object):
 
         w, x, y, z = 0, vect.x, vect.y, vect.z
 
-        return Quaternion(w, x, y, z)
+        return cls(w, x, y, z)
 
     @classmethod
     def fromRotMatr(cls, matr) -> 'Quaternion':
@@ -168,7 +168,7 @@ class Quaternion(object):
 
         w, x, y, z = q0, q1, q2, q3
 
-        return Quaternion(w, x, y, z)
+        return cls(w, x, y, z)
 
     @classmethod
     def zero(cls) -> 'Quaternion':
