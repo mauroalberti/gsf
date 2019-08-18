@@ -4,12 +4,12 @@ import unittest
 
 import math
 
-from pygsf.spatial.vectorial.geometries import Point
-from pygsf.spatial.rasters.geoarray import GeoArray
+from pygsf.spatial.vectorial.geometries import *
+from pygsf.spatial.rasters.geoarray import *
 
 from pygsf.spatial.rasters.fields import *
 
-from pygsf.spatial.movements import interpolate_rkf
+#from pygsf.spatial.movements import interpolate_rkf
 
 
 class TestRKFInterpolation(unittest.TestCase):

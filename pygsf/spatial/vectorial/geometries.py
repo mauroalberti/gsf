@@ -9,6 +9,7 @@ from enum import Enum
 import numbers
 
 from math import *
+import random
 
 from array import array
 from typing import List, Callable, Tuple, Optional
@@ -799,6 +800,20 @@ class Point(object):
         transl_pt = center_point + rot_pt
 
         return transl_pt
+
+    @classmethod
+    def random(cls,
+        lower_boundary: float = -MAX_SCALAR_VALUE,
+        upper_boundary: float =  MAX_SCALAR_VALUE):
+        """
+        Creates a random point.
+
+        :return: random point
+        :rtype: Point
+        """
+
+        vals = [random.uniform(lower_boundary, upper_boundary) for _ in range(3)]
+        return cls(*vals)
 
 
 class CPlane(object):
@@ -1905,6 +1920,22 @@ class Segment(object):
         return Segment(
             start_pt=rotated_start_pt,
             end_pt=rotated_end_pt
+        )
+
+    @classmethod
+    def random(cls,
+        lower_boundary: float = -MAX_SCALAR_VALUE,
+        upper_boundary: float = MAX_SCALAR_VALUE):
+        """
+        Creates a random segment.
+
+        :return: random segment
+        :rtype: Segment
+        """
+
+        return cls(
+            start_pt=Point.random(lower_boundary, upper_boundary),
+            end_pt=Point.random(lower_boundary, upper_boundary)
         )
 
 
@@ -4708,6 +4739,24 @@ class RotationAxis(object):
 
         return self if abs(self.rotAngle) <= 180.0 else self.specular()
 
+    @classmethod
+    def randomNaive(cls):
+        """
+        Naive method for creating a random RotationAxis instance.
+        :return: random rotation axis (not uniformly distributed in the space)
+        :rtype: RotationAxis
+        """
+
+        random_trend = random.uniform(0, 360)
+        random_dip = random.uniform(-90, 90)
+        random_rotation = random.uniform(0, 360)
+
+        return cls(
+            trend=random_trend,
+            plunge=random_dip,
+            rot_ang=random_rotation
+        )
+
 
 def sortRotations(rotation_axes: List[RotationAxis]) -> List[RotationAxis]:
     """
@@ -4831,7 +4880,8 @@ def rotVectByQuater(quat: Quaternion, vect: Vect) -> Vect:
 
 def shortest_segment_or_point(
     segment1: Segment,
-    segment2: Segment
+    segment2: Segment,
+    tol: numbers.Real = PRACTICAL_MIN_DIST
 ) -> Optional[Union[Segment, Point]]:
 
     """
@@ -4904,6 +4954,8 @@ def shortest_segment_or_point(
     :type segment1: Segment.
     :param segment2: the second segment.
     :type segment2: Segment.
+    :param tol: tolerance value for collapsing a segment into the midpoint.
+    :type tol: numbers.Real
     :return: the optional shortest segment or an intersection point.
     :rtype: Optional[Union[Segment, Point]]
     """
@@ -4980,15 +5032,15 @@ def shortest_segment_or_point(
 
     return point_or_segment(
         point1=pa,
-        point2=pb
+        point2=pb,
+        tol=tol
     )
-
 
 
 def point_or_segment(
         point1: Point,
         point2: Point,
-        tol: numbers.Real = MIN_POINT_POS_DIFF
+        tol: numbers.Real = PRACTICAL_MIN_DIST
 ) -> Union[Point, Segment]:
     """
     Creates a point or segment based on the points distance.
@@ -5010,13 +5062,12 @@ def point_or_segment(
     check_crs(point1, point2)
 
     if point1.dist3DWith(point2) <= tol:
-        return point1.clone()
+        return Points([point1, point2]).nanmean_point()
     else:
         return Segment(
             start_pt=point1,
             end_pt=point2
         )
-
 
 
 class SegmentPair:
@@ -5043,10 +5094,14 @@ class SegmentPair:
         self._s1 = segment1
         self._s2 = segment2
 
-    def intersect(self) -> Optional[Union[Point, Segment]]:
+    def intersect(self,
+        tol: numbers.Real = PRACTICAL_MIN_DIST
+    ) -> Optional[Union[Point, Segment]]:
         """
         Determines the optional point or segment intersection between the segment pair.
 
+        :param tol: the distance tolerance for collapsing a intersection segment into a point
+        :type tol: numbers.Real
         :return: the optional point or segment intersection between the segment pair.
         :rtype: Optional[Union[Point, Segment]]
 
@@ -5145,26 +5200,29 @@ class SegmentPair:
         if s1_startpt_inside and s2_startpt_inside:
             return point_or_segment(
                 self._s1.start_pt,
-                self._s2.start_pt
+                self._s2.start_pt,
+                tol=tol
             )
 
         if s1_startpt_inside and s2_endpt_inside:
             return point_or_segment(
                 self._s1.start_pt,
-                self._s2.end_pt
+                self._s2.end_pt,
+                tol = tol
             )
 
         if s1_endpt_inside and s2_startpt_inside:
             return point_or_segment(
                 self._s2.start_pt,
-                self._s1.end_pt
-
+                self._s1.end_pt,
+                tol=tol
             )
 
         if s1_endpt_inside and s2_endpt_inside:
             return point_or_segment(
                 self._s1.end_pt,
-                self._s2.end_pt
+                self._s2.end_pt,
+                tol=tol
             )
 
         if s1_startpt_inside:
@@ -5181,7 +5239,8 @@ class SegmentPair:
 
         shortest_segm_or_pt = shortest_segment_or_point(
             segment1=self._s1,
-            segment2=self._s2
+            segment2=self._s2,
+            tol=tol
         )
 
         if not shortest_segm_or_pt:
@@ -5191,6 +5250,131 @@ class SegmentPair:
             return shortest_segm_or_pt
         else:
             return None
+
+
+class Points:
+    """
+    Collection of points.
+    """
+
+    def __init__(self,
+         points: List[Point],
+         epsg_cd: numbers.Integral = None,
+         crs_check: bool = True
+    ):
+        """
+
+        :param points: list of points
+        :type points: List[Point]
+        :param epsg_cd: optional EPSG code
+        :type epsg_cd: numbers.Integral
+        :param crs_check: whether to check points crs
+        :type crs_check: bool
+        """
+
+        for ndx, point in enumerate(points):
+
+            check_type(point, "Input point {}".format(ndx), Point)
+
+        if not epsg_cd:
+            epsg_cd = points[0].epsg()
+
+        if crs_check:
+
+            for ndx, point in enumerate(points):
+
+                if point.epsg() != epsg_cd:
+
+                    raise Exception("Point {} has EPSG code {} but {} required".format(ndx, point.epsg(), epsg_cd))
+
+        self._xs = np.array([p.x for p in points])
+        self._ys = np.array([p.y for p in points])
+        self._zs = np.array([p.z for p in points])
+        self._ts = np.array([p.t for p in points])
+        self._crs = Crs(epsg_cd)
+
+    @property
+    def xs(self):
+        """
+        The points x values.
+
+        :return: points x values
+        :rtype: float
+        """
+
+        return self._xs
+
+    @property
+    def ys(self):
+        """
+        The points y values.
+
+        :return: points y values
+        :rtype: float
+        """
+
+        return self._ys
+
+    @property
+    def zs(self):
+        """
+        The points z values.
+
+        :return: points z values
+        :rtype: float
+        """
+
+        return self._zs
+
+
+    @property
+    def ts(self):
+        """
+        The points t values.
+
+        :return: points t values
+        :rtype: float
+        """
+
+        return self._ts
+
+    @property
+    def crs(self) -> Crs:
+        """
+        The points CRS.
+
+        :return: the points CRS
+        :rtype: Crs
+        """
+
+        return self._crs
+
+    def epsg(self) -> numbers.Integral:
+        """
+        The points EPSG code.
+
+        :return: the points EPSG code
+        :rtype: numbers.Integral
+        """
+
+        return self.crs.epsg()
+
+    def nanmean_point(self) -> Point:
+        """
+        Returns the nan- excluded mean point of the collection.
+        It is the mean point for a collection of point in a x-y-z frame (i.e., not lat-lon).
+
+        :return: the nan- excluded mean point of the collection.
+        :rtype: Point
+        """
+
+        return Point(
+            x=np.nanmean(self.xs),
+            y=np.nanmean(self.ys),
+            z=np.nanmean(self.zs),
+            t=np.nanmean(self.ts),
+            epsg_cd=self.epsg()
+        )
 
 
 class Segments(list):
