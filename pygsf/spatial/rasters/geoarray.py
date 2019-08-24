@@ -2,18 +2,12 @@
 
 import numbers
 
-import numpy as np
-
 from .fields import *
 
 from ..vectorial.geometries import *
 
 from ..projections.crs import *
 
-# -*- coding: utf-8 -*-
-
-
-#from ..utils.types import *
 
 
 def ijPixToijArray(i_pix: numbers.Real, j_pix: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
@@ -124,7 +118,7 @@ class GeoArray(object):
         :rtype: numbers.Integral.
         """
 
-        return self._crs.epsg()
+        return self.crs.epsg()
 
     def define_epsg(self, epsg_cd: numbers.Integral):
         """
@@ -152,8 +146,8 @@ class GeoArray(object):
         for band_ndx in range(num_bands):
             band = self.level(level_ndx=band_ndx)
             rows, cols = band.shape
-            min, max = band.min(), band.max()
-            bands_txt += "\nBand {}: {} rows x {} cols; min: {},  max: {}".format(band_ndx+1, rows, cols, min, max)
+            bmin, bmax = band.min(), band.max()
+            bands_txt += "\nBand {}: {} rows x {} cols; min: {},  max: {}".format(band_ndx+1, rows, cols, bmin, bmax)
 
         txt = "GeoArray with {} band(s) - CRS: EPSG: {}\n{}".format(num_bands, epsg_code, bands_txt)
 

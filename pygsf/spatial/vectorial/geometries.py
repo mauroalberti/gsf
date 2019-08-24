@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from functools import singledispatch
 
 import itertools
 
@@ -12,25 +11,14 @@ from math import *
 import random
 
 from array import array
-from typing import List, Callable, Tuple, Optional
+from typing import List
 
-import numpy
-
-from ...utils.types import *
 from ...utils.lists import *
 
 from ...mathematics.statistics import *
-from ...mathematics.defaults import *
 from ...mathematics.utils import *
-from ...mathematics.scalars import *
-
-#from ..rasters.fields import *
-#from ..rasters.geoarray import *
-
 from ..transformations.quaternions import *
-
 from ..vectors import *
-
 from .defaults import *
 from .direct_utils import *
 
@@ -85,7 +73,10 @@ class Point(object):
         """
 
         return cls(
-
+            x=vect.x,
+            y=vect.y,
+            z=vect.z,
+            epsg_cd=vect.epsg()
         )
 
     @property
@@ -1265,7 +1256,7 @@ class Segment(object):
 
     def __iter__(self):
         """
-        Return the elements of a Segment.
+        Return the elements of a Segment, i.e., start and end point.
         """
 
         return (i for i in [self.start_pt, self.end_pt])
@@ -1519,6 +1510,26 @@ class Segment(object):
             return True
         else:
             return False
+
+    def intersectLine(self,
+        line: Line
+    ) -> List[Optional[Union[Point, 'Segment']]]:
+        """
+        Calculates the possible intersection between the segment and a line
+
+        :param line: the input line
+        :type line: Line
+        :return: the possible intersections, points or segments
+        :rtype: List[Optional[Union[Point, 'Segment']]]
+        """
+
+        check_type(line, "Input line", Line)
+        check_crs(self, line)
+
+        intersections = [intersect_segments(self, segment) for segment in line]
+        intersections = list(filter(lambda val: val is not None, intersections))
+
+        return intersections
 
     def pointAt(self,
         scale_factor: numbers.Real
@@ -2021,30 +2032,40 @@ class Line(object):
 
         return self._pts
 
-    def extract_pt(self, pt_ndx: numbers.Integral) -> Optional[Point]:
+    def extract_pt(self, pt_ndx: numbers.Integral) -> Point:
         """
         Extract the point at index pt_ndx.
 
         :param pt_ndx: point index.
         :type pt_ndx: numbers.Integral.
-        :return: the extracted Point instance or None when index out-of-range.
-        :rtype: Optional[Point].
+        :return: the extracted Point instance.
+        :rtype: Point.
 
         Examples:
         """
 
-        num_pts = self.num_pts()
-
-        if num_pts == 0:
-            return None
-        elif pt_ndx not in range(num_pts):
-            return None
-        else:
-            return self._pts[pt_ndx]
+        return self._pts[pt_ndx]
 
     def pts(self):
 
         return [pt.clone() for pt in self._pts]
+
+    def segment(self,
+        ndx: numbers.Integral
+    ) -> Segment:
+        """
+        Returns the segment at index ndx.
+
+        :param ndx: the segment index.
+        :type ndx: numbers.Integral
+        :return: the segment
+        :rtype: Segment
+        """
+
+        return Segment(
+            start_pt=self.extract_pt(ndx),
+            end_pt=self.extract_pt(ndx+1)
+        )
 
     @property
     def crs(self) -> Crs:
@@ -2084,6 +2105,13 @@ class Line(object):
             return self._pts[-1].clone()
         else:
             return None
+
+    def __iter__(self):
+        """
+        Return the elements of a Line, i.e., its segments.
+        """
+
+        return (self.segment(i) for i in range(self.num_pts()))
 
     def __repr__(self) -> str:
         """
@@ -2300,7 +2328,7 @@ class Line(object):
         and orientation mismatches between the two original lines
         """
 
-        return Line(self._pts + another._pts)
+        return Line(self.pts() + another.pts())
 
     def length_3d(self) -> numbers.Real:
 
@@ -5070,186 +5098,155 @@ def point_or_segment(
         )
 
 
-class SegmentPair:
+def intersect_segments(
+    segment1: Segment,
+    segment2: Segment,
+    tol: numbers.Real = PRACTICAL_MIN_DIST
+) -> Optional[Union[Point, Segment]]:
     """
-    A pair of segments.
+    Determines the optional point or segment intersection between the segment pair.
 
+    :param segment1: the first segment
+    :type segment1: Segment
+    :param segment2: the second segment
+    :type segment2: Segment
+    :param tol: the distance tolerance for collapsing a intersection segment into a point
+    :type tol: numbers.Real
+    :return: the optional point or segment intersection between the segment pair.
+    :rtype: Optional[Union[Point, Segment]]
+
+    Examples:
+      >>> s2 = Segment(Point(0,0,0), Point(1,0,0))
+      >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(-2,0,0), Point(-1,0,0))
+      >>> intersect_segments(s1, s2) is None
+      True
+      >>> s1 = Segment(Point(-2,0,0), Point(0,0,0))
+      >>> intersect_segments(s1, s2)
+      Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
+      >>> s1 = Segment(Point(-2,0,0), Point(0.5,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.5000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(-2,0,0), Point(1,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(-2,0,0), Point(2,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0,0,0), Point(0.5,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.5000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0.25,0,0), Point(0.75,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.7500, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0.25,0,0), Point(1,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0.25,0,0), Point(1.25,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0,0,0), Point(1.25,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(1,0,0), Point(1.25,0,0))
+      >>> intersect_segments(s1, s2)
+      Point(1.0000, 0.0000, 0.0000, 0.0000, -1)
+      >>> s2 = Segment(Point(0,0,0), Point(1,1,1))
+      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(0.75,0.75,0.75))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.2500, 0.2500, 0.2500, 0.0000, -1), end_pt=Point(0.7500, 0.7500, 0.7500, 0.0000, -1))
+      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,1.75,1.75))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.2500, 0.2500, 0.2500, 0.0000, -1), end_pt=Point(1.0000, 1.0000, 1.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,0,1.75))
+      >>> intersect_segments(s1, s2)
+      Point(0.2500, 0.2500, 0.2500, 0.0000, -1)
+      >>> s1 = Segment(Point(0.25,1,0.25), Point(0.75,0.75,0.75))
+      >>> intersect_segments(s1, s2)
+      Point(0.7500, 0.7500, 0.7500, 0.0000, -1)
+      >>> s2 = Segment(Point(-1,-1,-1), Point(1,1,1))
+      >>> s1 = Segment(Point(-1,1,1), Point(1,-1,-1))
+      >>> intersect_segments(s1, s2)
+      Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
     """
 
-    def __init__(self,
-        segment1: Segment,
-        segment2: Segment
-    ):
-        """
+    check_type(segment1, "First segment", Segment)
+    check_type(segment2, "Second segment", Segment)
 
-        :param segment1:
-        :param segment2:
-        """
+    check_crs(segment1, segment2)
 
-        check_type(segment1, "First segment", Segment)
-        check_type(segment2, "Second segment", Segment)
+    s1_startpt_inside = segment1.segment_start_in(segment2)
+    s2_startpt_inside = segment2.segment_start_in(segment1)
 
-        check_crs(segment1, segment2)
+    s1_endpt_inside = segment1.segment_end_in(segment2)
+    s2_endpt_inside = segment2.segment_end_in(segment1)
 
-        self._s1 = segment1
-        self._s2 = segment2
+    elements = [s1_startpt_inside, s2_startpt_inside, s1_endpt_inside, s2_endpt_inside]
 
-    def intersect(self,
-        tol: numbers.Real = PRACTICAL_MIN_DIST
-    ) -> Optional[Union[Point, Segment]]:
-        """
-        Determines the optional point or segment intersection between the segment pair.
+    if all(elements):
+        return segment1.clone()
 
-        :param tol: the distance tolerance for collapsing a intersection segment into a point
-        :type tol: numbers.Real
-        :return: the optional point or segment intersection between the segment pair.
-        :rtype: Optional[Union[Point, Segment]]
+    if s1_startpt_inside and s1_endpt_inside:
+        return segment1.clone()
 
-        Examples:
-          >>> s2 = Segment(Point(0,0,0), Point(1,0,0))
-          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-          >>> s1 = Segment(Point(-2,0,0), Point(-1,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect() is None
-          True
-          >>> s1 = Segment(Point(-2,0,0), Point(0,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
-          >>> s1 = Segment(Point(-2,0,0), Point(0.5,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.5000, 0.0000, 0.0000, 0.0000, -1))
-          >>> s1 = Segment(Point(-2,0,0), Point(1,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-          >>> s1 = Segment(Point(-2,0,0), Point(2,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-          >>> s1 = Segment(Point(0,0,0), Point(0.5,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.5000, 0.0000, 0.0000, 0.0000, -1))
-          >>> s1 = Segment(Point(0.25,0,0), Point(0.75,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.7500, 0.0000, 0.0000, 0.0000, -1))
-          >>> s1 = Segment(Point(0.25,0,0), Point(1,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-          >>> s1 = Segment(Point(0.25,0,0), Point(1.25,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-          >>> s1 = Segment(Point(0,0,0), Point(1.25,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-          >>> s1 = Segment(Point(1,0,0), Point(1.25,0,0))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Point(1.0000, 0.0000, 0.0000, 0.0000, -1)
-          >>> s2 = Segment(Point(0,0,0), Point(1,1,1))
-          >>> s1 = Segment(Point(0.25,0.25,0.25), Point(0.75,0.75,0.75))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.2500, 0.2500, 0.2500, 0.0000, -1), end_pt=Point(0.7500, 0.7500, 0.7500, 0.0000, -1))
-          >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,1.75,1.75))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Segment(start_pt=Point(0.2500, 0.2500, 0.2500, 0.0000, -1), end_pt=Point(1.0000, 1.0000, 1.0000, 0.0000, -1))
-          >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,0,1.75))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Point(0.2500, 0.2500, 0.2500, 0.0000, -1)
-          >>> s1 = Segment(Point(0.25,1,0.25), Point(0.75,0.75,0.75))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Point(0.7500, 0.7500, 0.7500, 0.0000, -1)
-          >>> s2 = Segment(Point(-1,-1,-1), Point(1,1,1))
-          >>> s1 = Segment(Point(-1,1,1), Point(1,-1,-1))
-          >>> sp = SegmentPair(s1, s2)
-          >>> sp.intersect()
-          Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
+    if s2_startpt_inside and s2_endpt_inside:
+        return segment2.clone()
 
-        """
-
-        s1_startpt_inside = self._s1.segment_start_in(self._s2)
-        s2_startpt_inside = self._s2.segment_start_in(self._s1)
-
-        s1_endpt_inside = self._s1.segment_end_in(self._s2)
-        s2_endpt_inside = self._s2.segment_end_in(self._s1)
-
-        elements = [s1_startpt_inside, s2_startpt_inside, s1_endpt_inside, s2_endpt_inside]
-
-        if all(elements):
-            return self._s1.clone()
-
-        if s1_startpt_inside and s1_endpt_inside:
-            return self._s1.clone()
-
-        if s2_startpt_inside and s2_endpt_inside:
-            return self._s2.clone()
-
-        if s1_startpt_inside and s2_startpt_inside:
-            return point_or_segment(
-                self._s1.start_pt,
-                self._s2.start_pt,
-                tol=tol
-            )
-
-        if s1_startpt_inside and s2_endpt_inside:
-            return point_or_segment(
-                self._s1.start_pt,
-                self._s2.end_pt,
-                tol = tol
-            )
-
-        if s1_endpt_inside and s2_startpt_inside:
-            return point_or_segment(
-                self._s2.start_pt,
-                self._s1.end_pt,
-                tol=tol
-            )
-
-        if s1_endpt_inside and s2_endpt_inside:
-            return point_or_segment(
-                self._s1.end_pt,
-                self._s2.end_pt,
-                tol=tol
-            )
-
-        if s1_startpt_inside:
-            return self._s1.start_pt.clone()
-
-        if s1_endpt_inside:
-            return self._s1.end_pt.clone()
-
-        if s2_startpt_inside:
-            return self._s2.start_pt.clone()
-
-        if s2_endpt_inside:
-            return self._s2.end_pt.clone()
-
-        shortest_segm_or_pt = shortest_segment_or_point(
-            segment1=self._s1,
-            segment2=self._s2,
+    if s1_startpt_inside and s2_startpt_inside:
+        return point_or_segment(
+            segment1.start_pt,
+            segment2.start_pt,
             tol=tol
         )
 
-        if not shortest_segm_or_pt:
-            return None
+    if s1_startpt_inside and s2_endpt_inside:
+        return point_or_segment(
+            segment1.start_pt,
+            segment2.end_pt,
+            tol = tol
+        )
 
-        if isinstance(shortest_segm_or_pt, Point):
-            return shortest_segm_or_pt
-        else:
-            return None
+    if s1_endpt_inside and s2_startpt_inside:
+        return point_or_segment(
+            segment2.start_pt,
+            segment1.end_pt,
+            tol=tol
+        )
+
+    if s1_endpt_inside and s2_endpt_inside:
+        return point_or_segment(
+            segment1.end_pt,
+            segment2.end_pt,
+            tol=tol
+        )
+
+    if s1_startpt_inside:
+        return segment1.start_pt.clone()
+
+    if s1_endpt_inside:
+        return segment1.end_pt.clone()
+
+    if s2_startpt_inside:
+        return segment2.start_pt.clone()
+
+    if s2_endpt_inside:
+        return segment2.end_pt.clone()
+
+    shortest_segm_or_pt = shortest_segment_or_point(
+        segment1=segment1,
+        segment2=segment2,
+        tol=tol
+    )
+
+    if not shortest_segm_or_pt:
+        return None
+
+    if isinstance(shortest_segm_or_pt, Point):
+        return shortest_segm_or_pt
+    else:
+        return None
 
 
 class Points:
@@ -5261,7 +5258,7 @@ class Points:
          points: List[Point],
          epsg_cd: numbers.Integral = None,
          crs_check: bool = True
-    ):
+):
         """
 
         :param points: list of points

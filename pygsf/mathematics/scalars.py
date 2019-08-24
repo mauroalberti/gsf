@@ -17,7 +17,7 @@ def areClose(
     equal_inf: bool = False
 ) -> bool:
     """
-    Mimics math.isclose from Python 3.5 (see: https://docs.python.org/3.5/library/math.html)
+    Mimics math.isclose from Python 3.5 (see: https://src_docs.python.org/3.5/library/math.html)
 
     Example:
       >>> areClose(1.0, 1.0)

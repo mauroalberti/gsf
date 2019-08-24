@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import Callable, List
+from typing import Callable
 
 from math import sin, cos
-import numpy as np
+
 
 
 import numbers

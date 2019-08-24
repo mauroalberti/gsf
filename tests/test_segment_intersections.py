@@ -4,8 +4,7 @@
 
 
 import unittest
-import math
-import numpy as np
+
 
 from pygsf.spatial.vectorial.geometries import *
 
@@ -29,12 +28,7 @@ class TestSegmentIntersections(unittest.TestCase):
                 center_point=center_point
             )
 
-            pair = SegmentPair(
-                random_segment,
-                rotated_segment
-            )
-
-            intersection_pt = pair.intersect()
+            intersection_pt = intersect_segments(random_segment, rotated_segment)
 
             if not intersection_pt or not intersection_pt.isCoinc(center_point, tolerance=1e-2):
                 print(n)
@@ -45,8 +39,6 @@ class TestSegmentIntersections(unittest.TestCase):
                 print(rotated_segment)
                 print(intersection_pt)
                 print(center_point.dist3DWith(intersection_pt))
-
-            #assert intersection_pt.isCoinc(center_point, tolerance=1e-2)
 
 
 if __name__ == '__main__':

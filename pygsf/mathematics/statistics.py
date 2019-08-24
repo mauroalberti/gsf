@@ -17,14 +17,14 @@ def get_statistics(vals: Union[List, np.array]) -> Dict:
 
     array = np.asarray(vals)
 
-    min = np.nanmin(array)
-    max = np.nanmax(array)
+    amin = np.nanmin(array)
+    amax = np.nanmax(array)
     mean = np.nanmean(array)
     var = np.nanvar(array)
     std = np.nanstd(array)
 
-    stats = dict(min=min,
-                 max=max,
+    stats = dict(min=amin,
+                 max=amax,
                  mean=mean,
                  var=var,
                  std=std)
