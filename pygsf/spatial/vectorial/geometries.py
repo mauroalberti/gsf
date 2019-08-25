@@ -1511,26 +1511,6 @@ class Segment(object):
         else:
             return False
 
-    def intersectLine(self,
-        line: Line
-    ) -> List[Optional[Union[Point, 'Segment']]]:
-        """
-        Calculates the possible intersection between the segment and a line
-
-        :param line: the input line
-        :type line: Line
-        :return: the possible intersections, points or segments
-        :rtype: List[Optional[Union[Point, 'Segment']]]
-        """
-
-        check_type(line, "Input line", Line)
-        check_crs(self, line)
-
-        intersections = [intersect_segments(self, segment) for segment in line]
-        intersections = list(filter(lambda val: val is not None, intersections))
-
-        return intersections
-
     def pointAt(self,
         scale_factor: numbers.Real
     ) -> Point:
@@ -1950,6 +1930,334 @@ class Segment(object):
         )
 
 
+class CLine:
+    """
+    Cartesian line.
+
+    Defined by a point and a unit vector.
+    """
+
+    def __init__(self,
+        point: Point,
+        dir_vector: Vect):
+
+        check_type(point, "Input point", Point)
+        check_type(dir_vector, "Directional vector", Vect)
+
+        check_crs(point, dir_vector)
+
+        self._start_pt = point
+
+        self._dir_vect = dir_vector.versor().upward()
+
+    @property
+    def start_pt(self) -> Point:
+        """
+        Returns the Cartesian line point.
+
+        :return: the Cartesian line point
+        :rtype: Point
+        """
+
+        return self._start_pt
+
+    @property
+    def end_pt(self) -> Point:
+        """
+        Returns the Cartesian line point.
+
+        :return: the Cartesian line point
+        :rtype: Point
+        """
+
+        return self.start_pt.shiftByVect(self.versor)
+
+    @property
+    def versor(self) -> Vect:
+        """
+        Returns .
+
+        :return: the unit vector
+        :rtype: Vect
+        """
+
+        return self._dir_vect
+
+    def points(self)-> Tuple[Point, Point]:
+        """
+        Returns the CLine as a tuple of two points.
+
+        :return: the CLine as a tuple of two points
+        :rtype: Tuple[Point, Point]
+        """
+
+        return self.start_pt, self.end_pt
+
+    def segment(self) -> Segment:
+        """
+        Returns the CLine as a segment.
+
+        :return: the CLine as a segment
+        :rtype: Segment
+        """
+
+        return Segment(
+            start_pt=self.start_pt,
+            end_pt=self.end_pt
+        )
+
+    @property
+    def crs(self) -> Crs:
+        """
+        Returns the CRS.
+
+        :return: the CRS
+        :rtype: Crs
+        """
+
+        return self.start_pt.crs
+
+    def epsg(self) -> numbers.Integral:
+        """
+        Returns the EPSG code.
+
+        :return: the EPSG code
+        :rtype: numbers.Integral
+        """
+
+        return self.crs.epsg()
+
+    @classmethod
+    def fromPoints(cls,
+        first_pt: Point,
+        second_pt: Point,
+        tolerance=PRACTICAL_MIN_DIST
+    ) -> 'CLine':
+        """
+        Creates a CLine instance from two distinct points.
+
+        :param first_pt: the first input point
+        :type first_pt: Point
+        :param second_pt: the second input point
+        :type second_pt: Point
+        :return: a new CLine instance
+        :rtype: CLine
+        """
+
+        check_type(first_pt, "First point", Point)
+        check_type(second_pt, "Second point", Point)
+
+        check_crs(first_pt, second_pt)
+
+        if first_pt.isCoinc(second_pt, tolerance=tolerance):
+            raise Exception("The two input points are practically coincident")
+
+        segment = Segment(
+            start_pt=first_pt,
+            end_pt=second_pt
+        )
+
+        return cls(
+            point=first_pt,
+            dir_vector=segment.vector()
+        )
+
+    @classmethod
+    def fromSegment(cls,
+        segment: Segment):
+        """
+        Creates a Cartesian line from a segment instance.
+
+        :param segment: the segment to convert to Cartesian line
+        :type segment: Segment
+        :return: a new CLine
+        :rtype: CLine
+        """
+
+        return cls.fromPoints(
+            first_pt=segment.start_pt,
+            second_pt=segment.end_pt
+        )
+
+    def shortest_segment_or_point(self,
+        another: 'CLine',
+        tol: numbers.Real = PRACTICAL_MIN_DIST
+    ) -> Optional[Union[Segment, Point]]:
+
+        """
+        Calculates the optional shortest segment - or the intersection point - between two lines represented by two segments.
+
+        Adapted from:
+            http://paulbourke.net/geometry/pointlineplane/
+
+        C code from:
+            http://paulbourke.net/geometry/pointlineplane/lineline.c
+    [
+        typedef struct {
+        double x,y,z;
+        } XYZ;
+
+        /*
+        Calculate the line segment PaPb that is the shortest route between
+        two lines P1P2 and P3P4. Calculate also the values of mua and mub where
+          Pa = P1 + mua (P2 - P1)
+          Pb = P3 + mub (P4 - P3)
+        Return FALSE if no solution exists.
+        */
+        int LineLineIntersect(
+        XYZ p1,XYZ p2,XYZ p3,XYZ p4,XYZ *pa,XYZ *pb,
+        double *mua, double *mub)
+        {
+        XYZ p13,p43,p21;
+        double d1343,d4321,d1321,d4343,d2121;
+        double numer,denom;
+
+        p13.x = p1.x - p3.x;
+        p13.y = p1.y - p3.y;
+        p13.z = p1.z - p3.z;
+        p43.x = p4.x - p3.x;
+        p43.y = p4.y - p3.y;
+        p43.z = p4.z - p3.z;
+        if (ABS(p43.x) < EPS && ABS(p43.y) < EPS && ABS(p43.z) < EPS)
+          return(FALSE);
+        p21.x = p2.x - p1.x;
+        p21.y = p2.y - p1.y;
+        p21.z = p2.z - p1.z;
+        if (ABS(p21.x) < EPS && ABS(p21.y) < EPS && ABS(p21.z) < EPS)
+          return(FALSE);
+
+        d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
+        d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
+        d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
+        d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
+        d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
+
+        denom = d2121 * d4343 - d4321 * d4321;
+        if (ABS(denom) < EPS)
+          return(FALSE);
+        numer = d1343 * d4321 - d1321 * d4343;
+
+        *mua = numer / denom;
+        *mub = (d1343 + d4321 * (*mua)) / d4343;
+
+        pa->x = p1.x + *mua * p21.x;
+        pa->y = p1.y + *mua * p21.y;
+        pa->z = p1.z + *mua * p21.z;
+        pb->x = p3.x + *mub * p43.x;
+        pb->y = p3.y + *mub * p43.y;
+        pb->z = p3.z + *mub * p43.z;
+
+        return(TRUE);
+        }
+
+        :param another: the second Cartesian line.
+        :type another: Cartesian line.
+        :param tol: tolerance value for collapsing a segment into the midpoint.
+        :type tol: numbers.Real
+        :return: the optional shortest segment or an intersection point.
+        :rtype: Optional[Union[Segment, Point]]
+        """
+
+        check_type(another, "Second Cartesian line", CLine)
+
+        check_crs(self, another)
+
+        epsg_cd = self.epsg()
+
+        p1 = self.start_pt
+        p2 = self.end_pt
+
+        p3 = another.start_pt
+        p4 = another.end_pt
+
+        p13 = Point(
+            x=p1.x - p3.x,
+            y=p1.y - p3.y,
+            z=p1.z - p3.z,
+            epsg_cd=epsg_cd
+        )
+
+        p43 = Point(
+            x=p4.x - p3.x,
+            y=p4.y - p3.y,
+            z=p4.z - p3.z,
+            epsg_cd=epsg_cd
+        )
+
+        if p43.asVect().isAlmostZero:
+            return None
+
+        p21 = Point(
+            x=p2.x - p1.x,
+            y=p2.y - p1.y,
+            z=p2.z - p1.z,
+            epsg_cd=epsg_cd
+        )
+
+        if p21.asVect().isAlmostZero:
+            return None
+
+        d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z
+        d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z
+        d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z
+        d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z
+        d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z
+
+        denom = d2121 * d4343 - d4321 * d4321
+
+        if fabs(denom) < MIN_SCALAR_VALUE:
+            return None
+
+        numer = d1343 * d4321 - d1321 * d4343
+
+        mua = numer / denom
+        mub = (d1343 + d4321 * mua) / d4343
+
+        pa = Point(
+            x=p1.x + mua * p21.x,
+            y=p1.y + mua * p21.y,
+            z=p1.z + mua * p21.z,
+            epsg_cd=epsg_cd
+        )
+
+        pb = Point(
+            x=p3.x + mub * p43.x,
+            y=p3.y + mub * p43.y,
+            z=p3.z + mub * p43.z,
+            epsg_cd=epsg_cd
+        )
+
+        intersection = point_or_segment(
+            point1=pa,
+            point2=pb,
+            tol=tol
+        )
+
+        return intersection
+
+    def point_distance(self,
+        point: Point
+    ) -> numbers.Real:
+        """
+        Returns the distance between a line and a point.
+
+        Algorithm from Wolfram MathWorld: Point-Line Distance -- 3-Dimensional
+
+        :param point: input point
+        :type point: Point
+        :return: the distance
+        :rtype: numbers.Real
+        """
+        v2 = self.end_pt.asVect()
+        v1 = self.start_pt.asVect()
+
+        v0 = point.asVect()
+
+        d = abs((v0 - v1).vCross(v0 - v2)) / abs(v2 - v1)
+
+        return d
+
+
 class Line(object):
     """
     A list of Point objects, all with the same CRS code.
@@ -2067,6 +2375,26 @@ class Line(object):
             end_pt=self.extract_pt(ndx+1)
         )
 
+    def intersectSegment(self,
+        segment: Segment
+    ) -> List[Optional[Union[Point, 'Segment']]]:
+        """
+        Calculates the possible intersection between the line and a provided segment.
+
+        :param segment: the input segment
+        :type segment: Segment
+        :return: the possible intersections, points or segments
+        :rtype: List[Optional[Union[Point, 'Segment']]]
+        """
+
+        check_type(segment, "Input segment", Segment)
+        check_crs(self, segment)
+
+        intersections = [intersect_segments(curr_segment, segment) for curr_segment in self]
+        intersections = list(filter(lambda val: val is not None, intersections))
+
+        return intersections
+
     @property
     def crs(self) -> Crs:
 
@@ -2111,7 +2439,7 @@ class Line(object):
         Return the elements of a Line, i.e., its segments.
         """
 
-        return (self.segment(i) for i in range(self.num_pts()))
+        return (self.segment(i) for i in range(0, self.num_pts()-1))
 
     def __repr__(self) -> str:
         """
@@ -4906,165 +5234,6 @@ def rotVectByQuater(quat: Quaternion, vect: Vect) -> Vect:
     return rotated_v.vector()
 
 
-def shortest_segment_or_point(
-    segment1: Segment,
-    segment2: Segment,
-    tol: numbers.Real = PRACTICAL_MIN_DIST
-) -> Optional[Union[Segment, Point]]:
-
-    """
-    Calculates the optional shortest segment - or the intesection point - between two segments.
-
-    Adapted from:
-        http://paulbourke.net/geometry/pointlineplane/
-
-    C code from:
-        http://paulbourke.net/geometry/pointlineplane/lineline.c
-[
-    typedef struct {
-    double x,y,z;
-    } XYZ;
-
-    /*
-    Calculate the line segment PaPb that is the shortest route between
-    two lines P1P2 and P3P4. Calculate also the values of mua and mub where
-      Pa = P1 + mua (P2 - P1)
-      Pb = P3 + mub (P4 - P3)
-    Return FALSE if no solution exists.
-    */
-    int LineLineIntersect(
-    XYZ p1,XYZ p2,XYZ p3,XYZ p4,XYZ *pa,XYZ *pb,
-    double *mua, double *mub)
-    {
-    XYZ p13,p43,p21;
-    double d1343,d4321,d1321,d4343,d2121;
-    double numer,denom;
-
-    p13.x = p1.x - p3.x;
-    p13.y = p1.y - p3.y;
-    p13.z = p1.z - p3.z;
-    p43.x = p4.x - p3.x;
-    p43.y = p4.y - p3.y;
-    p43.z = p4.z - p3.z;
-    if (ABS(p43.x) < EPS && ABS(p43.y) < EPS && ABS(p43.z) < EPS)
-      return(FALSE);
-    p21.x = p2.x - p1.x;
-    p21.y = p2.y - p1.y;
-    p21.z = p2.z - p1.z;
-    if (ABS(p21.x) < EPS && ABS(p21.y) < EPS && ABS(p21.z) < EPS)
-      return(FALSE);
-
-    d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
-    d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
-    d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
-    d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
-    d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
-
-    denom = d2121 * d4343 - d4321 * d4321;
-    if (ABS(denom) < EPS)
-      return(FALSE);
-    numer = d1343 * d4321 - d1321 * d4343;
-
-    *mua = numer / denom;
-    *mub = (d1343 + d4321 * (*mua)) / d4343;
-
-    pa->x = p1.x + *mua * p21.x;
-    pa->y = p1.y + *mua * p21.y;
-    pa->z = p1.z + *mua * p21.z;
-    pb->x = p3.x + *mub * p43.x;
-    pb->y = p3.y + *mub * p43.y;
-    pb->z = p3.z + *mub * p43.z;
-
-    return(TRUE);
-    }
-
-    :param segment1: the first segment.
-    :type segment1: Segment.
-    :param segment2: the second segment.
-    :type segment2: Segment.
-    :param tol: tolerance value for collapsing a segment into the midpoint.
-    :type tol: numbers.Real
-    :return: the optional shortest segment or an intersection point.
-    :rtype: Optional[Union[Segment, Point]]
-    """
-
-    check_type(segment1, "First segment", Segment)
-    check_type(segment2, "Second segment", Segment)
-
-    check_crs(segment1, segment2)
-
-    epsg_cd = segment1.epsg()
-
-    p1 = segment1.start_pt
-    p2 = segment1.end_pt
-
-    p3 = segment2.start_pt
-    p4 = segment2.end_pt
-
-    p13 = Point(
-        x=p1.x - p3.x,
-        y=p1.y - p3.y,
-        z=p1.z - p3.z,
-        epsg_cd=epsg_cd
-    )
-
-    p43 = Point(
-        x=p4.x - p3.x,
-        y=p4.y - p3.y,
-        z=p4.z - p3.z,
-        epsg_cd=epsg_cd
-    )
-
-    if p43.asVect().isAlmostZero:
-        return None
-
-    p21 = Point(
-        x=p2.x - p1.x,
-        y=p2.y - p1.y,
-        z=p2.z - p1.z,
-        epsg_cd=epsg_cd
-    )
-
-    if p21.asVect().isAlmostZero:
-        return None
-
-    d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z
-    d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z
-    d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z
-    d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z
-    d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z
-
-    denom = d2121 * d4343 - d4321 * d4321
-
-    if fabs(denom) < MIN_SCALAR_VALUE:
-        return None
-
-    numer = d1343 * d4321 - d1321 * d4343
-
-    mua = numer / denom
-    mub = (d1343 + d4321 * mua) / d4343
-
-    pa = Point(
-        x=p1.x + mua * p21.x,
-        y=p1.y + mua * p21.y,
-        z=p1.z + mua * p21.z,
-        epsg_cd=epsg_cd
-    )
-
-    pb = Point(
-        x=p3.x + mub * p43.x,
-        y=p3.y + mub * p43.y,
-        z=p3.z + mub * p43.z,
-        epsg_cd=epsg_cd
-    )
-
-    return point_or_segment(
-        point1=pa,
-        point2=pb,
-        tol=tol
-    )
-
-
 def point_or_segment(
         point1: Point,
         point2: Point,
@@ -5234,19 +5403,29 @@ def intersect_segments(
     if s2_endpt_inside:
         return segment2.end_pt.clone()
 
-    shortest_segm_or_pt = shortest_segment_or_point(
-        segment1=segment1,
-        segment2=segment2,
+    cline1 = CLine.fromSegment(segment1)
+    cline2 = CLine.fromSegment(segment2)
+
+    shortest_segm_or_pt = cline1.shortest_segment_or_point(
+        cline2,
         tol=tol
     )
 
     if not shortest_segm_or_pt:
         return None
 
-    if isinstance(shortest_segm_or_pt, Point):
-        return shortest_segm_or_pt
-    else:
+    if not isinstance(shortest_segm_or_pt, Point):
         return None
+
+    inters_pt = shortest_segm_or_pt
+
+    if not segment1.contains_pt(inters_pt):
+        return None
+
+    if not segment2.contains_pt(inters_pt):
+        return None
+
+    return inters_pt
 
 
 class Points:

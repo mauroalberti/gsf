@@ -55,6 +55,15 @@ class Vect(object):
         self._a = np.array(vals, dtype=np.float64)
         self._crs = Crs(epsg_cd)
 
+    def __abs__(self):
+        """
+        The abs of a vector.
+
+        :return: numbers.Real
+        """
+
+        return self.len3D
+
     def __eq__(self, another: 'Vect') -> bool:
         """
         Return True if objects are equal.
@@ -631,7 +640,9 @@ class Vect(object):
 
         return self.x * another.x + self.y * another.y + self.z * another.z
 
-    def angleCos(self, another: 'Vect') -> Optional[numbers.Real]:
+    def angleCos(self,
+        another: 'Vect'
+    ) -> Optional[numbers.Real]:
         """
         Return the cosine of the angle between two vectors.
 
@@ -664,6 +675,48 @@ class Vect(object):
             return -1.0
         else:
             return val
+
+    def scalarProjection(self,
+        another: 'Vect'
+    ) -> Optional[numbers.Real]:
+        """
+        Return the scalar projection of the second vector on the first vector.
+
+        Examples:
+          >>> Vect(1,0,0).scalarProjection(Vect(0,0,1))
+          0.0
+          >>> Vect(2,0,0).scalarProjection(Vect(1,5,0))
+          1.0
+          >>> Vect(2,0,0).scalarProjection(Vect(-1,5,0))
+          -1.0
+        """
+
+        check_type(another, "Second vector", Vect)
+
+        check_crs(self, another)
+
+        return self.angleCos(another) * another.len3D
+
+    def fractionalProjection(self,
+        another: 'Vect'
+    ) -> Optional[numbers.Real]:
+        """
+        Return the fractional projection of the second vector on the first vector.
+
+        Examples:
+          >>> Vect(1,0,0).fractionalProjection(Vect(0,0,1))
+          0.0
+          >>> Vect(2,0,0).fractionalProjection(Vect(1,5,0))
+          0.5
+          >>> Vect(2,0,0).fractionalProjection(Vect(-1,5,0))
+          -0.5
+        """
+
+        check_type(another, "Second vector", Vect)
+
+        check_crs(self, another)
+
+        return self.scalarProjection(another) / self.len3D
 
     def angle(self, another: 'Vect', unit='d') -> Optional[numbers.Real]:
         """

@@ -462,11 +462,15 @@ class GeoArray(object):
         Examples:
         """
 
+        check_type(pt, "Input point", Point)
+
+        check_crs(self, pt)
+
         x, y, epsg_cd = pt.x, pt.y, pt.epsg()
 
         z = self.interpolate_bilinear(x=x, y=y, level_ndx=level_ndx)
 
-        if z:
+        if z and isfinite(z):
             return Point(x, y, z, epsg_cd=epsg_cd)
         else:
             return None
