@@ -689,6 +689,8 @@ class Vect(object):
           1.0
           >>> Vect(2,0,0).scalarProjection(Vect(-1,5,0))
           -1.0
+          >>> Vect(4,0,0).scalarProjection(Vect(7.5, 19.2, -14.72))
+          7.5
         """
 
         check_type(another, "Second vector", Vect)

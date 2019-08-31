@@ -1181,7 +1181,7 @@ class CPlane(object):
         return angle_degr
 
 
-class Segment(object):
+class Segment:
     """
     Segment is a geometric object defined by the straight line between
     two vertices.
@@ -1224,16 +1224,6 @@ class Segment(object):
             self.start_pt,
             self.end_pt
         )
-
-    """
-    def extract_start_pt(self) -> Point:
-
-        return self._start_pt
-
-    def extract_end_pt(self) -> Point:
-
-        return self._end_pt
-    """
 
     @property
     def start_pt(self) -> Point:
@@ -1309,6 +1299,15 @@ class Segment(object):
         """
 
         return self.end_pt.z - self.start_pt.z
+
+    def delta_t(self) -> numbers.Real:
+        """
+        T delta between segment end point and start point.
+
+        :return: numbers.Real.
+        """
+
+        return self.end_pt.t - self.start_pt.t
 
     def length2D(self) -> numbers.Real:
         """
@@ -1554,18 +1553,78 @@ class Segment(object):
           >>> s = Segment(Point(0,0,0), Point(1,1,1))
           >>> s.pointAt(0.5)
           Point(0.5000, 0.5000, 0.5000, 0.0000, -1)
+          >>> s = Segment(Point(0,0,0), Point(4,0,0))
+          >>> s.pointAt(7.5)
+          Point(30.0000, 0.0000, 0.0000, 0.0000, -1)
         """
 
-        delta_x = self.delta_x() * scale_factor
-        delta_y = self.delta_y() * scale_factor
-        delta_z = self.delta_z() * scale_factor
+        dx = self.delta_x() * scale_factor
+        dy = self.delta_y() * scale_factor
+        dz = self.delta_z() * scale_factor
+        dt = self.delta_t() * scale_factor
 
         return Point(
-            x=self.start_pt.x + delta_x,
-            y=self.start_pt.y + delta_y,
-            z=self.start_pt.z + delta_z,
-            t=self.end_pt.t,
+            x=self.start_pt.x + dx,
+            y=self.start_pt.y + dy,
+            z=self.start_pt.z + dz,
+            t=self.start_pt.t + dt,
             epsg_cd=self.epsg())
+
+    def pointProjection(self,
+        point: Point
+    ) -> Point:
+        """
+        Return the point projection on the segment.
+
+        Examples:
+          >>> s = Segment(start_pt=Point(0,0,0), end_pt=Point(1,0,0))
+          >>> p = Point(0.5, 1, 4)
+          >>> s.pointProjection(p)
+          Point(0.5000, 0.0000, 0.0000, 0.0000, -1)
+          >>> s = Segment(start_pt=Point(0,0,0), end_pt=Point(4,0,0))
+          >>> p = Point(7.5, 19.2, -14.72)
+          >>> s.pointProjection(p)
+          Point(7.5000, 0.0000, 0.0000, 0.0000, -1)
+        """
+
+        check_type(point, "Input point", Point)
+
+        check_crs(self, point)
+
+        other_segment = Segment(
+            self.start_pt,
+            point
+        )
+        
+        scale_factor = self.vector().scalarProjection(other_segment.vector()) / self.length3D()
+        return self.pointAt(scale_factor)
+
+    def pointDistance(self,
+        point: Point
+    ) -> numbers.Real:
+        """
+        Returns the point distance to the segment.
+
+        :param point: the point to calculate the distance with
+        :type point: Point
+        :return: the distance of the point to the segment
+        :rtype: numbers.Real
+
+        Examples:
+          >>> s = Segment(Point(0,0,0), Point(0,0,4))
+          >>> s.pointDistance(Point(-17.2, 0.0, -49,3))
+          17.2
+          >>> s.pointDistance(Point(-17.2, 1.22, -49,3))
+          17.24321315764553
+        """
+
+        check_type(point, "Input point", Point)
+
+        check_crs(self, point)
+
+        point_projection = self.pointProjection(point)
+
+        return point.dist3DWith(point_projection)
 
     def scale(self, scale_factor) -> 'Segment':
         """
@@ -2235,7 +2294,7 @@ class CLine:
 
         return intersection
 
-    def point_distance(self,
+    def pointDistance(self,
         point: Point
     ) -> numbers.Real:
         """
@@ -2247,7 +2306,10 @@ class CLine:
         :type point: Point
         :return: the distance
         :rtype: numbers.Real
+
+        Examples:
         """
+
         v2 = self.end_pt.asVect()
         v1 = self.start_pt.asVect()
 
@@ -5338,7 +5400,7 @@ def intersect_segments(
       >>> s2 = Segment(Point(-1,-1,-1), Point(1,1,1))
       >>> s1 = Segment(Point(-1,1,1), Point(1,-1,-1))
       >>> intersect_segments(s1, s2)
-      Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
+      Point(-0.0000, 0.0000, 0.0000, 0.0000, -1)
     """
 
     check_type(segment1, "First segment", Segment)

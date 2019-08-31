@@ -38,7 +38,8 @@ class TestSegmentIntersections(unittest.TestCase):
                 print(center_point)
                 print(rotated_segment)
                 print(intersection_pt)
-                print(center_point.dist3DWith(intersection_pt))
+                if intersection_pt:
+                    print(center_point.dist3DWith(intersection_pt))
 
 
 if __name__ == '__main__':
