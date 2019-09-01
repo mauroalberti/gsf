@@ -1429,10 +1429,11 @@ class Segment:
         return Point(x0, y0, epsg_cd=self.epsg())
 
     def contains_pt(self,
-        pt: Point) -> bool:
+        pt: Point
+    ) -> bool:
         """
         Checks whether a point is contained in a segment.
-        It is contained, the angle between
+
         :param pt: the point for which to check containement.
         :return: bool.
         :raise: Exception.
@@ -1494,7 +1495,8 @@ class Segment:
         )
 
     def fast_2d_contains_pt(self,
-        pt2d) -> bool:
+        pt2d
+    ) -> bool:
         """
         Deprecated. Use 'contains_pt'.
 
@@ -1626,7 +1628,31 @@ class Segment:
 
         return point.dist3DWith(point_projection)
 
-    def scale(self, scale_factor) -> 'Segment':
+    def pointS(self,
+        point: Point
+    ) -> Optional[numbers.Real]:
+        """
+        Calculates the optional distance of the point along the segment.
+        A zero value is for a point coinciding with the start point.
+        Returns None if the point is not contained in the segment.
+
+        :param point: the point to calculate the optional distance in the segment.
+        :type point: Point
+        :return: the the optional distance of the point along the segment.
+        """
+
+        check_type(point, "Input point", Point)
+
+        check_crs(self, point)
+
+        if not self.contains_pt(point):
+            return None
+
+        return self.start_pt.dist3DWith(point)
+
+    def scale(self,
+        scale_factor
+    ) -> 'Segment':
         """
         Scale a segment by the given scale_factor.
         Start point does not change.
@@ -1644,7 +1670,8 @@ class Segment:
             end_pt)
 
     def densify2d_asSteps(self,
-        densify_distance: numbers.Real) -> array:
+        densify_distance: numbers.Real
+    ) -> array:
         """
         Defines the array storing the incremental lengths according to the provided densify distance.
 
@@ -1679,7 +1706,8 @@ class Segment:
         return array('d', s_list)
 
     def densify2d_asPts(self,
-        densify_distance) -> List[Point]:
+        densify_distance
+    ) -> List[Point]:
         """
         Densify a segment by adding additional points
         separated a distance equal to densify_distance.
@@ -1722,7 +1750,8 @@ class Segment:
         return pts
 
     def densify2d_asLine(self,
-        densify_distance) -> 'Line':
+        densify_distance
+    ) -> 'Line':
         """
         Densify a segment by adding additional points
         separated a distance equal to densify_distance.
