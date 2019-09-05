@@ -1011,11 +1011,12 @@ class CPlane(object):
     def intersVersor(self, another) -> Optional[Vect]:
         """
         Return intersection versor for two intersecting planes.
+        Return None for not intersecting planes.
 
         :param another: another Cartesian plane.
         :type another: CPlane.
         :return: the intersection line as a vector.
-        :rtype: Vect.
+        :rtype: Optional[Vect].
         :raise: Exception.
 
         Examples:
@@ -1023,9 +1024,12 @@ class CPlane(object):
           >>> b = CPlane(0, 0, 1, 0, epsg_cd=2000)
           >>> a.intersVersor(b)
           Vect(0.0000, -1.0000, 0.0000, EPSG: 2000)
+          >>> b = CPlane(-1, 0, 0, 0, epsg_cd=2000)  # parallel plane, no intersection
+          >>> a.intersVersor(b) is None
+          True
         """
 
-        check_type(another, "Argument", CPlane)
+        check_type(another, "Input Cartesian plane", CPlane)
 
         check_crs(self, another)
 
@@ -1048,6 +1052,8 @@ class CPlane(object):
           >>> b = CPlane(0, 0, 1, 0, epsg_cd=32632)
           >>> a.intersPoint(b)
           Point(0.0000, 0.0000, 0.0000, 0.0000, 32632)
+          >>> b = CPlane(-1, 0, 0, 0, epsg_cd=32632)  # parallel plane, no intersection
+          >>> a.intersPoint(b) is None
         """
 
         check_type(another, "Second plane", CPlane)
@@ -2468,14 +2474,14 @@ class Line(object):
 
     def intersectSegment(self,
         segment: Segment
-    ) -> List[Optional[Union[Point, 'Segment']]]:
+    ) -> List[Optional[Union[Point, Segment]]]:
         """
         Calculates the possible intersection between the line and a provided segment.
 
         :param segment: the input segment
         :type segment: Segment
         :return: the possible intersections, points or segments
-        :rtype: List[Optional[Union[Point, 'Segment']]]
+        :rtype: List[Optional[Union[Point, Segment]]]
         """
 
         check_type(segment, "Input segment", Segment)
@@ -2946,7 +2952,7 @@ class MultiLine(object):
 
         return num_points
 
-    def extract_line(self, ln_ndx: numbers.Integral = 0) -> Optional[Line]:
+    def line(self, ln_ndx: numbers.Integral = 0) -> Optional[Line]:
         """
         Extracts a line from the multiline instance, based on the provided index.
 
@@ -2962,6 +2968,13 @@ class MultiLine(object):
             return None
 
         return self.lines()[ln_ndx]
+
+    def __iter__(self):
+        """
+        Return the elements of a MultiLine, i.e., its lines.
+        """
+
+        return (self.line(i) for i in range(0, self.num_lines()-1))
 
     def __repr__(self) -> str:
         """
@@ -3093,6 +3106,27 @@ class MultiLine(object):
             cleaned_lines.append(line.remove_coincident_points())
 
         return MultiLine(cleaned_lines, self.epsg())
+
+    def intersectSegment(self,
+        segment: Segment
+    ) -> List[List[Optional[Union[Point, 'Segment']]]]:
+        """
+        Calculates the possible intersection between the multiline and a provided segment.
+
+        :param segment: the input segment
+        :type segment: Segment
+        :return: the possible intersections, points or segments
+        :rtype: List[List[Optional[Union[Point, 'Segment']]]]
+        """
+
+        check_type(segment, "Input segment", Segment)
+        check_crs(self, segment)
+
+        intersections = []
+        for line in self:
+            intersections.append(line.intersectSegment(segment))
+
+        return intersections
 
 
 class ParamLine3D(object):
