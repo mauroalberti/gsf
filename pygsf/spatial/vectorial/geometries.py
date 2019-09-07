@@ -3109,7 +3109,7 @@ class MultiLine(object):
 
     def intersectSegment(self,
         segment: Segment
-    ) -> List[List[Optional[Union[Point, 'Segment']]]]:
+    ) -> List[Optional[Union[Point, 'Segment']]]:
         """
         Calculates the possible intersection between the multiline and a provided segment.
 
@@ -3124,7 +3124,7 @@ class MultiLine(object):
 
         intersections = []
         for line in self:
-            intersections.append(line.intersectSegment(segment))
+            intersections.extend(line.intersectSegment(segment))
 
         return intersections
 
