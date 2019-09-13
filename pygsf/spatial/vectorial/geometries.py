@@ -57,6 +57,11 @@ class Point(object):
         if not all(map(math.isfinite, vals)):
             raise Exception("Input values must be finite")
 
+        if not isinstance(epsg_cd, numbers.Integral):
+            raise Exception("Input EPSG value must be integer")
+        if not math.isfinite(epsg_cd):
+            raise Exception("Input EPSG value must be finite")
+
         self._x = float(x)
         self._y = float(y)
         self._z = float(z)
@@ -158,6 +163,16 @@ class Point(object):
 
         return self._crs
 
+    def epsg(self) -> numbers.Integral:
+        """
+        Returns the EPSG code of the point.
+
+        :return: the CRS code.
+        :rtype: numbers.Integral.
+        """
+
+        return self.crs.epsg()
+
     def __iter__(self):
         """
         Return the elements of a Point.
@@ -174,16 +189,6 @@ class Point(object):
         """
 
         return (i for i in self.a())
-
-    def epsg(self) -> numbers.Integral:
-        """
-        Returns the EPSG code of the point.
-
-        :return: the CRS code.
-        :rtype: numbers.Integral.
-        """
-
-        return self.crs.epsg()
 
     def __repr__(self) -> str:
 
