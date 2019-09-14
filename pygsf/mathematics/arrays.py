@@ -194,7 +194,7 @@ def pointSolution(
 
         return np.linalg.lstsq(a_array, b_array, rcond=None)[0]
 
-    except:
+    except Exception:
 
         return None, None, None
 
@@ -216,7 +216,7 @@ def xyzSvd(xyz_array) -> dict:
 
     try:
         result = np.linalg.svd(xyz_array)
-    except:
+    except Exception:
         result = None
 
     return dict(result=result)
@@ -239,7 +239,7 @@ def svd(xyz_array) -> Optional[Tuple['np.array', 'np.array', 'np.array']]:
 
     try:
         return np.linalg.svd(xyz_array)
-    except:
+    except Exception:
         return None
 
 

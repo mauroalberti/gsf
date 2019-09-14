@@ -2135,6 +2135,7 @@ class CLine:
         """
         Creates a CLine instance from two distinct points.
 
+        :param tolerance:
         :param first_pt: the first input point
         :type first_pt: Point
         :param second_pt: the second input point
