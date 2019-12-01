@@ -1,12 +1,8 @@
 
 from warnings import warn
-
 from functools import singledispatch
 
-
 from matplotlib.figure import Figure
-
-
 import matplotlib.pyplot as plt
 
 
