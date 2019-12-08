@@ -24,8 +24,6 @@ def plot(
     :return:
     """
 
-    print("plot0")
-
     fig = kargs.get("fig", None)
     aspect = kargs.get("aspect", 1)
     width = kargs.get("width", 18.5)
@@ -41,8 +39,6 @@ def plot(
     else:
 
         plt.gca()
-
-    plt.show()
 
     return fig
 
@@ -60,8 +56,6 @@ def _(
     :return: the figure.
     :rtype: Figure
     """
-
-    print("plot1")
 
     fig = kargs.get("fig", None)
     plot_z_min = kargs.get("plot_z_min", None)
@@ -155,8 +149,6 @@ def _(
 
         pass
 
-    plt.show()
-
     return fig
 
 
@@ -191,7 +183,5 @@ def _(
             plot_z_max=plot_z_max
         )
         figs.append(fig)
-
-    plt.show()
 
     return figs
