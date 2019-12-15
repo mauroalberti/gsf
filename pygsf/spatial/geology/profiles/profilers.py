@@ -815,7 +815,7 @@ class ParallelProfilers(list):
         :type profs_num: numbers.Integral.
         :param profs_offset: the lateral offset between profilers.
         :type profs_offset: numbers.Real.
-        :param profs_arr: profiles arrangement: one of left", "central", "right".
+        :param profs_arr: profiles arrangement: one of "left", "central", "right".
         :type: str.
         :return: the parallel linear profilers.
         :type: ParallelProfilers.
