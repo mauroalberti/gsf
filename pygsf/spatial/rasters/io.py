@@ -25,10 +25,51 @@ class RasterIOException(Exception):
     pass
 
 
+def try_read_raster(
+    file_ref: Any
+) -> Tuple[bool, Union[str, Tuple[gdal.Dataset, Optional[GeoTransform], int, str]]]:
+    """
+    Try reading a raster layer.
+
+    :param file_ref: the reference to the raster
+    :type file_ref: Any
+    :return: success status and an error message or the dataset, its geotransform, the number of bands, the projection.
+    :rtype: tTuple[bool, Union[str, Tuple[gdal.Dataset, Optional[GeoTransform], int, str]]]
+
+    Examples:
+    """
+
+    file_ref = file_ref.strip()
+    if not os.path.exists(file_ref):
+        return False, "Source file reference not found at {}".format(file_ref)
+
+    # open raster file and check operation success
+
+    dataset = gdal.Open(file_ref, gdal.GA_ReadOnly)
+    if not dataset:
+        return False, "Gdal cannot open {}".format(file_ref)
+
+    # get raster descriptive infos
+
+    gt = dataset.GetGeoTransform()
+    if gt:
+        geotransform = GeoTransform.fromGdalGt(gt)
+    else:
+        geotransform = None
+
+    num_bands = dataset.RasterCount
+
+    projection = dataset.GetProjection()
+
+    return True, (dataset, geotransform, num_bands, projection)
+
+
 def read_raster(
     file_ref: Any
 ) -> Tuple[gdal.Dataset, Optional[GeoTransform], int, str]:
     """
+    Deprecated. Use 'try_read_raster'.
+
     Read a raster layer.
 
     :param file_ref: the reference to the raster
@@ -148,7 +189,11 @@ def try_read_raster_band(raster_source: str, bnd_ndx: int=1) -> Tuple[bool, Unio
     return True, (geotransform, projection, band_params, data)
 
 
-def read_raster_band(raster_source: str, bnd_ndx: int = 1, epsg_cd: int = -1) -> Optional[GeoArray]:
+def read_raster_band(
+    raster_source: str,
+    bnd_ndx: int = 1,
+    epsg_cd: int = -1
+) -> Tuple[bool, Union[str, GeoArray]]:
     """
     Read parameters and values of a raster band.
     Since it is not immediate to get the EPSG code of the input raster,
@@ -162,21 +207,22 @@ def read_raster_band(raster_source: str, bnd_ndx: int = 1, epsg_cd: int = -1) ->
     :rtype: Optional GeoArray.
     """
 
-    try:
+    success, result = try_read_raster(raster_source)
+    if not success:
+        msg = result
+        return False, msg
 
-        dataset, geotransform, num_bands, projection = read_raster(raster_source)
-        band_params, data = read_band(dataset, bnd_ndx)
-        ga = GeoArray(
-            inGeotransform=geotransform,
-            epsg_cd=epsg_cd,
-            inLevels=[data]
-        )
+    dataset, geotransform, num_bands, projection = result
+    band_params, data = read_band(dataset, bnd_ndx)
+    ga = GeoArray(
+        inGeotransform=geotransform,
+        epsg_cd=epsg_cd,
+        inLevels=[data]
+    )
 
-        return ga
+    return True, ga
 
-    except:
 
-        return None
 
 
 def try_write_esrigrid(geoarray: GeoArray, outgrid_flpth: str, esri_nullvalue: numbers.Real=GRID_NULL_VALUE, level_ndx: int=0) -> Tuple[bool, str]:
