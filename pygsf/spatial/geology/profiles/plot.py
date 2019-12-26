@@ -10,9 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
 from .geoprofiles import *
-#from.gis_utils.qgs_tools import qcolor2rgbmpl
-#from .gis_utils.profile import define_plot_structural_segment
-from ....utils.mpl.mpl_widget import MplWidget, plot_line, plot_filled_line
+
 
 
 colors_addit = [
@@ -37,6 +35,9 @@ colors_addit = [
 
 z_padding = 0.2
 
+default_width = 18.5
+default_height = 10.5
+
 
 @singledispatch
 def plot(
@@ -52,8 +53,8 @@ def plot(
 
     fig = kargs.get("fig", None)
     aspect = kargs.get("aspect", 1)
-    width = kargs.get("width", 18.5)
-    height = kargs.get("height", 10.5)
+    width = kargs.get("width", default_width)
+    height = kargs.get("height", default_height)
 
     if fig is None:
 
@@ -88,10 +89,11 @@ def _(
     plot_z_max = kargs.get("plot_z_max", None)
     ndx = kargs.get("ndx", 0)
     aspect = kargs.get("aspect", 1)
-    width = kargs.get("width", 18.5)
-    height = kargs.get("height", 10.5)
+    width = kargs.get("width", default_width)
+    height = kargs.get("height", default_height)
     superposed=kargs.get("superposed", False)
     num_subplots=kargs.get("num_subplots", 1)
+    spec = kargs.get("spec", None)
 
     if plot_z_min is None or plot_z_max is not None:
 
@@ -108,12 +110,12 @@ def _(
         ax = fig.add_axes(
             [0.1, 0.1, 0.8, 0.8]
         )
-    else:
+    elif spec is not None:
         ax = fig.add_subplot(
-            num_subplots,
-            1,
-            ndx+1
+            spec[ndx, 0]
         )
+    else:
+        ax = fig.add_subplot()
 
     ax.set_aspect(aspect)
     ax.set_ylim([plot_z_min, plot_z_max])
@@ -161,7 +163,11 @@ def _(
                     section_length,
                     vertical_exaggeration)
 
-                fig.gca().plot(structural_segment_s, structural_segment_z, '-', color=attitude_color)
+                fig.gca().plot(
+                    structural_segment_s,
+                    structural_segment_z,
+                    '-',
+                    color=attitude_color)
 
     if geoprofile.lines_intersections:
 
@@ -205,17 +211,28 @@ def _(
     :rtype: List[Figure]
     """
 
-    fig = kargs.get("fig", None)
-    plot_z_min = kargs.get("plot_z_min", None)
-    plot_z_max = kargs.get("plot_z_max", None)
+    #fig = kargs.get("fig", None)
+    width = kargs.get("width", default_width)
+    height = kargs.get("height", default_height)
+    #plot_z_min = kargs.get("plot_z_min", None)
+    #plot_z_max = kargs.get("plot_z_max", None)
     superposed = kargs.get("superposed", False)
 
-    if plot_z_min is None or plot_z_max is not None:
-        z_range = geoprofiles.z_max() - geoprofiles.z_min()
-        plot_z_min = geoprofiles.z_min() - z_padding * z_range
-        plot_z_max = geoprofiles.z_max() + z_padding * z_range
+    z_range = geoprofiles.z_max() - geoprofiles.z_min()
+    plot_z_min = geoprofiles.z_min() - z_padding * z_range
+    plot_z_max = geoprofiles.z_max() + z_padding * z_range
 
     num_profiles = geoprofiles.num_profiles()
+
+    if not superposed:
+        fig = plt.figure(constrained_layout=True)
+        spec = gridspec.GridSpec(ncols=1, nrows=num_profiles, figure=fig)
+    else:
+        fig = plt.figure()
+        spec=None
+
+    fig.set_size_inches(width, height)
+
     for ndx in range(num_profiles):
         geoprofile = geoprofiles.extract_geoprofile(ndx)
         fig = plot(
@@ -225,8 +242,11 @@ def _(
             fig=fig,
             ndx=ndx,
             superposed=superposed,
-            num_subplots=num_profiles
+            num_subplots=num_profiles,
+            spec=spec
         )
+
+    #plt.tight_layout()
 
     return fig
 
