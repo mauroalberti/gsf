@@ -89,7 +89,7 @@ def _(
 
     else:
 
-        ax = plt.gca()
+        ax = fig.add_axes(plt.gca())  #  plt.gca()
 
     if geoprofile.topo_profile:
 
@@ -181,7 +181,7 @@ def _(
     plot_z_min = geoprofiles.z_min() - z_range * z_padding
     plot_z_max = geoprofiles.z_max() + z_range * z_padding
 
-    figs = []
+    #figs = []
     for ndx in range(num_subplots):
         geoprofile = geoprofiles.extract_geoprofile(ndx)
         fig = plot(
@@ -189,9 +189,9 @@ def _(
             plot_z_min=plot_z_min,
             plot_z_max=plot_z_max
         )
-        figs.append(fig)
+        #figs.append(fig)
 
-    return figs
+    return fig #s
 
 ####### IMPORTED - TO ADAPT
 
