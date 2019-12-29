@@ -8,6 +8,8 @@ import os
 
 from osgeo import ogr, osr
 
+import geopandas as gpd
+
 from pygsf.utils.types import *
 from pygsf.spatial.vectorial.geometries import Line, MultiLine, Point
 
@@ -32,6 +34,27 @@ ogr_multiline_types = [
     ogr.wkbMultiLineStringM,
     ogr.wkbMultiLineStringZM
 ]
+
+
+def try_read_as_geodataframe(
+    path: str
+) -> Tuple[bool, Union[str, gpd.GeoDataFrame]]:
+    """
+    Try reading a GIS vectorial dataset as a geopandas GeoDataFrame.
+
+    :param path: the vectorial geodataset full path
+    :type path: str
+    :return: success status and (error message or results).
+    :rtype: Tuple[bool, Union[str, gpd.GeoDataFrame]]
+    """
+
+    try:
+        v = gpd.read_file(
+            filename=path
+        )
+        return True, v
+    except Exception as e:
+        return False, e
 
 
 def try_open_shapefile(path: str) -> Tuple[bool, Union["OGRLayer", str]]:

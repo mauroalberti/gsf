@@ -1,6 +1,10 @@
 PyQt5
 matplotlib
 numpy>=1.8
+geopandas
+pandas
+gdal
+
 
 
 
