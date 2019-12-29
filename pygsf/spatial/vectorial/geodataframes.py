@@ -33,5 +33,5 @@ def containsLines(
     :rtype: bool
     """
 
-    return 'LineString' in geodataframe_geom_types(gdf)
+    return 'LineString' in geodataframe_geom_types(geodataframe)
 
