@@ -19,9 +19,10 @@ class LinearProfiler:
     """
 
     def __init__(self,
-            start_pt: Point,
-            end_pt: Point,
-            densify_distance: numbers.Real):
+        start_pt: Point,
+        end_pt: Point,
+        densify_distance: numbers.Real
+    ):
         """
         Instantiates a 2D linear profile object.
         It is represented by two 2D points and by a densify distance.

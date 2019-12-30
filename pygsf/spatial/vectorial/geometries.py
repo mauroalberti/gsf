@@ -812,6 +812,53 @@ class Point(object):
         return cls(*vals)
 
 
+def pack_to_points(
+    xs: array,
+    ys: array,
+    zs: Optional[array] = None,
+    ts: Optional[array] = None,
+    epsg: Optional[numbers.Integral] = -1
+) -> List[Point]:
+    # Side effects: None
+    """
+    Create a list of points given a set
+    of input arrays and an optional EPSG code.
+
+    :param xs: array of x values
+    :type xs: array
+    :param ys: array of y values
+    :type ys: array
+    :param zs: optional array of z values
+    :type zs: Optional[array]
+    :param ts: optional array of t values
+    :type ts: Optional[array]
+    :param epsg: optional EPSG code
+    :type epsg: Optional[numbers.Integral]
+    :return: a list of Point instances
+    :rtype: List[Point]
+    """
+
+    if zs is None:
+        zs = [0.0] * len(xs)
+    if ts is None:
+        ts = [0.0] * len(xs)
+    pts = []
+    for x, y, z, t in zip(xs, ys, zs, ts):
+        pts.append(
+            Point(
+                x,
+                y,
+                z,
+                t,
+                epsg
+            )
+        )
+
+    return pts
+
+
+
+
 class CPlane(object):
     """
     Cartesian plane.
