@@ -11,6 +11,8 @@ import numpy as np
 
 import gdal
 
+from affine import Affine
+
 from pygsf.mathematics.scalars import areClose
 from pygsf.spatial.rasters.geoarray import GeoArray
 from pygsf.spatial.rasters.geotransform import GeoTransform
@@ -23,6 +25,30 @@ class RasterIOException(Exception):
     Exception for rasters IO.
     """
     pass
+
+
+def try_read_rasterio(
+    file_ref: str
+):
+    """
+
+    """
+
+    with rasterio.open(file_ref) as src:
+
+        width = src.width
+        height = src.height
+
+        crs = src.crs
+        epgs = src.crs.to_epsg()
+        epgs = epsg if epsg is not None else -1
+
+        transform = src.transform
+
+        print(src.count)
+        print(src.indexes)
+
+
 
 
 def try_read_raster(
@@ -52,10 +78,15 @@ def try_read_raster(
     # get raster descriptive infos
 
     gt = dataset.GetGeoTransform()
+    print("Source gt: {}".format(gt))
+    print("Type: {}".format(type(gt)))
     if gt:
         geotransform = GeoTransform.fromGdalGt(gt)
     else:
         geotransform = None
+    print("Geotransform: {}".format(geotransform))
+    fwd = Affine.from_gdal(*gt)
+    print("Affine Geotransform: {}".format(fwd))
 
     num_bands = dataset.RasterCount
 
