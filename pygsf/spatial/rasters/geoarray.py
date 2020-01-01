@@ -99,6 +99,31 @@ class GeoArray(object):
 
         return self._gt
 
+    @classmethod
+    def fromRasterio(self,
+        array: np.ndarray,
+        affine_transform: affine.Affine,
+        epsg: numbers.Integral
+    ):
+        """
+        Create a GeoArray instance from RasterIO-derived input data.
+
+        :param array: the numpy array with the Geoarray values
+        :type array: np.ndarray
+        :param affine_transform: the affine transformation from image to geographic coordinates
+        :type affine_transform: affine.Affine
+        :param epsg: the EPSG code
+        :type epsg: numbers.Integral
+        """
+
+        gt = GeoTransform.fromAffine(affine_transform)
+
+        return GeoArray(
+            inGeotransform=gt,
+            epsg_cd=epsg,
+            inLevels=[array]
+        )
+
     @property
     def crs(self) -> Crs:
         """

@@ -5,6 +5,8 @@ geopandas
 pandas
 gdal
 affine
+rasterio
+
 
 
 

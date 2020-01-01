@@ -23,8 +23,24 @@ def geodataframe_geom_types(
     return set(geodataframe.geom_type)
 
 
+def containsPoints(
+    geodataframe: gpd.GeoDataFrame
+) -> bool:
+    # Side effects: none
+    """
+    Check if a GeoDataFrame instance contains points.
+
+    :param geodataframe: the input geodataframe
+    :type geodataframe: gpd.GeoDataFrame
+    :return: if a GeoDataFrame instance contains points
+    :rtype: bool
+    """
+
+    return 'Point' in geodataframe_geom_types(geodataframe)
+
+
 def containsLines(
-        geodataframe: gpd.GeoDataFrame
+    geodataframe: gpd.GeoDataFrame
 ) -> bool:
     # Side effects: none
     """

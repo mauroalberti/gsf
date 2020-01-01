@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import affine
 
 from ...mathematics.arrays import *
 
@@ -67,6 +68,20 @@ class GeoTransform(np.ndarray):
             -gdal_gt[5],
             gdal_gt[2],
             gdal_gt[4])
+
+    @classmethod
+    def fromAffine(self,
+        affine_transformation: affine.Affine
+    ) -> 'GeoTransform':
+        """
+        Creates a Geotransform from an affine transformation.
+
+        :param affine_transformation: the affine transformation
+        :type affine_transformation: affine.Affine
+        """
+
+        gdal_transformation = affine_transformation.to_gdal()
+        return GeoTransform.fromGdalGt(gdal_transformation)
 
     def __repr__(self) -> str:
 

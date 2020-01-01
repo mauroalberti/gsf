@@ -9,9 +9,9 @@ from math import isfinite
 
 import numpy as np
 
-import gdal
-
 from affine import Affine
+import gdal
+import rasterio
 
 from pygsf.mathematics.scalars import areClose
 from pygsf.spatial.rasters.geoarray import GeoArray
@@ -27,28 +27,28 @@ class RasterIOException(Exception):
     pass
 
 
-def try_read_rasterio(
-    file_ref: str
+def try_read_rasterio_band(
+    file_ref: str,
+    band_idx: numbers.Integral = 1
 ):
     """
+    Read a raster band using rasterio open method.
+
+    :param file_ref: the path of the raster
+    :type file_ref:
 
     """
 
     with rasterio.open(file_ref) as src:
 
-        width = src.width
-        height = src.height
-
-        crs = src.crs
-        epgs = src.crs.to_epsg()
+        epsg = src.crs.to_epsg()
         epgs = epsg if epsg is not None else -1
 
-        transform = src.transform
+        affine_transform = src.transform
 
-        print(src.count)
-        print(src.indexes)
+        array = src.read(band_idx)
 
-
+        return True, (array, affine_transform, epgs)
 
 
 def try_read_raster(
