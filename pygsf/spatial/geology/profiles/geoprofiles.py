@@ -13,11 +13,11 @@ class GeoProfile:
     """
 
     def __init__(self,
-         topo_profile: Optional[TopographicProfile] = None,
-         attitudes: Optional[Attitudes] = None,
-         lines_intersections: Optional[LinesIntersections] = None,
-         polygons_intersections: Optional[PolygonsIntersections] = None
-    ):
+                 topo_profile: Optional[TopographicProfile] = None,
+                 profile_attitudes: Optional[ProfileAttitudes] = None,
+                 lines_intersections: Optional[LinesIntersections] = None,
+                 polygons_intersections: Optional[PolygonsIntersections] = None
+                 ):
         """
 
         """
@@ -25,8 +25,8 @@ class GeoProfile:
         if topo_profile:
             check_type(topo_profile, "Topographic profile", TopographicProfile)
 
-        if attitudes:
-            check_type(attitudes, "Attitudes", Attitudes)
+        if profile_attitudes:
+            check_type(profile_attitudes, "Attitudes", ProfileAttitudes)
 
         if lines_intersections:
             check_type(lines_intersections, "Line intersections", LinesIntersections)
@@ -35,7 +35,7 @@ class GeoProfile:
             check_type(polygons_intersections, "Polygon intersections", PolygonsIntersections)
 
         self._topo_profile = topo_profile
-        self._attitudes = attitudes
+        self._profile_attitudes = profile_attitudes
         self._lines_intersections = lines_intersections
         self._polygons_intersections = polygons_intersections
 
@@ -107,17 +107,17 @@ class GeoProfile:
     '''
 
     @property
-    def attitudes(self):
+    def profile_attitudes(self):
         """
 
         :return:
         """
 
-        return self._attitudes
+        return self._profile_attitudes
 
-    @attitudes.setter
-    def attitudes(self,
-                  prj_attitudes: Attitudes):
+    @profile_attitudes.setter
+    def profile_attitudes(self,
+                          prj_attitudes: ProfileAttitudes):
         """
         Set the projected _attitudes content.
 
@@ -128,9 +128,9 @@ class GeoProfile:
 
         check_type(prj_attitudes, "Projected _attitudes", List)
         for el in prj_attitudes:
-            check_type(el, "Projected attitude", Attitude)
+            check_type(el, "Projected attitude", ProfileAttitude)
 
-        self._attitudes = prj_attitudes
+        self._profile_attitudes = prj_attitudes
 
     def clear_attitudes(self):
         """
@@ -139,7 +139,7 @@ class GeoProfile:
         :return:
         """
 
-        self._attitudes = None
+        self._profile_attitudes = None
 
     @property
     def lines_intersections(self):
@@ -501,7 +501,7 @@ class GeoProfileSet:
 
         return GeoProfile(
             topo_profile=self.topo_profiles_set[ndx] if self.topo_profiles_set and ndx < len(self.topo_profiles_set) else None,
-            attitudes=self.attitudes_set[ndx] if self.attitudes_set and ndx < len(self.attitudes_set) else None,
+            profile_attitudes=self.attitudes_set[ndx] if self.attitudes_set and ndx < len(self.attitudes_set) else None,
             lines_intersections=self.lines_intersections_set[ndx] if self.lines_intersections_set and ndx < len(self.lines_intersections_set) else None,
             polygons_intersections=self.polygons_intersections_set[ndx] if self.polygons_intersections_set and ndx < len(self.polygons_intersections_set) else None
         )

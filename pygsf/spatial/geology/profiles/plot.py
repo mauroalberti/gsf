@@ -94,6 +94,8 @@ def _(
     superposed=kargs.get("superposed", False)
     num_subplots=kargs.get("num_subplots", 1)
     spec = kargs.get("spec", None)
+    labels_add_orientdip = kargs.get("labels_add_orientdip", None)
+    labels_add_id = kargs.get("labels_add_id", None)
 
     if plot_z_min is None or plot_z_max is not None:
 
@@ -122,6 +124,8 @@ def _(
 
     if geoprofile.topo_profile:
 
+        print("Making topography")
+
         if superposed:
             topo_color = colors_addit[ndx % len(colors_addit)]
         else:
@@ -133,9 +137,11 @@ def _(
             color=topo_color
         )
 
-    if geoprofile.attitudes:
+    if geoprofile.profile_attitudes:
 
-        attits = geoprofile.attitudes
+        print("Making attitudes")
+
+        attits = geoprofile.profile_attitudes
 
         attitude_color = kargs.get("attitude_color", "red")
         section_length = geoprofile.length_2d()
@@ -152,7 +158,12 @@ def _(
         axes = fig.gca()
         vertical_exaggeration = axes.get_aspect()
 
-        axes.plot(projected_s, projected_z, 'o', color=attitude_color)
+        axes.plot(
+            projected_s,
+            projected_z,
+            'o',
+            color=attitude_color
+        )
 
         # plot segments representing structural data
 
@@ -167,7 +178,27 @@ def _(
                     structural_segment_s,
                     structural_segment_z,
                     '-',
-                    color=attitude_color)
+                    color=attitude_color
+                )
+
+        if labels_add_orientdip or labels_add_id:
+
+            src_dip_dirs = [structural_attitude.src_dip_dir for structural_attitude in
+                            attits if 0.0 <= structural_attitude.s <= section_length]
+            src_dip_angs = [structural_attitude.src_dip_ang for structural_attitude in
+                            attits if 0.0 <= structural_attitude.s <= section_length]
+
+            for rec_id, src_dip_dir, src_dip_ang, s, z in zip(projected_ids, src_dip_dirs, src_dip_angs, projected_s,
+                                                              projected_z):
+
+                if labels_add_orientdip and labels_add_id:
+                    label = "%s-%03d/%02d" % (rec_id, src_dip_dir, src_dip_ang)
+                elif labels_add_id:
+                    label = "%s" % rec_id
+                elif labels_add_orientdip:
+                    label = "%03d/%02d" % (src_dip_dir, src_dip_ang)
+
+                axes.annotate(label, (s + 15, z + 15))
 
     if geoprofile.lines_intersections:
 

@@ -387,15 +387,15 @@ class TopographicProfile:
         return array('d', map(self.z_for_s, s_subset))
 
 
-class Attitudes(list):
+class ProfileAttitudes(list):
 
-    def __init__(self, atts: List[Attitude]):
+    def __init__(self, atts: List[ProfileAttitude]):
 
         check_type(atts, "Attitude projections", List)
         for el in atts:
-            check_type(el, "Attitude projection", Attitude)
+            check_type(el, "Attitude projection", ProfileAttitude)
 
-        super(Attitudes, self).__init__(atts)
+        super(ProfileAttitudes, self).__init__(atts)
 
 
 class LinesIntersections(list):

@@ -140,7 +140,7 @@ class AttitudesSet(list):
     Class storing a set of topographic profiles.
     """
 
-    def __init__(self, attitudes_set: List[Attitude]):
+    def __init__(self, attitudes_set: List[ProfileAttitude]):
         """
         Instantiates an attitudes set.
 
@@ -150,7 +150,7 @@ class AttitudesSet(list):
 
         check_type(attitudes_set, "Attitude set", List)
         for el in attitudes_set:
-            check_type(el, "Attitude", Attitude)
+            check_type(el, "Attitude", ProfileAttitude)
 
         super(AttitudesSet, self).__init__(attitudes_set)
 

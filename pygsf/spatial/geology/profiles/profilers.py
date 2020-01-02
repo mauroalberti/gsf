@@ -541,7 +541,7 @@ class LinearProfiler:
         if self.crs != structural_pt.crs:
             raise Exception("Structural point should have {} EPSG but has {}".format(self.epsg(), structural_pt.epsg()))
 
-        axis_versor = map_axis.asDirect().asVersor()
+        axis_versor = map_axis.asDirect().asVersor(epsg_cd=structural_pt.epsg())
 
         l, m, n = axis_versor.x, axis_versor.y, axis_versor.z
 
@@ -617,7 +617,7 @@ class LinearProfiler:
     def map_attitude_to_section(
             self,
             georef_attitude: GeorefAttitude,
-            map_axis: Optional[Axis] = None) -> Optional[Attitude]:
+            map_axis: Optional[Axis] = None) -> Optional[ProfileAttitude]:
         """
         Project a georeferenced attitude to the section.
 
@@ -673,20 +673,26 @@ class LinearProfiler:
 
         # solution for current structural point
 
-        return Attitude(
+        profile_attitude = ProfileAttitude(
             rec_id=georef_attitude.id,
             s=signed_distance_from_section_start,
             z=intersection_point_3d.z,
             slope_degr=degrees(slope_radians),
             down_sense=intersection_downward_sense,
-            dist=dist
+            dist=dist,
+            src_dip_dir=georef_attitude.attitude.dd,
+            src_dip_ang=georef_attitude.attitude.da
         )
+        print("Profile attitude: {}".format(profile_attitude))
+
+        return profile_attitude
 
     def map_georef_attitudes_to_section(
         self,
         structural_data: List[GeorefAttitude],
         mapping_method: dict,
-        height_source: Optional[GeoArray] = None) -> Optional[List[Attitude]]:
+        height_source: Optional[GeoArray] = None
+    ) -> Optional[List[ProfileAttitude]]:
         """
         Projects a set of georeferenced _attitudes onto the section profile,
         optionally extracting point heights from a grid.
@@ -727,7 +733,7 @@ class LinearProfiler:
         if mapping_method['method'] == 'nearest':
             results = [self.map_attitude_to_section(georef_att) for georef_att in attitudes_3d]
         elif mapping_method['method'] == 'common axis':
-            map_axis = Axis(mapping_method['trend'], mapping_method['plunge'])
+            map_axis = Axis(Azim(mapping_method['trend']), Plunge(mapping_method['plunge']))
             results = [self.map_attitude_to_section(georef_att, map_axis) for georef_att in attitudes_3d]
         elif mapping_method['method'] == 'individual axes':
             if len(mapping_method['individual_axes_values']) != len(attitudes_3d):
@@ -745,7 +751,8 @@ class LinearProfiler:
                     result = self.map_attitude_to_section(georef_att, map_axis)
                     if result:
                         results.append(result)
-                except Exception:
+                except Exception as e:
+                    print("Exception while processing individual axes values: {}".format(e))
                     continue
         else:
             return NotImplemented
@@ -753,7 +760,7 @@ class LinearProfiler:
         if results is None:
             return None
 
-        return Attitudes(sorted(results, key=attrgetter('s')))
+        return ProfileAttitudes(sorted(results, key=attrgetter('s')))
 
     def parse_intersections_for_profile(self,
         lines_intersections: LinesIntersections

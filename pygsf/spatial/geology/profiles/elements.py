@@ -3,7 +3,7 @@
 from pygsf.spatial.vectorial.geometries import *
 
 
-class Attitude:
+class ProfileAttitude:
     """
     Represent a geological attitude projected onto a vertical profile.
     """
@@ -15,7 +15,9 @@ class Attitude:
         z: numbers.Real,
         slope_degr: numbers.Real,
         down_sense: str,
-        dist: numbers.Real
+        dist: numbers.Real,
+        src_dip_dir: numbers.Real,
+        src_dip_ang: numbers.Real
     ):
         """
         :param rec_id: the identifier of the observation.
@@ -30,6 +32,10 @@ class Attitude:
         :type down_sense: str.
         :param dist: the distance between the attitude point and the point projection on the profile.
         :type: dist: numbers.Real
+        :param src_dip_dir: source dip direction
+        :type src_dip_dir: numbers.Real
+        :param src_dip_ang: source dip angle
+        :type src_dip_ang: numbers.Real
         """
 
         self.id = rec_id
@@ -38,6 +44,8 @@ class Attitude:
         self.slope_degr = slope_degr
         self.down_sense = down_sense
         self.dist = dist
+        self.src_dip_dir = src_dip_dir
+        self.src_dip_ang = src_dip_ang
 
     def __repr__(self) -> str:
         """
@@ -47,13 +55,15 @@ class Attitude:
         :rtype: str.
         """
 
-        return"ProfileAttitude(id={}, s={}, z={}, slope_degr={}, down_sense={}, dist={})".format(
+        return"ProfileAttitude(id={}, s={}, z={}, slope_degr={}, down_sense={}, dist={}, src_dip_dir={}, src_dip_ang={})".format(
             self.id,
             self.s,
             self.z,
             self.slope_degr,
             self.down_sense,
-            self.dist
+            self.dist,
+            self.src_dip_dir,
+            self.src_dip_ang
         )
 
     def create_segment_for_plot(

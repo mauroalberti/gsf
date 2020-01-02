@@ -3210,6 +3210,13 @@ class ParamLine3D(object):
         self._m = m
         self._n = n
 
+    def epsg(self) -> numbers.Integral:
+        """
+        Return the EPSG code of the parametric line.
+        """
+
+        return self._srcPt.epsg()
+
     def intersect_cartes_plane(self, cartes_plane) -> Optional[Point]:
         """
         Return intersection point between parametric line and Cartesian plane.
@@ -3224,21 +3231,25 @@ class ParamLine3D(object):
         if not isinstance(cartes_plane, CPlane):
             raise Exception("Method argument should be a Cartesian plane but is {}".format(type(cartes_plane)))
 
+        if cartes_plane.epsg() != self.epsg():
+            raise Exception("Parametric line has EPSG {} while Cartesian plane has {}".format(self.epsg(), cartes_plane.espg()))
+
         # line parameters
         x1, y1, z1 = self._srcPt.x, self._srcPt.y, self._srcPt.z
         l, m, n = self._l, self._m, self._n
-
         # Cartesian plane parameters
-        a, b, c, d = cartes_plane.a, cartes_plane.b, cartes_plane.c, cartes_plane.d
-
+        a, b, c, d = cartes_plane.a(), cartes_plane.b(), cartes_plane.c(), cartes_plane.d()
         try:
             k = (a * x1 + b * y1 + c * z1 + d) / (a * l + b * m + c * n)
         except ZeroDivisionError:
             return None
 
-        return Point(x1 - l * k,
-                     y1 - m * k,
-                     z1 - n * k)
+        return Point(
+            x=x1 - l * k,
+            y=y1 - m * k,
+            z=z1 - n * k,
+            epsg_cd=self.epsg()
+        )
 
 
 class JoinTypes(Enum):
@@ -4552,7 +4563,10 @@ class Direct(object):
 
         return plng2colatBottom(self.pl.d)
 
-    def asVersor(self):
+    def asVersor(
+        self,
+        epsg_cd: numbers.Integral = -1
+    ):
         """
         Return the unit vector corresponding to the Direct instance.
 
@@ -4572,7 +4586,11 @@ class Direct(object):
         east_coord = cos_pl * sin_az
         down_coord = sin_pl
 
-        return Vect(east_coord, north_coord, -down_coord)
+        return Vect(
+            x=east_coord,
+            y=north_coord,
+            z=-down_coord,
+            epsg_cd=epsg_cd)
 
     @property
     def isUpward(self):
