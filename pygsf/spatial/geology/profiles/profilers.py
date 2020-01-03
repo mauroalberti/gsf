@@ -747,7 +747,7 @@ class LinearProfiler:
             results = []
             for georef_att, (trend, plunge) in zip(attitudes_3d, mapping_method['individual_axes_values']):
                 try:
-                    map_axis = Axis(trend, plunge)
+                    map_axis = Axis(Azim(trend), Plunge(plunge))
                     result = self.map_attitude_to_section(georef_att, map_axis)
                     if result:
                         results.append(result)
