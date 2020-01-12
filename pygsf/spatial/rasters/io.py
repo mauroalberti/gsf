@@ -41,8 +41,14 @@ def try_read_rasterio_band(
 
     with rasterio.open(file_ref) as src:
 
-        epsg = src.crs.to_epsg()
-        epgs = epsg if epsg is not None else -1
+        try:
+
+            epsg = src.crs.to_epsg()
+            epgs = epsg if epsg is not None else -1
+
+        except Exception as e:
+
+            epsg = -1
 
         affine_transform = src.transform
 
