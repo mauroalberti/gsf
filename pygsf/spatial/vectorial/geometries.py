@@ -2411,7 +2411,10 @@ class Line(object):
     A list of Point objects, all with the same CRS code.
     """
 
-    def __init__(self, pts: Optional[List[Point]] = None, epsg_cd: numbers.Integral = -1):
+    def __init__(self,
+        pts: Optional[List[Point]] = None,
+        epsg_cd: numbers.Integral = -1
+    ):
         """
         Creates the Line instance, when all the provided points have the same CRS codes.
 
@@ -2452,7 +2455,67 @@ class Line(object):
         self._crs = Crs(epsg_cd)
 
     @classmethod
-    def fromPointList(cls, pt_list: List[List[numbers.Real]], epsg_cd: numbers.Integral = -1) -> 'Line':
+    def fromArrays(cls,
+        xs: array,
+        ys: array,
+        zs: array = None,
+        ts: array = None,
+        epsg_cd: numbers.Integral = -1
+    ) -> 'Line':
+        """
+        Create a Line instance from a list of x, y and optional z values.
+
+        Example:
+          >>> Line.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]), zs=array('d',[1,2,3]), ts=array('d', [3,4,5]), epsg_cd=4326)
+          Line with 3 points: (1.0000, 3.0000, 1.0000) ... (3.0000, 5.0000, 3.0000) - EPSG: 4326
+          >>> Line.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]), epsg_cd=4326)
+          Line with 3 points: (1.0000, 3.0000, 0.0000) ... (3.0000, 5.0000, 0.0000) - EPSG: 4326
+        """
+
+        if not isinstance(xs, array):
+            raise Exception("X values have type {} instead of array".format(type(xs)))
+
+        if not isinstance(ys, array):
+            raise Exception("Y values have type {} instead of array".format(type(ys)))
+
+        if zs is not None and not isinstance(zs, array):
+            raise Exception("Z values have type {} instead of array or None".format(type(zs)))
+
+        if ts is not None and not isinstance(ts, array):
+            raise Exception("T values have type {} instead of array or None".format(type(ts)))
+
+        num_vals = len(xs)
+        if len(ys) != num_vals:
+            raise Exception("Y array has length {} while x array has length {}".format(len(ys), num_vals))
+
+        if zs is not None and len(zs) != num_vals:
+            raise Exception("Z array has length {} while x array has length {}".format(len(zs), num_vals))
+
+        if ts is not None and len(ts) != num_vals:
+            raise Exception("T array has length {} while x array has length {}".format(len(ts), num_vals))
+
+        if zs is None:
+            zs = array('d', [0.0]*num_vals)
+
+        if ts is None:
+            ts = array('d', [0.0]*num_vals)
+
+        self = cls(
+            epsg_cd=epsg_cd
+        )
+
+        self._x = xs
+        self._y = ys
+        self._z = zs
+        self._t = ts
+
+        return self
+
+    @classmethod
+    def fromPointList(cls,
+        pt_list: List[List[numbers.Real]],
+        epsg_cd: numbers.Integral = -1
+    ) -> 'Line':
         """
         Create a Line instance from a list of x, y and optional z values.
 
@@ -2486,7 +2549,10 @@ class Line(object):
 
             pts.append(pt)
 
-        return cls(pts, epsg_cd=epsg_cd)
+        return cls(
+            pts,
+            epsg_cd=epsg_cd
+        )
 
     def pt(self, pt_ndx: numbers.Integral) -> Point:
         """
