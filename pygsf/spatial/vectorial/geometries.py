@@ -857,8 +857,6 @@ def pack_to_points(
     return pts
 
 
-
-
 class CPlane(object):
     """
     Cartesian plane.
@@ -2413,7 +2411,10 @@ class Line(object):
     A list of Point objects, all with the same CRS code.
     """
 
-    def __init__(self, pts: Optional[List[Point]] = None, epsg_cd: numbers.Integral = -1):
+    def __init__(self,
+        pts: Optional[List[Point]] = None,
+        epsg_cd: numbers.Integral = -1
+    ):
         """
         Creates the Line instance, when all the provided points have the same CRS codes.
 
@@ -2446,11 +2447,75 @@ class Line(object):
             if pt.epsg() != epsg_cd:
                 raise Exception("All points must have the same '{}' EPSG code".format(epsg_cd))
 
-        self._pts = [pt.clone() for pt in pts]
+        self._x = array('d', [pt.x for pt in pts])
+        self._y = array('d', [pt.y for pt in pts])
+        self._z = array('d', [pt.z for pt in pts])
+        self._t = array('d', [pt.t for pt in pts])
+
         self._crs = Crs(epsg_cd)
 
     @classmethod
-    def fromPointList(cls, pt_list: List[List[numbers.Real]], epsg_cd: numbers.Integral = -1) -> 'Line':
+    def fromArrays(cls,
+        xs: array,
+        ys: array,
+        zs: array = None,
+        ts: array = None,
+        epsg_cd: numbers.Integral = -1
+    ) -> 'Line':
+        """
+        Create a Line instance from a list of x, y and optional z values.
+
+        Example:
+          >>> Line.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]), zs=array('d',[1,2,3]), ts=array('d', [3,4,5]), epsg_cd=4326)
+          Line with 3 points: (1.0000, 3.0000, 1.0000) ... (3.0000, 5.0000, 3.0000) - EPSG: 4326
+          >>> Line.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]), epsg_cd=4326)
+          Line with 3 points: (1.0000, 3.0000, 0.0000) ... (3.0000, 5.0000, 0.0000) - EPSG: 4326
+        """
+
+        if not isinstance(xs, array):
+            raise Exception("X values have type {} instead of array".format(type(xs)))
+
+        if not isinstance(ys, array):
+            raise Exception("Y values have type {} instead of array".format(type(ys)))
+
+        if zs is not None and not isinstance(zs, array):
+            raise Exception("Z values have type {} instead of array or None".format(type(zs)))
+
+        if ts is not None and not isinstance(ts, array):
+            raise Exception("T values have type {} instead of array or None".format(type(ts)))
+
+        num_vals = len(xs)
+        if len(ys) != num_vals:
+            raise Exception("Y array has length {} while x array has length {}".format(len(ys), num_vals))
+
+        if zs is not None and len(zs) != num_vals:
+            raise Exception("Z array has length {} while x array has length {}".format(len(zs), num_vals))
+
+        if ts is not None and len(ts) != num_vals:
+            raise Exception("T array has length {} while x array has length {}".format(len(ts), num_vals))
+
+        if zs is None:
+            zs = array('d', [0.0]*num_vals)
+
+        if ts is None:
+            ts = array('d', [0.0]*num_vals)
+
+        self = cls(
+            epsg_cd=epsg_cd
+        )
+
+        self._x = xs
+        self._y = ys
+        self._z = zs
+        self._t = ts
+
+        return self
+
+    @classmethod
+    def fromPointList(cls,
+        pt_list: List[List[numbers.Real]],
+        epsg_cd: numbers.Integral = -1
+    ) -> 'Line':
         """
         Create a Line instance from a list of x, y and optional z values.
 
@@ -2484,13 +2549,12 @@ class Line(object):
 
             pts.append(pt)
 
-        return cls(pts, epsg_cd=epsg_cd)
+        return cls(
+            pts,
+            epsg_cd=epsg_cd
+        )
 
-    def extract_pts(self):
-
-        return self._pts
-
-    def extract_pt(self, pt_ndx: numbers.Integral) -> Point:
+    def pt(self, pt_ndx: numbers.Integral) -> Point:
         """
         Extract the point at index pt_ndx.
 
@@ -2502,40 +2566,69 @@ class Line(object):
         Examples:
         """
 
-        return self._pts[pt_ndx]
+        return Point(
+            x=self._x[pt_ndx],
+            y=self._y[pt_ndx],
+            z=self._z[pt_ndx],
+            t=self._t[pt_ndx],
+            epsg_cd=self.epsg()
+        )
+
+    def values_at(self,
+        ndx: numbers.Integral
+                  ) -> Tuple[float, float, float, float, numbers.Integral]:
+        """
+        Return the values at given index.
+
+        :param ndx: the index of the point values to extract
+        :type ndx: numbers.Integral
+        :return: the x, y, z, t and epsg code values
+        :rtype: Tuple[float, float, float, float, numbers.Integral]
+        """
+
+        return (
+            self._x[ndx],
+            self._y[ndx],
+            self._z[ndx],
+            self._t[ndx],
+            self.epsg()
+        )
 
     def pts(self):
 
-        return [pt.clone() for pt in self._pts]
+        return [Point(*self.values_at(ndx)) for ndx in range(self.num_pts())]
 
     def segment(self,
         ndx: numbers.Integral
-    ) -> Segment:
+    ) -> Optional[Segment]:
         """
-        Returns the segment at index ndx.
+        Returns the optional segment at index ndx.
 
         :param ndx: the segment index.
         :type ndx: numbers.Integral
-        :return: the segment
-        :rtype: Segment
+        :return: the optional segment
+        :rtype: Optional[Segment]
         """
 
         return Segment(
-            start_pt=self.extract_pt(ndx),
-            end_pt=self.extract_pt(ndx+1)
+            start_pt=self.pt(ndx),
+            end_pt=self.pt(ndx + 1)
         )
 
     def intersectSegment(self,
         segment: Segment
-    ) -> List[Optional[Union[Point, Segment]]]:
+    ) -> Optional[List[Optional[Union[Point, Segment]]]]:
         """
         Calculates the possible intersection between the line and a provided segment.
 
         :param segment: the input segment
         :type segment: Segment
-        :return: the possible intersections, points or segments
-        :rtype: List[Optional[Union[Point, Segment]]]
+        :return: the optional intersections, points or segments
+        :rtype: Optional[List[Optional[Union[Point, Segment]]]]
         """
+
+        if self.num_pts() <= 1:
+            return
 
         check_type(segment, "Input segment", Segment)
         check_crs(self, segment)
@@ -2556,7 +2649,7 @@ class Line(object):
 
     def num_pts(self):
 
-        return len(self._pts)
+        return len(self._x)
 
     def start_pt(self) -> Optional[Point]:
         """
@@ -2566,10 +2659,7 @@ class Line(object):
         :rtype: optional Point instance.
         """
 
-        if self.num_pts() >= 1:
-            return self._pts[0].clone()
-        else:
-            return None
+        return self.pt(0) if self.num_pts() > 0 else None
 
     def end_pt(self) -> Optional[Point]:
         """
@@ -2579,17 +2669,14 @@ class Line(object):
         :rtype: optional Point instance.
         """
 
-        if self.num_pts() >= 1:
-            return self._pts[-1].clone()
-        else:
-            return None
+        return self.pt(-1) if self.num_pts() > 0 else None
 
     def __iter__(self):
         """
-        Return the elements of a Line, i.e., its segments.
+        Return each element of a Line, i.e., its segments.
         """
 
-        return (self.segment(i) for i in range(0, self.num_pts()-1))
+        return (self.segment(i) for i in range(self.num_pts()-1))
 
     def __repr__(self) -> str:
         """
@@ -2614,13 +2701,6 @@ class Line(object):
 
         return txt
 
-    def clone(self):
-
-        return Line(
-            pts=self._pts,
-            epsg_cd=self.epsg()
-        )
-
     def add_pt(self, pt) -> bool:
         """
         In-place transformation of the original Line instance
@@ -2637,9 +2717,12 @@ class Line(object):
 
         if self.num_pts() > 0 and pt.crs != self.crs:
             return False
-
-        self._pts.append(pt.clone())
-        return True
+        else:
+            self._x.append(pt.x)
+            self._y.append(pt.y)
+            self._z.append(pt.z)
+            self._t.append(pt.t)
+            return True
 
     def add_pts(self, pt_list) -> numbers.Integral:
         """
@@ -2662,102 +2745,191 @@ class Line(object):
 
     def x_list(self) -> List[numbers.Real]:
 
-        return [pt.x for pt in self._pts]
+        return list(self._x)
 
     def y_list(self) -> List[numbers.Real]:
 
-        return [pt.y for pt in self._pts]
+        return list(self._y)
 
     def z_list(self) -> List[numbers.Real]:
 
-        return [pt.z for pt in self._pts]
+        return list(self._z)
 
     def t_list(self) -> List[numbers.Real]:
 
-        return [pt.t for pt in self._pts]
+        return list(self._t)
 
     def z_array(self) -> np.array:
 
-        return np.array(self.z_list())
+        return np.array(self._z)
 
     def xy_lists(self) -> Tuple[List[numbers.Real], List[numbers.Real]]:
 
         return self.x_list(), self.y_list()
 
     def x_min(self) -> Optional[numbers.Real]:
+        """
+        Optional minimum of x values.
 
-        return find_val(
-            func=min,
-            lst=self.x_list())
+        :return: the optional minimum of x values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          >>> l.x_min()
+          0.0
+        """
+
+        return min(self._x) if self.num_pts() > 0 else None
 
     def x_max(self) -> Optional[numbers.Real]:
+        """
+        Optional maximum of x values.
 
-        return find_val(
-            func=max,
-            lst=self.x_list())
+        :return: the optional maximum of x values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          >>> l.x_max()
+          1.0
+        """
+
+        return max(self._x) if self.num_pts() > 0 else None
 
     def y_min(self) -> Optional[numbers.Real]:
+        """
+        Optional minimum of y values.
 
-        return find_val(
-            func=min,
-            lst=self.y_list())
+        :return: the optional minimum of y values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          >>> l.y_min()
+          0.0
+        """
+
+        return min(self._y) if self.num_pts() > 0 else None
 
     def y_max(self) -> Optional[numbers.Real]:
+        """
+        Optional maximum of y values.
 
-        return find_val(
-            func=max,
-            lst=self.y_list())
+        :return: the optional maximum of y values.
+        :rtype: Optional[numbers.Real]
 
-    def z_stats(self) -> Dict:
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          >>> l.y_max()
+          1.0
+        """
+
+        return max(self._y) if self.num_pts() > 0 else None
+
+    def z_stats(self) -> Optional[Dict]:
         """
         Returns the line elevation statistics.
 
         :return: the statistics parameters: min, max, mean, var, std.
-        :rtype: Dictionary of numbers.Real values.
+        :rtype: Optional dictionary of numbers.Real values.
         """
 
-        return get_statistics(self.z_array())
+        return get_statistics(self.z_array()) if self.num_pts() > 0 else None
 
     def z_min(self) -> Optional[numbers.Real]:
+        """
+        Optional minimum of z values.
 
-        return find_val(
-            func=min,
-            lst=self.z_list())
+        :return: the optional minimum of z values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 0], [1, 0, 0], [-2.72, 1, -0.7]])
+          >>> l.z_min()
+          -0.7
+        """
+
+        return min(self._z) if self.num_pts() > 0 else None
 
     def z_max(self) -> Optional[numbers.Real]:
+        """
+        Optional maximum of z values.
 
-        return find_val(
-            func=max,
-            lst=self.z_list())
+        :return: the optional maximum of z values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 0], [1, 0, 4.4], [0, 1, 0]])
+          >>> l.z_max()
+          4.4
+        """
+
+        return max(self._z) if self.num_pts() > 0 else None
 
     def z_mean(self) -> Optional[numbers.Real]:
+        """
+        Optional mean of z values.
 
-        zs = self.z_list()
-        return float(np.mean(zs)) if zs else None
+        :return: the optional maximum of z values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 2], [1, 0, 4], [0, 1, 6]])
+          >>> l.z_mean()
+          4.0
+        """
+
+        return np.mean(self._z) if self.num_pts() > 0 else None
 
     def z_var(self) -> Optional[numbers.Real]:
+        """
+        Optional variance of z values.
 
-        zs = self.z_list()
-        return float(np.var(zs)) if zs else None
+        :return: the optional variance of z values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
+          >>> l.z_var()
+          0.0
+        """
+
+        return np.var(self._z) if self.num_pts() > 0 else None
 
     def z_std(self) -> Optional[numbers.Real]:
+        """
+        Optional standard deviation of z values.
 
-        zs = self.z_list()
-        return float(np.std(zs)) if zs else None
+        :return: the optional standard deviation of z values.
+        :rtype: Optional[numbers.Real]
 
-    def remove_coincident_points(self) -> 'Line':
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
+          >>> l.z_std()
+          0.0
+        """
+
+        return np.std(self._z) if self.num_pts() > 0 else None
+
+    def remove_coincident_points(self) -> Optional['Line']:
         """
         Remove coincident successive points
 
         :return: Line instance
+        :rtype: Optional[Line]
         """
 
+        if self.num_pts() == 0:
+            return
+
         new_line = Line(
-            pts=self._pts[:1])
+            pts=[self.pt(0)]
+        )
 
         for ndx in range(1, self.num_pts()):
-            if not self._pts[ndx].isCoinc(new_line._pts[-1]):
-                new_line.add_pt(self._pts[ndx])
+            if not self.pt(ndx).isCoinc(new_line.pt(-1)):
+                new_line.add_pt(self.pt(ndx))
 
         return new_line
 
@@ -2768,7 +2940,7 @@ class Line(object):
         :return: list of Segment objects
         """
 
-        pts_pairs = zip(self._pts[:-1], self._pts[1:])
+        pts_pairs = zip(self.pts()[:-1], self.pts()[1:])
 
         segments = [Segment(pt_a, pt_b) for (pt_a, pt_b) in pts_pairs]
 
@@ -2812,14 +2984,14 @@ class Line(object):
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
-            length += self._pts[ndx].dist3DWith(self._pts[ndx + 1])
+            length += self.pt(ndx).dist3DWith(self.pt(ndx + 1))
         return length
 
     def length_2d(self) -> numbers.Real:
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
-            length += self._pts[ndx].dist2DWith(self._pts[ndx + 1])
+            length += self.pt(ndx).dist2DWith(self.pt(ndx + 1))
         return length
 
     def step_delta_z(self) -> List[numbers.Real]:
@@ -2834,7 +3006,7 @@ class Line(object):
         delta_z = [0.0]
 
         for ndx in range(1, self.num_pts()):
-            delta_z.append(self._pts[ndx].z - self._pts[ndx - 1].z)
+            delta_z.append(self.pt(ndx).z - self.pt(ndx - 1).z)
 
         return delta_z
 
@@ -2852,7 +3024,7 @@ class Line(object):
 
         step_length_list = [0.0]
         for ndx in range(1, self.num_pts()):
-            length = self._pts[ndx].dist3DWith(self._pts[ndx - 1])
+            length = self.pt(ndx).dist3DWith(self.pt(ndx - 1))
             step_length_list.append(length)
 
         return step_length_list
@@ -2871,7 +3043,7 @@ class Line(object):
 
         step_length_list = [0.0]
         for ndx in range(1, self.num_pts()):
-            length = self._pts[ndx].dist2DWith(self._pts[ndx - 1])
+            length = self.pt(ndx).dist2DWith(self.pt(ndx - 1))
             step_length_list.append(length)
 
         return step_length_list
@@ -2905,7 +3077,7 @@ class Line(object):
         """
 
         new_line = self.clone()
-        new_line._pts.reverse()  # in-place operation on new_line
+        new_line.pts().reverse()  # in-place operation on new_line
 
         return new_line
 
@@ -3145,14 +3317,14 @@ class MultiLine(object):
     def is_unidirectional(self):
 
         for line_ndx in range(len(self.lines()) - 1):
-            if not self.lines()[line_ndx].extract_pts()[-1].isCoinc(self.lines()[line_ndx + 1].extract_pts()[0]):
+            if not self.lines()[line_ndx].pt(-1).isCoinc(self.lines()[line_ndx + 1].pt(0)):
                 return False
 
         return True
 
     def to_line(self):
 
-        return Line([point for line in self._lines for point in line.extract_pts()], epsg_cd=self.epsg())
+        return Line([point for line in self._lines for point in line.pts()], epsg_cd=self.epsg())
 
     def densify_2d_multiline(self, sample_distance):
 

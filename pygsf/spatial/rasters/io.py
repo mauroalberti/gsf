@@ -84,15 +84,11 @@ def try_read_raster(
     # get raster descriptive infos
 
     gt = dataset.GetGeoTransform()
-    print("Source gt: {}".format(gt))
-    print("Type: {}".format(type(gt)))
     if gt:
         geotransform = GeoTransform.fromGdalGt(gt)
     else:
         geotransform = None
-    print("Geotransform: {}".format(geotransform))
     fwd = Affine.from_gdal(*gt)
-    print("Affine Geotransform: {}".format(fwd))
 
     num_bands = dataset.RasterCount
 
@@ -258,8 +254,6 @@ def read_raster_band(
     )
 
     return True, ga
-
-
 
 
 def try_write_esrigrid(geoarray: GeoArray, outgrid_flpth: str, esri_nullvalue: numbers.Real=GRID_NULL_VALUE, level_ndx: int=0) -> Tuple[bool, str]:
