@@ -617,7 +617,9 @@ class LinearProfiler:
     def map_attitude_to_section(
             self,
             georef_attitude: GeorefAttitude,
-            map_axis: Optional[Axis] = None) -> Optional[ProfileAttitude]:
+            map_axis: Optional[Axis] = None,
+            max_profile_distance: Optional[numbers.Real] = None
+    ) -> Optional[ProfileAttitude]:
         """
         Project a georeferenced attitude to the section.
 
@@ -625,6 +627,8 @@ class LinearProfiler:
         :type georef_attitude: GeorefAttitude.
         :param map_axis: the map axis.
         :type map_axis: Optional[Axis].
+        :param max_profile_distance: the maximum projection distance between the attitude and the profile
+        :type max_profile_distance: Optional[numbers.Real]
         :return: the optional planar attitude on the profiler vertical plane.
         :rtype: Optional[PlanarAttitude].
         """
@@ -667,6 +671,9 @@ class LinearProfiler:
 
         dist = georef_attitude.posit.dist3DWith(intersection_point_3d)
 
+        if max_profile_distance is not None and dist > max_profile_distance:
+            return None
+
         # horizontal spat_distance between projected structural point and profile start
 
         signed_distance_from_section_start = self.point_signed_s(intersection_point_3d)
@@ -691,7 +698,8 @@ class LinearProfiler:
         self,
         structural_data: List[GeorefAttitude],
         mapping_method: dict,
-        height_source: Optional[GeoArray] = None
+        height_source: Optional[GeoArray] = None,
+        max_profile_distance: Optional[numbers.Real] = None
     ) -> Optional[List[ProfileAttitude]]:
         """
         Projects a set of georeferenced _attitudes onto the section profile,
@@ -706,6 +714,8 @@ class LinearProfiler:
         :param mapping_method: the method to map the _attitudes to the section.
         ;type mapping_method; Dict.
         :param height_source: the _attitudes elevation source. Default is None.
+        :param max_profile_distance: the maximum projection distance between the attitude and the profile
+        :type max_profile_distance: Optional[numbers.Real]
         :return: sorted list of ProfileAttitude values.
         :rtype: Optional[List[Attitude]]
         :raise: Exception.
@@ -719,22 +729,26 @@ class LinearProfiler:
             attitudes_3d = []
             for georef_attitude in structural_data:
                 pt3d = height_source.interpolate_bilinear_point(
-                    pt=georef_attitude.posit)
+                    pt=georef_attitude.posit
+                )
                 if pt3d:
-                    attitudes_3d.append(GeorefAttitude(
-                        georef_attitude.id,
-                        pt3d,
-                        georef_attitude.attitude))
+                    attitudes_3d.append(
+                        GeorefAttitude(
+                            georef_attitude.id,
+                            pt3d,
+                            georef_attitude.attitude
+                        )
+                    )
 
         else:
 
             attitudes_3d = structural_data
 
         if mapping_method['method'] == 'nearest':
-            results = [self.map_attitude_to_section(georef_att) for georef_att in attitudes_3d]
+            results = [self.map_attitude_to_section(georef_att, max_profile_distance=max_profile_distance) for georef_att in attitudes_3d]
         elif mapping_method['method'] == 'common axis':
             map_axis = Axis(Azim(mapping_method['trend']), Plunge(mapping_method['plunge']))
-            results = [self.map_attitude_to_section(georef_att, map_axis) for georef_att in attitudes_3d]
+            results = [self.map_attitude_to_section(georef_att, map_axis, max_profile_distance=max_profile_distance) for georef_att in attitudes_3d]
         elif mapping_method['method'] == 'individual axes':
             if len(mapping_method['individual_axes_values']) != len(attitudes_3d):
                 raise Exception(
@@ -748,9 +762,7 @@ class LinearProfiler:
             for georef_att, (trend, plunge) in zip(attitudes_3d, mapping_method['individual_axes_values']):
                 try:
                     map_axis = Axis(Azim(trend), Plunge(plunge))
-                    result = self.map_attitude_to_section(georef_att, map_axis)
-                    if result:
-                        results.append(result)
+                    results.append(self.map_attitude_to_section(georef_att, map_axis, max_profile_distance=max_profile_distance))
                 except Exception as e:
                     print("Exception while processing individual axes values: {}".format(e))
                     continue
@@ -758,6 +770,11 @@ class LinearProfiler:
             return NotImplemented
 
         if results is None:
+            return None
+        
+        results = list(filter(lambda res: res is not None, results))
+
+        if len(results) == 0:
             return None
 
         return ProfileAttitudes(sorted(results, key=attrgetter('s')))

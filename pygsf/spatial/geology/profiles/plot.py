@@ -43,7 +43,7 @@ default_height = 10.5
 def plot(
     obj,
     **kargs
-) -> Figure:
+) -> Optional[Figure]:
     """
 
     :param obj:
@@ -74,7 +74,7 @@ def plot(
 def _(
     geoprofile: GeoProfile,
     **kargs
-) -> Figure:
+) -> Optional[Figure]:
     """
     Plot a single geological profile.
 
@@ -97,11 +97,14 @@ def _(
     labels_add_orientdip = kargs.get("labels_add_orientdip", None)
     labels_add_id = kargs.get("labels_add_id", None)
 
-    if plot_z_min is None or plot_z_max is not None:
+    if plot_z_min is None or plot_z_max is None:
 
         z_range = geoprofile.z_max() - geoprofile.z_min()
         plot_z_min = geoprofile.z_min() - z_padding * z_range
         plot_z_max = geoprofile.z_max() + z_padding * z_range
+
+    if np.isnan(plot_z_min) or np.isnan(plot_z_max):
+        return
 
     if fig is None:
 
@@ -124,7 +127,7 @@ def _(
 
     if geoprofile.topo_profile:
 
-        print("Making topography")
+        print("Creating topography profile")
 
         if superposed:
             topo_color = colors_addit[ndx % len(colors_addit)]
@@ -232,7 +235,7 @@ def _(
 def _(
     geoprofiles: GeoProfileSet,
     **kargs
-) -> List[Figure]:
+) -> List[Optional[Figure]]:
     """
     Plot a set of geological profiles.
 
