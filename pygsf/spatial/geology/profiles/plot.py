@@ -245,11 +245,11 @@ def _(
     :rtype: List[Figure]
     """
 
-    #fig = kargs.get("fig", None)
+    fig = kargs.get("fig", None)
     width = kargs.get("width", default_width)
     height = kargs.get("height", default_height)
-    #plot_z_min = kargs.get("plot_z_min", None)
-    #plot_z_max = kargs.get("plot_z_max", None)
+    plot_z_min = kargs.get("plot_z_min", None)
+    plot_z_max = kargs.get("plot_z_max", None)
     superposed = kargs.get("superposed", False)
 
     z_range = geoprofiles.z_max() - geoprofiles.z_min()
@@ -263,12 +263,14 @@ def _(
         spec = gridspec.GridSpec(ncols=1, nrows=num_profiles, figure=fig)
     else:
         fig = plt.figure()
-        spec=None
+        spec = None
 
     fig.set_size_inches(width, height)
 
     for ndx in range(num_profiles):
+
         geoprofile = geoprofiles.extract_geoprofile(ndx)
+
         fig = plot(
             geoprofile,
             plot_z_min=plot_z_min,
@@ -279,8 +281,6 @@ def _(
             num_subplots=num_profiles,
             spec=spec
         )
-
-    #plt.tight_layout()
 
     return fig
 

@@ -140,19 +140,25 @@ class AttitudesSet(list):
     Class storing a set of topographic profiles.
     """
 
-    def __init__(self, attitudes_set: List[ProfileAttitude]):
+    def __init__(self,
+        attitudes_set: Optional[List[ProfileAttitude]] = None
+    ):
         """
         Instantiates an attitudes set.
 
-        :param attitudes_set: the attitudes set.
+        :param attitudes_set: the optional initial attitudes set.
         :type attitudes_set: List[Attitude].
         """
 
-        check_type(attitudes_set, "Attitude set", List)
-        for el in attitudes_set:
-            check_type(el, "Attitude", ProfileAttitude)
+        if attitudes_set:
+            check_type(attitudes_set, "Attitude set", List)
+            for el in attitudes_set:
+                check_type(el, "Attitude", ProfileAttitude)
 
-        super(AttitudesSet, self).__init__(attitudes_set)
+        super(AttitudesSet, self).__init__()
+
+        if attitudes_set:
+            self.append(attitudes_set)
 
 
 class LinesIntersectionsSet(list):

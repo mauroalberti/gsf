@@ -1,5 +1,5 @@
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 
 from geopandas import GeoDataFrame
 
@@ -9,15 +9,15 @@ from pygsf.spatial.vectorial.geodataframes import *
 from .base import GeorefAttitude
 
 
-def extract_georeferenced_attitudes(
+def try_extract_georeferenced_attitudes(
         geodataframe: GeoDataFrame,
         azim_fldnm: str,
         dip_ang_fldnm: str,
         id_fldnm: Optional[str] = None,
         is_rhrstrike: bool = False
-) -> List[Tuple[Point, Plane]]:
+) -> Tuple[bool, Union[str, List[GeorefAttitude]]]:
     """
-    Extracts the georeferenced _attitudes from a geopandas GeoDataFrame instance representing point records.
+    Try extracting the georeferenced _attitudes from a geopandas GeoDataFrame instance representing point records.
 
     :param geodataframe: the source geodataframe.
     :type geodataframe: GeoDataFrame.
@@ -27,28 +27,35 @@ def extract_georeferenced_attitudes(
     :type dip_ang_fldnm: basestring.
     :param is_rhrstrike: whether the dip azimuth is strike RHR
     :type is_rhrstrike: bool.
-    :return: a collection of Point and Plane values, one for each source record.
-    :rtype: List[Tuple[pygsf.spatial.vectorial.geometries.Point, pygsf.spatial.vectorial.geometries.Plane]]
+    :return: the success status and an error message or a collection of georeferenced attitudes, one for each source record.
+    :rtype: Tuple[bool, Union[str, List[GeorefAttitude]]]
     """
 
-    epsg = get_epsg(geodataframe)
+    try:
 
-    attitudes = []
+        epsg = get_epsg(geodataframe)
 
-    for ndx, row in geodataframe.iterrows():
+        attitudes = []
 
-        pt = row['geometry']
-        x, y = pt.x, pt.y
+        for ndx, row in geodataframe.iterrows():
 
-        if id_fldnm:
-            azimuth, dip_ang, id = row[azim_fldnm], row[dip_ang_fldnm], row[id_fldnm]
-        else:
-            azimuth, dip_ang, id = row[azim_fldnm], row[dip_ang_fldnm], ndx + 1
+            pt = row['geometry']
+            x, y = pt.x, pt.y
 
-        if is_rhrstrike:
-            azimuth = (azimuth + 90.0) % 360.0
+            if id_fldnm:
+                azimuth, dip_ang, id = row[azim_fldnm], row[dip_ang_fldnm], row[id_fldnm]
+            else:
+                azimuth, dip_ang, id = row[azim_fldnm], row[dip_ang_fldnm], ndx + 1
 
-        attitudes.append(GeorefAttitude(id, Point(x, y, epsg_cd=epsg), Plane(azimuth, dip_ang)))
+            if is_rhrstrike:
+                azimuth = (azimuth + 90.0) % 360.0
 
-    return attitudes
+            attitudes.append(GeorefAttitude(id, Point(x, y, epsg_cd=epsg), Plane(azimuth, dip_ang)))
+
+        return True, attitudes
+
+    except Exception as e:
+
+        return False, str(e)
+
 

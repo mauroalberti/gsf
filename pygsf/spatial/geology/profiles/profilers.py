@@ -10,6 +10,50 @@ from pygsf.spatial.geology.base import GeorefAttitude
 from .sets import *
 
 
+def georef_attitudes_3d_from_grid(
+        structural_data: List[GeorefAttitude],
+        height_source: GeoArray,
+) -> List[GeorefAttitude]:
+    """
+    Create a set of 3D georeferenced attitudes, extracting heights from a grid.
+
+    :param structural_data: the set of georeferenced attitudes
+    :type structural_data: List[GeorefAttitude]
+    :param height_source: the elevation source
+    :type height_source: GeoArray
+    :return: list of GeorefAttitude values
+    :rtype: List[GeorefAttitude]
+    :raise: Exception.
+    """
+
+    if not isinstance(height_source, GeoArray):
+
+        raise Exception(
+            "Height source should be GeoArray instead of {}".format(
+                type(height_source)
+            )
+        )
+
+    attitudes_3d = []
+
+    for georef_attitude in structural_data:
+
+        pt3d = height_source.interpolate_bilinear_point(
+            pt=georef_attitude.posit
+        )
+
+        if pt3d:
+            attitudes_3d.append(
+                GeorefAttitude(
+                    georef_attitude.id,
+                    pt3d,
+                    georef_attitude.attitude
+                )
+            )
+
+    return attitudes_3d
+
+
 class LinearProfiler:
     """
     Class storing a linear (straight) profile.
@@ -696,53 +740,23 @@ class LinearProfiler:
 
     def map_georef_attitudes_to_section(
         self,
-        structural_data: List[GeorefAttitude],
+        attitudes_3d: List[GeorefAttitude],
         mapping_method: dict,
-        height_source: Optional[GeoArray] = None,
         max_profile_distance: Optional[numbers.Real] = None
     ) -> Optional[List[ProfileAttitude]]:
         """
-        Projects a set of georeferenced _attitudes onto the section profile,
-        optionally extracting point heights from a grid.
+        Projects a set of georeferenced 3d attitudes onto the section profile.
 
-        defines:
-            - 2D x-y position in section
-            - plane-plane segment intersection
-
-        :param structural_data: the set of georeferenced _attitudes to plot on the section.
-        :type structural_data: List[GeorefAttitude]
-        :param mapping_method: the method to map the _attitudes to the section.
+        :param attitudes_3d: the set of georeferenced 3d attitudes to plot on the section.
+        :type attitudes_3d: List[GeorefAttitude]
+        :param mapping_method: the method to map the attitudes to the section.
         ;type mapping_method; Dict.
-        :param height_source: the _attitudes elevation source. Default is None.
         :param max_profile_distance: the maximum projection distance between the attitude and the profile
         :type max_profile_distance: Optional[numbers.Real]
         :return: sorted list of ProfileAttitude values.
         :rtype: Optional[List[Attitude]]
         :raise: Exception.
         """
-
-        if height_source:
-
-            if not isinstance(height_source, GeoArray):
-                raise Exception("Height source should be GeoArray but is {}".format(type(height_source)))
-
-            attitudes_3d = []
-            for georef_attitude in structural_data:
-                pt3d = height_source.interpolate_bilinear_point(
-                    pt=georef_attitude.posit
-                )
-                if pt3d:
-                    attitudes_3d.append(
-                        GeorefAttitude(
-                            georef_attitude.id,
-                            pt3d,
-                            georef_attitude.attitude
-                        )
-                    )
-
-        else:
-
-            attitudes_3d = structural_data
 
         if mapping_method['method'] == 'nearest':
             results = [self.map_attitude_to_section(georef_att, max_profile_distance=max_profile_distance) for georef_att in attitudes_3d]
@@ -752,7 +766,7 @@ class LinearProfiler:
         elif mapping_method['method'] == 'individual axes':
             if len(mapping_method['individual_axes_values']) != len(attitudes_3d):
                 raise Exception(
-                    "Individual axes values are {} but _attitudes are {}".format(
+                    "Individual axes values are {} but attitudes are {}".format(
                         len(mapping_method['individual_axes_values']),
                         len(attitudes_3d)
                     )
@@ -926,3 +940,40 @@ class ParallelProfilers(list):
 
         return TopographicProfileSet(topo_profiles)
 
+    def map_georef_attitudes_to_section(
+            self,
+            attitudes_3d: List[GeorefAttitude],
+            mapping_method: dict,
+            max_profile_distance: Optional[numbers.Real] = None
+    ) -> AttitudesSet:
+        """
+        Projects a set of georeferenced 3d attitudes onto the section profile.
+
+        Projects a set of georeferenced 3d attitudes onto the section profile,
+
+        :param attitudes_3d: the set of georeferenced 3d attitudes to plot on the section.
+        :type attitudes_3d: List[GeorefAttitude]
+        :param mapping_method: the method to map the attitudes to the section.
+        ;type mapping_method; Dict.
+        :param max_profile_distance: the maximum projection distance between the attitude and the profile
+        :type max_profile_distance: Optional[numbers.Real]
+        :return: an attitudes set
+        :rtype: AttitudesSet
+        :raise: Exception.
+        """
+
+        attitudes_set = AttitudesSet()
+
+        for profiler in self:
+
+            profile_attitudes = profiler.map_georef_attitudes_to_section(
+                attitudes_3d=attitudes_3d,
+                mapping_method=mapping_method,
+                max_profile_distance=max_profile_distance
+            )
+
+            attitudes_set.append(profile_attitudes)
+
+        print(attitudes_set)
+
+        return attitudes_set

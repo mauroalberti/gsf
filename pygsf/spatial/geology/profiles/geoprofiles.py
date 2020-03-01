@@ -13,17 +13,14 @@ class GeoProfile:
     """
 
     def __init__(self,
-                 topo_profile: Optional[TopographicProfile] = None,
+                 topo_profiles: Optional[TopographicProfile] = None,
                  profile_attitudes: Optional[ProfileAttitudes] = None,
                  lines_intersections: Optional[LinesIntersections] = None,
                  polygons_intersections: Optional[PolygonsIntersections] = None
                  ):
-        """
 
-        """
-
-        if topo_profile:
-            check_type(topo_profile, "Topographic profile", TopographicProfile)
+        if topo_profiles:
+            check_type(topo_profiles, "Topographic profile", TopographicProfile)
 
         if profile_attitudes:
             check_type(profile_attitudes, "Attitudes", ProfileAttitudes)
@@ -34,7 +31,7 @@ class GeoProfile:
         if polygons_intersections:
             check_type(polygons_intersections, "Polygon intersections", PolygonsIntersections)
 
-        self._topo_profile = topo_profile
+        self._topo_profile = topo_profiles
         self._profile_attitudes = profile_attitudes
         self._lines_intersections = lines_intersections
         self._polygons_intersections = polygons_intersections
@@ -69,42 +66,6 @@ class GeoProfile:
         """
 
         self._topo_profile = None
-
-    '''
-    def plot_topo_profile(self,
-          aspect: numbers.Real = 1,
-          width: numbers.Real = 18.5,
-          height: numbers.Real = 10.5,
-          color="blue"):
-        """
-        Plot a set of profiles with Matplotlib.
-
-        :param aspect: the plot aspect.
-        :type aspect: numbers.Real.
-        :param width: the plot width, in inches. # TOCHECK IF ALWAYS INCHES
-        :type width: numbers.Real.
-        :param height: the plot height in inches.  # TOCHECK IF ALWAYS INCHES
-        :type color: the color.
-        :param color: str.
-        :type height: numbers.Real.
-        :return: the figure.
-        :rtype:
-        """
-
-        fig, ax = plt.subplots()
-        fig.set_size_inches(width, height)
-
-        ax.set_aspect(aspect)
-
-        if self._topo_profile:
-            ax.plot(
-                self._topo_profile.s(),
-                self._topo_profile.z(),
-                color=color
-            )
-
-        self.fig = fig
-    '''
 
     @property
     def profile_attitudes(self):
@@ -346,17 +307,19 @@ class GeoProfileSet:
     """
 
     def __init__(self,
-        topo_profiles_set: Optional[TopographicProfileSet] = None,
-        attitudes_set: Optional[AttitudesSet] = None,
-        lines_intersections_set: Optional[LinesIntersectionsSet] = None,
-        polygons_intersections_set: Optional[PolygonsIntersectionsSet] = None
-        ):
+                 topo_profiles: Optional[TopographicProfileSet] = None,
+                 profile_attitudes: Optional[AttitudesSet] = None,
+                 lines_intersections_set: Optional[LinesIntersectionsSet] = None,
+                 polygons_intersections_set: Optional[PolygonsIntersectionsSet] = None
+                 ):
 
-        if topo_profiles_set:
-            check_type(topo_profiles_set, "Toppographic profiles set", TopographicProfileSet)
+        if topo_profiles:
+            print("Num. topographic profiles: {}".format(len(topo_profiles)))
+            check_type(topo_profiles, "Topographic profiles set", TopographicProfileSet)
 
-        if attitudes_set:
-            check_type(attitudes_set, "Attitudes set", AttitudesSet)
+        if profile_attitudes:
+            print("Num. attitude profiles: {}".format(len(profile_attitudes)))
+            check_type(profile_attitudes, "Attitudes set", AttitudesSet)
 
         if lines_intersections_set:
             check_type(lines_intersections_set, "Lines intersections set", LinesIntersectionsSet)
@@ -364,8 +327,8 @@ class GeoProfileSet:
         if polygons_intersections_set:
             check_type(polygons_intersections_set, "Polygons_intersections set", PolygonsIntersectionsSet)
 
-        self._topo_profiles_set = topo_profiles_set
-        self._attitudes_set = attitudes_set
+        self._topo_profiles_set = topo_profiles
+        self._attitudes_set = profile_attitudes
         self._lines_intersections_set = lines_intersections_set
         self._polygons_intersections_set = polygons_intersections_set
 
@@ -407,7 +370,7 @@ class GeoProfileSet:
         self._topo_profiles_set = topo_profiles_set
 
     @property
-    def attitudes_set(self):
+    def profile_attitudes(self):
         """
 
         :return:
@@ -415,9 +378,9 @@ class GeoProfileSet:
 
         return self._attitudes_set
 
-    @attitudes_set.setter
-    def attitudes_set(self,
-        attitudes_set: AttitudesSet):
+    @profile_attitudes.setter
+    def profile_attitudes(self,
+                          attitudes_set: AttitudesSet):
         """
 
         :param attitudes_set: the attitudes set.
@@ -485,7 +448,10 @@ class GeoProfileSet:
 
         return max(map(lambda lst: len(lst) if lst else 0, self.parameters()))
 
-    def extract_geoprofile(self, ndx: numbers.Integral) -> GeoProfile:
+    def extract_geoprofile(
+            self,
+            ndx: numbers.Integral
+    ) -> GeoProfile:
         """
         Returns a geoprofile referencing slices of stored data.
 
@@ -500,8 +466,8 @@ class GeoProfileSet:
             raise Exception("Geoprofile set range is in 0-{} but {} got".format(self.num_profiles() - 1, ndx))
 
         return GeoProfile(
-            topo_profile=self.topo_profiles_set[ndx] if self.topo_profiles_set and ndx < len(self.topo_profiles_set) else None,
-            profile_attitudes=self.attitudes_set[ndx] if self.attitudes_set and ndx < len(self.attitudes_set) else None,
+            topo_profiles=self.topo_profiles_set[ndx] if self.topo_profiles_set and ndx < len(self.topo_profiles_set) else None,
+            profile_attitudes=self.profile_attitudes[ndx] if self.profile_attitudes and ndx < len(self.profile_attitudes) else None,
             lines_intersections=self.lines_intersections_set[ndx] if self.lines_intersections_set and ndx < len(self.lines_intersections_set) else None,
             polygons_intersections=self.polygons_intersections_set[ndx] if self.polygons_intersections_set and ndx < len(self.polygons_intersections_set) else None
         )
