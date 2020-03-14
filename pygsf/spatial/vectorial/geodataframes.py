@@ -75,6 +75,7 @@ def extract_geometry(
     geodataframe: gpd.GeoDataFrame,
     ndx: numbers.Integral
 ) -> Any:
+    # Side effects: none
     """
     Extract a geometry from a GeoDataFrame instance,
     given the geometry index.

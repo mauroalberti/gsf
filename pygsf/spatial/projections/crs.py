@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from typing import Any
 import numbers
 
 
@@ -50,16 +51,20 @@ class Crs(object):
 
 
 def check_crs(
-    template_element,
-    checked_element
+    template_element: Any,
+    checked_element: Any
 ) -> None:
     """
-    Check whether two spatial elements have the same crs.
+    Check whether two spatial elements have the same crs, raising an exception when not equal.
+    The two elements should both implement the crs property.
 
     :param template_element: first spatial element.
+    :type template_element: Any
     :param checked_element: second spatial element.
+    :type checked_element: Any
     :return: whether two spatial elements have the same crs.
     :rtype: None.
+    :raise: Exception
     """
 
     if checked_element.crs != template_element.crs:

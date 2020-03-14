@@ -536,7 +536,6 @@ class GeoProfileSet:
 
         return [topoprofile.profile_length_3d() for topoprofile in self._topo_profiles_set]
 
-
     def max_length_2d(self) -> Optional[numbers.Real]:
         """
         Returns the maximum 2D length of profiles.
@@ -551,7 +550,6 @@ class GeoProfileSet:
             return max(lengths)
         else:
             return None
-
 
     def add_plane_attitudes(self, plane_attitudes):
         """

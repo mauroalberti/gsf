@@ -91,8 +91,8 @@ def _(
     aspect = kargs.get("aspect", 1)
     width = kargs.get("width", default_width)
     height = kargs.get("height", default_height)
-    superposed=kargs.get("superposed", False)
-    num_subplots=kargs.get("num_subplots", 1)
+    superposed = kargs.get("superposed", False)
+    num_subplots = kargs.get("num_subplots", 1)
     spec = kargs.get("spec", None)
     labels_add_orientdip = kargs.get("labels_add_orientdip", None)
     labels_add_id = kargs.get("labels_add_id", None)
@@ -246,15 +246,26 @@ def _(
     """
 
     fig = kargs.get("fig", None)
-    width = kargs.get("width", default_width)
-    height = kargs.get("height", default_height)
     plot_z_min = kargs.get("plot_z_min", None)
     plot_z_max = kargs.get("plot_z_max", None)
+    ndx = kargs.get("ndx", 0)
+    aspect = kargs.get("aspect", 1)
+    width = kargs.get("width", default_width)
+    height = kargs.get("height", default_height)
     superposed = kargs.get("superposed", False)
+    num_subplots = kargs.get("num_subplots", 1)
+    spec = kargs.get("spec", None)
+    labels_add_orientdip = kargs.get("labels_add_orientdip", None)
+    labels_add_id = kargs.get("labels_add_id", None)
 
-    z_range = geoprofiles.z_max() - geoprofiles.z_min()
-    plot_z_min = geoprofiles.z_min() - z_padding * z_range
-    plot_z_max = geoprofiles.z_max() + z_padding * z_range
+    if plot_z_min is None or plot_z_max is None:
+
+        z_range = geoprofiles.z_max() - geoprofiles.z_min()
+        plot_z_min = geoprofiles.z_min() - z_padding * z_range
+        plot_z_max = geoprofiles.z_max() + z_padding * z_range
+
+    if np.isnan(plot_z_min) or np.isnan(plot_z_max):
+        return
 
     num_profiles = geoprofiles.num_profiles()
 
@@ -279,7 +290,9 @@ def _(
             ndx=ndx,
             superposed=superposed,
             num_subplots=num_profiles,
-            spec=spec
+            spec=spec,
+            labels_add_orientdip=labels_add_orientdip,
+            labels_add_id=labels_add_id
         )
 
     return fig

@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 
-
-import itertools
-
+from typing import List
 from enum import Enum
 
+import itertools
 import numbers
-
 from math import *
 import random
-
 from array import array
-from typing import List
+
+from shapely.geometry import LineString
 
 from ...utils.lists import *
 
@@ -1262,7 +1260,7 @@ class Segment:
         check_crs(start_pt, end_pt)
 
         if start_pt.dist3DWith(end_pt) == 0.0:
-            raise Exception("Segment point distance must be greater than zero")
+            raise Exception("Source points cannot be coincident")
 
         self._start_pt = start_pt.clone()
         self._end_pt = end_pt.clone()
@@ -2610,10 +2608,16 @@ class Line(object):
         :rtype: Optional[Segment]
         """
 
-        return Segment(
-            start_pt=self.pt(ndx),
-            end_pt=self.pt(ndx + 1)
-        )
+        start_pt = self.pt(ndx)
+        end_pt = self.pt(ndx + 1)
+
+        if start_pt.isCoinc(end_pt):
+            return None
+        else:
+            return Segment(
+                start_pt=self.pt(ndx),
+                end_pt=self.pt(ndx + 1)
+            )
 
     def intersectSegment(self,
         segment: Segment
@@ -2633,7 +2637,7 @@ class Line(object):
         check_type(segment, "Input segment", Segment)
         check_crs(self, segment)
 
-        intersections = [intersect_segments(curr_segment, segment) for curr_segment in self]
+        intersections = [intersect_segments(curr_segment, segment) for curr_segment in self if curr_segment is not None]
         intersections = list(filter(lambda val: val is not None, intersections))
 
         return intersections
@@ -3126,6 +3130,31 @@ class Line(object):
         """
 
         return get_statistics(self.abs_slopes_degr())
+
+
+def line_from_shapely(
+        src_line: LineString,
+        epsg_code: numbers.Integral
+) -> Line:
+    # Side effects: none
+    """
+    Create a Line instance from a shapely Linestring instance.
+
+    :param src_line: the shapely input Linestring instance
+    :type src_line: shapely.geometry.linestring.LineString
+    :param epsg_code: the EPSG code of the LineString instance
+    :type epsg_code: numbers.Integral
+    :return: the converted Line instance
+    :rtype: Line
+    """
+
+    x_array, y_array = src_line.xy
+
+    return Line.fromArrays(
+        x_array,
+        y_array,
+        epsg_cd=epsg_code
+    )
 
 
 class MultiLine(object):

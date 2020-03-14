@@ -99,9 +99,20 @@ class LinearProfiler:
 
         epsg_cd = start_pt.epsg()
 
-        self._start_pt = Point(x=start_pt.x, y=start_pt.y, epsg_cd=epsg_cd)
-        self._end_pt = Point(x=end_pt.x, y=end_pt.y, epsg_cd=epsg_cd)
+        self._start_pt = Point(
+            x=start_pt.x,
+            y=start_pt.y,
+            epsg_cd=epsg_cd
+        )
+
+        self._end_pt = Point(
+            x=end_pt.x,
+            y=end_pt.y,
+            epsg_cd=epsg_cd
+        )
+
         self._crs = Crs(epsg_cd)
+
         self._densify_dist = float(densify_distance)
 
     def start_pt(self) -> Point:
@@ -819,32 +830,39 @@ class LinearProfiler:
         return parsed_intersections
 
 
-class ParallelProfilers(list):
+class ParallelProfiler(list):
     """
-    Parallel linear profilers.
+    Parallel linear profiler.
     """
 
     def __init__(self,
-        profilers: List[LinearProfiler]):
+                 parallel_profiler: List[LinearProfiler]):
         """
-
-        :param profilers:
+        :param parallel_profiler: a set of parallel profilers
         :return:
         """
 
-        check_type(profilers, "Profilers", List)
-        for el in profilers:
+        check_type(parallel_profiler, "Profilers", List)
+        for el in parallel_profiler:
             check_type(el, "Profiler", LinearProfiler)
+        template_profile = parallel_profiler[0]
+        for el in parallel_profiler[1:]:
+            check_crs(
+                template_element=template_profile,
+                checked_element=el
+            )
 
-        super(ParallelProfilers, self).__init__(profilers)
+        super(ParallelProfiler, self).__init__(parallel_profiler)
+
+        self._crs = Crs(template_profile.epsg())
 
     @classmethod
-    def fromProfiler(cls,
-         base_profiler: LinearProfiler,
-         profs_num: numbers.Integral,
-         profs_offset: numbers.Real,
-         profs_arr: str = "central",  # one of: "left", "central", "right"
-         ):
+    def fromBaseProfiler(cls,
+                         base_profiler: LinearProfiler,
+                         profs_num: numbers.Integral,
+                         profs_offset: numbers.Real,
+                         profs_arr: str = "central",  # one of: "left", "central", "right"
+                         ):
         """
         Initialize the parallel linear profilers.
 
@@ -918,6 +936,27 @@ class ParallelProfilers(list):
 
         inner_profilers = "\n".join([repr(profiler) for profiler in self])
         return "ParallelProfilers([\n{}]\n)".format(inner_profilers)
+
+    @property
+    def crs(self) -> Crs:
+        """
+        Returns the CRS of the profiles.
+
+        :return: the CRS of the profiles.
+        :rtype: Crs.
+        """
+
+        return self._crs
+
+    def epsg(self) -> numbers.Integral:
+        """
+        Returns the EPSG code of the profiles.
+
+        :return: the EPSG code of the profiles.
+        :rtype: numbers.Real.
+        """
+
+        return self.crs.epsg()
 
     def profile_grid(
             self,

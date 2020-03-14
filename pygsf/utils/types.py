@@ -3,12 +3,14 @@
 
 def check_type(var, name, expected_type):
     """
-    Checks the type of the variable.
+    Checks the type of the variable, raising an exception when not equal.
 
     :param var:
     :param name:
     :param expected_type:
-    :return:
+    :return: None
+    :rtype: None
+    :raise: Exception
     """
 
     if not (isinstance(var, expected_type)):
@@ -17,12 +19,14 @@ def check_type(var, name, expected_type):
 
 def check_optional_type(var, name, expected_type):
     """
-    Checks the type of the optional variable.
+    Checks the type of the optional variable, raising an exception when not equal.
 
     :param var:
     :param name:
     :param expected_type: Any
-    :return:
+    :return: None
+    :rtype: None
+    :raise: Exception
     """
 
     if var:
