@@ -96,6 +96,8 @@ def _(
     spec = kargs.get("spec", None)
     labels_add_orientdip = kargs.get("labels_add_orientdip", None)
     labels_add_id = kargs.get("labels_add_id", None)
+    inters_color = kargs.get("inters_color", None)
+    #inters_label = kargs.get("inters_label", None)
 
     if plot_z_min is None or plot_z_max is None:
 
@@ -191,8 +193,12 @@ def _(
             src_dip_angs = [structural_attitude.src_dip_ang for structural_attitude in
                             attits if 0.0 <= structural_attitude.s <= section_length]
 
-            for rec_id, src_dip_dir, src_dip_ang, s, z in zip(projected_ids, src_dip_dirs, src_dip_angs, projected_s,
-                                                              projected_z):
+            for rec_id, src_dip_dir, src_dip_ang, s, z in zip(
+                    projected_ids,
+                    src_dip_dirs,
+                    src_dip_angs,
+                    projected_s,
+                    projected_z):
 
                 if labels_add_orientdip and labels_add_id:
                     label = "%s-%03d/%02d" % (rec_id, src_dip_dir, src_dip_ang)
@@ -213,16 +219,35 @@ def _(
 
             for profile_part in geoprofile.lines_intersections:
 
-                prof_part_id = profile_part.id
-                id_color = "orange"
-                parts = profile_part.parts
+                parts = profile_part.arrays
 
                 for s_range in parts:
 
-                    s_start, s_end = s_range[0], s_range[1] if len(s_range) > 1 else None
-                    s_vals = geoprofile.topo_profile.s_subset(s_start, s_end)
-                    z_vals = geoprofile.topo_profile.zs_from_s_range(s_start, s_end)
-                    fig.gca().plot(s_vals, z_vals, 'o', color=id_color)
+                    s_start = s_range[0]
+                    s_end = s_range[1] if len(s_range) > 1 else None
+
+                    s_vals = geoprofile.topo_profile.s_subset(
+                        s_start,
+                        s_end
+                    )
+
+                    z_vals = geoprofile.topo_profile.zs_from_s_range(
+                        s_start,
+                        s_end
+                    )
+
+                    fig.gca().plot(
+                        s_vals,
+                        z_vals,
+                        'o',
+                        color=inters_color
+                    )
+
+                    """
+                    axes.annotate(
+                        f"{parts.line_id}",
+                        (s_vals[-1] + 15, z_vals[-1] + 15))
+                    """
 
     if geoprofile.polygons_intersections:
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import List
+from typing import List, Union
 from enum import Enum
 
 import itertools
@@ -19,6 +19,7 @@ from ..transformations.quaternions import *
 from ..vectors import *
 from .defaults import *
 from .direct_utils import *
+from ...utils.types import check_type
 
 
 class Point(object):
@@ -6004,3 +6005,54 @@ class MultiLines(list):
 
         super(MultiLines, self).__init__(multilines)
 
+
+class PointSegmentCollection:
+    """
+
+    """
+
+    def __init__(
+        self,
+        line_id: int,
+        geoms: List[Union[Point, Segment]]
+    ):
+
+        check_type(line_id, "Line index", numbers.Integral)
+        for geom in geoms:
+            check_type(geom, "Intersection geometry", (Point, Segment))
+
+        self._line_id = line_id
+        self._geoms = geoms
+
+    @property
+    def line_id(self) -> numbers.Integral:
+        """
+        Return line id.
+
+        :return: the line id
+        :rtype: numbers.Integral
+        """
+
+        return self._line_id
+
+    @property
+    def geoms(self) -> List[Union[Point, Segment]]:
+        """
+        Returns the intersecting geometries.
+
+        :return: the intersecting geometries.
+        :rtype: List[Union[Point, Segment]]
+        """
+
+        return self._geoms
+
+
+class PointSegmentCollections(list):
+
+    def __init__(self, atts: List[PointSegmentCollection]):
+
+        check_type(atts, "Lines intersections", List)
+        for el in atts:
+            check_type(el, "Lines intersections", PointSegmentCollection)
+
+        super(PointSegmentCollections, self).__init__(atts)

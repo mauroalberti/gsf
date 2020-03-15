@@ -1,6 +1,7 @@
 
 
 from .chains import *
+from ...vectorial.geometries import PointSegmentCollections
 
 
 class TopographicProfileSet(list):
@@ -167,7 +168,7 @@ class LinesIntersectionsSet(list):
     Class storing a set of topographic profiles.
     """
 
-    def __init__(self, line_intersection_set: List[LinesIntersections]):
+    def __init__(self, line_intersection_set: List[PointSegmentCollections]):
         """
         Instantiates an lines intersections set.
 
@@ -177,7 +178,7 @@ class LinesIntersectionsSet(list):
 
         check_type(line_intersection_set, "Line intersections set", List)
         for el in line_intersection_set:
-            check_type(el, "Line intersections", LinesIntersections)
+            check_type(el, "Line intersections", PointSegmentCollections)
 
         super(LinesIntersectionsSet, self).__init__(line_intersection_set)
 

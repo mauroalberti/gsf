@@ -1,10 +1,11 @@
 
 from array import array
 
+from .elements import *
+from ....utils.arrays import *
 
-from pygsf.spatial.geology.profiles.elements import *
 
-
+'''
 class ProfileSubpartsSet(list):
     """
     Describes subelements (point or segment-type) of a profile
@@ -19,7 +20,7 @@ class ProfileSubpartsSet(list):
             subelements = []
 
         super(ProfileSubpartsSet, self).__init__(subelements)
-
+'''
 
 class TopographicProfile:
     """
@@ -400,15 +401,17 @@ class ProfileAttitudes(list):
 
 class LinesIntersections(list):
 
-    def __init__(self, atts: List[LineIntersections]):
+    def __init__(self, intersections: List[ArrayList]):
 
-        check_type(atts, "Lines intersections", List)
-        for el in atts:
-            check_type(el, "Lines intersections", LineIntersections)
+        check_type(intersections, "Lines intersections", List)
+        for el in intersections:
+            check_type(el, "Line intersections", ArrayList)
 
-        super(LinesIntersections, self).__init__(atts)
+        super(LinesIntersections, self).__init__(intersections)
 
 
 class PolygonsIntersections(list):
 
     pass
+
+

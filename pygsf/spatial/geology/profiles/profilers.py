@@ -6,8 +6,10 @@ from operator import attrgetter
 from pygsf.spatial.rasters.geoarray import *
 
 from pygsf.spatial.geology.base import GeorefAttitude
+from pygsf.utils.arrays import ArrayList
 
 from .sets import *
+from ...vectorial.geometries import PointSegmentCollection, PointSegmentCollections
 
 
 def georef_attitudes_3d_from_grid(
@@ -466,15 +468,15 @@ class LinearProfiler:
         """
 
         results = [self.intersect_line(mline) for mline in mlines]
-        valid_results = [LineIntersections(ndx, res) for ndx, res in enumerate(results) if res]
+        valid_results = [PointSegmentCollection(ndx, res) for ndx, res in enumerate(results) if res]
 
-        return LinesIntersections(valid_results)
+        return PointSegmentCollections(valid_results)
 
     def point_signed_s(
             self,
             pt: Point) -> numbers.Real:
         """
-        Calculates the point signed distance from the profiles start.
+        Calculates the point signed distance from the profile start.
         The projected point must already lay in the profile vertical plane, otherwise an exception is raised.
 
         The implementation assumes (and verifies) that the point lies in the profile vertical plane.
@@ -805,29 +807,31 @@ class LinearProfiler:
         return ProfileAttitudes(sorted(results, key=attrgetter('s')))
 
     def parse_intersections_for_profile(self,
-        lines_intersections: LinesIntersections
-    ) -> List:
+        lines_intersections: PointSegmentCollections
+    ) -> LinesIntersections:
         """
         Parse the line intersections for incorporation
         as elements in a geoprofile.
 
         :param lines_intersections: the line intersections
-        :type lines_intersections: LinesIntersections
+        :type lines_intersections: pygsf.spatial.vectorial.geometries.PointSegmentCollections
         :return:
         """
 
-        parsed_intersections = ProfileSubpartsSet()
+        parsed_intersections = []
 
         for line_intersections in lines_intersections:
 
             line_id = line_intersections.line_id
             inters_geoms = line_intersections.geoms
 
-            intersections_ranges = [self.pt_segm_signed_s(geom) for geom in inters_geoms]
+            intersections_arrays = [self.pt_segm_signed_s(geom) for geom in inters_geoms]
 
-            parsed_intersections.append(ProfileSubpart(line_id, intersections_ranges))
+            parsed_intersections.append(ArrayList(line_id, intersections_arrays))
 
-        return parsed_intersections
+        return LinesIntersections(parsed_intersections)
+
+
 
 
 class ParallelProfiler(list):

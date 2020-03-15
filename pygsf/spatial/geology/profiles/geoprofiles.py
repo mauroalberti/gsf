@@ -1,6 +1,6 @@
 
 from .sets import *
-
+from ...vectorial.geometries import PointSegmentCollections
 
 z_padding = 0.2
 
@@ -15,7 +15,7 @@ class GeoProfile:
     def __init__(self,
                  topo_profiles: Optional[TopographicProfile] = None,
                  profile_attitudes: Optional[ProfileAttitudes] = None,
-                 lines_intersections: Optional[LinesIntersections] = None,
+                 lines_intersections: Optional[PointSegmentCollections] = None,
                  polygons_intersections: Optional[PolygonsIntersections] = None
                  ):
 
@@ -26,7 +26,7 @@ class GeoProfile:
             check_type(profile_attitudes, "Attitudes", ProfileAttitudes)
 
         if lines_intersections:
-            check_type(lines_intersections, "Line intersections", LinesIntersections)
+            check_type(lines_intersections, "Line intersections", PointSegmentCollections)
 
         if polygons_intersections:
             check_type(polygons_intersections, "Polygon intersections", PolygonsIntersections)
@@ -113,7 +113,7 @@ class GeoProfile:
 
     @lines_intersections.setter
     def lines_intersections(self,
-        lines_intersections: ProfileSubpartsSet):
+                            lines_intersections: LinesIntersections):
         """
         Set the line intersections content.
 
@@ -122,9 +122,18 @@ class GeoProfile:
         :return:
         """
 
-        check_type(lines_intersections, "Line intersections", ProfileSubpartsSet)
+        check_type(lines_intersections, "Lines intersections", LinesIntersections)
 
         self._lines_intersections = lines_intersections
+
+    def clear_lines_intersections(self):
+        """
+        Clear line intersections content.
+
+        :return:
+        """
+
+        self._lines_intersections = None
 
     @property
     def polygons_intersections(self):
