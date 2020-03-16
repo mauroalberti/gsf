@@ -105,7 +105,7 @@ class TestRKFInterpolation(unittest.TestCase):
         first_pt = Point(
             x=0,
             y=20,
-            epsg_cd=32633)
+            epsg_code=32633)
 
         str_pt = first_pt
         pts_x, pts_y = [first_pt.x], [first_pt.y]

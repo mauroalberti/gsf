@@ -99,18 +99,18 @@ class LinearProfiler:
         if densify_distance <= 0.0:
             raise Exception("Input densify distance must be positive")
 
-        epsg_cd = start_pt.epsg()
+        epsg_cd = start_pt.epsg_code()
 
         self._start_pt = Point(
             x=start_pt.x,
             y=start_pt.y,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
         self._end_pt = Point(
             x=end_pt.x,
             y=end_pt.y,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
         self._crs = Crs(epsg_cd)
@@ -494,7 +494,7 @@ class LinearProfiler:
             raise Exception("Projected point should be Point but is {}".format(type(pt)))
 
         if self.crs != pt.crs:
-            raise Exception("Projected point should have {} EPSG but has {}".format(self.epsg(), pt.epsg()))
+            raise Exception("Projected point should have {} EPSG but has {}".format(self.epsg(), pt.epsg_code()))
 
         if not self.point_in_profile(pt):
             raise Exception("Projected point should lie in the profile plane but there is a distance of {} units".format(self.point_distance(pt)))
@@ -596,9 +596,9 @@ class LinearProfiler:
             raise Exception("Structural point should be Point but is {}".format(type(structural_pt)))
 
         if self.crs != structural_pt.crs:
-            raise Exception("Structural point should have {} EPSG but has {}".format(self.epsg(), structural_pt.epsg()))
+            raise Exception("Structural point should have {} EPSG but has {}".format(self.epsg(), structural_pt.epsg_code()))
 
-        axis_versor = map_axis.asDirect().asVersor(epsg_cd=structural_pt.epsg())
+        axis_versor = map_axis.asDirect().asVersor(epsg_cd=structural_pt.epsg_code())
 
         l, m, n = axis_versor.x, axis_versor.y, axis_versor.z
 
@@ -628,7 +628,7 @@ class LinearProfiler:
             raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
 
         if self.crs != attitude_pt.crs:
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg()))
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg_code()))
 
         putative_inters_versor = self.vertical_plane().intersVersor(attitude_plane.toCPlane(attitude_pt))
 
@@ -654,7 +654,7 @@ class LinearProfiler:
             raise Exception("georef_attitude point should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
         if self.crs != georef_attitude.posit.crs:
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg_code()))
 
         attitude_cplane = georef_attitude.attitude.toCPlane(georef_attitude.posit)
         intersection_versor = self.vertical_plane().intersVersor(attitude_cplane)
@@ -667,7 +667,7 @@ class LinearProfiler:
             x=dummy_inters_pt.x + offset_vector.x,
             y=dummy_inters_pt.y + offset_vector.y,
             z=dummy_inters_pt.z + offset_vector.z,
-            epsg_cd=self.epsg())
+            epsg_code=self.epsg())
 
         return projected_pt
 
@@ -694,7 +694,7 @@ class LinearProfiler:
             raise Exception("Georef attitude should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
         if self.crs != georef_attitude.posit.crs:
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg_code()))
 
         if map_axis:
             if not isinstance(map_axis, Axis):

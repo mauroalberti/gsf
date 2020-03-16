@@ -109,7 +109,7 @@ def pt_4326_ecef(pt: Point) -> Optional[Point]:
     :rtype: Point.
     """
 
-    if pt.epsg() != 4326:
+    if pt.epsg_code() != 4326:
         return None
 
     lon, lat, height, time = pt.x, pt.y, pt.z, pt.t
@@ -120,7 +120,7 @@ def pt_4326_ecef(pt: Point) -> Optional[Point]:
         y=y,
         z=z,
         t=time,
-        epsg_cd=4978
+        epsg_code=4978
     )
 
 

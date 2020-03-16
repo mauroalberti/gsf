@@ -22,7 +22,7 @@ from .direct_utils import *
 from ...utils.types import check_type
 
 
-class Point(object):
+class Point:
     """
     Cartesian point.
     Dimensions: 4D (space-time)
@@ -34,7 +34,7 @@ class Point(object):
         y: numbers.Real,
         z: numbers.Real = 0.0,
         t: numbers.Real = 0.0,
-        epsg_cd: numbers.Integral = -1):
+        epsg_code: numbers.Integral = -1):
         """
         Construct a Point instance.
 
@@ -46,8 +46,8 @@ class Point(object):
         :type z: numbers.Real.
         :param t: point time coordinate.
         :type t: numbers.Real.
-        :param epsg_cd: CRS EPSG code.
-        :type epsg_cd: numbers.Integral.
+        :param epsg_code: CRS EPSG code.
+        :type epsg_code: numbers.Integral.
         """
 
         vals = [x, y, z, t]
@@ -56,16 +56,16 @@ class Point(object):
         if not all(map(math.isfinite, vals)):
             raise Exception("Input values must be finite")
 
-        if not isinstance(epsg_cd, numbers.Integral):
+        if not isinstance(epsg_code, numbers.Integral):
             raise Exception("Input EPSG value must be integer")
-        if not math.isfinite(epsg_cd):
+        if not math.isfinite(epsg_code):
             raise Exception("Input EPSG value must be finite")
 
         self._x = float(x)
         self._y = float(y)
         self._z = float(z)
         self._t = float(t)
-        self._crs = Crs(epsg_cd)
+        self._crs = Crs(epsg_code)
 
     @classmethod
     def fromVect(cls,
@@ -92,7 +92,7 @@ class Point(object):
         :rtype: numbers.Real
 
         Examples:
-          >>> Point(4, 3, 7, epsg_cd=4326).x
+          >>> Point(4, 3, 7, epsg_code=4326).x
           4.0
           >>> Point(-0.39, 3, 7).x
           -0.39
@@ -109,7 +109,7 @@ class Point(object):
         :rtype: numbers.Real
 
         Examples:
-          >>> Point(4, 3, 7, epsg_cd=4326).y
+          >>> Point(4, 3, 7, epsg_code=4326).y
           3.0
           >>> Point(-0.39, 17.42, 7).y
           17.42
@@ -126,7 +126,7 @@ class Point(object):
         :rtype: numbers.Real
 
         Examples:
-          >>> Point(4, 3, 7, epsg_cd=4326).z
+          >>> Point(4, 3, 7, epsg_code=4326).z
           7.0
           >>> Point(-0.39, 17.42, 8.9).z
           8.9
@@ -143,7 +143,7 @@ class Point(object):
         :rtype: numbers.Real
 
         Examples:
-          >>> Point(4, 3, 7, epsg_cd=4326).t
+          >>> Point(4, 3, 7, epsg_code=4326).t
           0.0
           >>> Point(-0.39, 17.42, 8.9, 4112).t
           4112.0
@@ -162,7 +162,7 @@ class Point(object):
 
         return self._crs
 
-    def epsg(self) -> numbers.Integral:
+    def epsg_code(self) -> numbers.Integral:
         """
         Returns the EPSG code of the point.
 
@@ -191,7 +191,7 @@ class Point(object):
 
     def __repr__(self) -> str:
 
-        return "Point({:.4f}, {:.4f}, {:.4f}, {:.4f}, {})".format(self.x, self.y, self.z, self.t, self.epsg())
+        return "Point({:.4f}, {:.4f}, {:.4f}, {:.4f}, {})".format(self.x, self.y, self.z, self.t, self.epsg_code())
 
     def __eq__(self,
         another: 'Point'
@@ -206,9 +206,9 @@ class Point(object):
         Example:
           >>> Point(1., 1., 1.) == Point(1, 1, 1)
           True
-          >>> Point(1., 1., 1., epsg_cd=4326) == Point(1, 1, 1, epsg_cd=4326)
+          >>> Point(1., 1., 1., epsg_code=4326) == Point(1, 1, 1, epsg_code=4326)
           True
-          >>> Point(1., 1., 1., epsg_cd=4326) == Point(1, 1, -1, epsg_cd=4326)
+          >>> Point(1., 1., 1., epsg_code=4326) == Point(1, 1, -1, epsg_code=4326)
           False
         """
 
@@ -231,7 +231,7 @@ class Point(object):
         Example:
           >>> Point(1., 1., 1.) != Point(0., 0., 0.)
           True
-          >>> Point(1., 1., 1., epsg_cd=4326) != Point(1, 1, 1)
+          >>> Point(1., 1., 1., epsg_code=4326) != Point(1, 1, 1)
           True
         """
 
@@ -244,7 +244,7 @@ class Point(object):
         :return: double array of x, y, z values
 
         Examples:
-          >>> Point(4, 3, 7, epsg_cd=4326).a()
+          >>> Point(4, 3, 7, epsg_code=4326).a()
           (4.0, 3.0, 7.0, 0.0, 4326)
         """
 
@@ -261,9 +261,9 @@ class Point(object):
         :raise: Exception
 
         Example:
-          >>> Point(1, 0, 0, epsg_cd=2000) + Point(0, 1, 1, epsg_cd=2000)
+          >>> Point(1, 0, 0, epsg_code=2000) + Point(0, 1, 1, epsg_code=2000)
           Point(1.0000, 1.0000, 1.0000, 0.0000, 2000)
-          >>> Point(1, 1, 1, epsg_cd=2000) + Point(-1, -1, -1, epsg_cd=2000)
+          >>> Point(1, 1, 1, epsg_code=2000) + Point(-1, -1, -1, epsg_code=2000)
           Point(0.0000, 0.0000, 0.0000, 0.0000, 2000)
         """
 
@@ -279,7 +279,7 @@ class Point(object):
             y=y0+y1,
             z=z0+z1,
             t=t0+t1,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
     def __sub__(self, another: 'Point') -> 'Point':
@@ -292,9 +292,9 @@ class Point(object):
         :raise: Exception
 
         Example:
-          >>> Point(1., 1., 1., epsg_cd=2000) - Point(1., 1., 1., epsg_cd=2000)
+          >>> Point(1., 1., 1., epsg_code=2000) - Point(1., 1., 1., epsg_code=2000)
           Point(0.0000, 0.0000, 0.0000, 0.0000, 2000)
-          >>> Point(1., 1., 3., epsg_cd=2000) - Point(1., 1., 2.2, epsg_cd=2000)
+          >>> Point(1., 1., 3., epsg_code=2000) - Point(1., 1., 2.2, epsg_code=2000)
           Point(0.0000, 0.0000, 0.8000, 0.0000, 2000)
         """
 
@@ -310,7 +310,7 @@ class Point(object):
             y=y0 - y1,
             z=z0 - z1,
             t=t0 - t1,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
     def clone(self) -> 'Point':
@@ -375,7 +375,7 @@ class Point(object):
           Point(2.0000, 3.0000, 0.0000, 0.0000, -1)
         """
 
-        return Point(self.x, self.y, 0.0, self.t, self.epsg())
+        return Point(self.x, self.y, 0.0, self.t, self.epsg_code())
 
     def pXZ(self) -> 'Point':
         """
@@ -388,7 +388,7 @@ class Point(object):
           Point(2.0000, 0.0000, 4.0000, 0.0000, -1)
         """
 
-        return Point(self.x, 0.0, self.z, self.t, self.epsg())
+        return Point(self.x, 0.0, self.z, self.t, self.epsg_code())
 
     def pYZ(self) -> 'Point':
         """
@@ -401,7 +401,7 @@ class Point(object):
           Point(0.0000, 3.0000, 4.0000, 0.0000, -1)
         """
 
-        return Point(0.0, self.y, self.z, self.t, self.epsg())
+        return Point(0.0, self.y, self.z, self.t, self.epsg_code())
 
     def deltaX(self,
         another: 'Point'
@@ -414,9 +414,9 @@ class Point(object):
         :raise: Exception
 
         Examples:
-          >>> Point(1, 2, 3, epsg_cd=32632).deltaX(Point(4, 7, 1, epsg_cd=32632))
+          >>> Point(1, 2, 3, epsg_code=32632).deltaX(Point(4, 7, 1, epsg_code=32632))
           3.0
-          >>> Point(1, 2, 3, epsg_cd=4326).deltaX(Point(4, 7, 1))
+          >>> Point(1, 2, 3, epsg_code=4326).deltaX(Point(4, 7, 1))
           Traceback (most recent call last):
           ....
           Exception: checked Point instance has -1 EPSG code but 4326 expected
@@ -436,9 +436,9 @@ class Point(object):
         :rtype: optional numbers.Real.
 
         Examples:
-          >>> Point(1, 2, 3, epsg_cd=32632).deltaY(Point(4, 7, 1, epsg_cd=32632))
+          >>> Point(1, 2, 3, epsg_code=32632).deltaY(Point(4, 7, 1, epsg_code=32632))
           5.0
-          >>> Point(1, 2, 3, epsg_cd=4326).deltaY(Point(4, 7, 1))
+          >>> Point(1, 2, 3, epsg_code=4326).deltaY(Point(4, 7, 1))
           Traceback (most recent call last):
           ...
           Exception: checked Point instance has -1 EPSG code but 4326 expected
@@ -458,9 +458,9 @@ class Point(object):
         :rtype: optional numbers.Real.
 
         Examples:
-          >>> Point(1, 2, 3, epsg_cd=32632).deltaZ(Point(4, 7, 1, epsg_cd=32632))
+          >>> Point(1, 2, 3, epsg_code=32632).deltaZ(Point(4, 7, 1, epsg_code=32632))
           -2.0
-          >>> Point(1, 2, 3, epsg_cd=4326).deltaZ(Point(4, 7, 1))
+          >>> Point(1, 2, 3, epsg_code=4326).deltaZ(Point(4, 7, 1))
           Traceback (most recent call last):
           ....
           Exception: checked Point instance has -1 EPSG code but 4326 expected
@@ -500,9 +500,9 @@ class Point(object):
         :raise: Exception.
 
         Examples:
-          >>> Point(1., 1., 1., epsg_cd=32632).dist3DWith(Point(4., 5., 1, epsg_cd=32632))
+          >>> Point(1., 1., 1., epsg_code=32632).dist3DWith(Point(4., 5., 1, epsg_code=32632))
           5.0
-          >>> Point(1, 1, 1, epsg_cd=32632).dist3DWith(Point(4, 5, 1, epsg_cd=32632))
+          >>> Point(1, 1, 1, epsg_code=32632).dist3DWith(Point(4, 5, 1, epsg_code=32632))
           5.0
           >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1))
           5.0
@@ -528,9 +528,9 @@ class Point(object):
         :raise: Exception.
 
         Examples:
-          >>> Point(1., 1., 1., epsg_cd=32632).dist2DWith(Point(4., 5., 7., epsg_cd=32632))
+          >>> Point(1., 1., 1., epsg_code=32632).dist2DWith(Point(4., 5., 7., epsg_code=32632))
           5.0
-          >>> Point(1., 1., 1., epsg_cd=32632).dist2DWith(Point(4., 5., 7.))
+          >>> Point(1., 1., 1., epsg_code=32632).dist2DWith(Point(4., 5., 7.))
           Traceback (most recent call last):
           ...
           Exception: checked Point instance has -1 EPSG code but 32632 expected
@@ -558,7 +558,7 @@ class Point(object):
         """
 
         x, y, z = self.x * scale_factor, self.y * scale_factor, self.z * scale_factor
-        return Point(x, y, z, self.t, self.epsg())
+        return Point(x, y, z, self.t, self.epsg_code())
 
     def invert(self) -> 'Point':
         """
@@ -593,7 +593,7 @@ class Point(object):
             y=-y,
             z=z,
             t=t,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
     def isCoinc(self,
@@ -614,13 +614,13 @@ class Point(object):
         Example:
           >>> Point(1., 0., -1.).isCoinc(Point(1., 1.5, -1.))
           False
-          >>> Point(1., 0., 0., epsg_cd=32632).isCoinc(Point(1., 0., 0., epsg_cd=32632))
+          >>> Point(1., 0., 0., epsg_code=32632).isCoinc(Point(1., 0., 0., epsg_code=32632))
           True
-          >>> Point(1.2, 7.4, 1.4, epsg_cd=32632).isCoinc(Point(1.2, 7.4, 1.4))
+          >>> Point(1.2, 7.4, 1.4, epsg_code=32632).isCoinc(Point(1.2, 7.4, 1.4))
           Traceback (most recent call last):
           ...
           Exception: checked Point instance has -1 EPSG code but 32632 expected
-          >>> Point(1.2, 7.4, 1.4, epsg_cd=4326).isCoinc(Point(1.2, 7.4, 1.4))
+          >>> Point(1.2, 7.4, 1.4, epsg_code=4326).isCoinc(Point(1.2, 7.4, 1.4))
           Traceback (most recent call last):
           ...
           Exception: checked Point instance has -1 EPSG code but 4326 expected
@@ -661,13 +661,13 @@ class Point(object):
         Create a new object shifted by given amount from the self instance.
 
         Example:
-          >>> Point(1, 1, 1, epsg_cd=32632).shift(0.5, 1., 1.5)
+          >>> Point(1, 1, 1, epsg_code=32632).shift(0.5, 1., 1.5)
           Point(1.5000, 2.0000, 2.5000, 0.0000, 32632)
-          >>> Point(1, 2, -1, epsg_cd=32632).shift(0.5, 1., 1.5)
+          >>> Point(1, 2, -1, epsg_code=32632).shift(0.5, 1., 1.5)
           Point(1.5000, 3.0000, 0.5000, 0.0000, 32632)
        """
 
-        return Point(self.x + sx, self.y + sy, self.z + sz, self.t, self.epsg())
+        return Point(self.x + sx, self.y + sy, self.z + sz, self.t, self.epsg_code())
 
     def shiftByVect(self,
         v: Vect
@@ -682,9 +682,9 @@ class Point(object):
         :raise: Exception
 
         Example:
-          >>> Point(1, 1, 1, epsg_cd=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_cd=32632))
+          >>> Point(1, 1, 1, epsg_code=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_cd=32632))
           Point(1.5000, 2.0000, 2.5000, 0.0000, 32632)
-          >>> Point(1, 2, -1, epsg_cd=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_cd=32632))
+          >>> Point(1, 2, -1, epsg_code=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_cd=32632))
           Point(1.5000, 3.0000, 0.5000, 0.0000, 32632)
        """
 
@@ -707,7 +707,7 @@ class Point(object):
           Vect(0.2000, 1.0000, 6.0000, EPSG: -1)
         """
 
-        return Vect(self.x, self.y, self.z, self.epsg())
+        return Vect(self.x, self.y, self.z, self.epsg_code())
 
     def rotate(self,
         rotation_axis: 'RotationAxis',
@@ -766,7 +766,7 @@ class Point(object):
                 y=0.0,
                 z=0.0,
                 t=0.0,
-                epsg_cd=epsg_cd
+                epsg_code=epsg_cd
             )
 
         check_type(center_point, "Center point", Point)
@@ -789,7 +789,7 @@ class Point(object):
             y=y,
             z=z,
             t=t,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
         transl_pt = center_point + rot_pt
@@ -975,9 +975,9 @@ class CPlane(object):
         Example:
           >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
           CPlane(0.0000, 0.0000, 1.0000, 0.0000, -1)
-          >>> CPlane.fromPoints(Point(0, 0, 0, epsg_cd=4326), Point(1, 0, 0, epsg_cd=4326), Point(0, 1, 0, epsg_cd=4326))
+          >>> CPlane.fromPoints(Point(0, 0, 0, epsg_code=4326), Point(1, 0, 0, epsg_code=4326), Point(0, 1, 0, epsg_code=4326))
           CPlane(0.0000, 0.0000, 1.0000, 0.0000, 4326)
-          >>> CPlane.fromPoints(Point(0, 0, 0, epsg_cd=4326), Point(0, 1, 0, epsg_cd=4326), Point(0, 0, 1, epsg_cd=4326))
+          >>> CPlane.fromPoints(Point(0, 0, 0, epsg_code=4326), Point(0, 1, 0, epsg_code=4326), Point(0, 0, 1, epsg_code=4326))
           CPlane(1.0000, 0.0000, 0.0000, 0.0000, 4326)
           >>> CPlane.fromPoints(Point(1,2,3), Point(2,3,4), Point(-1,7,-2))
           CPlane(-0.7956, 0.2387, 0.5569, -1.3524, -1)
@@ -1021,7 +1021,7 @@ class CPlane(object):
             np.linalg.det(matr_b),
             np.linalg.det(matr_c),
             np.linalg.det(matr_d),
-            epsg_cd=pt1.epsg())
+            epsg_cd=pt1.epsg_code())
 
     def __repr__(self):
 
@@ -1053,7 +1053,7 @@ class CPlane(object):
             *pointSolution(
                 np.array([[self.a(), self.b(), self.c()]]),
                 np.array([-self.d()])),
-            epsg_cd=self.epsg())
+            epsg_code=self.epsg())
 
         return point
 
@@ -1116,7 +1116,7 @@ class CPlane(object):
         x, y, z = pointSolution(a, b)
 
         if x is not None and y is not None and z is not None:
-            return Point(x, y, z, epsg_cd=self.epsg())
+            return Point(x, y, z, epsg_code=self.epsg())
         else:
             return None
 
@@ -1139,16 +1139,16 @@ class CPlane(object):
 
         Examples:
           >>> cpl = CPlane(0, 0, 1, 0, epsg_cd=32632)
-          >>> pt = Point(0, 0, 1, epsg_cd=32632)
+          >>> pt = Point(0, 0, 1, epsg_code=32632)
           >>> cpl.pointDistance(pt)
           1.0
-          >>> pt = Point(0, 0, 0.5, epsg_cd=32632)
+          >>> pt = Point(0, 0, 0.5, epsg_code=32632)
           >>> cpl.pointDistance(pt)
           0.5
-          >>> pt = Point(0, 0, -0.5, epsg_cd=32632)
+          >>> pt = Point(0, 0, -0.5, epsg_code=32632)
           >>> cpl.pointDistance(pt)
           -0.5
-          >>> pt = Point(10, 20, 0.0, epsg_cd=32632)
+          >>> pt = Point(10, 20, 0.0, epsg_code=32632)
           >>> cpl.pointDistance(pt)
           0.0
           >>> cpl = CPlane(0, 0, 1, 0, epsg_cd=32632)
@@ -1183,7 +1183,7 @@ class CPlane(object):
           >>> pl.isPointInPlane(pt)
           True
           >>> pl = CPlane(0, 0, 1, 0, epsg_cd=32632)
-          >>> pt = Point(0, 1, 0, epsg_cd=32632)
+          >>> pt = Point(0, 1, 0, epsg_code=32632)
           >>> pl.isPointInPlane(pt)
           True
         """
@@ -1481,7 +1481,7 @@ class Segment:
             x0 = (p1 - p0) / (m0 - m1)
             y0 = m0 * x0 + p0
 
-        return Point(x0, y0, epsg_cd=self.epsg())
+        return Point(x0, y0, epsg_code=self.epsg())
 
     def contains_pt(self,
         pt: Point
@@ -1625,7 +1625,7 @@ class Segment:
             y=self.start_pt.y + dy,
             z=self.start_pt.z + dz,
             t=self.start_pt.t + dt,
-            epsg_cd=self.epsg())
+            epsg_code=self.epsg())
 
     def pointProjection(self,
         point: Point
@@ -2318,14 +2318,14 @@ class CLine:
             x=p1.x - p3.x,
             y=p1.y - p3.y,
             z=p1.z - p3.z,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
         p43 = Point(
             x=p4.x - p3.x,
             y=p4.y - p3.y,
             z=p4.z - p3.z,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
         if p43.asVect().isAlmostZero:
@@ -2335,7 +2335,7 @@ class CLine:
             x=p2.x - p1.x,
             y=p2.y - p1.y,
             z=p2.z - p1.z,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
         if p21.asVect().isAlmostZero:
@@ -2361,14 +2361,14 @@ class CLine:
             x=p1.x + mua * p21.x,
             y=p1.y + mua * p21.y,
             z=p1.z + mua * p21.z,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
         pb = Point(
             x=p3.x + mub * p43.x,
             y=p3.y + mub * p43.y,
             z=p3.z + mub * p43.z,
-            epsg_cd=epsg_cd
+            epsg_code=epsg_cd
         )
 
         intersection = point_or_segment(
@@ -2437,13 +2437,13 @@ class Line(object):
         # when implicit (-1) EPSG line code, initialize it to that of the first point
 
         if pts and epsg_cd == -1:
-            epsg_cd = pts[0].epsg()
+            epsg_cd = pts[0].epsg_code()
 
         # check all points have the same CRS
 
         for ndx in range(len(pts)):
             pt = pts[ndx]
-            if pt.epsg() != epsg_cd:
+            if pt.epsg_code() != epsg_cd:
                 raise Exception("All points must have the same '{}' EPSG code".format(epsg_cd))
 
         self._x = array('d', [pt.x for pt in pts])
@@ -2529,20 +2529,20 @@ class Line(object):
                 pt = Point(
                     x=vals[0],
                     y=vals[1],
-                    epsg_cd=epsg_cd)
+                    epsg_code=epsg_cd)
             elif len(vals) == 3:
                 pt = Point(
                     x=vals[0],
                     y=vals[1],
                     z=vals[2],
-                    epsg_cd=epsg_cd)
+                    epsg_code=epsg_cd)
             elif len(vals) == 3:
                 pt = Point(
                     x=vals[0],
                     y=vals[1],
                     z=vals[2],
                     t=vals[3],
-                    epsg_cd=epsg_cd)
+                    epsg_code=epsg_cd)
             else:
                 raise Exception("Point input values should be 2, 3 or 4. {} got ({}).".format(len(vals), vals))
 
@@ -2570,7 +2570,7 @@ class Line(object):
             y=self._y[pt_ndx],
             z=self._z[pt_ndx],
             t=self._t[pt_ndx],
-            epsg_cd=self.epsg()
+            epsg_code=self.epsg()
         )
 
     def values_at(self,
@@ -2718,7 +2718,7 @@ class Line(object):
         """
 
         if self.num_pts() == 0 and not self.crs.valid():
-            self._crs = Crs(pt.epsg())
+            self._crs = Crs(pt.epsg_code())
 
         if self.num_pts() > 0 and pt.crs != self.crs:
             return False
@@ -3417,7 +3417,7 @@ class ParamLine3D(object):
         Return the EPSG code of the parametric line.
         """
 
-        return self._srcPt.epsg()
+        return self._srcPt.epsg_code()
 
     def intersect_cartes_plane(self, cartes_plane) -> Optional[Point]:
         """
@@ -3450,7 +3450,7 @@ class ParamLine3D(object):
             x=x1 - l * k,
             y=y1 - m * k,
             z=z1 - n * k,
-            epsg_cd=self.epsg()
+            epsg_code=self.epsg()
         )
 
 
@@ -3477,12 +3477,12 @@ def analizeJoins(first: Union[Line, Segment], second: Union[Line, Segment]) -> L
     :rtype: List[Optional[JoinTypes]].
 
     Examples:
-      >>> first = Segment(Point(x=0,y=0, epsg_cd=32632), Point(x=1,y=0, epsg_cd=32632))
-      >>> second = Segment(Point(x=1,y=0, epsg_cd=32632), Point(x=0,y=0, epsg_cd=32632))
+      >>> first = Segment(Point(x=0,y=0, epsg_code=32632), Point(x=1,y=0, epsg_code=32632))
+      >>> second = Segment(Point(x=1,y=0, epsg_code=32632), Point(x=0,y=0, epsg_code=32632))
       >>> analizeJoins(first, second)
       [<JoinTypes.START_END: 2>, <JoinTypes.END_START: 3>]
-      >>> first = Segment(Point(x=0,y=0, epsg_cd=32632), Point(x=1,y=0, epsg_cd=32632))
-      >>> second = Segment(Point(x=2,y=0, epsg_cd=32632), Point(x=3,y=0, epsg_cd=32632))
+      >>> first = Segment(Point(x=0,y=0, epsg_code=32632), Point(x=1,y=0, epsg_code=32632))
+      >>> second = Segment(Point(x=2,y=0, epsg_code=32632), Point(x=3,y=0, epsg_code=32632))
       >>> analizeJoins(first, second)
       []
     """
@@ -4047,7 +4047,7 @@ class Plane(object):
         normal_versor = self.normDirectFrwrd().asVersor()
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * pt.x + b * pt.y + c * pt.z)
-        return CPlane(a, b, c, d, epsg_cd=pt.epsg())
+        return CPlane(a, b, c, d, epsg_cd=pt.epsg_code())
 
     def slope_x_dir(self) -> numbers.Real:
         """
@@ -5861,15 +5861,15 @@ class Points:
             check_type(point, "Input point {}".format(ndx), Point)
 
         if not epsg_cd:
-            epsg_cd = points[0].epsg()
+            epsg_cd = points[0].epsg_code()
 
         if crs_check:
 
             for ndx, point in enumerate(points):
 
-                if point.epsg() != epsg_cd:
+                if point.epsg_code() != epsg_cd:
 
-                    raise Exception("Point {} has EPSG code {} but {} required".format(ndx, point.epsg(), epsg_cd))
+                    raise Exception("Point {} has EPSG code {} but {} required".format(ndx, point.epsg_code(), epsg_cd))
 
         self._xs = np.array([p.x for p in points])
         self._ys = np.array([p.y for p in points])
@@ -5957,7 +5957,7 @@ class Points:
             y=np.nanmean(self.ys),
             z=np.nanmean(self.zs),
             t=np.nanmean(self.ts),
-            epsg_cd=self.epsg()
+            epsg_code=self.epsg()
         )
 
 

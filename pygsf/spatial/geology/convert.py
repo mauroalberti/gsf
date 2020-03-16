@@ -50,7 +50,7 @@ def try_extract_georeferenced_attitudes(
             if is_rhrstrike:
                 azimuth = (azimuth + 90.0) % 360.0
 
-            attitudes.append(GeorefAttitude(id, Point(x, y, epsg_cd=epsg), Plane(azimuth, dip_ang)))
+            attitudes.append(GeorefAttitude(id, Point(x, y, epsg_code=epsg), Plane(azimuth, dip_ang)))
 
         return True, attitudes
 

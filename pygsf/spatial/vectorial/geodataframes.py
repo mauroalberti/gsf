@@ -152,7 +152,7 @@ def extract_line_points(
             Point(
                 x=x,
                 y=y,
-                epsg_cd=epsg
+                epsg_code=epsg
             )
         )
 

@@ -70,7 +70,7 @@ def check_crs(
     if checked_element.crs != template_element.crs:
         raise Exception("checked {} instance has {} EPSG code but {} expected".format(
             type(checked_element).__name__,
-            checked_element.epsg(),
-            template_element.epsg()
+            checked_element.epsg_code(),
+            template_element.epsg_code()
         )
     )

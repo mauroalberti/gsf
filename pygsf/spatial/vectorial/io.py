@@ -155,7 +155,7 @@ def try_read_line_shapefile(
             for i in range(curr_geom.GetPointCount()):
                 x, y, z = curr_geom.GetX(i), curr_geom.GetY(i), curr_geom.GetZ(i)
 
-                line.add_pt(Point(x, y, z, epsg_cd=epsg_cd))
+                line.add_pt(Point(x, y, z, epsg_code=epsg_cd))
 
             feat_geometries = line
 
@@ -170,7 +170,7 @@ def try_read_line_shapefile(
                 for i in range(line_geom.GetPointCount()):
                     x, y, z = line_geom.GetX(i), line_geom.GetY(i), line_geom.GetZ(i)
 
-                    line.add_pt(Point(x, y, z, epsg_cd=epsg_cd))
+                    line.add_pt(Point(x, y, z, epsg_code=epsg_cd))
 
                 multiline.add_line(line)
 
@@ -258,7 +258,7 @@ def read_linestring_geometries(line_shp_path: str) -> Optional[MultiLine]:
 
             x, y, z = geometry.GetX(i), geometry.GetY(i), geometry.GetZ(i)
 
-            line.add_pt(Point(x, y, z, epsg_cd=epsg_cd))
+            line.add_pt(Point(x, y, z, epsg_code=epsg_cd))
 
         feature.Destroy()
 
