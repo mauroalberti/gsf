@@ -30,7 +30,7 @@ class TestSegmentIntersections(unittest.TestCase):
 
             intersection_pt = intersect_segments(random_segment, rotated_segment)
 
-            if not intersection_pt or not intersection_pt.isCoinc(center_point, tolerance=1e-2):
+            if not intersection_pt or not intersection_pt.isCoinc3D(center_point, tolerance=1e-2):
                 print(n)
                 print(random_segment)
                 print(random_interval_value)

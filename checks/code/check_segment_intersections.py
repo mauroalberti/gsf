@@ -61,7 +61,7 @@ def check_segment_intersections(n=100):
             print(intersection)
             print(intersection.length3D())
 
-        elif not intersection.isCoinc(center_point, tolerance=1):
+        elif not intersection.isCoinc3D(center_point, tolerance=1):
             print("\nCase not coincident: {}".format(i))
             print(random_segment)
             print(random_segment.length3D())

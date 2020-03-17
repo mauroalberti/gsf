@@ -124,5 +124,5 @@ class TestRKFInterpolation(unittest.TestCase):
             pts_y.append(end_pt.y)
             str_pt = end_pt
 
-        assert end_pt.isCoinc(first_pt)
+        assert end_pt.isCoinc3D(first_pt)
         # After 10 cycles the calculated point position is in the expected (initial) position: x=0, y=200.

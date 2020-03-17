@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 
-from typing import List, Union
+from typing import List, Optional, Tuple
 from enum import Enum
 
 import itertools
@@ -596,10 +595,10 @@ class Point:
             epsg_code=epsg_cd
         )
 
-    def isCoinc(self,
-        another: 'Point',
-        tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
-    ) -> bool:
+    def isCoinc3D(self,
+                  another: 'Point',
+                  tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                  ) -> bool:
         """
         Check spatial coincidence of two points
 
@@ -612,25 +611,48 @@ class Point:
         :raise: Exception.
 
         Example:
-          >>> Point(1., 0., -1.).isCoinc(Point(1., 1.5, -1.))
+          >>> Point(1., 0., -1.).isCoinc3D(Point(1., 1.5, -1.))
           False
-          >>> Point(1., 0., 0., epsg_code=32632).isCoinc(Point(1., 0., 0., epsg_code=32632))
+          >>> Point(1., 0., 0., epsg_code=32632).isCoinc3D(Point(1., 0., 0., epsg_code=32632))
           True
-          >>> Point(1.2, 7.4, 1.4, epsg_code=32632).isCoinc(Point(1.2, 7.4, 1.4))
+          >>> Point(1.2, 7.4, 1.4, epsg_code=32632).isCoinc3D(Point(1.2, 7.4, 1.4))
           Traceback (most recent call last):
           ...
           Exception: checked Point instance has -1 EPSG code but 32632 expected
-          >>> Point(1.2, 7.4, 1.4, epsg_code=4326).isCoinc(Point(1.2, 7.4, 1.4))
+          >>> Point(1.2, 7.4, 1.4, epsg_code=4326).isCoinc3D(Point(1.2, 7.4, 1.4))
           Traceback (most recent call last):
           ...
           Exception: checked Point instance has -1 EPSG code but 4326 expected
         """
 
         check_type(another, "Second point", Point)
-
         check_crs(self, another)
 
         return self.dist3DWith(another) <= tolerance
+
+    def isCoinc2D(self,
+                  another: 'Point',
+                  tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                  ) -> bool:
+        """
+        Check spatial coincidence of two points, limiting to the horizontal (XY) plane.
+
+        :param another: the point to compare.
+        :type another: Point.
+        :param tolerance: the maximum allowed distance between the two points.
+        :type tolerance: numbers.Real.
+        :return: whether the two points are coincident.
+        :rtype: bool.
+        :raise: Exception.
+
+        Example:
+
+        """
+
+        check_type(another, "Second point", Point)
+        check_crs(self, another)
+
+        return self.dist2DWith(another) <= tolerance
 
     def already_present(self,
         pt_list: List['Point'],
@@ -648,7 +670,7 @@ class Point:
         """
 
         for pt in pt_list:
-            if self.isCoinc(pt, tolerance=tolerance):
+            if self.isCoinc3D(pt, tolerance=tolerance):
                 return True
         return False
 
@@ -1865,7 +1887,7 @@ class Segment:
           True
         """
 
-        return self.start_pt.isCoinc(
+        return self.start_pt.isCoinc3D(
             another=another.start_pt,
             tolerance=tol
         )
@@ -1891,7 +1913,7 @@ class Segment:
           True
         """
 
-        return self.end_pt.isCoinc(
+        return self.end_pt.isCoinc3D(
             another=another.end_pt,
             tolerance=tol)
 
@@ -1916,7 +1938,7 @@ class Segment:
           True
         """
 
-        return self.end_pt.isCoinc(
+        return self.end_pt.isCoinc3D(
             another=another.start_pt,
             tolerance=tol)
 
@@ -1941,7 +1963,7 @@ class Segment:
           True
         """
 
-        return another.end_pt.isCoinc(
+        return another.end_pt.isCoinc3D(
             another=self.start_pt,
             tolerance=tol)
 
@@ -2193,7 +2215,7 @@ class CLine:
 
         check_crs(first_pt, second_pt)
 
-        if first_pt.isCoinc(second_pt, tolerance=tolerance):
+        if first_pt.isCoinc3D(second_pt, tolerance=tolerance):
             raise Exception("The two input points are practically coincident")
 
         segment = Segment(
@@ -2405,7 +2427,7 @@ class CLine:
         return d
 
 
-class Line(object):
+class Line:
     """
     A list of Point objects, all with the same CRS code.
     """
@@ -2612,7 +2634,7 @@ class Line(object):
         start_pt = self.pt(ndx)
         end_pt = self.pt(ndx + 1)
 
-        if start_pt.isCoinc(end_pt):
+        if start_pt.isCoinc3D(end_pt):
             return None
         else:
             return Segment(
@@ -2933,7 +2955,7 @@ class Line(object):
         )
 
         for ndx in range(1, self.num_pts()):
-            if not self.pt(ndx).isCoinc(new_line.pt(-1)):
+            if not self.pt(ndx).isCoinc3D(new_line.pt(-1)):
                 new_line.add_pt(self.pt(ndx))
 
         return new_line
@@ -3081,10 +3103,12 @@ class Line(object):
         :rtype: Line.
         """
 
-        new_line = self.clone()
-        new_line.pts().reverse()  # in-place operation on new_line
+        pts = [pt.clone() for pt in self.pts()]
+        pts.reverse()
 
-        return new_line
+        return Line(
+            pts=pts
+        )
 
     def slopes_degr(self) -> List[Optional[numbers.Real]]:
         """
@@ -3131,6 +3155,64 @@ class Line(object):
         """
 
         return get_statistics(self.abs_slopes_degr())
+
+    def extremes_distance_3d(self) -> numbers.Real:
+        """
+        Calculate the 3D distance between start and end points.
+
+        :return: the 3D distance between start and end points
+        :rtype: numbers.Real
+        """
+
+        return self.end_pt().dist3DWith(self.start_pt())
+
+    def extremes_distance_2d(self) -> numbers.Real:
+        """
+        Calculate the 2D distance between start and end points.
+
+        :return: the 2D distance between start and end points
+        :rtype: numbers.Real
+        """
+
+        return self.end_pt().dist2DWith(self.start_pt())
+
+    def isClosed_3d(self,
+                    tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                    ) -> bool:
+        """
+        Determine if the line is 3D-closed.
+
+        :param tolerance: the tolerance for considering the line closed
+        :type tolerance: numbers.Real
+        :return: whether the line is to be considered 3D-closed
+        :rtype: bool
+        """
+
+        return self.end_pt().isCoinc3D(self.start_pt(), tolerance=tolerance)
+
+    def isClosed_2d(self,
+                    tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                    ) -> bool:
+        """
+        Determine if the line is 2D-closed.
+
+        :param tolerance: the tolerance for considering the line closed
+        :type tolerance: numbers.Real
+        :return: whether the line is to be considered 2D-closed
+        :rtype: bool
+        """
+
+        return self.end_pt().isCoinc2D(self.start_pt(), tolerance=tolerance)
+
+    def walk_backward(self) -> 'Line':
+        """
+        Create a new line by walking the line backward from the last point up to the first and thus closing it.
+
+        :return: a closed line with zero area
+        :rtype: 'Line'
+        """
+
+        return Line(self.pts() + self.reversed().pts()[1:])
 
 
 def line_from_shapely(
@@ -3347,7 +3429,7 @@ class MultiLine(object):
     def is_unidirectional(self):
 
         for line_ndx in range(len(self.lines()) - 1):
-            if not self.lines()[line_ndx].pt(-1).isCoinc(self.lines()[line_ndx + 1].pt(0)):
+            if not self.lines()[line_ndx].pt(-1).isCoinc3D(self.lines()[line_ndx + 1].pt(0)):
                 return False
 
         return True
@@ -3489,16 +3571,16 @@ def analizeJoins(first: Union[Line, Segment], second: Union[Line, Segment]) -> L
 
     join_types = []
 
-    if first.start_pt.isCoinc(second.start_pt):
+    if first.start_pt.isCoinc3D(second.start_pt):
         join_types.append(JoinTypes.START_START)
 
-    if first.start_pt.isCoinc(second.end_pt):
+    if first.start_pt.isCoinc3D(second.end_pt):
         join_types.append(JoinTypes.START_END)
 
-    if first.end_pt.isCoinc(second.start_pt):
+    if first.end_pt.isCoinc3D(second.start_pt):
         join_types.append(JoinTypes.END_START)
 
-    if first.end_pt.isCoinc(second.end_pt):
+    if first.end_pt.isCoinc3D(second.end_pt):
         join_types.append(JoinTypes.END_END)
 
     return join_types
@@ -5978,17 +6060,32 @@ class Segments(list):
 
 class Lines(list):
     """
-    Collection of lines, inheriting from list.
+    Collection of lines.
 
     """
 
-    def __init__(self, lines: List[Line]):
+    def __init__(self,
+                 lines: Optional[List[Line]] = None
+                 ):
 
-        check_type(lines, "Lines", List)
-        for el in lines:
-            check_type(el, "Line", Line)
+        if lines:
 
-        super(Lines, self).__init__(lines)
+            check_type(lines, "Lines", List)
+            for line in lines:
+                check_type(line, "Line", Line)
+
+            super(Lines, self).__init__(lines)
+
+        else:
+
+            super(Lines, self).__init__()
+
+    def append(self,
+               item: Line
+               ) -> None:
+
+        check_type(item, "Line", Line)
+        super(Lines, self).append(item)
 
 
 class MultiLines(list):
@@ -5997,13 +6094,28 @@ class MultiLines(list):
 
     """
 
-    def __init__(self, multilines: List[MultiLine]):
+    def __init__(self,
+                 multilines: List[MultiLine] = None
+                 ):
 
-        check_type(multilines, "MultiLines", List)
-        for el in multilines:
-            check_type(el, "MultiLine", MultiLine)
+        if multilines:
 
-        super(MultiLines, self).__init__(multilines)
+            check_type(multilines, "MultiLines", List)
+            for el in multilines:
+                check_type(el, "MultiLine", MultiLine)
+
+            super(MultiLines, self).__init__(multilines)
+
+        else:
+
+            super(MultiLines, self).__init__()
+
+    def append(self,
+               item: MultiLine
+               ) -> None:
+
+        check_type(item, "MultiLine", MultiLine)
+        super(MultiLines, self).append(item)
 
 
 class PointSegmentCollection:
