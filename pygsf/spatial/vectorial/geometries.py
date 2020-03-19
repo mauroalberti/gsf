@@ -3214,6 +3214,48 @@ class Line:
 
         return Line(self.pts() + self.reversed().pts()[1:])
 
+    def clone(self) -> 'Line':
+        """
+        Clone a line.
+
+        :return: the cloned line
+        :rtype: Line
+        """
+
+        return Line(self.pts())
+
+    def close_2d(self) -> 'Line':
+        """
+        Return a line that is 2D-closed.
+
+        :return: a 2D-closed line
+        :rtype: Line
+        """
+
+        line = self.clone()
+
+        if not line.isClosed_2d():
+
+            line.add_pt(line.start_pt())
+
+        return line
+
+    def close_3d(self) -> 'Line':
+        """
+        Return a line that is 3D-closed.
+
+        :return: a 3D-closed line
+        :rtype: Line
+        """
+
+        line = self.clone()
+
+        if not line.isClosed_3d():
+
+            line.add_pt(line.start_pt())
+
+        return line
+
 
 def line_from_shapely(
         src_line: LineString,
