@@ -172,7 +172,7 @@ class LinearProfiler:
 
         return self._crs
 
-    def epsg(self) -> numbers.Integral:
+    def epsg_code(self) -> numbers.Integral:
         """
         Returns the EPSG code of the profile.
 
@@ -294,7 +294,7 @@ class LinearProfiler:
         :rtype: Vect.
         """
 
-        return Vect(0, 0, 1, epsg_cd=self.epsg()).vCross(self.versor()).versor()
+        return Vect(0, 0, 1, epsg_cd=self.epsg_code()).vCross(self.versor()).versor()
 
     def right_norm_vers(self) -> Vect:
         """
@@ -304,7 +304,7 @@ class LinearProfiler:
         :rtype: Vect.
         """
 
-        return Vect(0, 0, -1, epsg_cd=self.epsg()).vCross(self.versor()).versor()
+        return Vect(0, 0, -1, epsg_cd=self.epsg_code()).vCross(self.versor()).versor()
 
     def left_offset(self,
         offset: numbers.Real) -> 'LinearProfiler':
@@ -383,7 +383,7 @@ class LinearProfiler:
             raise Exception("Input grid must be a GeoArray but is {}".format(type(grid)))
 
         if self.crs != grid.crs:
-            raise Exception("Input grid EPSG code must be {} but is {}".format(self.epsg(), grid.epsg()))
+            raise Exception("Input grid EPSG code must be {} but is {}".format(self.epsg_code(), grid.epsg()))
 
         return array('d', [grid.interpolate_bilinear(pt_2d.x, pt_2d.y) for pt_2d in self.densified_points()])
 
@@ -494,7 +494,7 @@ class LinearProfiler:
             raise Exception("Projected point should be Point but is {}".format(type(pt)))
 
         if self.crs != pt.crs:
-            raise Exception("Projected point should have {} EPSG but has {}".format(self.epsg(), pt.epsg_code()))
+            raise Exception("Projected point should have {} EPSG but has {}".format(self.epsg_code(), pt.epsg_code()))
 
         if not self.point_in_profile(pt):
             raise Exception("Projected point should lie in the profile plane but there is a distance of {} units".format(self.point_distance(pt)))
@@ -596,7 +596,7 @@ class LinearProfiler:
             raise Exception("Structural point should be Point but is {}".format(type(structural_pt)))
 
         if self.crs != structural_pt.crs:
-            raise Exception("Structural point should have {} EPSG but has {}".format(self.epsg(), structural_pt.epsg_code()))
+            raise Exception("Structural point should have {} EPSG but has {}".format(self.epsg_code(), structural_pt.epsg_code()))
 
         axis_versor = map_axis.asDirect().asVersor(epsg_cd=structural_pt.epsg_code())
 
@@ -628,7 +628,7 @@ class LinearProfiler:
             raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
 
         if self.crs != attitude_pt.crs:
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg_code()))
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg_code(), attitude_pt.epsg_code()))
 
         putative_inters_versor = self.vertical_plane().intersVersor(attitude_plane.toCPlane(attitude_pt))
 
@@ -654,7 +654,7 @@ class LinearProfiler:
             raise Exception("georef_attitude point should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
         if self.crs != georef_attitude.posit.crs:
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg_code()))
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg_code(), georef_attitude.posit.epsg_code()))
 
         attitude_cplane = georef_attitude.attitude.toCPlane(georef_attitude.posit)
         intersection_versor = self.vertical_plane().intersVersor(attitude_cplane)
@@ -667,7 +667,7 @@ class LinearProfiler:
             x=dummy_inters_pt.x + offset_vector.x,
             y=dummy_inters_pt.y + offset_vector.y,
             z=dummy_inters_pt.z + offset_vector.z,
-            epsg_code=self.epsg())
+            epsg_code=self.epsg_code())
 
         return projected_pt
 
@@ -694,7 +694,7 @@ class LinearProfiler:
             raise Exception("Georef attitude should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
         if self.crs != georef_attitude.posit.crs:
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg_code()))
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg_code(), georef_attitude.posit.epsg_code()))
 
         if map_axis:
             if not isinstance(map_axis, Axis):
@@ -832,8 +832,6 @@ class LinearProfiler:
         return LinesIntersections(parsed_intersections)
 
 
-
-
 class ParallelProfiler(list):
     """
     Parallel linear profiler.
@@ -858,7 +856,7 @@ class ParallelProfiler(list):
 
         super(ParallelProfiler, self).__init__(parallel_profiler)
 
-        self._crs = Crs(template_profile.epsg())
+        self._crs = Crs(template_profile.epsg_code())
 
     @classmethod
     def fromBaseProfiler(cls,
@@ -952,7 +950,7 @@ class ParallelProfiler(list):
 
         return self._crs
 
-    def epsg(self) -> numbers.Integral:
+    def epsg_code(self) -> numbers.Integral:
         """
         Returns the EPSG code of the profiles.
 

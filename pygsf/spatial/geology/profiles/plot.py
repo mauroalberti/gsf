@@ -97,7 +97,7 @@ def _(
     labels_add_orientdip = kargs.get("labels_add_orientdip", None)
     labels_add_id = kargs.get("labels_add_id", None)
     inters_color = kargs.get("inters_color", None)
-    #inters_label = kargs.get("inters_label", None)
+    inters_label = kargs.get("inters_label", None)
 
     if plot_z_min is None or plot_z_max is None:
 
@@ -217,11 +217,12 @@ def _(
 
         else:
 
-            for profile_part in geoprofile.lines_intersections:
+            for ndx, intersection_element in enumerate(geoprofile.lines_intersections):
 
-                parts = profile_part.arrays
+                intersection_id = intersection_element.id
+                intersection_subparts = intersection_element.arrays
 
-                for s_range in parts:
+                for s_range in intersection_subparts:
 
                     s_start = s_range[0]
                     s_end = s_range[1] if len(s_range) > 1 else None
@@ -240,14 +241,14 @@ def _(
                         s_vals,
                         z_vals,
                         'o',
-                        color=inters_color
+                        color=colors_addit[ndx]
                     )
 
-                    """
-                    axes.annotate(
-                        f"{parts.line_id}",
-                        (s_vals[-1] + 15, z_vals[-1] + 15))
-                    """
+                    if inters_label:
+
+                        fig.gca().annotate(
+                            f"{intersection_id}",
+                            (s_vals[-1] + 20, z_vals[-1] + 25))
 
     if geoprofile.polygons_intersections:
 
