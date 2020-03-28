@@ -143,7 +143,7 @@ class GeoArray(object):
         :rtype: numbers.Integral.
         """
 
-        return self.crs.epsg()
+        return self.crs.epsg_code()
 
     def define_epsg(self, epsg_cd: numbers.Integral):
         """
@@ -823,7 +823,7 @@ def line_on_grid(ga: GeoArray, profile_line: Line) -> Optional[Line]:
     if ga.crs != profile_line.crs:
         return None
 
-    epsg_line = profile_line.epsg()
+    epsg_line = profile_line.epsg_code()
 
     lnProfile = Line(epsg_cd=epsg_line)
 

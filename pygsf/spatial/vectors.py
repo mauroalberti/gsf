@@ -165,7 +165,7 @@ class Vect(object):
         :rtype: numbers.Integral.
         """
 
-        return self._crs.epsg()
+        return self._crs.epsg_code()
 
     def __iter__(self):
         """

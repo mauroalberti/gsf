@@ -132,7 +132,7 @@ def line_4326_ecef(line: Line) -> Optional[Line]:
     :rtype: optional Line.
     """
 
-    if line.epsg() != 4326:
+    if line.epsg_code() != 4326:
         return None
 
     pts = [pt_4326_ecef(pt) for pt in line.pts()]

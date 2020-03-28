@@ -19,17 +19,17 @@ class Crs(object):
 
         self._epsg = int(epsg_cd)
 
-    def epsg(self) -> numbers.Integral:
+    def epsg_code(self) -> numbers.Integral:
 
         return self._epsg
 
     def valid(self):
 
-        return self.epsg() >= min_epsg_crs_code
+        return self.epsg_code() >= min_epsg_crs_code
 
     def __repr__(self):
 
-        return "EPSG:{}".format(self.epsg())
+        return "EPSG:{}".format(self.epsg_code())
 
     def __eq__(self, another) -> bool:
         """
@@ -47,7 +47,7 @@ class Crs(object):
         if not (isinstance(another, Crs)):
             raise Exception("Input instance should be Crs but is {}".format(type(another)))
 
-        return self.epsg() == another.epsg()
+        return self.epsg_code() == another.epsg_code()
 
 
 def check_crs(

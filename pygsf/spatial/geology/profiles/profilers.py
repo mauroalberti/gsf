@@ -180,7 +180,7 @@ class LinearProfiler:
         :rtype: numbers.Real.
         """
 
-        return self.crs.epsg()
+        return self.crs.epsg_code()
 
     def clone(self) -> 'LinearProfiler':
         """
@@ -958,7 +958,7 @@ class ParallelProfiler(list):
         :rtype: numbers.Real.
         """
 
-        return self.crs.epsg()
+        return self.crs.epsg_code()
 
     def profile_grid(
             self,

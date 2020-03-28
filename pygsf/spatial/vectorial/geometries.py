@@ -169,7 +169,7 @@ class Point:
         :rtype: numbers.Integral.
         """
 
-        return self.crs.epsg()
+        return self.crs.epsg_code()
 
     def __iter__(self):
         """
@@ -247,7 +247,7 @@ class Point:
           (4.0, 3.0, 7.0, 0.0, 4326)
         """
 
-        return self.x, self.y, self.z, self.t, self.crs.epsg()
+        return self.x, self.y, self.z, self.t, self.crs.epsg_code()
 
     def __add__(self, another: 'Point') -> 'Point':
         """
@@ -976,7 +976,7 @@ class CPlane(object):
         Example:
         """
 
-        return self.crs.epsg()
+        return self.crs.epsg_code()
 
     def v(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Integral]:
         """
@@ -1319,7 +1319,7 @@ class Segment:
 
     def epsg(self) -> numbers.Integral:
 
-        return self.crs.epsg()
+        return self.crs.epsg_code()
 
     def __iter__(self):
         """
@@ -2190,7 +2190,7 @@ class CLine:
         :rtype: numbers.Integral
         """
 
-        return self.crs.epsg()
+        return self.crs.epsg_code()
 
     @classmethod
     def fromPoints(cls,
@@ -2592,7 +2592,7 @@ class Line:
             y=self._y[pt_ndx],
             z=self._z[pt_ndx],
             t=self._t[pt_ndx],
-            epsg_code=self.epsg()
+            epsg_code=self.epsg_code()
         )
 
     def values_at(self,
@@ -2612,7 +2612,7 @@ class Line:
             self._y[ndx],
             self._z[ndx],
             self._t[ndx],
-            self.epsg()
+            self.epsg_code()
         )
 
     def pts(self):
@@ -2670,9 +2670,9 @@ class Line:
 
         return self._crs
 
-    def epsg(self) -> numbers.Integral:
+    def epsg_code(self) -> numbers.Integral:
 
-        return self.crs.epsg()
+        return self.crs.epsg_code()
 
     def num_pts(self):
 
@@ -2714,7 +2714,7 @@ class Line:
         """
 
         num_points = self.num_pts()
-        epsg = self.epsg()
+        epsg = self.epsg_code()
 
         if num_points == 0:
             txt = "Empty Line - EPSG: {}".format(epsg)
@@ -2793,6 +2793,10 @@ class Line:
     def xy_lists(self) -> Tuple[List[numbers.Real], List[numbers.Real]]:
 
         return self.x_list(), self.y_list()
+
+    def xy_zipped(self) -> List[Tuple[numbers.Real, numbers.Real]]:
+
+        return [(x, y) for x, y in zip(self.x_list(), self.y_list())]
 
     def x_min(self) -> Optional[numbers.Real]:
         """
@@ -2990,7 +2994,7 @@ class Line:
 
         densified_line_list = [segment.densify2d_asLine(sample_distance) for segment in segments]
 
-        densifyied_multiline = MultiLine(densified_line_list, epsg_cd=self.epsg())
+        densifyied_multiline = MultiLine(densified_line_list, epsg_cd=self.epsg_code())
 
         densifyied_line = densifyied_multiline.to_line()
 
@@ -3258,28 +3262,42 @@ class Line:
 
 
 def line_from_shapely(
-        src_line: LineString,
+        shapely_linestring: LineString,
         epsg_code: numbers.Integral
 ) -> Line:
     # Side effects: none
     """
     Create a Line instance from a shapely Linestring instance.
 
-    :param src_line: the shapely input Linestring instance
-    :type src_line: shapely.geometry.linestring.LineString
+    :param shapely_linestring: the shapely input LineString instance
+    :type shapely_linestring: shapely.geometry.linestring.LineString
     :param epsg_code: the EPSG code of the LineString instance
     :type epsg_code: numbers.Integral
     :return: the converted Line instance
     :rtype: Line
     """
 
-    x_array, y_array = src_line.xy
+    x_array, y_array = shapely_linestring.xy
 
     return Line.fromArrays(
         x_array,
         y_array,
         epsg_cd=epsg_code
     )
+
+def line_to_shapely(
+        src_line: Line
+) -> LineString:
+    """
+    Create a shapely.LineString instance from a Line one.
+
+    :param src_line: the source line to convert to the shapely format
+    :type src_line: Line
+    :return: the shapely LineString instance and the EPSG code
+    :rtype: Tuple[LineString, numbers.Integral]
+    """
+
+    return LineString(src_line.xy_zipped()), src_line.epsg_code()
 
 
 class MultiLine(object):
@@ -3293,14 +3311,14 @@ class MultiLine(object):
             lines = []
 
         if lines and epsg_cd == -1:
-            epsg_cd = lines[0].epsg()
+            epsg_cd = lines[0].epsg_code()
 
         for ndx in range(len(lines)):
-            if lines[ndx].epsg() != epsg_cd:
+            if lines[ndx].epsg_code() != epsg_cd:
                 raise Exception("Input line with index {} should have EPSG code {} but has {}".format(
                     ndx,
                     epsg_cd,
-                    lines[ndx].epsg()
+                    lines[ndx].epsg_code()
                 ))
 
         self._lines = lines
@@ -3317,7 +3335,7 @@ class MultiLine(object):
 
     def epsg(self) -> numbers.Integral:
 
-        return self._crs.epsg()
+        return self._crs.epsg_code()
 
     def num_lines(self):
 
@@ -6065,7 +6083,7 @@ class Points:
         :rtype: numbers.Integral
         """
 
-        return self.crs.epsg()
+        return self.crs.epsg_code()
 
     def nanmean_point(self) -> Point:
         """

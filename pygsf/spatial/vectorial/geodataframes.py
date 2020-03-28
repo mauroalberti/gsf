@@ -55,6 +55,22 @@ def containsLines(
     return 'LineString' in geodataframe_geom_types(geodataframe)
 
 
+def containsPolygons(
+    geodataframe: gpd.GeoDataFrame
+) -> bool:
+    # Side effects: none
+    """
+    Check if a GeoDataFrame instance contains polygons.
+
+    :param geodataframe: the input geodataframe
+    :type geodataframe: gpd.GeoDataFrame
+    :return: if a GeoDataFrame instance contains polygons
+    :rtype: bool
+    """
+
+    return 'Polygon' in geodataframe_geom_types(geodataframe)
+
+
 def extract_geometries(
     geodataframe: gpd.GeoDataFrame
 ) -> gpd.geoseries.GeoSeries:
