@@ -2,6 +2,7 @@
 from typing import List, Iterable
 from operator import attrgetter
 
+import shapely
 
 from pygsf.spatial.rasters.geoarray import *
 
@@ -9,7 +10,8 @@ from pygsf.spatial.geology.base import GeorefAttitude
 from pygsf.utils.arrays import ArrayList
 
 from .sets import *
-from ...vectorial.geometries import PointSegmentCollection, PointSegmentCollections
+from ...vectorial.geometries import *
+from ...vectorial.processings import *
 
 
 def georef_attitudes_3d_from_grid(
@@ -484,6 +486,27 @@ class LinearProfiler:
         valid_results = [PointSegmentCollection(ndx, res) for ndx, res in enumerate(results) if res]
 
         return PointSegmentCollections(valid_results)
+
+    def intersect_polygon(self,
+       mpolygon: Union[shapely.geometry.Polygon, shapely.geometry.MultiPolygon],
+    ) -> Lines:
+        """
+        Calculates the intersection with a shapely polygon/multipolygon.
+        Note: the intersections are intended flat (in a 2D plane, not 3D).
+
+        :param mpolygon: the shapely polygon/multipolygon to intersect profile with
+        :type mpolygon: Union[shapely.geometry.Polygon, shapely.geometry.MultiPolygon]
+        :return: the possible intersections
+        :rtype: Lines
+        """
+
+        line_shapely, epsg_code = line_to_shapely(self.to_line())
+
+        return polygon_line_intersection(
+            mpolygon=mpolygon,
+            line=line_shapely,
+            epsg_code=epsg_code
+        )
 
     def point_signed_s(
             self,

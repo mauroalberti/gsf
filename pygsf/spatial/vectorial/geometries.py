@@ -6133,6 +6133,9 @@ class Lines(list):
             check_type(lines, "Lines", List)
             for line in lines:
                 check_type(line, "Line", Line)
+            first_line = lines[0]
+            for line in lines[1:]:
+                check_crs(first_line, line)
 
             super(Lines, self).__init__(lines)
 
@@ -6145,6 +6148,9 @@ class Lines(list):
                ) -> None:
 
         check_type(item, "Line", Line)
+        if len(self) > 0:
+            check_crs(self[0], item)
+
         super(Lines, self).append(item)
 
 
