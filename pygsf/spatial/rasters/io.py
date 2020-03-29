@@ -249,7 +249,7 @@ def read_raster_band(
     band_params, data = read_band(dataset, bnd_ndx)
     ga = GeoArray(
         inGeotransform=geotransform,
-        epsg_cd=epsg_cd,
+        epsg_code=epsg_cd,
         inLevels=[data]
     )
 

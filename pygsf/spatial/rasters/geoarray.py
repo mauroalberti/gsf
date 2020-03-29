@@ -63,17 +63,17 @@ class GeoArray(object):
     """
 
     def __init__(self,
-        inGeotransform: GeoTransform,
-        epsg_cd: numbers.Integral = -1,
-        inLevels: Optional[List[np.ndarray]] = None
-    ):
+                 inGeotransform: GeoTransform,
+                 epsg_code: numbers.Integral = -1,
+                 inLevels: Optional[List[np.ndarray]] = None
+                 ):
         """
         GeoArray class constructor.
 
         :param  inGeotransform:  the geotransform
         :type  inGeotransform:  GeoTransform.
-        :param epsg_cd: the projection EPSG code.
-        :type epsg_cd: numbers.Integral
+        :param epsg_code: the projection EPSG code.
+        :type epsg_code: numbers.Integral
         :param  inLevels:  the nd-array storing the data.
         :type  inLevels:  np.array.
 
@@ -83,7 +83,7 @@ class GeoArray(object):
         """
 
         self._gt = inGeotransform
-        self._crs = Crs(epsg_cd)
+        self._crs = Crs(epsg_code)
         if inLevels is None:
             self._levels = []
         else:
@@ -120,7 +120,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=gt,
-            epsg_cd=epsg,
+            epsg_code=epsg,
             inLevels=[array]
         )
 
@@ -135,7 +135,7 @@ class GeoArray(object):
 
         return self._crs
 
-    def epsg(self) -> numbers.Integral:
+    def epsg_code(self) -> numbers.Integral:
         """
         Return the geoarray crs EPSG code.
 
@@ -166,7 +166,7 @@ class GeoArray(object):
         """
 
         num_bands = self.levels_num
-        epsg_code = self.epsg()
+        epsg_code = self.epsg_code()
         bands_txt = ""
         for band_ndx in range(num_bands):
             band = self.level(level_ndx=band_ndx)
@@ -520,7 +520,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self.epsg(),
+            epsg_code=self.epsg_code(),
             inLevels=[magn]
         )
 
@@ -544,7 +544,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self.epsg(),
+            epsg_code=self.epsg_code(),
             inLevels=[orient]
         )
 
@@ -570,7 +570,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self.epsg(),
+            epsg_code=self.epsg_code(),
             inLevels=[div]
         )
 
@@ -596,7 +596,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self.epsg(),
+            epsg_code=self.epsg_code(),
             inLevels=[curl_m])
 
     def magnitude_grads(self, axis: str= '', ndx_fx: numbers.Integral=0, ndx_fy: numbers.Integral=1) -> 'GeoArray':
@@ -633,7 +633,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self.epsg(),
+            epsg_code=self.epsg_code(),
             inLevels=magnitude_gradients)
 
     def grad_flowlines(self, ndx_fx: numbers.Integral=0, ndx_fy: numbers.Integral=1) -> 'GeoArray':
@@ -656,7 +656,7 @@ class GeoArray(object):
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_cd=self.epsg(),
+            epsg_code=self.epsg_code(),
             inLevels=[flowln_grad])
 
 
@@ -708,7 +708,7 @@ def interpolate_rkf(
     """
 
     check_type(geoarray, "Geoarray", GeoArray)
-    epsg_cd = geoarray.epsg()
+    epsg_cd = geoarray.epsg_code()
 
     check_type(delta_time, "Delta time", numbers.Real)
 

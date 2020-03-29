@@ -137,6 +137,19 @@ class LinearProfiler:
 
         return self._end_pt.clone()
 
+    def to_line(self) -> Line:
+        """
+        Convert to a line.
+
+        """
+
+        return Line(
+            pts=[
+                self.start_pt(),
+                self.end_pt()
+            ]
+        )
+
     def densify_dist(self) -> numbers.Real:
         """
         Returns the densify distance of the profiler.
@@ -383,7 +396,7 @@ class LinearProfiler:
             raise Exception("Input grid must be a GeoArray but is {}".format(type(grid)))
 
         if self.crs != grid.crs:
-            raise Exception("Input grid EPSG code must be {} but is {}".format(self.epsg_code(), grid.epsg()))
+            raise Exception("Input grid EPSG code must be {} but is {}".format(self.epsg_code(), grid.epsg_code()))
 
         return array('d', [grid.interpolate_bilinear(pt_2d.x, pt_2d.y) for pt_2d in self.densified_points()])
 
