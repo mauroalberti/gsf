@@ -11,7 +11,7 @@ from pygsf.utils.arrays import ArrayList
 
 from .sets import *
 from ...vectorial.geometries import *
-from ...vectorial.processings import *
+from ...vectorial.polygons import *
 
 
 def georef_attitudes_3d_from_grid(
@@ -488,7 +488,7 @@ class LinearProfiler:
         return PointSegmentCollections(valid_results)
 
     def intersect_polygon(self,
-       mpolygon: Union[shapely.geometry.Polygon, shapely.geometry.MultiPolygon],
+       mpolygon: Union[Polygon, MultiPolygon],
     ) -> Lines:
         """
         Calculates the intersection with a shapely polygon/multipolygon.
@@ -501,12 +501,20 @@ class LinearProfiler:
         """
 
         line_shapely, epsg_code = line_to_shapely(self.to_line())
+        return MPolygon(geom=mpolygon, epsg_code=epsg_code).intersect_line(line=line_shapely)
 
-        return polygon_line_intersection(
-            mpolygon=mpolygon,
-            line=line_shapely,
-            epsg_code=epsg_code
-        )
+    def intersect_polygons(self,
+       mpolygon: Union[Polygon, MultiPolygon],
+    ) -> Lines:
+        """
+        Calculates the intersection with a shapely polygon/multipolygon.
+        Note: the intersections are intended flat (in a 2D plane, not 3D).
+
+        :param mpolygon: the shapely polygon/multipolygon to intersect profile with
+        :type mpolygon: Union[shapely.geometry.Polygon, shapely.geometry.MultiPolygon]
+        :return: the possible intersections
+        :rtype: Lines
+        """
 
     def point_signed_s(
             self,
@@ -858,7 +866,7 @@ class LinearProfiler:
 
         for line_intersections in lines_intersections:
 
-            line_id = line_intersections.line_id
+            line_id = line_intersections.element_id
             inters_geoms = line_intersections.geoms
 
             intersections_arrays = [self.pt_segm_signed_s(geom) for geom in inters_geoms]

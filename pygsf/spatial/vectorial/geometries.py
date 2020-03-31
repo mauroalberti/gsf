@@ -6186,37 +6186,38 @@ class MultiLines(list):
 
 class PointSegmentCollection:
     """
+    Collection of point or segment elements.
 
     """
 
     def __init__(
         self,
-        line_id: int,
+        element_id: int,
         geoms: List[Union[Point, Segment]]
     ):
 
-        check_type(line_id, "Line index", numbers.Integral)
+        check_type(element_id, "Element index", numbers.Integral)
         for geom in geoms:
-            check_type(geom, "Intersection geometry", (Point, Segment))
+            check_type(geom, "Point-segment collection", (Point, Segment))
 
-        self._line_id = line_id
+        self._element_id = element_id
         self._geoms = geoms
 
     @property
-    def line_id(self) -> numbers.Integral:
+    def element_id(self) -> numbers.Integral:
         """
-        Return line id.
+        Return element id.
 
-        :return: the line id
+        :return: the element id
         :rtype: numbers.Integral
         """
 
-        return self._line_id
+        return self._element_id
 
     @property
     def geoms(self) -> List[Union[Point, Segment]]:
         """
-        Returns the intersecting geometries.
+        Returns the collection geometries.
 
         :return: the intersecting geometries.
         :rtype: List[Union[Point, Segment]]
@@ -6229,8 +6230,8 @@ class PointSegmentCollections(list):
 
     def __init__(self, atts: List[PointSegmentCollection]):
 
-        check_type(atts, "Lines intersections", List)
+        check_type(atts, "Point-segment collections", List)
         for el in atts:
-            check_type(el, "Lines intersections", PointSegmentCollection)
+            check_type(el, "Point-segment collection", PointSegmentCollection)
 
         super(PointSegmentCollections, self).__init__(atts)
