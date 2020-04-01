@@ -5447,7 +5447,10 @@ class RotationAxis(object):
         return RotationAxis(*direct.d, angle)
 
     @classmethod
-    def fromVect(cls, vector: Vect, angle: numbers.Real):
+    def fromVect(cls,
+                 vector: Vect,
+                 angle: numbers.Real
+                 ):
         """
         Class constructor from a Vect instance and an angle value.
 
@@ -5984,6 +5987,90 @@ class Points:
     """
 
     def __init__(self,
+                 epsg_code: numbers.Integral,
+                 x_array: np.array,
+                 y_array: np.array,
+                 z_array: Optional[np.array] = None,
+                 t_array: Optional[np.array] = None
+                 ):
+        """
+        Construct a point list from a set of array values and an EPSG code.
+
+        :param epsg_code: the EPSG code of the points
+        :type epsg_code: numbers.Integral
+        :param x_array: the array storing the x values
+        :type x_array: np.array
+        :param y_array: the array storing the y values
+        :type y_array: np.array
+        :param z_array: the optional array storing the z values
+        :type z_array: np.array
+        :param t_array: the optional array storing the t values
+        :type t_array: np.array
+        """
+
+        check_type(
+            var=epsg_code,
+            name="EPSG code",
+            expected_type=numbers.Integral
+        )
+
+        check_type(
+            var=x_array,
+            name="X array",
+            expected_type=np.array
+        )
+
+        check_type(
+            var=y_array,
+            name="Y array",
+            expected_type=np.array
+        )
+
+        array_length = len(x_array)
+
+        if len(y_array) != array_length:
+            raise Exception(f"Y array has length {len(y_array)} while X array has length {len(x_array)}")
+
+        if z_array is not None:
+
+            check_type(
+                var=z_array,
+                name="Z array",
+                expected_type=np.array
+            )
+
+            if len(z_array) != array_length:
+                raise Exception(f"Z array has length {len(z_array)} while X array has length {len(x_array)}")
+
+        else:
+
+            z_array = np.zeros_like(x_array)
+
+        if t_array is not None:
+
+            check_type(
+                var=t_array,
+                name="T array",
+                expected_type=np.array
+            )
+
+            if len(t_array) != array_length:
+                raise Exception(f"T array has length {len(t_array)} while X array has length {len(x_array)}")
+
+        else:
+
+            t_array = np.zeros_like(x_array)
+
+        return Points(
+            epsg_code=epsg_code,
+            x_array=x_array,
+            y_array=y_array,
+            z_array=z_array,
+            t_array=t_array
+        )
+
+    @classmethod
+    def fromPoints(cls,
          points: List[Point],
          epsg_cd: numbers.Integral = None,
          crs_check: bool = True
@@ -6013,11 +6100,39 @@ class Points:
 
                     raise Exception("Point {} has EPSG code {} but {} required".format(ndx, point.epsg_code(), epsg_cd))
 
-        self._xs = np.array([p.x for p in points])
-        self._ys = np.array([p.y for p in points])
-        self._zs = np.array([p.z for p in points])
-        self._ts = np.array([p.t for p in points])
-        self._crs = Crs(epsg_cd)
+        return Points(
+            self._xs = np.array([p.x for p in points]),
+            self._ys = np.array([p.y for p in points]),
+            self._zs = np.array([p.z for p in points]),
+            self._ts = np.array([p.t for p in points]),
+            self._crs = Crs(epsg_cd)
+        )
+
+    @classmethod
+    def fromXY(cls,
+                   epsg_code: numbers.Integral,
+                   x_array: np.array,
+                   y_array: np.array,
+                   z_array: Optional[np.array] = None,
+                   t_array: Optional[np.array] = None
+                   ):
+        """
+        Construct a point list from a set of array values and an EPSG code.
+
+        :param epsg_code: the EPSG code of the points
+        :type epsg_code: numbers.Integral
+        :param x_array: the array storing the x values
+        :type x_array: np.array
+        :param y_array: the array storing the y values
+        :type y_array: np.array
+        :param z_array: the optional array storing the z values
+        :type z_array: np.array
+        :param t_array: the optional array storing the t values
+        :type t_array: np.array
+        """
+
+
+
 
     @property
     def xs(self):
@@ -6075,7 +6190,7 @@ class Points:
 
         return self._crs
 
-    def epsg(self) -> numbers.Integral:
+    def epsg_code(self) -> numbers.Integral:
         """
         The points EPSG code.
 
@@ -6099,7 +6214,7 @@ class Points:
             y=np.nanmean(self.ys),
             z=np.nanmean(self.zs),
             t=np.nanmean(self.ts),
-            epsg_code=self.epsg()
+            epsg_code=self.epsg_code()
         )
 
 
