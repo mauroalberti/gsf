@@ -6061,26 +6061,24 @@ class Points:
 
             t_array = np.zeros_like(x_array)
 
-        return Points(
-            epsg_code=epsg_code,
-            x_array=x_array,
-            y_array=y_array,
-            z_array=z_array,
-            t_array=t_array
-        )
+        self._epsg_code = epsg_code
+        self._x_array = x_array
+        self._y_array = y_array
+        self._z_array = z_array
+        self._t_array = t_array
 
     @classmethod
     def fromPoints(cls,
-         points: List[Point],
-         epsg_cd: numbers.Integral = None,
-         crs_check: bool = True
-):
+                   points: List[Point],
+                   epsg_code: numbers.Integral = None,
+                   crs_check: bool = True
+                   ):
         """
 
         :param points: list of points
         :type points: List[Point]
-        :param epsg_cd: optional EPSG code
-        :type epsg_cd: numbers.Integral
+        :param epsg_code: optional EPSG code
+        :type epsg_code: numbers.Integral
         :param crs_check: whether to check points crs
         :type crs_check: bool
         """
@@ -6089,50 +6087,24 @@ class Points:
 
             check_type(point, "Input point {}".format(ndx), Point)
 
-        if not epsg_cd:
-            epsg_cd = points[0].epsg_code()
+        if not epsg_code:
+            epsg_code = points[0].epsg_code()
 
         if crs_check:
 
             for ndx, point in enumerate(points):
 
-                if point.epsg_code() != epsg_cd:
+                if point.epsg_code() != epsg_code:
 
-                    raise Exception("Point {} has EPSG code {} but {} required".format(ndx, point.epsg_code(), epsg_cd))
+                    raise Exception("Point {} has EPSG code {} but {} required".format(ndx, point.epsg_code(), epsg_code))
 
         return Points(
-            self._xs = np.array([p.x for p in points]),
-            self._ys = np.array([p.y for p in points]),
-            self._zs = np.array([p.z for p in points]),
-            self._ts = np.array([p.t for p in points]),
-            self._crs = Crs(epsg_cd)
+            epsg_code=epsg_code,
+            x_array=np.array([p.x for p in points]),
+            y_array=np.array([p.y for p in points]),
+            z_array=np.array([p.z for p in points]),
+            t_array=np.array([p.t for p in points])
         )
-
-    @classmethod
-    def fromXY(cls,
-                   epsg_code: numbers.Integral,
-                   x_array: np.array,
-                   y_array: np.array,
-                   z_array: Optional[np.array] = None,
-                   t_array: Optional[np.array] = None
-                   ):
-        """
-        Construct a point list from a set of array values and an EPSG code.
-
-        :param epsg_code: the EPSG code of the points
-        :type epsg_code: numbers.Integral
-        :param x_array: the array storing the x values
-        :type x_array: np.array
-        :param y_array: the array storing the y values
-        :type y_array: np.array
-        :param z_array: the optional array storing the z values
-        :type z_array: np.array
-        :param t_array: the optional array storing the t values
-        :type t_array: np.array
-        """
-
-
-
 
     @property
     def xs(self):
@@ -6143,7 +6115,7 @@ class Points:
         :rtype: float
         """
 
-        return self._xs
+        return self._x_array
 
     @property
     def ys(self):
@@ -6154,7 +6126,7 @@ class Points:
         :rtype: float
         """
 
-        return self._ys
+        return self._y_array
 
     @property
     def zs(self):
@@ -6165,7 +6137,7 @@ class Points:
         :rtype: float
         """
 
-        return self._zs
+        return self._z_array
 
 
     @property
@@ -6177,7 +6149,17 @@ class Points:
         :rtype: float
         """
 
-        return self._ts
+        return self._t_array
+
+    def epsg_code(self) -> numbers.Integral:
+        """
+        The points EPSG code.
+
+        :return: the points EPSG code
+        :rtype: numbers.Integral
+        """
+
+        return self._epsg_code
 
     @property
     def crs(self) -> Crs:
@@ -6188,17 +6170,63 @@ class Points:
         :rtype: Crs
         """
 
-        return self._crs
+        return Crs(self.epsg_code())
 
-    def epsg_code(self) -> numbers.Integral:
+    def x_min(self):
         """
-        The points EPSG code.
-
-        :return: the points EPSG code
-        :rtype: numbers.Integral
+        The minimum x value.
         """
 
-        return self.crs.epsg_code()
+        return np.nanmin(self.xs)
+
+    def x_max(self):
+        """
+        The maximum x value.
+        """
+
+        return np.nanmax(self.xs)
+
+    def y_min(self):
+        """
+        The minimum y value.
+        """
+
+        return np.nanmin(self.ys)
+
+    def y_max(self):
+        """
+        The maximum y value.
+        """
+
+        return np.nanmax(self.ys)
+
+    def z_min(self):
+        """
+        The minimum z value.
+        """
+
+        return np.nanmin(self.zs)
+
+    def z_max(self):
+        """
+        The maximum z value.
+        """
+
+        return np.nanmax(self.zs)
+
+    def t_min(self):
+        """
+        The minimum t value.
+        """
+
+        return np.nanmin(self.ts)
+
+    def t_max(self):
+        """
+        The maximum t value.
+        """
+
+        return np.nanmax(self.ts)
 
     def nanmean_point(self) -> Point:
         """
