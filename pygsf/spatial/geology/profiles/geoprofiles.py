@@ -16,7 +16,7 @@ class GeoProfile:
                  topo_profiles: Optional[TopographicProfile] = None,
                  profile_attitudes: Optional[ProfileAttitudes] = None,
                  lines_intersections: Optional[PointSegmentCollections] = None,
-                 polygons_intersections: Optional[PolygonsIntersections] = None
+                 polygons_intersections: Optional[PointSegmentCollections] = None
                  ):
 
         if topo_profiles:
@@ -29,7 +29,7 @@ class GeoProfile:
             check_type(lines_intersections, "Line intersections", PointSegmentCollections)
 
         if polygons_intersections:
-            check_type(polygons_intersections, "Polygon intersections", PolygonsIntersections)
+            check_type(polygons_intersections, "Polygon intersections", PointSegmentCollections)
 
         self._topo_profile = topo_profiles
         self._profile_attitudes = profile_attitudes
@@ -113,7 +113,7 @@ class GeoProfile:
 
     @lines_intersections.setter
     def lines_intersections(self,
-                            lines_intersections: LinesIntersections):
+                            lines_intersections: ProfilesIntersections):
         """
         Set the line intersections content.
 
@@ -122,7 +122,7 @@ class GeoProfile:
         :return:
         """
 
-        check_type(lines_intersections, "Lines intersections", LinesIntersections)
+        check_type(lines_intersections, "Lines intersections", ProfilesIntersections)
 
         self._lines_intersections = lines_intersections
 
@@ -146,7 +146,7 @@ class GeoProfile:
 
     @polygons_intersections.setter
     def polygons_intersections(self,
-        polygons_intersections: PolygonsIntersections):
+        polygons_intersections: PointSegmentCollections):
         """
         Set the polygons intersections content.
 
@@ -155,7 +155,7 @@ class GeoProfile:
         :return:
         """
 
-        check_type(polygons_intersections, "Polygons intersections", PolygonsIntersections)
+        check_type(polygons_intersections, "Polygons intersections", PointSegmentCollections)
 
         self._polygons_intersections = polygons_intersections
 
@@ -318,8 +318,8 @@ class GeoProfileSet:
     def __init__(self,
                  topo_profiles: Optional[TopographicProfileSet] = None,
                  profile_attitudes: Optional[AttitudesSet] = None,
-                 lines_intersections_set: Optional[LinesIntersectionsSet] = None,
-                 polygons_intersections_set: Optional[PolygonsIntersectionsSet] = None
+                 lines_intersections_set: Optional[PointSegmentCollectionsSet] = None,
+                 polygons_intersections_set: Optional[PointSegmentCollectionsSet] = None
                  ):
 
         if topo_profiles:
@@ -331,10 +331,10 @@ class GeoProfileSet:
             check_type(profile_attitudes, "Attitudes set", AttitudesSet)
 
         if lines_intersections_set:
-            check_type(lines_intersections_set, "Lines intersections set", LinesIntersectionsSet)
+            check_type(lines_intersections_set, "Lines intersections set", PointSegmentCollectionsSet)
 
         if polygons_intersections_set:
-            check_type(polygons_intersections_set, "Polygons_intersections set", PolygonsIntersectionsSet)
+            check_type(polygons_intersections_set, "Polygons_intersections set", PointSegmentCollectionsSet)
 
         self._topo_profiles_set = topo_profiles
         self._attitudes_set = profile_attitudes
@@ -412,7 +412,7 @@ class GeoProfileSet:
 
     @lines_intersections_set.setter
     def lines_intersections_set(self,
-                                lines_intersections_set: LinesIntersectionsSet):
+                                lines_intersections_set: PointSegmentCollectionsSet):
         """
 
         :param lines_intersections_set: the lines intersections set.
@@ -421,7 +421,7 @@ class GeoProfileSet:
 
         """
 
-        check_type(lines_intersections_set, "Line intersections set", LinesIntersectionsSet)
+        check_type(lines_intersections_set, "Line intersections set", PointSegmentCollectionsSet)
         self._lines_intersections_set = lines_intersections_set
 
     @property
@@ -435,7 +435,7 @@ class GeoProfileSet:
 
     @polygons_intersections_set.setter
     def polygons_intersections_set(self,
-        polygons_intersections_set: PolygonsIntersectionsSet):
+                                   polygons_intersections_set: PointSegmentCollectionsSet):
         """
 
         :param polygons_intersections_set: the polygons intersections set.
@@ -444,7 +444,7 @@ class GeoProfileSet:
 
         """
 
-        check_type(polygons_intersections_set, "Polygons intersections set", PolygonsIntersectionsSet)
+        check_type(polygons_intersections_set, "Polygons intersections set", PointSegmentCollectionsSet)
         self._polygons_intersections_set = polygons_intersections_set
 
     def num_profiles(self) -> numbers.Integral:
@@ -535,6 +535,16 @@ class GeoProfileSet:
 
         return [topoprofile.elevations() for topoprofile in self._topo_profiles_set]
 
+    def profiles_lengths_2d(self) -> List[numbers.Real]:
+        """
+        Returns the 2D lengths of the profiles.
+
+        :return: the 2D profiles lengths.
+        :rtype: list of numbers.Real values.
+        """
+
+        return [topoprofile.profile_length_2d() for topoprofile in self._topo_profiles_set]
+
     def profiles_lengths_3d(self) -> List[numbers.Real]:
         """
         Returns the 3D lengths of the profiles.
@@ -553,7 +563,7 @@ class GeoProfileSet:
         :rtype: an optional numbers.Real value.
         """
 
-        lengths = self.length_2d()
+        lengths = self.profiles_lengths_2d()
 
         if lengths:
             return max(lengths)

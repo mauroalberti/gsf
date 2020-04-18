@@ -488,7 +488,7 @@ class LinearProfiler:
         return PointSegmentCollections(valid_results)
 
     def intersect_polygon(self,
-       mpolygon: Union[Polygon, MultiPolygon],
+       mpolygon: MPolygon,
     ) -> Lines:
         """
         Calculates the intersection with a shapely polygon/multipolygon.
@@ -501,20 +501,33 @@ class LinearProfiler:
         """
 
         line_shapely, epsg_code = line_to_shapely(self.to_line())
-        return MPolygon(geom=mpolygon, epsg_code=epsg_code).intersect_line(line=line_shapely)
+        return mpolygon.intersect_line(line=line_shapely)
 
     def intersect_polygons(self,
-       mpolygon: Union[Polygon, MultiPolygon],
-    ) -> Lines:
+       mpolygons: List[MPolygon]
+    ) -> List[Lines]:
         """
-        Calculates the intersection with a shapely polygon/multipolygon.
+        Calculates the intersection with a set of shapely polygon/multipolygon.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
 
-        :param mpolygon: the shapely polygon/multipolygon to intersect profile with
-        :type mpolygon: Union[shapely.geometry.Polygon, shapely.geometry.MultiPolygon]
+        :param mpolygons: the shapely set of polygon/multipolygon to intersect profile with
+        :type mpolygons: List[MPolygon]
         :return: the possible intersections
-        :rtype: Lines
+        :rtype: List[Lines]
         """
+
+        results = []
+
+        for mpolygon in mpolygons:
+
+            result = self.intersect_polygon(
+                mpolygon=mpolygon
+            )
+            if result:
+                results.append(result)
+
+        return results
+
 
     def point_signed_s(
             self,
@@ -852,7 +865,7 @@ class LinearProfiler:
 
     def parse_intersections_for_profile(self,
         lines_intersections: PointSegmentCollections
-    ) -> LinesIntersections:
+    ) -> ProfilesIntersections:
         """
         Parse the line intersections for incorporation
         as elements in a geoprofile.
@@ -873,7 +886,7 @@ class LinearProfiler:
 
             parsed_intersections.append(ArrayList(line_id, intersections_arrays))
 
-        return LinesIntersections(parsed_intersections)
+        return ProfilesIntersections(parsed_intersections)
 
 
 class ParallelProfiler(list):

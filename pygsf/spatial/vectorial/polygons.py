@@ -9,27 +9,23 @@ from .geometries import *
 
 class MPolygon:
     """
-    A shapely (multi)polygon with EPSG code and category/id.
+    A shapely (multi)polygon with EPSG code.
 
     """
 
     def __init__(self,
                  geom: Union[Polygon, MultiPolygon],
-                 epsg_code: numbers.Integral,
-                 cat: Optional[Union[numbers.Integral, str]] = None,
+                 epsg_code: numbers.Integral
                  ):
         """
         :param geom: the (multi)polygon
         :type geom: Union[Polygon, MultiPolygon]
         :param epsg_code: the EPSG code of the two geometries
         :type epsg_code: numbers.Integral
-        :param cat: the category/id
-        :type cat: Optional[Union[numbers.Integral, str]]
         """
 
         self._geom = geom
         self._epsg_code = epsg_code
-        self._cat = cat
 
     @property
     def geom(self):
@@ -38,10 +34,6 @@ class MPolygon:
     @property
     def epsg_code(self):
         return self._epsg_code
-
-    @property
-    def cat(self):
-        return self._cat
 
     def intersect_line(self,
                        line: LineString,
@@ -85,7 +77,4 @@ class MPolygon:
                 pass
 
         return lines
-
-
-
 

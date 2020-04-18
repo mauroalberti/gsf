@@ -12,7 +12,8 @@ class ArrayList:
 
     def __init__(self,
                  rec_id: numbers.Integral,
-                 arrays: List[array]):
+                 arrays: List[array]
+                 ):
 
         check_type(rec_id, "Input id", numbers.Integral)
         check_type(arrays, "List of arrays", list)
@@ -43,3 +44,4 @@ class ArrayList:
         """
 
         return self._arrays
+

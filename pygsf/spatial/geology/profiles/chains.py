@@ -399,19 +399,14 @@ class ProfileAttitudes(list):
         super(ProfileAttitudes, self).__init__(atts)
 
 
-class LinesIntersections(list):
+class ProfilesIntersections(list):
 
     def __init__(self, intersections: List[ArrayList]):
 
-        check_type(intersections, "Lines intersections", List)
+        check_type(intersections, "Profiles intersections", List)
         for el in intersections:
-            check_type(el, "Line intersections", ArrayList)
+            check_type(el, "Profile intersections", ArrayList)
 
-        super(LinesIntersections, self).__init__(intersections)
-
-
-class PolygonsIntersections(list):
-
-    pass
+        super(ProfilesIntersections, self).__init__(intersections)
 
 

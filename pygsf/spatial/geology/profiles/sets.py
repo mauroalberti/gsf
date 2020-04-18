@@ -162,44 +162,23 @@ class AttitudesSet(list):
             self.append(attitudes_set)
 
 
-class LinesIntersectionsSet(list):
+class PointSegmentCollectionsSet(list):
     """
 
-    Class storing a set of topographic profiles.
+    Class storing a set of point-segment collections.
     """
 
-    def __init__(self, line_intersection_set: List[PointSegmentCollections]):
+    def __init__(self, ptsegm_collects_set: List[PointSegmentCollections]):
         """
         Instantiates an lines intersections set.
 
-        :param line_intersection_set: the lines intersections set.
-        :type line_intersection_set: List[LinesIntersections].
+        :param ptsegm_collects_set: the PointSegmentCollections set.
+        :type ptsegm_collects_set: List[PointSegmentCollections].
         """
 
-        check_type(line_intersection_set, "Line intersections set", List)
-        for el in line_intersection_set:
-            check_type(el, "Line intersections", PointSegmentCollections)
+        check_type(ptsegm_collects_set, "Point-segment collections set", List)
+        for el in ptsegm_collects_set:
+            check_type(el, "Point-segment collections", PointSegmentCollections)
 
-        super(LinesIntersectionsSet, self).__init__(line_intersection_set)
-
-
-class PolygonsIntersectionsSet(list):
-    """
-
-    Class storing a set of topographic profiles.
-    """
-
-    def __init__(self, polygons_intersections_set: List[PolygonsIntersections]):
-        """
-        Instantiates a polygons intersections set.
-
-        :param polygons_intersections_set: the polygons intersections set.
-        :type polygons_intersections_set: List[PolygonsIntersections].
-        """
-
-        check_type(polygons_intersections_set, "PolygonsIntersections set", List)
-        for el in polygons_intersections_set:
-            check_type(el, "Polygons intersections", PolygonsIntersections)
-
-        super(PolygonsIntersectionsSet, self).__init__(polygons_intersections_set)
+        super(PointSegmentCollectionsSet, self).__init__(ptsegm_collects_set)
 
