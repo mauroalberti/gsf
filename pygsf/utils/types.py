@@ -1,20 +1,26 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
 
-def check_type(var, name, expected_type):
+
+def check_type(
+        var,
+        name,
+        expected_types
+):
     """
     Checks the type of the variable, raising an exception when not equal.
 
     :param var:
     :param name:
-    :param expected_type:
+    :param expected_types:
     :return: None
     :rtype: None
     :raise: Exception
     """
 
-    if not (isinstance(var, expected_type)):
-        raise Exception("{} should be {} but instead got {}".format(name, expected_type, type(var)))
+    if not (isinstance(var, expected_types)):
+        raise Exception("{} should be {} but instead got {}".format(name, expected_types, type(var)))
 
 
 def check_optional_type(var, name, expected_type):

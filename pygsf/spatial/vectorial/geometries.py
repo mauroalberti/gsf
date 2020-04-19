@@ -878,6 +878,271 @@ def pack_to_points(
     return pts
 
 
+class Points:
+    """
+    Collection of points.
+    """
+
+    def __init__(self,
+                 epsg_code: numbers.Integral,
+                 x_array: np.array,
+                 y_array: np.array,
+                 z_array: Optional[np.array] = None,
+                 t_array: Optional[np.array] = None
+                 ):
+        """
+        Construct a point list from a set of array values and an EPSG code.
+
+        :param epsg_code: the EPSG code of the points
+        :type epsg_code: numbers.Integral
+        :param x_array: the array storing the x values
+        :type x_array: np.array
+        :param y_array: the array storing the y values
+        :type y_array: np.array
+        :param z_array: the optional array storing the z values
+        :type z_array: np.array
+        :param t_array: the optional array storing the t values
+        :type t_array: np.array
+        """
+
+        check_type(
+            var=epsg_code,
+            name="EPSG code",
+            expected_types=numbers.Integral
+        )
+
+        check_type(
+            var=x_array,
+            name="X array",
+            expected_types=np.array
+        )
+
+        check_type(
+            var=y_array,
+            name="Y array",
+            expected_types=np.array
+        )
+
+        array_length = len(x_array)
+
+        if len(y_array) != array_length:
+            raise Exception(f"Y array has length {len(y_array)} while X array has length {len(x_array)}")
+
+        if z_array is not None:
+
+            check_type(
+                var=z_array,
+                name="Z array",
+                expected_types=np.array
+            )
+
+            if len(z_array) != array_length:
+                raise Exception(f"Z array has length {len(z_array)} while X array has length {len(x_array)}")
+
+        else:
+
+            z_array = np.zeros_like(x_array)
+
+        if t_array is not None:
+
+            check_type(
+                var=t_array,
+                name="T array",
+                expected_types=np.array
+            )
+
+            if len(t_array) != array_length:
+                raise Exception(f"T array has length {len(t_array)} while X array has length {len(x_array)}")
+
+        else:
+
+            t_array = np.zeros_like(x_array)
+
+        self._epsg_code = epsg_code
+        self._x_array = x_array
+        self._y_array = y_array
+        self._z_array = z_array
+        self._t_array = t_array
+
+    @classmethod
+    def fromPoints(cls,
+                   points: List[Point],
+                   epsg_code: numbers.Integral = None,
+                   crs_check: bool = True
+                   ):
+        """
+
+        :param points: list of points
+        :type points: List[Point]
+        :param epsg_code: optional EPSG code
+        :type epsg_code: numbers.Integral
+        :param crs_check: whether to check points crs
+        :type crs_check: bool
+        """
+
+        for ndx, point in enumerate(points):
+
+            check_type(point, "Input point {}".format(ndx), Point)
+
+        if not epsg_code:
+            epsg_code = points[0].epsg_code()
+
+        if crs_check:
+
+            for ndx, point in enumerate(points):
+
+                if point.epsg_code() != epsg_code:
+
+                    raise Exception("Point {} has EPSG code {} but {} required".format(ndx, point.epsg_code(), epsg_code))
+
+        return Points(
+            epsg_code=epsg_code,
+            x_array=np.array([p.x for p in points]),
+            y_array=np.array([p.y for p in points]),
+            z_array=np.array([p.z for p in points]),
+            t_array=np.array([p.t for p in points])
+        )
+
+    @property
+    def xs(self):
+        """
+        The points x values.
+
+        :return: points x values
+        :rtype: float
+        """
+
+        return self._x_array
+
+    @property
+    def ys(self):
+        """
+        The points y values.
+
+        :return: points y values
+        :rtype: float
+        """
+
+        return self._y_array
+
+    @property
+    def zs(self):
+        """
+        The points z values.
+
+        :return: points z values
+        :rtype: float
+        """
+
+        return self._z_array
+
+
+    @property
+    def ts(self):
+        """
+        The points t values.
+
+        :return: points t values
+        :rtype: float
+        """
+
+        return self._t_array
+
+    def epsg_code(self) -> numbers.Integral:
+        """
+        The points EPSG code.
+
+        :return: the points EPSG code
+        :rtype: numbers.Integral
+        """
+
+        return self._epsg_code
+
+    @property
+    def crs(self) -> Crs:
+        """
+        The points CRS.
+
+        :return: the points CRS
+        :rtype: Crs
+        """
+
+        return Crs(self.epsg_code())
+
+    def x_min(self):
+        """
+        The minimum x value.
+        """
+
+        return np.nanmin(self.xs)
+
+    def x_max(self):
+        """
+        The maximum x value.
+        """
+
+        return np.nanmax(self.xs)
+
+    def y_min(self):
+        """
+        The minimum y value.
+        """
+
+        return np.nanmin(self.ys)
+
+    def y_max(self):
+        """
+        The maximum y value.
+        """
+
+        return np.nanmax(self.ys)
+
+    def z_min(self):
+        """
+        The minimum z value.
+        """
+
+        return np.nanmin(self.zs)
+
+    def z_max(self):
+        """
+        The maximum z value.
+        """
+
+        return np.nanmax(self.zs)
+
+    def t_min(self):
+        """
+        The minimum t value.
+        """
+
+        return np.nanmin(self.ts)
+
+    def t_max(self):
+        """
+        The maximum t value.
+        """
+
+        return np.nanmax(self.ts)
+
+    def nanmean_point(self) -> Point:
+        """
+        Returns the nan- excluded mean point of the collection.
+        It is the mean point for a collection of point in a x-y-z frame (i.e., not lat-lon).
+
+        :return: the nan- excluded mean point of the collection.
+        :rtype: Point
+        """
+
+        return Point(
+            x=np.nanmean(self.xs),
+            y=np.nanmean(self.ys),
+            z=np.nanmean(self.zs),
+            t=np.nanmean(self.ts),
+            epsg_code=self.epsg_code()
+        )
+
+
 class CPlane(object):
     """
     Cartesian plane.
@@ -1317,7 +1582,7 @@ class Segment:
 
         return self.start_pt.crs
 
-    def epsg(self) -> numbers.Integral:
+    def epsg_code(self) -> numbers.Integral:
 
         return self.crs.epsg_code()
 
@@ -1434,7 +1699,7 @@ class Segment:
         return Vect(self.delta_x(),
                     self.delta_y(),
                     self.delta_z(),
-                    epsg_cd=self.epsg())
+                    epsg_cd=self.epsg_code())
 
     def antivector(self) -> Vect:
         """
@@ -1503,7 +1768,7 @@ class Segment:
             x0 = (p1 - p0) / (m0 - m1)
             y0 = m0 * x0 + p0
 
-        return Point(x0, y0, epsg_code=self.epsg())
+        return Point(x0, y0, epsg_code=self.epsg_code())
 
     def contains_pt(self,
         pt: Point
@@ -1647,7 +1912,7 @@ class Segment:
             y=self.start_pt.y + dy,
             z=self.start_pt.z + dz,
             t=self.start_pt.t + dt,
-            epsg_code=self.epsg())
+            epsg_code=self.epsg_code())
 
     def pointProjection(self,
         point: Point
@@ -2095,6 +2360,215 @@ class Segment:
         )
 
 
+def point_or_segment(
+        point1: Point,
+        point2: Point,
+        tol: numbers.Real = PRACTICAL_MIN_DIST
+) -> Union[Point, Segment]:
+    """
+    Creates a point or segment based on the points distance.
+
+    :param point1: first input point.
+    :type point1: Point.
+    :param point2: second input point.
+    :type point2: Point.
+    :param tol: distance tolerance between the two points.
+    :type tol: numbers.Real.
+    :return: point or segment based on their distance.
+    :rtype: PointOrSegment.
+    :raise: Exception.
+    """
+
+    check_type(point1, "First point", Point)
+    check_type(point2, "Second point", Point)
+
+    check_crs(point1, point2)
+
+    if point1.dist3DWith(point2) <= tol:
+        return Points.fromPoints([point1, point2]).nanmean_point()
+    else:
+        return Segment(
+            start_pt=point1,
+            end_pt=point2
+        )
+
+
+def intersect_segments(
+    segment1: Segment,
+    segment2: Segment,
+    tol: numbers.Real = PRACTICAL_MIN_DIST
+) -> Optional[Union[Point, Segment]]:
+    """
+    Determines the optional point or segment intersection between the segment pair.
+
+    :param segment1: the first segment
+    :type segment1: Segment
+    :param segment2: the second segment
+    :type segment2: Segment
+    :param tol: the distance tolerance for collapsing a intersection segment into a point
+    :type tol: numbers.Real
+    :return: the optional point or segment intersection between the segment pair.
+    :rtype: Optional[Union[Point, Segment]]
+
+    Examples:
+      >>> s2 = Segment(Point(0,0,0), Point(1,0,0))
+      >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(-2,0,0), Point(-1,0,0))
+      >>> intersect_segments(s1, s2) is None
+      True
+      >>> s1 = Segment(Point(-2,0,0), Point(0,0,0))
+      >>> intersect_segments(s1, s2)
+      Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
+      >>> s1 = Segment(Point(-2,0,0), Point(0.5,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.5000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(-2,0,0), Point(1,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(-2,0,0), Point(2,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0,0,0), Point(0.5,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.5000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0.25,0,0), Point(0.75,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.7500, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0.25,0,0), Point(1,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0.25,0,0), Point(1.25,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0,0,0), Point(1.25,0,0))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(1,0,0), Point(1.25,0,0))
+      >>> intersect_segments(s1, s2)
+      Point(1.0000, 0.0000, 0.0000, 0.0000, -1)
+      >>> s2 = Segment(Point(0,0,0), Point(1,1,1))
+      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(0.75,0.75,0.75))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.2500, 0.2500, 0.2500, 0.0000, -1), end_pt=Point(0.7500, 0.7500, 0.7500, 0.0000, -1))
+      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,1.75,1.75))
+      >>> intersect_segments(s1, s2)
+      Segment(start_pt=Point(0.2500, 0.2500, 0.2500, 0.0000, -1), end_pt=Point(1.0000, 1.0000, 1.0000, 0.0000, -1))
+      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,0,1.75))
+      >>> intersect_segments(s1, s2)
+      Point(0.2500, 0.2500, 0.2500, 0.0000, -1)
+      >>> s1 = Segment(Point(0.25,1,0.25), Point(0.75,0.75,0.75))
+      >>> intersect_segments(s1, s2)
+      Point(0.7500, 0.7500, 0.7500, 0.0000, -1)
+      >>> s2 = Segment(Point(-1,-1,-1), Point(1,1,1))
+      >>> s1 = Segment(Point(-1,1,1), Point(1,-1,-1))
+      >>> intersect_segments(s1, s2)
+      Point(-0.0000, 0.0000, 0.0000, 0.0000, -1)
+    """
+
+    check_type(segment1, "First segment", Segment)
+    check_type(segment2, "Second segment", Segment)
+
+    check_crs(segment1, segment2)
+
+    s1_startpt_inside = segment1.segment_start_in(segment2)
+    s2_startpt_inside = segment2.segment_start_in(segment1)
+
+    s1_endpt_inside = segment1.segment_end_in(segment2)
+    s2_endpt_inside = segment2.segment_end_in(segment1)
+
+    elements = [s1_startpt_inside, s2_startpt_inside, s1_endpt_inside, s2_endpt_inside]
+
+    if all(elements):
+        return segment1.clone()
+
+    if s1_startpt_inside and s1_endpt_inside:
+        return segment1.clone()
+
+    if s2_startpt_inside and s2_endpt_inside:
+        return segment2.clone()
+
+    if s1_startpt_inside and s2_startpt_inside:
+        return point_or_segment(
+            segment1.start_pt,
+            segment2.start_pt,
+            tol=tol
+        )
+
+    if s1_startpt_inside and s2_endpt_inside:
+        return point_or_segment(
+            segment1.start_pt,
+            segment2.end_pt,
+            tol=tol
+        )
+
+    if s1_endpt_inside and s2_startpt_inside:
+        return point_or_segment(
+            segment2.start_pt,
+            segment1.end_pt,
+            tol=tol
+        )
+
+    if s1_endpt_inside and s2_endpt_inside:
+        return point_or_segment(
+            segment1.end_pt,
+            segment2.end_pt,
+            tol=tol
+        )
+
+    if s1_startpt_inside:
+        return segment1.start_pt.clone()
+
+    if s1_endpt_inside:
+        return segment1.end_pt.clone()
+
+    if s2_startpt_inside:
+        return segment2.start_pt.clone()
+
+    if s2_endpt_inside:
+        return segment2.end_pt.clone()
+
+    cline1 = CLine.fromSegment(segment1)
+    cline2 = CLine.fromSegment(segment2)
+
+    shortest_segm_or_pt = cline1.shortest_segment_or_point(
+        cline2,
+        tol=tol
+    )
+
+    if not shortest_segm_or_pt:
+        return None
+
+    if not isinstance(shortest_segm_or_pt, Point):
+        return None
+
+    inters_pt = shortest_segm_or_pt
+
+    if not segment1.contains_pt(inters_pt):
+        return None
+
+    if not segment2.contains_pt(inters_pt):
+        return None
+
+    return inters_pt
+
+
+class Segments(list):
+    """
+    Collection of segments, inheriting from list.
+
+    """
+
+    def __init__(self, segments: List[Segment]):
+
+        check_type(segments, "Segments", List)
+        for el in segments:
+            check_type(el, "Segment", Segment)
+
+        super(Segments, self).__init__(segments)
+
+
 class CLine:
     """
     Cartesian line.
@@ -2427,6 +2901,88 @@ class CLine:
         return d
 
 
+class PointSegmentCollection(list):
+    """
+    Collection of point or segment elements.
+
+    """
+
+    def __init__(
+            self,
+            geoms: Optional[List[Union[Point, Segment]]] = None,
+            epsg_code: Optional[numbers.Integral] = None
+    ):
+
+        if geoms is not None:
+
+            for geom in geoms:
+                check_type(geom, "Spatial element", (Point, Segment))
+
+        if epsg_code is not None:
+            check_type(
+                var=epsg_code,
+                name="EPSG code",
+                expected_types=numbers.Integral
+            )
+
+        if geoms is not None and epsg_code is not None:
+
+            for geom in geoms:
+                check_epsg(
+                    spatial_element=geom,
+                    epsg_code=epsg_code
+                )
+
+        elif geoms is not None:
+
+            epsg_code = geoms[0].epsg_code()
+
+        if geoms is not None:
+
+            super(PointSegmentCollection, self).__init__(geoms)
+
+        else:
+
+            super(PointSegmentCollection, self).__init__()
+
+        self.epsg_code = epsg_code
+
+    def append(self,
+               spatial_element: Union[Point, Segment]
+               ) -> None:
+
+        check_type(
+            var=spatial_element,
+            name="Spatial element",
+            expected_types=(Point, Segment)
+        )
+
+        if self.epsg_code is not None:
+
+            check_epsg(
+                spatial_element=spatial_element,
+                epsg_code=self.epsg_code
+            )
+
+        else:
+
+            self.epsg_code = spatial_element.epsg_code()
+
+        self.append(spatial_element)
+
+
+class PointSegmentCollections(list):
+
+    def __init__(self, atts: List[Tuple[Union[str, numbers.Integral], PointSegmentCollection]]):
+
+        check_type(atts, "Point-segment collections", List)
+        for label, spat_element in atts:
+            check_type(label, "Label", (str, numbers.Integral))
+            check_type(spat_element, "Point-segment collection", PointSegmentCollection)
+
+        super(PointSegmentCollections, self).__init__(atts)
+
+
 class Line:
     """
     A list of Point objects, all with the same CRS code.
@@ -2644,7 +3200,7 @@ class Line:
 
     def intersectSegment(self,
         segment: Segment
-    ) -> Optional[List[Optional[Union[Point, Segment]]]]:
+    ) -> Optional[PointSegmentCollection]:
         """
         Calculates the possible intersection between the line and a provided segment.
 
@@ -2652,6 +3208,7 @@ class Line:
         :type segment: Segment
         :return: the optional intersections, points or segments
         :rtype: Optional[List[Optional[Union[Point, Segment]]]]
+        :raise: Exception
         """
 
         if self.num_pts() <= 1:
@@ -2662,6 +3219,7 @@ class Line:
 
         intersections = [intersect_segments(curr_segment, segment) for curr_segment in self if curr_segment is not None]
         intersections = list(filter(lambda val: val is not None, intersections))
+        intersections = PointSegmentCollection(intersections)
 
         return intersections
 
@@ -3262,28 +3820,29 @@ class Line:
 
 
 def line_from_shapely(
-        shapely_linestring: LineString,
+        shapely_geom: LineString,
         epsg_code: numbers.Integral
 ) -> Line:
     # Side effects: none
     """
     Create a Line instance from a shapely Linestring instance.
 
-    :param shapely_linestring: the shapely input LineString instance
-    :type shapely_linestring: shapely.geometry.linestring.LineString
+    :param shapely_geom: the shapely input LineString instance
+    :type shapely_geom: shapely.geometry.linestring.LineString
     :param epsg_code: the EPSG code of the LineString instance
     :type epsg_code: numbers.Integral
     :return: the converted Line instance
     :rtype: Line
     """
 
-    x_array, y_array = shapely_linestring.xy
+    x_array, y_array = shapely_geom.xy
 
     return Line.fromArrays(
         x_array,
         y_array,
         epsg_cd=epsg_code
     )
+
 
 def line_to_shapely(
         src_line: Line
@@ -3298,6 +3857,62 @@ def line_to_shapely(
     """
 
     return LineString(src_line.xy_zipped()), src_line.epsg_code()
+
+
+class Lines(list):
+    """
+    Collection of lines.
+
+    """
+
+    def __init__(self,
+                 lines: Optional[List[Line]] = None
+                 ):
+
+        if lines:
+
+            check_type(lines, "Lines", List)
+            for line in lines:
+                check_type(line, "Line", Line)
+            first_line = lines[0]
+            for line in lines[1:]:
+                check_crs(first_line, line)
+
+            super(Lines, self).__init__(lines)
+
+        else:
+
+            super(Lines, self).__init__()
+
+    def append(self,
+               item: Line
+               ) -> None:
+
+        check_type(item, "Line", Line)
+        if len(self) > 0:
+            check_crs(self[0], item)
+
+        super(Lines, self).append(item)
+
+
+class SimpleGeometryCollections(list):
+
+    def __init__(self,
+                 epsg_code: numbers.Integral = 4326):
+
+        super(SimpleGeometryCollections, self).__init__()
+
+        self.epsg_code = epsg_code
+
+    def append(self, geom):
+
+        if not isinstance(geom, (Point, Segment, Line)):
+            raise Exception(f"Expected Point, Segment or Line but got {type(geom)}")
+
+        if geom.epsg_code() != self.epsg_code:
+            raise Exception(f"Expected {self.epsg_code} EPSG code but got {geom.epsg_code()}")
+
+        self.append(geom)
 
 
 class MultiLine(object):
@@ -3534,6 +4149,36 @@ class MultiLine(object):
             intersections.extend(line.intersectSegment(segment))
 
         return intersections
+
+
+class MultiLines(list):
+    """
+    Collection of multilines, inheriting from list.
+
+    """
+
+    def __init__(self,
+                 multilines: List[MultiLine] = None
+                 ):
+
+        if multilines:
+
+            check_type(multilines, "MultiLines", List)
+            for el in multilines:
+                check_type(el, "MultiLine", MultiLine)
+
+            super(MultiLines, self).__init__(multilines)
+
+        else:
+
+            super(MultiLines, self).__init__()
+
+    def append(self,
+               item: MultiLine
+               ) -> None:
+
+        check_type(item, "MultiLine", MultiLine)
+        super(MultiLines, self).append(item)
 
 
 class ParamLine3D(object):
@@ -5786,595 +6431,3 @@ def rotVectByQuater(quat: Quaternion, vect: Vect) -> Vect:
 
     return rotated_v.vector()
 
-
-def point_or_segment(
-        point1: Point,
-        point2: Point,
-        tol: numbers.Real = PRACTICAL_MIN_DIST
-) -> Union[Point, Segment]:
-    """
-    Creates a point or segment based on the points distance.
-
-    :param point1: first input point.
-    :type point1: Point.
-    :param point2: second input point.
-    :type point2: Point.
-    :param tol: distance tolerance between the two points.
-    :type tol: numbers.Real.
-    :return: point or segment based on their distance.
-    :rtype: PointOrSegment.
-    :raise: Exception.
-    """
-
-    check_type(point1, "First point", Point)
-    check_type(point2, "Second point", Point)
-
-    check_crs(point1, point2)
-
-    if point1.dist3DWith(point2) <= tol:
-        return Points([point1, point2]).nanmean_point()
-    else:
-        return Segment(
-            start_pt=point1,
-            end_pt=point2
-        )
-
-
-def intersect_segments(
-    segment1: Segment,
-    segment2: Segment,
-    tol: numbers.Real = PRACTICAL_MIN_DIST
-) -> Optional[Union[Point, Segment]]:
-    """
-    Determines the optional point or segment intersection between the segment pair.
-
-    :param segment1: the first segment
-    :type segment1: Segment
-    :param segment2: the second segment
-    :type segment2: Segment
-    :param tol: the distance tolerance for collapsing a intersection segment into a point
-    :type tol: numbers.Real
-    :return: the optional point or segment intersection between the segment pair.
-    :rtype: Optional[Union[Point, Segment]]
-
-    Examples:
-      >>> s2 = Segment(Point(0,0,0), Point(1,0,0))
-      >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-      >>> s1 = Segment(Point(-2,0,0), Point(-1,0,0))
-      >>> intersect_segments(s1, s2) is None
-      True
-      >>> s1 = Segment(Point(-2,0,0), Point(0,0,0))
-      >>> intersect_segments(s1, s2)
-      Point(0.0000, 0.0000, 0.0000, 0.0000, -1)
-      >>> s1 = Segment(Point(-2,0,0), Point(0.5,0,0))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.5000, 0.0000, 0.0000, 0.0000, -1))
-      >>> s1 = Segment(Point(-2,0,0), Point(1,0,0))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-      >>> s1 = Segment(Point(-2,0,0), Point(2,0,0))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-      >>> s1 = Segment(Point(0,0,0), Point(0.5,0,0))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.5000, 0.0000, 0.0000, 0.0000, -1))
-      >>> s1 = Segment(Point(0.25,0,0), Point(0.75,0,0))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(0.7500, 0.0000, 0.0000, 0.0000, -1))
-      >>> s1 = Segment(Point(0.25,0,0), Point(1,0,0))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-      >>> s1 = Segment(Point(0.25,0,0), Point(1.25,0,0))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.2500, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-      >>> s1 = Segment(Point(0,0,0), Point(1.25,0,0))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000, 0.0000, -1), end_pt=Point(1.0000, 0.0000, 0.0000, 0.0000, -1))
-      >>> s1 = Segment(Point(1,0,0), Point(1.25,0,0))
-      >>> intersect_segments(s1, s2)
-      Point(1.0000, 0.0000, 0.0000, 0.0000, -1)
-      >>> s2 = Segment(Point(0,0,0), Point(1,1,1))
-      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(0.75,0.75,0.75))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.2500, 0.2500, 0.2500, 0.0000, -1), end_pt=Point(0.7500, 0.7500, 0.7500, 0.0000, -1))
-      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,1.75,1.75))
-      >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.2500, 0.2500, 0.2500, 0.0000, -1), end_pt=Point(1.0000, 1.0000, 1.0000, 0.0000, -1))
-      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,0,1.75))
-      >>> intersect_segments(s1, s2)
-      Point(0.2500, 0.2500, 0.2500, 0.0000, -1)
-      >>> s1 = Segment(Point(0.25,1,0.25), Point(0.75,0.75,0.75))
-      >>> intersect_segments(s1, s2)
-      Point(0.7500, 0.7500, 0.7500, 0.0000, -1)
-      >>> s2 = Segment(Point(-1,-1,-1), Point(1,1,1))
-      >>> s1 = Segment(Point(-1,1,1), Point(1,-1,-1))
-      >>> intersect_segments(s1, s2)
-      Point(-0.0000, 0.0000, 0.0000, 0.0000, -1)
-    """
-
-    check_type(segment1, "First segment", Segment)
-    check_type(segment2, "Second segment", Segment)
-
-    check_crs(segment1, segment2)
-
-    s1_startpt_inside = segment1.segment_start_in(segment2)
-    s2_startpt_inside = segment2.segment_start_in(segment1)
-
-    s1_endpt_inside = segment1.segment_end_in(segment2)
-    s2_endpt_inside = segment2.segment_end_in(segment1)
-
-    elements = [s1_startpt_inside, s2_startpt_inside, s1_endpt_inside, s2_endpt_inside]
-
-    if all(elements):
-        return segment1.clone()
-
-    if s1_startpt_inside and s1_endpt_inside:
-        return segment1.clone()
-
-    if s2_startpt_inside and s2_endpt_inside:
-        return segment2.clone()
-
-    if s1_startpt_inside and s2_startpt_inside:
-        return point_or_segment(
-            segment1.start_pt,
-            segment2.start_pt,
-            tol=tol
-        )
-
-    if s1_startpt_inside and s2_endpt_inside:
-        return point_or_segment(
-            segment1.start_pt,
-            segment2.end_pt,
-            tol = tol
-        )
-
-    if s1_endpt_inside and s2_startpt_inside:
-        return point_or_segment(
-            segment2.start_pt,
-            segment1.end_pt,
-            tol=tol
-        )
-
-    if s1_endpt_inside and s2_endpt_inside:
-        return point_or_segment(
-            segment1.end_pt,
-            segment2.end_pt,
-            tol=tol
-        )
-
-    if s1_startpt_inside:
-        return segment1.start_pt.clone()
-
-    if s1_endpt_inside:
-        return segment1.end_pt.clone()
-
-    if s2_startpt_inside:
-        return segment2.start_pt.clone()
-
-    if s2_endpt_inside:
-        return segment2.end_pt.clone()
-
-    cline1 = CLine.fromSegment(segment1)
-    cline2 = CLine.fromSegment(segment2)
-
-    shortest_segm_or_pt = cline1.shortest_segment_or_point(
-        cline2,
-        tol=tol
-    )
-
-    if not shortest_segm_or_pt:
-        return None
-
-    if not isinstance(shortest_segm_or_pt, Point):
-        return None
-
-    inters_pt = shortest_segm_or_pt
-
-    if not segment1.contains_pt(inters_pt):
-        return None
-
-    if not segment2.contains_pt(inters_pt):
-        return None
-
-    return inters_pt
-
-
-class Points:
-    """
-    Collection of points.
-    """
-
-    def __init__(self,
-                 epsg_code: numbers.Integral,
-                 x_array: np.array,
-                 y_array: np.array,
-                 z_array: Optional[np.array] = None,
-                 t_array: Optional[np.array] = None
-                 ):
-        """
-        Construct a point list from a set of array values and an EPSG code.
-
-        :param epsg_code: the EPSG code of the points
-        :type epsg_code: numbers.Integral
-        :param x_array: the array storing the x values
-        :type x_array: np.array
-        :param y_array: the array storing the y values
-        :type y_array: np.array
-        :param z_array: the optional array storing the z values
-        :type z_array: np.array
-        :param t_array: the optional array storing the t values
-        :type t_array: np.array
-        """
-
-        check_type(
-            var=epsg_code,
-            name="EPSG code",
-            expected_type=numbers.Integral
-        )
-
-        check_type(
-            var=x_array,
-            name="X array",
-            expected_type=np.array
-        )
-
-        check_type(
-            var=y_array,
-            name="Y array",
-            expected_type=np.array
-        )
-
-        array_length = len(x_array)
-
-        if len(y_array) != array_length:
-            raise Exception(f"Y array has length {len(y_array)} while X array has length {len(x_array)}")
-
-        if z_array is not None:
-
-            check_type(
-                var=z_array,
-                name="Z array",
-                expected_type=np.array
-            )
-
-            if len(z_array) != array_length:
-                raise Exception(f"Z array has length {len(z_array)} while X array has length {len(x_array)}")
-
-        else:
-
-            z_array = np.zeros_like(x_array)
-
-        if t_array is not None:
-
-            check_type(
-                var=t_array,
-                name="T array",
-                expected_type=np.array
-            )
-
-            if len(t_array) != array_length:
-                raise Exception(f"T array has length {len(t_array)} while X array has length {len(x_array)}")
-
-        else:
-
-            t_array = np.zeros_like(x_array)
-
-        self._epsg_code = epsg_code
-        self._x_array = x_array
-        self._y_array = y_array
-        self._z_array = z_array
-        self._t_array = t_array
-
-    @classmethod
-    def fromPoints(cls,
-                   points: List[Point],
-                   epsg_code: numbers.Integral = None,
-                   crs_check: bool = True
-                   ):
-        """
-
-        :param points: list of points
-        :type points: List[Point]
-        :param epsg_code: optional EPSG code
-        :type epsg_code: numbers.Integral
-        :param crs_check: whether to check points crs
-        :type crs_check: bool
-        """
-
-        for ndx, point in enumerate(points):
-
-            check_type(point, "Input point {}".format(ndx), Point)
-
-        if not epsg_code:
-            epsg_code = points[0].epsg_code()
-
-        if crs_check:
-
-            for ndx, point in enumerate(points):
-
-                if point.epsg_code() != epsg_code:
-
-                    raise Exception("Point {} has EPSG code {} but {} required".format(ndx, point.epsg_code(), epsg_code))
-
-        return Points(
-            epsg_code=epsg_code,
-            x_array=np.array([p.x for p in points]),
-            y_array=np.array([p.y for p in points]),
-            z_array=np.array([p.z for p in points]),
-            t_array=np.array([p.t for p in points])
-        )
-
-    @property
-    def xs(self):
-        """
-        The points x values.
-
-        :return: points x values
-        :rtype: float
-        """
-
-        return self._x_array
-
-    @property
-    def ys(self):
-        """
-        The points y values.
-
-        :return: points y values
-        :rtype: float
-        """
-
-        return self._y_array
-
-    @property
-    def zs(self):
-        """
-        The points z values.
-
-        :return: points z values
-        :rtype: float
-        """
-
-        return self._z_array
-
-
-    @property
-    def ts(self):
-        """
-        The points t values.
-
-        :return: points t values
-        :rtype: float
-        """
-
-        return self._t_array
-
-    def epsg_code(self) -> numbers.Integral:
-        """
-        The points EPSG code.
-
-        :return: the points EPSG code
-        :rtype: numbers.Integral
-        """
-
-        return self._epsg_code
-
-    @property
-    def crs(self) -> Crs:
-        """
-        The points CRS.
-
-        :return: the points CRS
-        :rtype: Crs
-        """
-
-        return Crs(self.epsg_code())
-
-    def x_min(self):
-        """
-        The minimum x value.
-        """
-
-        return np.nanmin(self.xs)
-
-    def x_max(self):
-        """
-        The maximum x value.
-        """
-
-        return np.nanmax(self.xs)
-
-    def y_min(self):
-        """
-        The minimum y value.
-        """
-
-        return np.nanmin(self.ys)
-
-    def y_max(self):
-        """
-        The maximum y value.
-        """
-
-        return np.nanmax(self.ys)
-
-    def z_min(self):
-        """
-        The minimum z value.
-        """
-
-        return np.nanmin(self.zs)
-
-    def z_max(self):
-        """
-        The maximum z value.
-        """
-
-        return np.nanmax(self.zs)
-
-    def t_min(self):
-        """
-        The minimum t value.
-        """
-
-        return np.nanmin(self.ts)
-
-    def t_max(self):
-        """
-        The maximum t value.
-        """
-
-        return np.nanmax(self.ts)
-
-    def nanmean_point(self) -> Point:
-        """
-        Returns the nan- excluded mean point of the collection.
-        It is the mean point for a collection of point in a x-y-z frame (i.e., not lat-lon).
-
-        :return: the nan- excluded mean point of the collection.
-        :rtype: Point
-        """
-
-        return Point(
-            x=np.nanmean(self.xs),
-            y=np.nanmean(self.ys),
-            z=np.nanmean(self.zs),
-            t=np.nanmean(self.ts),
-            epsg_code=self.epsg_code()
-        )
-
-
-class Segments(list):
-    """
-    Collection of segments, inheriting from list.
-
-    """
-
-    def __init__(self, segments: List[Segment]):
-
-        check_type(segments, "Segments", List)
-        for el in segments:
-            check_type(el, "Segment", Segment)
-
-        super(Segments, self).__init__(segments)
-
-
-class Lines(list):
-    """
-    Collection of lines.
-
-    """
-
-    def __init__(self,
-                 lines: Optional[List[Line]] = None
-                 ):
-
-        if lines:
-
-            check_type(lines, "Lines", List)
-            for line in lines:
-                check_type(line, "Line", Line)
-            first_line = lines[0]
-            for line in lines[1:]:
-                check_crs(first_line, line)
-
-            super(Lines, self).__init__(lines)
-
-        else:
-
-            super(Lines, self).__init__()
-
-    def append(self,
-               item: Line
-               ) -> None:
-
-        check_type(item, "Line", Line)
-        if len(self) > 0:
-            check_crs(self[0], item)
-
-        super(Lines, self).append(item)
-
-
-class MultiLines(list):
-    """
-    Collection of multilines, inheriting from list.
-
-    """
-
-    def __init__(self,
-                 multilines: List[MultiLine] = None
-                 ):
-
-        if multilines:
-
-            check_type(multilines, "MultiLines", List)
-            for el in multilines:
-                check_type(el, "MultiLine", MultiLine)
-
-            super(MultiLines, self).__init__(multilines)
-
-        else:
-
-            super(MultiLines, self).__init__()
-
-    def append(self,
-               item: MultiLine
-               ) -> None:
-
-        check_type(item, "MultiLine", MultiLine)
-        super(MultiLines, self).append(item)
-
-
-class PointSegmentCollection:
-    """
-    Collection of point or segment elements.
-
-    """
-
-    def __init__(
-        self,
-        element_id: int,
-        geoms: List[Union[Point, Segment]]
-    ):
-
-        check_type(element_id, "Element index", numbers.Integral)
-        for geom in geoms:
-            check_type(geom, "Point-segment collection", (Point, Segment))
-
-        self._element_id = element_id
-        self._geoms = geoms
-
-    @property
-    def element_id(self) -> numbers.Integral:
-        """
-        Return element id.
-
-        :return: the element id
-        :rtype: numbers.Integral
-        """
-
-        return self._element_id
-
-    @property
-    def geoms(self) -> List[Union[Point, Segment]]:
-        """
-        Returns the collection geometries.
-
-        :return: the intersecting geometries.
-        :rtype: List[Union[Point, Segment]]
-        """
-
-        return self._geoms
-
-
-class PointSegmentCollections(list):
-
-    def __init__(self, atts: List[PointSegmentCollection]):
-
-        check_type(atts, "Point-segment collections", List)
-        for el in atts:
-            check_type(el, "Point-segment collection", PointSegmentCollection)
-
-        super(PointSegmentCollections, self).__init__(atts)

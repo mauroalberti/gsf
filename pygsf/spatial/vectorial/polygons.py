@@ -14,17 +14,17 @@ class MPolygon:
     """
 
     def __init__(self,
-                 geom: Union[Polygon, MultiPolygon],
+                 shapely_geom: Union[Polygon, MultiPolygon],
                  epsg_code: numbers.Integral
                  ):
         """
-        :param geom: the (multi)polygon
-        :type geom: Union[Polygon, MultiPolygon]
+        :param shapely_geom: the (multi)polygon
+        :type shapely_geom: Union[Polygon, MultiPolygon]
         :param epsg_code: the EPSG code of the two geometries
         :type epsg_code: numbers.Integral
         """
 
-        self._geom = geom
+        self._geom = shapely_geom
         self._epsg_code = epsg_code
 
     @property
@@ -56,7 +56,7 @@ class MPolygon:
             if intersections.geom_type == "LineString":
 
                 inters_ln = line_from_shapely(
-                    shapely_linestring=intersections,
+                    shapely_geom=intersections,
                     epsg_code=self.epsg_code
                 )
 
@@ -65,8 +65,9 @@ class MPolygon:
             elif intersections.geom_type == "MultiLineString":
 
                 for intersection_line in intersections:
+
                     inters_ln = line_from_shapely(
-                        shapely_linestring=intersection_line,
+                        shapely_geom=intersection_line,
                         epsg_code=self.epsg_code
                     )
 

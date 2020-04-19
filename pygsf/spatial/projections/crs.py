@@ -62,8 +62,8 @@ def check_crs(
     :type template_element: Any
     :param checked_element: second spatial element.
     :type checked_element: Any
-    :return: whether two spatial elements have the same crs.
-    :rtype: None.
+    :return: nothing
+    :rtype: None
     :raise: Exception
     """
 
@@ -72,5 +72,31 @@ def check_crs(
             type(checked_element).__name__,
             checked_element.epsg_code(),
             template_element.epsg_code()
+        )
+    )
+
+
+def check_epsg(
+    spatial_element: Any,
+    epsg_code: numbers.Integral
+) -> None:
+    """
+    Check whether a spatial element has a given EPSG code, raising an exception when not true.
+    The spatial element should implement the epsg_code method.
+
+    :param spatial_element: spatial element
+    :type spatial_element: Any
+    :param epsg_code: the EPSG code
+    :type epsg_code: numbers.Integral
+    :return: nothing
+    :rtype: None
+    :raise: Exception
+    """
+
+    if spatial_element.epsg_code() != epsg_code:
+        raise Exception("checked {} instance has {} EPSG code but {} expected".format(
+            type(spatial_element).__name__,
+            spatial_element.epsg_code(),
+            epsg_code
         )
     )

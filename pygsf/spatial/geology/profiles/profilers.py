@@ -456,7 +456,7 @@ class LinearProfiler:
 
     def intersect_line(self,
        mline: Union[Line, MultiLine],
-    ) -> List[Optional[Union[Point, Segment]]]:
+    ) -> PointSegmentCollection:
         """
         Calculates the intersection with a line/multiline.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
@@ -464,7 +464,7 @@ class LinearProfiler:
         :param mline: the line/multiline to intersect profile with
         :type mline: Union[Line, MultiLine]
         :return: the possible intersections
-        :rtype: List[Optional[Union[Point, Segment]]]
+        :rtype: PointSegmentCollection
         """
 
         return mline.intersectSegment(self.segment())
@@ -492,7 +492,7 @@ class LinearProfiler:
     ) -> Lines:
         """
         Calculates the intersection with a shapely polygon/multipolygon.
-        Note: the intersections are intended flat (in a 2D plane, not 3D).
+        Note: the intersections are considered flat, i.e., in a 2D plane, not 3D.
 
         :param mpolygon: the shapely polygon/multipolygon to intersect profile with
         :type mpolygon: Union[shapely.geometry.Polygon, shapely.geometry.MultiPolygon]
@@ -527,7 +527,6 @@ class LinearProfiler:
                 results.append(result)
 
         return results
-
 
     def point_signed_s(
             self,
@@ -877,10 +876,7 @@ class LinearProfiler:
 
         parsed_intersections = []
 
-        for line_intersections in lines_intersections:
-
-            line_id = line_intersections.element_id
-            inters_geoms = line_intersections.geoms
+        for line_id, inters_geoms in lines_intersections:
 
             intersections_arrays = [self.pt_segm_signed_s(geom) for geom in inters_geoms]
 

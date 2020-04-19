@@ -2,12 +2,12 @@
 from typing import Tuple
 
 import numbers
-import affine
+from affine import Affine
 
 
 def gdal_to_affine(
     geotransform: Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Real]
-) -> affine.Affine:
+) -> Affine:
     """
     Create an affine transformation
     from a GDAL geotransform tuple.
@@ -18,7 +18,7 @@ def gdal_to_affine(
 
 
 def forward_transformation(
-    trans: affine.Affine,
+    trans: Affine,
     row: numbers.Real,
     col: numbers.Real
 ) -> Tuple[numbers.Real, numbers.Real]:
@@ -32,7 +32,7 @@ def forward_transformation(
 
 
 def backward_transformation(
-    trans: affine.Affine,
+    trans: Affine,
     x: numbers.Real,
     y: numbers.Real
 ) -> Tuple[numbers.Real, numbers.Real]:
