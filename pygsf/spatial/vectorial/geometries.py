@@ -350,7 +350,7 @@ class Point:
 
         return self.x, self.y, self.z, self.t
 
-    def toArray(self) -> 'np.array':
+    def toArray(self) -> np.ndarray:
         """
         Return a Numpy array representing the point values (without the crs code).
 
@@ -885,10 +885,10 @@ class Points:
 
     def __init__(self,
                  epsg_code: numbers.Integral,
-                 x_array: np.array,
-                 y_array: np.array,
-                 z_array: Optional[np.array] = None,
-                 t_array: Optional[np.array] = None
+                 x_array: np.ndarray,
+                 y_array: np.ndarray,
+                 z_array: Optional[np.ndarray] = None,
+                 t_array: Optional[np.ndarray] = None
                  ):
         """
         Construct a point list from a set of array values and an EPSG code.
@@ -896,13 +896,13 @@ class Points:
         :param epsg_code: the EPSG code of the points
         :type epsg_code: numbers.Integral
         :param x_array: the array storing the x values
-        :type x_array: np.array
+        :type x_array: np.ndarray
         :param y_array: the array storing the y values
-        :type y_array: np.array
+        :type y_array: np.ndarray
         :param z_array: the optional array storing the z values
-        :type z_array: np.array
+        :type z_array: np.ndarray
         :param t_array: the optional array storing the t values
-        :type t_array: np.array
+        :type t_array: np.ndarray
         """
 
         check_type(
@@ -914,13 +914,13 @@ class Points:
         check_type(
             var=x_array,
             name="X array",
-            expected_types=np.array
+            expected_types=np.ndarray
         )
 
         check_type(
             var=y_array,
             name="Y array",
-            expected_types=np.array
+            expected_types=np.ndarray
         )
 
         array_length = len(x_array)
@@ -933,7 +933,7 @@ class Points:
             check_type(
                 var=z_array,
                 name="Z array",
-                expected_types=np.array
+                expected_types=np.ndarray
             )
 
             if len(z_array) != array_length:
@@ -948,7 +948,7 @@ class Points:
             check_type(
                 var=t_array,
                 name="T array",
-                expected_types=np.array
+                expected_types=np.ndarray
             )
 
             if len(t_array) != array_length:
@@ -2933,11 +2933,11 @@ class PointSegmentCollection(list):
                     epsg_code=epsg_code
                 )
 
-        elif geoms is not None:
+        elif geoms is not None and len(geoms) > 0:
 
             epsg_code = geoms[0].epsg_code()
 
-        if geoms is not None:
+        if geoms is not None and len(geoms) > 0:
 
             super(PointSegmentCollection, self).__init__(geoms)
 
@@ -3344,7 +3344,7 @@ class Line:
 
         return list(self._t)
 
-    def z_array(self) -> np.array:
+    def z_array(self) -> np.ndarray:
 
         return np.array(self._z)
 

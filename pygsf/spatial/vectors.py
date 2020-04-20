@@ -99,7 +99,7 @@ class Vect(object):
             return not (self == another)
 
     @property
-    def a(self) -> np.array:
+    def a(self) -> np.ndarray:
         """
         Return a copy of the object inner array.
 
@@ -191,7 +191,7 @@ class Vect(object):
 
         return self.x, self.y, self.z
 
-    def toArray(self) -> np.array:
+    def toArray(self) -> np.ndarray:
         """
         Return a double Numpy array representing the point values.
 
@@ -779,7 +779,7 @@ class Vect(object):
         x, y, z = arrToTuple(np.cross(self.a[:3], another.a[:3]))
         return Vect(x, y, z, epsg_cd=self.epsg())
 
-    def byMatrix(self, array3x3: np.array) -> 'Vect':
+    def byMatrix(self, array3x3: np.ndarray) -> 'Vect':
         """
         Matrix multiplication of a vector.
 

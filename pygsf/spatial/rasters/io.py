@@ -135,7 +135,7 @@ def read_raster(
     return dataset, geotransform, num_bands, projection
 
 
-def read_band(dataset: gdal.Dataset, bnd_ndx: int = 1) -> Tuple[dict, 'np.array']:
+def read_band(dataset: gdal.Dataset, bnd_ndx: int = 1) -> Tuple[dict, np.ndarray]:
     """
     Read data and metadata of a rasters band based on GDAL.
 
@@ -202,7 +202,7 @@ def read_band(dataset: gdal.Dataset, bnd_ndx: int = 1) -> Tuple[dict, 'np.array'
     return band_params, grid_values
 
 
-def try_read_raster_band(raster_source: str, bnd_ndx: int=1) -> Tuple[bool, Union[str, Tuple[GeoTransform, str, Dict, 'np.array']]]:
+def try_read_raster_band(raster_source: str, bnd_ndx: int=1) -> Tuple[bool, Union[str, Tuple[GeoTransform, str, Dict, np.ndarray]]]:
     """
     Deprecated. Use "read_raster_band" instead.
 

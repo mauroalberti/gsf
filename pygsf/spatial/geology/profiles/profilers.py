@@ -547,13 +547,16 @@ class LinearProfiler:
         """
 
         if not isinstance(pt, Point):
-            raise Exception("Projected point should be Point but is {}".format(type(pt)))
+            raise Exception(f"Projected point should be Point but is {type(pt)}")
 
         if self.crs != pt.crs:
-            raise Exception("Projected point should have {} EPSG but has {}".format(self.epsg_code(), pt.epsg_code()))
+            raise Exception(f"Projected point should have {self.epsg_code()} EPSG but has {pt.epsg_code()}")
 
         if not self.point_in_profile(pt):
-            raise Exception("Projected point should lie in the profile plane but there is a distance of {} units".format(self.point_distance(pt)))
+            raise Exception(f"Projected point should lie in the profile plane but there is a distance of {self.point_distance(pt)} units")
+
+        if pt.isCoinc2D(self.start_pt()):
+            return 0.0
 
         projected_vector = Segment(self.start_pt(), pt).vector()
         cos_alpha = self.vector().angleCos(projected_vector)

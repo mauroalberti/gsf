@@ -87,13 +87,13 @@ def grad_j(
     Calculates the array gradient along the j axis.
 
     :param fld: array.
-    :type fld: np.array.
+    :type fld: np.ndarray.
     :param cell_size_j: the cell spacing in the x direction.
     :type cell_size_j: numbers.Real.
     :param edge_order: the type of edge order used in the Numpy gradient method.
     :type edge_order: numbers.Integral.
     :return: gradient field.
-    :rtype: np.array.
+    :rtype: np.ndarray.
 
     Examples:
     """
@@ -109,13 +109,13 @@ def grad_i(
     Calculates the array gradient along the i axis.
 
     :param fld: array.
-    :type fld: np.array.
+    :type fld: np.ndarray.
     :param cell_size_i: the cell spacing in the y direction.
     :type cell_size_i: numbers.Real.
     :param edge_order: the type of edge order used in the Numpy gradient method.
     :type edge_order: numbers.Integral.
     :return: gradient field.
-    :rtype: np.array.
+    :rtype: np.ndarray.
 
     Examples:
     """
@@ -131,13 +131,13 @@ def grad_iminus(
     Calculates the array gradient along the -i axis.
 
     :param fld: array.
-    :type fld: np.array.
+    :type fld: np.ndarray.
     :param cell_size_i: the cell spacing in the y direction.
     :type cell_size_i: numbers.Real.
     :param edge_order: the type of edge order used in the Numpy gradient method.
     :type edge_order: numbers.Integral.
     :return: gradient field.
-    :rtype: np.array.
+    :rtype: np.ndarray.
 
     Examples:
     """
@@ -191,11 +191,11 @@ def magnitude(
     the first represents the vector field x component, the second the vector field y component.
 
     :param fld_x: vector field x component.
-    :type fld_x: np.array.
+    :type fld_x: np.ndarray.
     :param fld_y: vector field y component.
-    :type fld_y: np.array.
+    :type fld_y: np.ndarray.
     :return: magnitude field.
-    :rtype: np.array.
+    :rtype: np.ndarray.
 
     Examples:
     """
@@ -211,11 +211,11 @@ def orients_r(
     the first represents the vector field x component, the second the vector field y component.
 
     :param fld_x: vector field x component.
-    :type fld_x: np.array.
+    :type fld_x: np.ndarray.
     :param fld_y: vector field y component.
-    :type fld_y: np.array.
+    :type fld_y: np.ndarray.
     :return: orientation field, in radians.
-    :rtype: np.array.
+    :rtype: np.ndarray.
 
     Examples:
     """
@@ -234,11 +234,11 @@ def orients_d(
     the first represents the vector field x component, the second the vector field y component.
 
     :param fld_x: vector field x component.
-    :type fld_x: np.array.
+    :type fld_x: np.ndarray.
     :param fld_y: vector field y component.
-    :type fld_y: np.array.
+    :type fld_y: np.ndarray.
     :return: orientation field, in decimal degrees.
-    :rtype: np.array.
+    :rtype: np.ndarray.
 
     Examples:
     """
@@ -256,15 +256,15 @@ def divergence(
     the first represents the vector field x component, the second the vector field y component.
 
     :param fld_x: vector field x component.
-    :type fld_x: np.array.
+    :type fld_x: np.ndarray.
     :param fld_y: vector field y component.
-    :type fld_y: np.array.
+    :type fld_y: np.ndarray.
     :param cell_size_x: the cell spacing in the x direction.
     :type cell_size_x: numbers.Real.
     :param cell_size_y: the cell spacing in the y direction.
     :type cell_size_y: numbers.Real.
     :return: divergence field.
-    :rtype: np.array.
+    :rtype: np.ndarray.
 
     Examples:
     """
@@ -285,15 +285,15 @@ def curl_module(
     the first represents the vector field x component, the second the vector field y component.
 
     :param fld_x: vector field x component.
-    :type fld_x: np.array.
+    :type fld_x: np.ndarray.
     :param fld_y: vector field y component.
-    :type fld_y: np.array.
+    :type fld_y: np.ndarray.
     :param cell_size_x: the cell spacing in the x direction.
     :type cell_size_x: numbers.Real.
     :param cell_size_y: the cell spacing in the y direction.
     :type cell_size_y: numbers.Real.
     :return: curl field.
-    :rtype: np.array.
+    :rtype: np.ndarray.
 
     Examples:
     """
@@ -314,15 +314,15 @@ def magn_grads(
     the first representing the x component, the second the y component.
 
     :param fld_x: vector field x component.
-    :type fld_x: np.array.
+    :type fld_x: np.ndarray.
     :param fld_y: vector field y component.
-    :type fld_y: np.array.
+    :type fld_y: np.ndarray.
     :param dir_cell_sizes: list of cell spacing(s) in the considered direction(s).
     :type dir_cell_sizes: list of numbers.Real(s).
     :param axis: declares the axis ('x' or 'y') or the axes('', i.e., empty string) for both x and y directions.
     :type axis: str.
     :return: magnitude gradient field(s) along the considered direction.
-    :rtype: list of np.array.
+    :rtype: list of np.ndarray.
     :raises: Exception.
 
     Examples:
@@ -348,15 +348,15 @@ def magn_grad_along_flowlines(
     Calculates gradient along flow lines.
 
     :param fld_x: vector field x component.
-    :type fld_x: np.array.
+    :type fld_x: np.ndarray.
     :param fld_y: vector field y component.
-    :type fld_y: np.array.
+    :type fld_y: np.ndarray.
     :param cell_size_x: the cell spacing in the x direction.
     :type cell_size_x: numbers.Real.
     :param cell_size_y: the cell spacing in the y direction.
     :type cell_size_y: numbers.Real.
     :return: the flowline gradient field
-    :rtype: np.array.
+    :rtype: np.ndarray.
     """
 
     orien_rad = orients_r(fld_x, fld_y)

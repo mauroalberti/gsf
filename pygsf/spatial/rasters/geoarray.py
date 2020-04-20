@@ -75,7 +75,7 @@ class GeoArray(object):
         :param epsg_code: the projection EPSG code.
         :type epsg_code: numbers.Integral
         :param  inLevels:  the nd-array storing the data.
-        :type  inLevels:  np.array.
+        :type  inLevels:  np.ndarray.
 
         :return:  None.
 

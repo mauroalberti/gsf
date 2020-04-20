@@ -10,10 +10,10 @@ from .interpolations import scalars_bilin_interp as s_interp_bilinear, interp_li
 from .scalars import *
 
 
-def arrToTuple(arr1D: np.array) -> Tuple[numbers.Real, ...]:
+def arrToTuple(arr1D: np.ndarray) -> Tuple[numbers.Real, ...]:
     """
     Converts a 1D arrays into a tuple of floats.
-    It assumes a 1D np.array as input.
+    It assumes a 1D np.ndarray as input.
     Modified from: https://stackoverflow.com/questions/10016352/convert-numpy-array-to-tuple
 
     :param arr1D: the 1D-arrays whose components have to be extracted.
@@ -48,12 +48,13 @@ def toFloats(iterable_obj: Sequence[numbers.Real]) -> List[numbers.Real]:
 
 
 def arraysAreClose(
-        a_array: 'np.array',
-        b_array: 'np.array',
+        a_array: np.ndarray,
+        b_array: np.ndarray,
         rtol: numbers.Real = 1e-012,
         atol: numbers.Real = 1e-12,
         equal_nan: bool = False,
-        equal_inf: bool = False) -> bool:
+        equal_inf: bool = False
+) -> bool:
     """
     Check for equivalence between two numpy arrays.
 
@@ -95,8 +96,9 @@ def arraysAreClose(
 
 
 def arraysSameShape(
-        a_array: 'np.array',
-        b_array: 'np.array') -> bool:
+        a_array: np.ndarray,
+        b_array: np.ndarray
+) -> bool:
     """
     Checks that two arrays have the same shape.
 
@@ -118,7 +120,7 @@ def arraysSameShape(
 
 
 def array_bilin_interp(
-        arr: 'np.array',
+        arr: np.ndarray,
         i: numbers.Real,
         j: numbers.Real
 ) -> numbers.Real:
@@ -173,9 +175,8 @@ def array_bilin_interp(
 
 
 def pointSolution(
-        a_array: np.array,
-        b_array:
-        np.array
+        a_array: np.ndarray,
+        b_array: np.ndarray
 ) -> Tuple[Optional[numbers.Real], Optional[numbers.Real], Optional[numbers.Real]]:
     """
     Finds a non-unique solution for a set of linear equations.
@@ -222,7 +223,8 @@ def xyzSvd(xyz_array) -> dict:
     return dict(result=result)
 
 
-def svd(xyz_array) -> Optional[Tuple['np.array', 'np.array', 'np.array']]:
+def svd(xyz_array
+        ) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
     Calculates the SVD solution given a Numpy array.
 

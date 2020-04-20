@@ -6,7 +6,7 @@ from typing import List, Dict, Union
 import numpy as np
 
 
-def get_statistics(vals: Union[List, np.array]) -> Dict:
+def get_statistics(vals: Union[List, np.ndarray]) -> Dict:
     """
 
     :param vals: the values, as a list or a numpy array
