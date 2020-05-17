@@ -24,6 +24,12 @@ class MPolygon:
         :type epsg_code: numbers.Integral
         """
 
+        check_type(
+            shapely_geom,
+            "Polygon",
+            (Polygon, MultiPolygon)
+        )
+
         self._geom = shapely_geom
         self._epsg_code = epsg_code
 

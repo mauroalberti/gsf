@@ -495,10 +495,16 @@ class LinearProfiler:
         Note: the intersections are considered flat, i.e., in a 2D plane, not 3D.
 
         :param mpolygon: the shapely polygon/multipolygon to intersect profile with
-        :type mpolygon: Union[shapely.geometry.Polygon, shapely.geometry.MultiPolygon]
+        :type mpolygon: pygsf.spatial.vectorial.polygons.MPolygon
         :return: the possible intersections
         :rtype: Lines
         """
+
+        check_type(
+            mpolygon,
+            "Polygon",
+            MPolygon
+        )
 
         line_shapely, epsg_code = line_to_shapely(self.to_line())
         return mpolygon.intersect_line(line=line_shapely)

@@ -1,6 +1,6 @@
 import numbers
 from array import array
-from typing import List
+from typing import Union, List
 
 from pygsf.utils.types import check_type
 
@@ -11,11 +11,11 @@ class ArrayList:
     """
 
     def __init__(self,
-                 rec_id: numbers.Integral,
+                 rec_id: Union[str, numbers.Integral],
                  arrays: List[array]
                  ):
 
-        check_type(rec_id, "Input id", numbers.Integral)
+        check_type(rec_id, "Input id", (str, numbers.Integral))
         check_type(arrays, "List of arrays", list)
         for part in arrays:
             check_type(part, "Array", array)
