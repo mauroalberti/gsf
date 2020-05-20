@@ -226,6 +226,7 @@ def _(
 
                     s_start = s_range[0]
                     s_end = s_range[1] if len(s_range) > 1 else None
+                    plot_symbol = '-o' if len(s_range) > 1 else 'o'
 
                     s_vals = geoprofile.topo_profile.s_subset(
                         s_start,
@@ -240,7 +241,7 @@ def _(
                     fig.gca().plot(
                         s_vals,
                         z_vals,
-                        'o',
+                        plot_symbol,
                         color=colors_addit[ndx]
                     )
 

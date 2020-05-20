@@ -871,8 +871,9 @@ class LinearProfiler:
 
         return ProfileAttitudes(sorted(results, key=attrgetter('s')))
 
-    def parse_intersections_for_profile(self,
-        lines_intersections: PointSegmentCollections
+    def parse_intersections_for_profile(
+            self,
+            lines_intersections: PointSegmentCollections
     ) -> ProfilesIntersections:
         """
         Parse the line intersections for incorporation
