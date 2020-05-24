@@ -9,7 +9,7 @@ class GeoProfile:
 
     """
     Class representing the topographic and geological elements
-    embodying a single geological profile.
+    constituting a single geological profile.
     """
 
     def __init__(self,
