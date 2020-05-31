@@ -873,20 +873,20 @@ class LinearProfiler:
 
     def parse_intersections_for_profile(
             self,
-            lines_intersections: PointSegmentCollections
+            intersections: PointSegmentCollections
     ) -> ProfilesIntersections:
         """
-        Parse the line intersections for incorporation
+        Parse the profile intersections for incorporation
         as elements in a geoprofile.
 
-        :param lines_intersections: the line intersections
-        :type lines_intersections: pygsf.spatial.vectorial.geometries.PointSegmentCollections
+        :param intersections: the intersections
+        :type intersections: pygsf.spatial.vectorial.geometries.PointSegmentCollections
         :return:
         """
 
         parsed_intersections = []
 
-        for line_id, inters_geoms in lines_intersections:
+        for line_id, inters_geoms in intersections:
 
             intersections_arrays = [self.pt_segm_signed_s(geom) for geom in inters_geoms]
 

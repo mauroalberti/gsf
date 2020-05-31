@@ -134,7 +134,7 @@ def _(
         if superposed:
             topo_color = colors_addit[ndx % len(colors_addit)]
         else:
-            topo_color = colors_addit[0]
+            topo_color = colors_addit[-1]
 
         ax.plot(
             geoprofile.topo_profile.s_arr(),
@@ -253,7 +253,45 @@ def _(
 
     if geoprofile.polygons_intersections:
 
-        pass
+        if not geoprofile.topo_profile:
+
+            warn('Topographic profile is not defined, so intersections cannot be plotted')
+
+        else:
+
+            for ndx, intersection_element in enumerate(geoprofile.polygons_intersections):
+
+                intersection_id = intersection_element.id
+                intersection_subparts = intersection_element.arrays
+
+                for s_range in intersection_subparts:
+
+                    s_start = s_range[0]
+                    s_end = s_range[1] if len(s_range) > 1 else None
+                    plot_symbol = '-' if len(s_range) > 1 else 'o'
+
+                    s_vals = geoprofile.topo_profile.s_subset(
+                        s_start,
+                        s_end
+                    )
+
+                    z_vals = geoprofile.topo_profile.zs_from_s_range(
+                        s_start,
+                        s_end
+                    )
+
+                    fig.gca().plot(
+                        s_vals,
+                        z_vals,
+                        plot_symbol,
+                        color=colors_addit[ndx]
+                    )
+
+                    if inters_label:
+
+                        fig.gca().annotate(
+                            f"{intersection_id}",
+                            (s_vals[-1] + 20, z_vals[-1] + 25))
 
     return fig
 

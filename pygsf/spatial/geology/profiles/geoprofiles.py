@@ -15,8 +15,8 @@ class GeoProfile:
     def __init__(self,
                  topo_profiles: Optional[TopographicProfile] = None,
                  profile_attitudes: Optional[ProfileAttitudes] = None,
-                 lines_intersections: Optional[PointSegmentCollections] = None,
-                 polygons_intersections: Optional[PointSegmentCollections] = None
+                 lines_intersections: Optional[ProfilesIntersections] = None,
+                 polygons_intersections: Optional[ProfilesIntersections] = None
                  ):
 
         if topo_profiles:
@@ -26,10 +26,10 @@ class GeoProfile:
             check_type(profile_attitudes, "Attitudes", ProfileAttitudes)
 
         if lines_intersections:
-            check_type(lines_intersections, "Line intersections", PointSegmentCollections)
+            check_type(lines_intersections, "Line intersections", ProfilesIntersections)
 
         if polygons_intersections:
-            check_type(polygons_intersections, "Polygon intersections", PointSegmentCollections)
+            check_type(polygons_intersections, "Polygon intersections", ProfilesIntersections)
 
         self._topo_profile = topo_profiles
         self._profile_attitudes = profile_attitudes
@@ -146,16 +146,15 @@ class GeoProfile:
 
     @polygons_intersections.setter
     def polygons_intersections(self,
-        polygons_intersections: PointSegmentCollections):
+        polygons_intersections: ProfilesIntersections):
         """
         Set the polygons intersections content.
 
         :param polygons_intersections: polygons intersections.
-        :type polygons_intersections: PolygonsIntersections.
         :return:
         """
 
-        check_type(polygons_intersections, "Polygons intersections", PointSegmentCollections)
+        check_type(polygons_intersections, "Polygons intersections", ProfilesIntersections)
 
         self._polygons_intersections = polygons_intersections
 

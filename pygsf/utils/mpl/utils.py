@@ -3,6 +3,14 @@ from builtins import range
 from numpy import isnan
 
 
+def qcolor2rgbmpl(qcolor):
+
+    red = qcolor.red() / 255.0
+    green = qcolor.green() / 255.0
+    blue = qcolor.blue() / 255.0
+    return red, green, blue
+
+
 def valid_intervals(values_array_1D):
     """
 
