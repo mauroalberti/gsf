@@ -205,6 +205,18 @@ class GeoArray(object):
         return abs(self._gt.pixHeight)
 
     @property
+    def mean_cellsize(self) -> numbers.Real:
+        """
+        Get the mean cell size of the geoarray.
+
+        :return: mean cell size.
+
+        Examples:
+        """
+
+        return (self.src_cellsize_i + self.src_cellsize_j) / 2.0
+
+    @property
     def levels_num(self) -> numbers.Integral:
         """
         Returns the number of levels (dimensions) of the geoarray.
