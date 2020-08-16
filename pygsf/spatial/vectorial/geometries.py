@@ -79,7 +79,7 @@ class Point:
             x=vect.x,
             y=vect.y,
             z=vect.z,
-            epsg_cd=vect.epsg()
+            epsg_code=vect.epsg()
         )
 
     @property
@@ -704,9 +704,9 @@ class Point:
         :raise: Exception
 
         Example:
-          >>> Point(1, 1, 1, epsg_code=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_cd=32632))
+          >>> Point(1, 1, 1, epsg_code=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_code=32632))
           Point(1.5000, 2.0000, 2.5000, 0.0000, 32632)
-          >>> Point(1, 2, -1, epsg_code=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_cd=32632))
+          >>> Point(1, 2, -1, epsg_code=32632).shiftByVect(Vect(0.5, 1., 1.5, epsg_code=32632))
           Point(1.5000, 3.0000, 0.5000, 0.0000, 32632)
        """
 
@@ -1069,6 +1069,19 @@ class Points:
 
         return Crs(self.epsg_code())
 
+    def asXyzArray(self):
+        """
+        Convert to a Numpy x-y-z array
+        """
+
+        return np.vstack(
+            (
+                self.xs,
+                self.ys,
+                self.zs
+            )
+        ).transpose()
+
     def x_min(self):
         """
         The minimum x value.
@@ -1082,6 +1095,13 @@ class Points:
         """
 
         return np.nanmax(self.xs)
+
+    def x_mean(self):
+        """
+        The mean x value.
+        """
+
+        return np.nanmean(self.xs)
 
     def y_min(self):
         """
@@ -1097,6 +1117,13 @@ class Points:
 
         return np.nanmax(self.ys)
 
+    def y_mean(self):
+        """
+        The mean y value.
+        """
+
+        return np.nanmean(self.ys)
+
     def z_min(self):
         """
         The minimum z value.
@@ -1111,6 +1138,13 @@ class Points:
 
         return np.nanmax(self.zs)
 
+    def z_mean(self):
+        """
+        The mean z value.
+        """
+
+        return np.nanmean(self.zs)
+
     def t_min(self):
         """
         The minimum t value.
@@ -1124,6 +1158,13 @@ class Points:
         """
 
         return np.nanmax(self.ts)
+
+    def t_mean(self):
+        """
+        The mean t value.
+        """
+
+        return np.nanmean(self.ts)
 
     def nanmean_point(self) -> Point:
         """
@@ -1154,7 +1195,13 @@ class CPlane(object):
 
     """
 
-    def __init__(self, a: numbers.Real, b: numbers.Real, c: numbers.Real, d: numbers.Real, epsg_cd: numbers.Integral = -1):
+    def __init__(self,
+                 a: numbers.Real,
+                 b: numbers.Real,
+                 c: numbers.Real,
+                 d: numbers.Real,
+                 epsg_code: numbers.Integral = -1
+                 ):
 
         if not isinstance(a, numbers.Real):
             raise Exception("Input value a must be float or int but is {}".format(type(a)))
@@ -1164,15 +1211,15 @@ class CPlane(object):
             raise Exception("Input value c must be float or int but is {}".format(type(c)))
         if not isinstance(d, numbers.Real):
             raise Exception("Input value d must be float or int but is {}".format(type(d)))
-        if not isinstance(epsg_cd, numbers.Integral):
-            raise Exception("Input value epsg_cd must be int but is {}".format(type(epsg_cd)))
+        if not isinstance(epsg_code, numbers.Integral):
+            raise Exception("Input value epsg_cd must be int but is {}".format(type(epsg_code)))
 
         norm = sqrt(a*a + b*b + c*c)
         self._a = float(a) / norm
         self._b = float(b) / norm
         self._c = float(c) / norm
         self._d = float(d) / norm
-        self._crs = Crs(epsg_cd)
+        self._crs = Crs(epsg_code)
 
     def a(self) -> numbers.Real:
         """
@@ -1231,7 +1278,7 @@ class CPlane(object):
 
         return self._crs
 
-    def epsg(self) -> numbers.Integral:
+    def epsg_code(self) -> numbers.Integral:
         """
         Returns the EPSG code.
 
@@ -1252,7 +1299,7 @@ class CPlane(object):
           (0.14002800840280097, 0.14002800840280097, 0.9801960588196068, -0.5601120336112039, -1)
         """
 
-        return self.a(), self.b(), self.c(), self.d(), self.epsg()
+        return self.a(), self.b(), self.c(), self.d(), self.epsg_code()
 
     @classmethod
     def fromPoints(cls, pt1, pt2, pt3) -> 'CPlane':
@@ -1308,7 +1355,7 @@ class CPlane(object):
             np.linalg.det(matr_b),
             np.linalg.det(matr_c),
             np.linalg.det(matr_d),
-            epsg_cd=pt1.epsg_code())
+            epsg_code=pt1.epsg_code())
 
     def __repr__(self):
 
@@ -1321,11 +1368,11 @@ class CPlane(object):
         Examples:
           >>> CPlane(0, 0, 5, -2).normVersor()
           Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
-          >>> CPlane(0, 7, 0, 5, epsg_cd=32632).normVersor()
+          >>> CPlane(0, 7, 0, 5, epsg_code=32632).normVersor()
           Vect(0.0000, 1.0000, 0.0000, EPSG: 32632)
         """
 
-        return Vect(self.a(), self.b(), self.c(), epsg_cd=self.epsg()).versor()
+        return Vect(self.a(), self.b(), self.c(), epsg_code=self.epsg_code()).versor()
 
     def toPoint(self) -> Point:
         """
@@ -1340,7 +1387,7 @@ class CPlane(object):
             *pointSolution(
                 np.array([[self.a(), self.b(), self.c()]]),
                 np.array([-self.d()])),
-            epsg_code=self.epsg())
+            epsg_code=self.epsg_code())
 
         return point
 
@@ -1356,11 +1403,11 @@ class CPlane(object):
         :raise: Exception.
 
         Examples:
-          >>> a = CPlane(1, 0, 0, 0, epsg_cd=2000)
-          >>> b = CPlane(0, 0, 1, 0, epsg_cd=2000)
+          >>> a = CPlane(1, 0, 0, 0, epsg_code=2000)
+          >>> b = CPlane(0, 0, 1, 0, epsg_code=2000)
           >>> a.intersVersor(b)
           Vect(0.0000, -1.0000, 0.0000, EPSG: 2000)
-          >>> b = CPlane(-1, 0, 0, 0, epsg_cd=2000)  # parallel plane, no intersection
+          >>> b = CPlane(-1, 0, 0, 0, epsg_code=2000)  # parallel plane, no intersection
           >>> a.intersVersor(b) is None
           True
         """
@@ -1384,11 +1431,11 @@ class CPlane(object):
         :raise: Exception
 
         Examples:
-          >>> a = CPlane(1, 0, 0, 0, epsg_cd=32632)
-          >>> b = CPlane(0, 0, 1, 0, epsg_cd=32632)
+          >>> a = CPlane(1, 0, 0, 0, epsg_code=32632)
+          >>> b = CPlane(0, 0, 1, 0, epsg_code=32632)
           >>> a.intersPoint(b)
           Point(0.0000, 0.0000, 0.0000, 0.0000, 32632)
-          >>> b = CPlane(-1, 0, 0, 0, epsg_cd=32632)  # parallel plane, no intersection
+          >>> b = CPlane(-1, 0, 0, 0, epsg_code=32632)  # parallel plane, no intersection
           >>> a.intersPoint(b) is None
         """
 
@@ -1403,7 +1450,7 @@ class CPlane(object):
         x, y, z = pointSolution(a, b)
 
         if x is not None and y is not None and z is not None:
-            return Point(x, y, z, epsg_code=self.epsg())
+            return Point(x, y, z, epsg_code=self.epsg_code())
         else:
             return None
 
@@ -1425,7 +1472,7 @@ class CPlane(object):
         :raise: Exception.
 
         Examples:
-          >>> cpl = CPlane(0, 0, 1, 0, epsg_cd=32632)
+          >>> cpl = CPlane(0, 0, 1, 0, epsg_code=32632)
           >>> pt = Point(0, 0, 1, epsg_code=32632)
           >>> cpl.pointDistance(pt)
           1.0
@@ -1438,7 +1485,7 @@ class CPlane(object):
           >>> pt = Point(10, 20, 0.0, epsg_code=32632)
           >>> cpl.pointDistance(pt)
           0.0
-          >>> cpl = CPlane(0, 0, 1, 0, epsg_cd=32632)
+          >>> cpl = CPlane(0, 0, 1, 0, epsg_code=32632)
           >>> pt = Point(10, 20, 0.0)
           >>> cpl.pointDistance(pt)
           Traceback (most recent call last):
@@ -1469,7 +1516,7 @@ class CPlane(object):
           >>> pt = Point(0, 1, 0)
           >>> pl.isPointInPlane(pt)
           True
-          >>> pl = CPlane(0, 0, 1, 0, epsg_cd=32632)
+          >>> pl = CPlane(0, 0, 1, 0, epsg_code=32632)
           >>> pt = Point(0, 1, 0, epsg_code=32632)
           >>> pl.isPointInPlane(pt)
           True
@@ -1499,13 +1546,13 @@ class CPlane(object):
         Examples:
           >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0))
           90.0
-          >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(0,1,0,0, epsg_cd=32632))
+          >>> CPlane(1,0,0,0, epsg_code=32632).angle(CPlane(0,1,0,0, epsg_code=32632))
           90.0
-          >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,1,0, epsg_cd=32632))
+          >>> CPlane(1,0,0,0, epsg_code=32632).angle(CPlane(1,0,1,0, epsg_code=32632))
           45.0
-          >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,0,0, epsg_cd=32632))
+          >>> CPlane(1,0,0,0, epsg_code=32632).angle(CPlane(1,0,0,0, epsg_code=32632))
           0.0
-          >>> CPlane(1,0,0,0, epsg_cd=32632).angle(CPlane(1,0,0,0))
+          >>> CPlane(1,0,0,0, epsg_code=32632).angle(CPlane(1,0,0,0))
           Traceback (most recent call last):
           ...
           Exception: checked CPlane instance has -1 EPSG code but 32632 expected
@@ -1699,7 +1746,7 @@ class Segment:
         return Vect(self.delta_x(),
                     self.delta_y(),
                     self.delta_z(),
-                    epsg_cd=self.epsg_code())
+                    epsg_code=self.epsg_code())
 
     def antivector(self) -> Vect:
         """
@@ -4220,7 +4267,7 @@ class ParamLine3D(object):
         if not isinstance(cartes_plane, CPlane):
             raise Exception("Method argument should be a Cartesian plane but is {}".format(type(cartes_plane)))
 
-        if cartes_plane.epsg() != self.epsg():
+        if cartes_plane.epsg_code() != self.epsg():
             raise Exception("Parametric line has EPSG {} while Cartesian plane has {}".format(self.epsg(), cartes_plane.espg()))
 
         # line parameters
@@ -4834,7 +4881,7 @@ class Plane(object):
         normal_versor = self.normDirectFrwrd().asVersor()
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * pt.x + b * pt.y + c * pt.z)
-        return CPlane(a, b, c, d, epsg_cd=pt.epsg_code())
+        return CPlane(a, b, c, d, epsg_code=pt.epsg_code())
 
     def slope_x_dir(self) -> numbers.Real:
         """
@@ -5579,7 +5626,7 @@ class Direct(object):
             x=east_coord,
             y=north_coord,
             z=-down_coord,
-            epsg_cd=epsg_cd)
+            epsg_code=epsg_cd)
 
     @property
     def isUpward(self):
@@ -6386,7 +6433,7 @@ def rotVectByAxis(
       >>> rotation = RotationAxis(90, -45, 180)
       >>> rotVectByAxis(v, rotation)
       Vect(3.0000, -0.0000, -0.0000, EPSG: -1)
-      >>> v = Vect(0,0,3, epsg_cd=32633)
+      >>> v = Vect(0,0,3, epsg_code=32633)
       >>> rotVectByAxis(v, rotation)
       Vect(3.0000, -0.0000, -0.0000, EPSG: 32633)
     """

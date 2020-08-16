@@ -309,7 +309,7 @@ class LinearProfiler:
         :rtype: Vect.
         """
 
-        return Vect(0, 0, 1, epsg_cd=self.epsg_code()).vCross(self.versor()).versor()
+        return Vect(0, 0, 1, epsg_code=self.epsg_code()).vCross(self.versor()).versor()
 
     def right_norm_vers(self) -> Vect:
         """
@@ -319,7 +319,7 @@ class LinearProfiler:
         :rtype: Vect.
         """
 
-        return Vect(0, 0, -1, epsg_cd=self.epsg_code()).vCross(self.versor()).versor()
+        return Vect(0, 0, -1, epsg_code=self.epsg_code()).vCross(self.versor()).versor()
 
     def left_offset(self,
         offset: numbers.Real) -> 'LinearProfiler':

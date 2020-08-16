@@ -20,10 +20,10 @@ class Vect(object):
     """
 
     def __init__(self,
-        x: numbers.Real,
-        y: numbers.Real,
-        z: numbers.Real = 0.0,
-        epsg_cd: numbers.Integral = -1):
+                 x: numbers.Real,
+                 y: numbers.Real,
+                 z: numbers.Real = 0.0,
+                 epsg_code: numbers.Integral = -1):
         """
         Vect constructor.
 
@@ -38,9 +38,9 @@ class Vect(object):
           Traceback (most recent call last):
           ...
           Exception: Input values must be finite
-          >>> Vect(0, 0, 0, epsg_cd=32648)
+          >>> Vect(0, 0, 0, epsg_code=32648)
           Vect(0.0000, 0.0000, 0.0000, EPSG: 32648)
-          >>> Vect(2.2, -19.7, epsg_cd=32648)
+          >>> Vect(2.2, -19.7, epsg_code=32648)
           Vect(2.2000, -19.7000, 0.0000, EPSG: 32648)
         """
 
@@ -53,7 +53,7 @@ class Vect(object):
             raise Exception("Input values must be finite")
 
         self._a = np.array(vals, dtype=np.float64)
-        self._crs = Crs(epsg_cd)
+        self._crs = Crs(epsg_code)
 
     def __abs__(self):
         """
@@ -215,7 +215,7 @@ class Vect(object):
           Vect(2.0000, 3.0000, 0.0000, EPSG: -1)
         """
 
-        return self.__class__(self.x, self.y, 0.0, epsg_cd=self.epsg())
+        return self.__class__(self.x, self.y, 0.0, epsg_code=self.epsg())
 
     def pXZ(self) -> 'Vect':
         """
@@ -224,11 +224,11 @@ class Vect(object):
         :return: projected object instance
 
         Examples:
-          >>> Vect(2, 3, 4, epsg_cd=2000).pXZ()
+          >>> Vect(2, 3, 4, epsg_code=2000).pXZ()
           Vect(2.0000, 0.0000, 4.0000, EPSG: 2000)
         """
 
-        return self.__class__(self.x, 0.0, self.z, epsg_cd=self.epsg())
+        return self.__class__(self.x, 0.0, self.z, epsg_code=self.epsg())
 
     def pYZ(self) -> 'Vect':
         """
@@ -241,7 +241,7 @@ class Vect(object):
           Vect(0.0000, 3.0000, 4.0000, EPSG: -1)
         """
 
-        return self.__class__(0.0, self.y, self.z, epsg_cd=self.epsg())
+        return self.__class__(0.0, self.y, self.z, epsg_code=self.epsg())
 
     @property
     def len3D(self) -> numbers.Real:
@@ -280,7 +280,7 @@ class Vect(object):
         :rtype: Optional[numbers.Real].
 
         Examples:
-          >>> Vect(1, 2, 3, epsg_cd=2000).deltaX(Vect(4, 7, 1, epsg_cd=2000))
+          >>> Vect(1, 2, 3, epsg_code=2000).deltaX(Vect(4, 7, 1, epsg_code=2000))
           3.0
         """
 
@@ -300,7 +300,7 @@ class Vect(object):
         :rtype: Optional[numbers.Real].
 
         Examples:
-          >>> Vect(1, 2, 3, epsg_cd=2000).deltaY(Vect(4, 7, 1, epsg_cd=2000))
+          >>> Vect(1, 2, 3, epsg_code=2000).deltaY(Vect(4, 7, 1, epsg_code=2000))
           5.0
         """
 
@@ -320,7 +320,7 @@ class Vect(object):
         :rtype: Optional[numbers.Real].
 
         Examples:
-          >>> Vect(1, 2, 3, epsg_cd=2000).deltaZ(Vect(4, 7, 1, epsg_cd=2000))
+          >>> Vect(1, 2, 3, epsg_code=2000).deltaZ(Vect(4, 7, 1, epsg_code=2000))
           -2.0
         """
 
@@ -354,14 +354,14 @@ class Vect(object):
             return None
 
         x, y, z = arrToTuple(self.a * scale_factor)
-        return self.__class__(x, y, z, epsg_cd=self.epsg())
+        return self.__class__(x, y, z, epsg_code=self.epsg())
 
     def invert(self) -> 'Vect':
         """
         Create a new object with inverted direction.
 
         Examples:
-          >>> Vect(1, 1, 1, epsg_cd=2000).invert()
+          >>> Vect(1, 1, 1, epsg_code=2000).invert()
           Vect(-1.0000, -1.0000, -1.0000, EPSG: 2000)
           >>> Vect(2, -1, 4).invert()
           Vect(-2.0000, 1.0000, -4.0000, EPSG: -1)
@@ -384,9 +384,9 @@ class Vect(object):
         :raise: Exception
 
         Example:
-          >>> Vect(1, 0, 0, epsg_cd=2000) + Vect(0, 1, 1, epsg_cd=2000)
+          >>> Vect(1, 0, 0, epsg_code=2000) + Vect(0, 1, 1, epsg_code=2000)
           Vect(1.0000, 1.0000, 1.0000, EPSG: 2000)
-          >>> Vect(1, 1, 1, epsg_cd=2000) + Vect(-1, -1, -1, epsg_cd=2000)
+          >>> Vect(1, 1, 1, epsg_code=2000) + Vect(-1, -1, -1, epsg_code=2000)
           Vect(0.0000, 0.0000, 0.0000, EPSG: 2000)
         """
 
@@ -407,9 +407,9 @@ class Vect(object):
         :raise: Exception
 
         Example:
-          >>> Vect(1., 1., 1., epsg_cd=2000) - Vect(1., 1., 1., epsg_cd=2000)
+          >>> Vect(1., 1., 1., epsg_code=2000) - Vect(1., 1., 1., epsg_code=2000)
           Vect(0.0000, 0.0000, 0.0000, EPSG: 2000)
-          >>> Vect(1., 1., 3., epsg_cd=2000) - Vect(1., 1., 2.2, epsg_cd=2000)
+          >>> Vect(1., 1., 3., epsg_code=2000) - Vect(1., 1., 2.2, epsg_code=2000)
           Vect(0.0000, 0.0000, 0.8000, EPSG: 2000)
         """
 
@@ -475,7 +475,7 @@ class Vect(object):
         Example:
           >>> Vect(5, 0, 0).versor()
           Vect(1.0000, 0.0000, 0.0000, EPSG: -1)
-          >>> Vect(0, 0, -1, epsg_cd=32633).versor()
+          >>> Vect(0, 0, -1, epsg_code=32633).versor()
           Vect(0.0000, 0.0000, -1.0000, EPSG: 32633)
           >>> Vect(0, 0, 0).versor() is None
           True
@@ -777,7 +777,7 @@ class Vect(object):
             raise Exception("Another instance should have {} EPSG code but has {}".format(self.epsg(), another.epsg()))
 
         x, y, z = arrToTuple(np.cross(self.a[:3], another.a[:3]))
-        return Vect(x, y, z, epsg_cd=self.epsg())
+        return Vect(x, y, z, epsg_code=self.epsg())
 
     def byMatrix(self, array3x3: np.ndarray) -> 'Vect':
         """
