@@ -1,9 +1,5 @@
 
-#from __future__ import division
-
-#from builtins import str
-
-from PyQt5.QtCore import QSettings, QFileInfo
+from PyQt5.QtCore import QFileInfo
 from PyQt5.QtWidgets import QFileDialog
 
 

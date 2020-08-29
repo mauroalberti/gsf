@@ -4,8 +4,8 @@ import numbers
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-from pygsf.spatial.vectorial.geometries import Line
-from pygsf.spatial.rasters.geoarray import GeoArray
+from pygsf.spatial.space3d.vectorial.geometries import Line
+from pygsf.spatial.space3d.rasters.geoarray import GeoArray
 
 
 def plot_grid(

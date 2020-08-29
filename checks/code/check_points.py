@@ -2,10 +2,7 @@
 
 # # Check point collections
 
-import math
-import numpy as np
-
-from pygsf.spatial.vectorial.geometries import *
+from pygsf.spatial.space3d.vectorial.geometries import *
 
 
 def check_points():
