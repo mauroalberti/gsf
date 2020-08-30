@@ -5,7 +5,7 @@
 
 import unittest
 
-
+from pygsf.orientations.orientations import RotationAxis
 from pygsf.spatial.space3d.vectorial.geometries import *
 
 

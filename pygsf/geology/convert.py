@@ -4,7 +4,7 @@ from typing import Tuple, Optional, Union
 from geopandas import GeoDataFrame
 
 from pygsf.spatial.space3d.vectorial.geometries import Plane
-from pygsf.spatial.space3d.vectorial.geodataframes import *
+from pygsf.geodataframes.geodataframes import *
 
 from .base import GeorefAttitude
 

@@ -2,6 +2,7 @@
 
 
 from .ptbaxes import *
+from ..orientations.orientations import Axis, Direct
 
 
 def isDirect(obj) -> bool:

@@ -14,7 +14,7 @@ from .defaults import GRID_NULL_VALUE
 
 class RasterIOException(Exception):
     """
-    Exception for rasters IO.
+    Exception for io IO.
     """
     pass
 
@@ -129,7 +129,7 @@ def read_raster(
 
 def read_band(dataset: gdal.Dataset, bnd_ndx: int = 1) -> Tuple[dict, np.ndarray]:
     """
-    Read data and metadata of a rasters band based on GDAL.
+    Read data and metadata of a io band based on GDAL.
 
     :param dataset: the source raster dataset
     :type dataset: gdal.Dataset
@@ -177,7 +177,7 @@ def read_band(dataset: gdal.Dataset, bnd_ndx: int = 1) -> Tuple[dict, np.ndarray
 
     grid_values = band.ReadAsArray()
     if grid_values is None:
-        raise RasterIOException("Unable to read data from rasters")
+        raise RasterIOException("Unable to read data from io")
 
     # if nodatavalue exists, set null values to NaN in numpy array
 

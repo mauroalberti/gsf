@@ -2,7 +2,7 @@
 
 from collections import namedtuple
 
-from pygsf.spatial.space3d.geology.faults import *
+from pygsf.geology.faults import *
 from pygsf.spatial.space3d.vectorial.geometries import Point, Plane
 
 georef_att_flds = [

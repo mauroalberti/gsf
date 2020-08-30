@@ -2,7 +2,7 @@
 
 from .faults import *
 
-from pygsf.spatial.space3d.vectorial.geometries import RotationAxis
+from pygsf.orientations.orientations import RotationAxis, sortRotations
 
 
 class PTBAxes(object):
@@ -342,7 +342,7 @@ def focmech_rotate(
     :param fm: the focal mechanism to rotVectByAxis
     :type fm: PTBAxes
     :param ra: the rotation axis
-    :type ra: RotationAxis
+    :type ra: pygsf.orientations.orientations.RotationAxis
     :return: the rotated focal mechanism
     :rtype: PTBAxes
     """

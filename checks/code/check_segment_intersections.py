@@ -1,7 +1,7 @@
 # coding: utf-8
 
 # # Check segment intersections
-
+from pygsf.orientations.orientations import RotationAxis
 from pygsf.spatial.space3d.vectorial.geometries import *
 
 

@@ -3,10 +3,11 @@ from typing import List, Iterable
 from operator import attrgetter
 
 from pygsf.spatial.space3d.rasters.geoarray import *
-from pygsf.spatial.space3d.geology.base import *
+from pygsf.geology.base import *
 from pygsf.spatial.space3d.vectorial.polygons import *
 
 from .sets import *
+from ...orientations.orientations import Axis, Azim, Plunge
 
 
 def georef_attitudes_3d_from_grid(
@@ -818,9 +819,9 @@ class LinearProfiler:
         max_profile_distance: Optional[numbers.Real] = None
     ) -> Optional[List[ProfileAttitude]]:
         """
-        Projects a set of georeferenced 3d attitudes onto the section profile.
+        Projects a set of georeferenced geom3d attitudes onto the section profile.
 
-        :param attitudes_3d: the set of georeferenced 3d attitudes to plot on the section.
+        :param attitudes_3d: the set of georeferenced geom3d attitudes to plot on the section.
         :type attitudes_3d: List[GeorefAttitude]
         :param mapping_method: the method to map the attitudes to the section.
         ;type mapping_method; Dict.
@@ -1046,11 +1047,11 @@ class ParallelProfiler(list):
             max_profile_distance: Optional[numbers.Real] = None
     ) -> AttitudesSet:
         """
-        Projects a set of georeferenced 3d attitudes onto the section profile.
+        Projects a set of georeferenced geom3d attitudes onto the section profile.
 
-        Projects a set of georeferenced 3d attitudes onto the section profile,
+        Projects a set of georeferenced geom3d attitudes onto the section profile,
 
-        :param attitudes_3d: the set of georeferenced 3d attitudes to plot on the section.
+        :param attitudes_3d: the set of georeferenced geom3d attitudes to plot on the section.
         :type attitudes_3d: List[GeorefAttitude]
         :param mapping_method: the method to map the attitudes to the section.
         ;type mapping_method; Dict.

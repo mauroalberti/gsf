@@ -392,7 +392,7 @@ class ProfileAttitudes(list):
 
     def __init__(self, atts: List[ProfileAttitude]):
 
-        check_type(atts, "Attitude projections", List)
+        check_type(atts, "Attitude crs", List)
         for el in atts:
             check_type(el, "Attitude projection", ProfileAttitude)
 

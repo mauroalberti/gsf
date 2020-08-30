@@ -4,7 +4,7 @@ from typing import Union
 
 from math import sqrt, degrees, acos
 
-from pygsf.spatial.space3d.vectors import *
+from pygsf.mathematics.vectors import *
 
 
 class Quaternion(object):

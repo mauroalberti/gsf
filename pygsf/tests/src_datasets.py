@@ -1,6 +1,3 @@
-
-from pygsf.spatial.space3d.geology.ptbaxes import *
-
 """
 
 Dataset from: 

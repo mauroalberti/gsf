@@ -4,7 +4,7 @@ import numbers
 from pygsf.utils.types import *
 from pygsf.mathematics.defaults import *
 from pygsf.mathematics.arrays import *
-from pygsf.spatial.space3d.projections.crs import *
+from pygsf.crs.crs import *
 
 
 class Vect(object):

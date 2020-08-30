@@ -3,7 +3,7 @@
 
 from pygsf.mathematics.scalars import *
 
-from pygsf.spatial.space3d.vectors import Vect
+from pygsf.mathematics.vectors import Vect
 
 
 class RefFrame(object):

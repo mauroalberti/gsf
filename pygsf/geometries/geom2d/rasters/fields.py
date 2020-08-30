@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
-
 
 from typing import Callable
 
 from math import sin, cos
 
 
-
 import numbers
 
-from .geotransform import *
+from pygsf.geometries.geom2d.rasters.geotransform import *
 
 
 def ij_transfer_func(
@@ -18,7 +15,8 @@ def ij_transfer_func(
         geotransform: GeoTransform,
         z_transfer_func: Callable,
         i_shift=0.5,
-        j_shift=0.5) -> numbers.Real:
+        j_shift=0.5
+) -> numbers.Real:
     """
     Return a z value as the result of a function (transfer_func_z) applied to a
     (i+i_shift,j+j_shift) point (i.e., with defaultvalues, the cell center, not the cell top-left corner)
@@ -49,7 +47,8 @@ def array_from_function(
         row_num: numbers.Integral,
         col_num: numbers.Integral,
         geotransform: GeoTransform,
-        z_transfer_func: Callable) -> np.ndarray:
+        z_transfer_func: Callable
+) -> np.ndarray:
     """
     Creates an array of z values based on functions that map (i,j) indices (to be created)
     into (x, y) values and then z values.
@@ -82,7 +81,8 @@ def array_from_function(
 def grad_j(
         fld: np.ndarray,
         cell_size_j: numbers.Real,
-        edge_order: numbers.Integral = 2) -> np.ndarray:
+        edge_order: numbers.Integral = 2
+) -> np.ndarray:
     """
     Calculates the array gradient along the j axis.
 
@@ -104,7 +104,8 @@ def grad_j(
 def grad_i(
         fld: np.ndarray,
         cell_size_i: numbers.Real,
-        edge_order: numbers.Integral = 2) -> np.ndarray:
+        edge_order: numbers.Integral = 2
+) -> np.ndarray:
     """
     Calculates the array gradient along the i axis.
 
@@ -126,7 +127,8 @@ def grad_i(
 def grad_iminus(
         fld: np.ndarray,
         cell_size_i: numbers.Real,
-        edge_order: numbers.Integral=2) -> np.ndarray:
+        edge_order: numbers.Integral = 2
+) -> np.ndarray:
     """
     Calculates the array gradient along the -i axis.
 
@@ -150,8 +152,9 @@ def dir_deriv(
         cell_size_x: numbers.Real,
         cell_size_y: numbers.Real,
         direct_rad: numbers.Real,
-        dx_edge_order: numbers.Integral=2,
-        dy_edge_order: numbers.Integral=2) -> np.ndarray:
+        dx_edge_order: numbers.Integral = 2,
+        dy_edge_order: numbers.Integral = 2
+) -> np.ndarray:
     """
     Calculates the directional derivative in the provided direction.
 
@@ -185,7 +188,8 @@ def dir_deriv(
 
 def magnitude(
         fld_x: np.ndarray,
-        fld_y: np.ndarray) -> np.ndarray:
+        fld_y: np.ndarray
+) -> np.ndarray:
     """
     Calculates the magnitude given two 2D arrays:
     the first represents the vector field x component, the second the vector field y component.
@@ -205,7 +209,8 @@ def magnitude(
 
 def orients_r(
         fld_x: np.ndarray,
-        fld_y: np.ndarray) -> np.ndarray:
+        fld_y: np.ndarray
+) -> np.ndarray:
     """
     Calculates the orientations (as radians) given two 2D arrays:
     the first represents the vector field x component, the second the vector field y component.
@@ -228,7 +233,8 @@ def orients_r(
 
 def orients_d(
         fld_x: np.ndarray,
-        fld_y: np.ndarray) -> np.ndarray:
+        fld_y: np.ndarray
+) -> np.ndarray:
     """
     Calculates the orientations (as decimal degrees) given two 2D arrays:
     the first represents the vector field x component, the second the vector field y component.
@@ -250,7 +256,8 @@ def divergence(
         fld_x: np.ndarray,
         fld_y: np.ndarray,
         cell_size_x: numbers.Real,
-        cell_size_y: numbers.Real) -> np.ndarray:
+        cell_size_y: numbers.Real
+) -> np.ndarray:
     """
     Calculates the divergence from two 2D arrays:
     the first represents the vector field x component, the second the vector field y component.
@@ -279,7 +286,8 @@ def curl_module(
         fld_x: np.ndarray,
         fld_y: np.ndarray,
         cell_size_x: numbers.Real,
-        cell_size_y: numbers.Real) -> np.ndarray:
+        cell_size_y: numbers.Real
+) -> np.ndarray:
     """
     Calculates the curl module from two 2D arrays:
     the first represents the vector field x component, the second the vector field y component.
@@ -308,7 +316,8 @@ def magn_grads(
         fld_x: np.ndarray,
         fld_y: np.ndarray,
         dir_cell_sizes: List[numbers.Real],
-        axis: str='') -> List[np.ndarray]:
+        axis: str = ''
+) -> List[np.ndarray]:
     """
     Calculates the magnitude gradient along the given direction, based on the field-defining two 2D arrays:
     the first representing the x component, the second the y component.
@@ -343,7 +352,8 @@ def magn_grad_along_flowlines(
         fld_x: np.ndarray,
         fld_y: np.ndarray,
         cell_size_x: numbers.Real,
-        cell_size_y: numbers.Real) -> np.ndarray:
+        cell_size_y: numbers.Real
+) -> np.ndarray:
     """
     Calculates gradient along flow lines.
 

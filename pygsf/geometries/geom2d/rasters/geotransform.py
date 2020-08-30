@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+import numbers
+from typing import Tuple
 
 import affine
 
@@ -7,7 +8,7 @@ from pygsf.mathematics.arrays import *
 
 class GeoTransform(np.ndarray):
     """
-    Manage geotransform parameters for rasters.
+    Manage geotransform parameters for io.
     It is based on the GDAL GeoTransform concept.
     See: http://www.gdal.org/gdal_datamodel.html
     """
@@ -53,7 +54,9 @@ class GeoTransform(np.ndarray):
         ], dtype=float).view(cls)
 
     @classmethod
-    def fromGdalGt(cls, gdal_gt: Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Real]) -> 'GeoTransform':
+    def fromGdalGt(cls,
+            gdal_gt: Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Real, numbers.Real]
+        ) -> 'GeoTransform':
         """
         Creates a Geotransform from a GDAL-convention tuple.
 
@@ -106,7 +109,7 @@ class GeoTransform(np.ndarray):
     @property
     def topLeftX(self) -> numbers.Real:
         """
-        Get top-left corner x value of the rasters.
+        Get top-left corner x value of the io.
 
         :return: the top-left corner x value, according to GDAL convention
         :rtype: numbers.Real.
@@ -121,7 +124,7 @@ class GeoTransform(np.ndarray):
     @property
     def topLeftY(self) -> numbers.Real:
         """
-        Get top-left corner y value of the rasters.
+        Get top-left corner y value of the io.
 
         :return:  the top-left corner y value, according to GDAL convention.
         :rtype: numbers.Real.
@@ -136,9 +139,9 @@ class GeoTransform(np.ndarray):
     @property
     def pixWidth(self) -> numbers.Real:
         """
-        Get East-West size of the rasters cell.
+        Get East-West size of the io cell.
 
-        :return:  the East-West size of the rasters cell
+        :return:  the East-West size of the io cell
         :rtype: numbers.Real.
 
         Examples:
@@ -151,9 +154,9 @@ class GeoTransform(np.ndarray):
     @property
     def pixHeight(self) -> numbers.Real:
         """
-        Get North-South size of the rasters cell.
+        Get North-South size of the io cell.
 
-        :return:  the North-South size of the rasters cell.
+        :return:  the North-South size of the io cell.
         :rtype: numbers.Real.
 
         Examples:
@@ -168,7 +171,7 @@ class GeoTransform(np.ndarray):
         """
         Get row rotation GT(2) (see GDAL documentation).
 
-        :return:  the rasters rotation value GT(2).
+        :return:  the io rotation value GT(2).
         :rtype: numbers.Real.
 
         Examples:
@@ -183,7 +186,7 @@ class GeoTransform(np.ndarray):
         """
         Get column rotation GT(4) (see GDAL documentation).
 
-        :return:  the rasters rotation value GT(4).
+        :return:  the io rotation value GT(4).
         :rtype: numbers.Real.
 
         Examples:
@@ -208,7 +211,11 @@ class GeoTransform(np.ndarray):
         return self.rotRow != 0.0 or self.rotColumn != 0.0
 
 
-def ijPixToxyGeogr(geotransform: GeoTransform, i: numbers.Real, j: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
+def ijPixToxyGeogr(
+        geotransform: GeoTransform,
+        i: numbers.Real,
+        j: numbers.Real
+) -> Tuple[numbers.Real, numbers.Real]:
     """
     Transforms from pixel to geographic coordinates.
 
@@ -244,7 +251,11 @@ def ijPixToxyGeogr(geotransform: GeoTransform, i: numbers.Real, j: numbers.Real)
     return Xgeo, Ygeo
 
 
-def xyGeogrToijPix(geotransform: GeoTransform, x: numbers.Real, y: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
+def xyGeogrToijPix(
+        geotransform: GeoTransform,
+        x: numbers.Real,
+        y: numbers.Real
+) -> Tuple[numbers.Real, numbers.Real]:
     """
     Transforms from geographic to pixel coordinates.
 
@@ -301,7 +312,11 @@ def xyGeogrToijPix(geotransform: GeoTransform, x: numbers.Real, y: numbers.Real)
     return row, col
 
 
-def gtToxyCellCenters(gt: GeoTransform, num_rows: numbers.Integral, num_cols: numbers.Integral) -> Tuple[np.ndarray, np.ndarray]:
+def gtToxyCellCenters(
+        gt: GeoTransform,
+        num_rows: numbers.Integral,
+        num_cols: numbers.Integral
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Create two arrays that represent the X and Y geographic coordinates of
     the cells CENTERS (not corners) given the geotransform.
@@ -329,7 +344,10 @@ def gtToxyCellCenters(gt: GeoTransform, num_rows: numbers.Integral, num_cols: nu
     return X, Y
 
 
-def gtEquiv(gt1: GeoTransform, gt2: GeoTransform) -> bool:
+def gtEquiv(
+        gt1: GeoTransform,
+        gt2: GeoTransform
+) -> bool:
     """
     Check equivalence between two GeoTransform instances.
 
@@ -360,3 +378,54 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()
 
+
+def ijArrToijPix(
+        i_arr: numbers.Real,
+        j_arr: numbers.Real
+) -> Tuple[numbers.Real, numbers.Real]:
+    """
+    Converts from array indices to geotransform-related pixel indices.
+
+    :param i_arr: the array i value.
+    :type i_arr: numbers.Real.
+    :param j_arr: the array j value.
+    :type j_arr: numbers.Real.
+    :return: the geotransform-equivalent i and j indices.
+    :rtype: a tuple of two numbers.
+
+    Examples:
+      >>> ijArrToijPix(0, 0)
+      (0.5, 0.5)
+      >>> ijArrToijPix(0.5, 0.5)
+      (1.0, 1.0)
+      >>> ijArrToijPix(1.5, 0.5)
+      (2.0, 1.0)
+    """
+
+    return i_arr + 0.5, j_arr + 0.5
+
+
+def ijPixToijArray(
+        i_pix: numbers.Real,
+        j_pix: numbers.Real
+) -> Tuple[numbers.Real, numbers.Real]:
+    """
+    Converts from pixel (geotransform-derived) to array indices.
+
+    :param i_pix: the geotransform i value.
+    :type i_pix: numbers.Real.
+    :param j_pix: the geotransform j value.
+    :type j_pix: numbers.Real.
+    :return: the array-equivalent i and j indices.
+    :rtype: a tuple of two numbers.
+
+    Examples:
+      >>> ijPixToijArray(0, 0)
+      (-0.5, -0.5)
+      >>> ijPixToijArray(0.5, 0.5)
+      (0.0, 0.0)
+      >>> ijPixToijArray(0.5, 1.5)
+      (0.0, 1.0)
+    """
+
+    return i_pix - 0.5, j_pix - 0.5
