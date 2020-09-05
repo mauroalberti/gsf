@@ -1,95 +1,20 @@
 
+from copy import copy
+
 import numbers
 from typing import Optional, List, Union, Tuple
+from array import array
 
-import numpy
+import numpy as np
+from shapely.geometry import LineString
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
 
 from pygsf.spatial.space3d.vectorial.geometries import *
 
 from pygsf.crs.crs import Crs, check_epsg, check_crs
-from pygsf.geometries.geom3d.shapes import Point, Segment, Points, analizeJoins
+from pygsf.geometries.geom3d.shapes import Point, Segment, Line, analizeJoins
 from pygsf.utils.types import check_type
-
-
-class MGeoPolygon:
-    """
-    A shapely (multi)polygon with EPSG code.
-
-    """
-
-    def __init__(self,
-                 shapely_geom: Union[Polygon, MultiPolygon],
-                 epsg_code: numbers.Integral
-                 ):
-        """
-        :param shapely_geom: the (multi)polygon
-        :type shapely_geom: Union[Polygon, MultiPolygon]
-        :param epsg_code: the EPSG code of the two geometries
-        :type epsg_code: numbers.Integral
-        """
-
-        check_type(
-            shapely_geom,
-            "Polygon",
-            (Polygon, MultiPolygon)
-        )
-
-        self._geom = shapely_geom
-        self._epsg_code = epsg_code
-
-    @property
-    def geom(self):
-        return self._geom
-
-    @property
-    def epsg_code(self):
-        return self._epsg_code
-
-    def intersect_line(self,
-                       line: LineString,
-                       ) -> Lines:
-        """
-        Determine the intersections between a mpolygon and a line.
-
-        :param line: the line
-        :type line: shapely.geometry.LineString
-        :return: the intersecting lines
-        :rtype: Lines
-        """
-
-        lines = Lines()
-
-        intersections = line.intersection(self.geom)
-
-        if intersections:
-
-            if intersections.geom_type == "LineString":
-
-                inters_ln = line_from_shapely(
-                    shapely_geom=intersections,
-                    epsg_code=self.epsg_code
-                )
-
-                lines.append(inters_ln)
-
-            elif intersections.geom_type == "MultiLineString":
-
-                for intersection_line in intersections:
-
-                    inters_ln = line_from_shapely(
-                        shapely_geom=intersection_line,
-                        epsg_code=self.epsg_code
-                    )
-
-                    lines.append(inters_ln)
-
-            else:
-
-                pass
-
-        return lines
 
 
 class Points:
@@ -99,24 +24,17 @@ class Points:
 
     def __init__(self,
                  epsg_code: numbers.Integral,
-                 x_array: np.ndarray,
-                 y_array: np.ndarray,
-                 z_array: Optional[np.ndarray] = None
-                 #t_array: Optional[np.ndarray] = None
+                 x_array: array,
+                 y_array: array,
+                 z_array: Optional[array] = None
                  ):
         """
         Construct a point list from a set of array values and an EPSG code.
 
         :param epsg_code: the EPSG code of the points
-        :type epsg_code: numbers.Integral
         :param x_array: the array storing the x values
-        :type x_array: np.ndarray
         :param y_array: the array storing the y values
-        :type y_array: np.ndarray
         :param z_array: the optional array storing the z values
-        :type z_array: np.ndarray
-        :param t_array: the optional array storing the t values
-        :type t_array: np.ndarray
         """
 
         check_type(
@@ -128,13 +46,13 @@ class Points:
         check_type(
             var=x_array,
             name="X array",
-            expected_types=np.ndarray
+            expected_types=array
         )
 
         check_type(
             var=y_array,
             name="Y array",
-            expected_types=np.ndarray
+            expected_types=array
         )
 
         array_length = len(x_array)
@@ -147,7 +65,7 @@ class Points:
             check_type(
                 var=z_array,
                 name="Z array",
-                expected_types=np.ndarray
+                expected_types=array
             )
 
             if len(z_array) != array_length:
@@ -157,32 +75,23 @@ class Points:
 
             z_array = np.zeros_like(x_array)
 
-        if t_array is not None:
-
-            check_type(
-                var=t_array,
-                name="T array",
-                expected_types=np.ndarray
-            )
-
-            if len(t_array) != array_length:
-                raise Exception(f"T array has length {len(t_array)} while X array has length {len(x_array)}")
-
-        else:
-
-            t_array = np.zeros_like(x_array)
-
         self._epsg_code = epsg_code
         self._x_array = x_array
         self._y_array = y_array
         self._z_array = z_array
-        self._t_array = t_array
+
+    def num_pts(self
+                ) -> int:
+        """
+        Numbers of points.
+        """
+
+        return len(self._x_array)
 
     @classmethod
     def fromPoints(cls,
                    points: List[Point],
-                   epsg_code: numbers.Integral = None,
-                   crs_check: bool = True
+                   epsg_code: numbers.Integral
                    ):
         """
 
@@ -190,77 +99,119 @@ class Points:
         :type points: List[Point]
         :param epsg_code: optional EPSG code
         :type epsg_code: numbers.Integral
-        :param crs_check: whether to check points crs
-        :type crs_check: bool
         """
 
         for ndx, point in enumerate(points):
 
             check_type(point, "Input point {}".format(ndx), Point)
 
-        if not epsg_code:
-            epsg_code = points[0].epsg_code()
-
-        if crs_check:
-
-            for ndx, point in enumerate(points):
-
-                if point.epsg_code() != epsg_code:
-
-                    raise Exception("Point {} has EPSG code {} but {} required".format(ndx, point.epsg_code(), epsg_code))
-
-        return Points(
+        return Line(
             epsg_code=epsg_code,
-            x_array=np.array([p.x for p in points]),
-            y_array=np.array([p.y for p in points]),
-            z_array=np.array([p.z for p in points]),
-            t_array=np.array([p.t for p in points])
+            x_array=array('d', [p.x for p in points]),
+            y_array=array('d', [p.y for p in points]),
+            z_array=array('d', [p.z for p in points])
         )
 
     @property
-    def xs(self):
+    def xs(self
+           ) -> array:
         """
-        The points x values.
+        Returns a copy of the points x values.
 
         :return: points x values
-        :rtype: float
         """
 
-        return self._x_array
+        return copy(self._x_array)
 
     @property
-    def ys(self):
+    def ys(self
+           ) -> array:
         """
-        The points y values.
+        Returns a copy of the points y values.
 
         :return: points y values
-        :rtype: float
         """
 
-        return self._y_array
+        return copy(self._y_array)
 
     @property
-    def zs(self):
+    def zs(self
+           ) -> array:
         """
-        The points z values.
+        Returns a copy of the points z values.
 
         :return: points z values
-        :rtype: float
         """
 
-        return self._z_array
+        return copy(self._z_array)
 
-
-    @property
-    def ts(self):
+    def pt(self, pt_ndx: numbers.Integral) -> Point:
         """
-        The points t values.
+        Extract the point at index pt_ndx.
 
-        :return: points t values
-        :rtype: float
+        :param pt_ndx: point index.
+        :type pt_ndx: numbers.Integral.
+        :return: the extracted Point instance.
+        :rtype: Point.
+
+        Examples:
         """
 
-        return self._t_array
+        return Point(
+            x=self._x_array[pt_ndx],
+            y=self._y_array[pt_ndx],
+            z=self._z_array[pt_ndx]
+        )
+
+    def values_at(self,
+        ndx: numbers.Integral
+                  ) -> Tuple[float, float, float]:
+        """
+        Return the values at given index.
+
+        :param ndx: the index of the point values to extract
+        :type ndx: numbers.Integral
+        :return: the x, y and z values
+        """
+
+        return (
+            self._x_array[ndx],
+            self._y_array[ndx],
+            self._z_array[ndx]
+        )
+
+    def pts(self):
+
+        return [Point(*self.values_at(ndx)) for ndx in range(self.num_pts())]
+
+    def __repr__(self) -> str:
+        """
+        Represents a Points instance as a shortened text.
+
+        :return: a textual shortened representation of a Points instance.
+        """
+
+        num_points = self.num_pts()
+
+        if num_points == 0:
+            txt = "Empty Line"
+        else:
+            x1, y1, z1 = self.values_at(0)
+            if num_points == 1:
+                txt = "Line with unique point: {.4f}.{.4f},{.4f}".format(x1, y1, z1)
+            else:
+                x2, y2, z2 = self.values_at(self.num_pts()-1)
+                txt = "Line with {} points: ({:.4f}, {:.4f}, {:.4f}) ... ({:.4f}, {:.4f}, {:.4f})".format(
+                    num_points, x1, y1, z1, x2, y2, z2)
+
+        return txt
+
+    def __iter__(self):
+        """
+        Return each point.
+        """
+
+        return (self.pt(ndx) for ndx in range(self.num_pts()))
 
     def epsg_code(self) -> numbers.Integral:
         """
@@ -296,89 +247,138 @@ class Points:
             )
         ).transpose()
 
-    def x_min(self):
+    def add_pt(self, pt) -> None:
         """
-        The minimum x value.
+        In-place transformation of the original Line instance
+        by adding a new point at the end.
+
+        :param pt: the point to add
+        :return: nothing
         """
 
-        return np.nanmin(self.xs)
+        self._x_array.append(pt.x)
+        self._y_array.append(pt.y)
+        self._z_array.append(pt.z)
 
-    def x_max(self):
+    def add_pts(self,
+                pts: 'Line'):
         """
-        The maximum x value.
-        """
+        In-place transformation of the original Points instance
+        by adding a new set of points at the end.
 
-        return np.nanmax(self.xs)
-
-    def x_mean(self):
-        """
-        The mean x value.
-        """
-
-        return np.nanmean(self.xs)
-
-    def y_min(self):
-        """
-        The minimum y value.
+        :param pts: list of Points.
         """
 
-        return np.nanmin(self.ys)
+        check_type(pts, "Points", Line)
+        check_crs(self, pts)
 
-    def y_max(self):
-        """
-        The maximum y value.
-        """
+        self._x_array.extend(pts.xs)
+        self._y_array.extend(pts.ys)
+        self._z_array.extend(pts.zs)
 
-        return np.nanmax(self.ys)
-
-    def y_mean(self):
+    def x_min(self) -> Optional[numbers.Real]:
         """
-        The mean y value.
-        """
+        Optional minimum of x values.
 
-        return np.nanmean(self.ys)
+        :return: the optional minimum of x values.
+        :rtype: Optional[numbers.Real]
 
-    def z_min(self):
-        """
-        The minimum z value.
-        """
-
-        return np.nanmin(self.zs)
-
-    def z_max(self):
-        """
-        The maximum z value.
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          >>> l.x_min()
+          0.0
+          >>> m = Line.fromPointList([])
+          >>> m.x_min()
+          None
         """
 
-        return np.nanmax(self.zs)
+        return np.nanmin(self._x_array) if self.num_pts() > 0 else None
 
-    def z_mean(self):
+    def x_max(self) -> Optional[numbers.Real]:
         """
-        The mean z value.
-        """
-
-        return np.nanmean(self.zs)
-
-    def t_min(self):
-        """
-        The minimum t value.
+        Optional maximum x value.
         """
 
-        return np.nanmin(self.ts)
+        return np.nanmax(self._x_array) if self.num_pts() > 0 else None
 
-    def t_max(self):
+    def x_mean(self) -> Optional[numbers.Real]:
         """
-        The maximum t value.
-        """
-
-        return np.nanmax(self.ts)
-
-    def t_mean(self):
-        """
-        The mean t value.
+        Optional mean x value.
         """
 
-        return np.nanmean(self.ts)
+        return np.nanmean(self._x_array) if self.num_pts() > 0 else None
+
+    def y_min(self) -> Optional[numbers.Real]:
+        """
+        Optional minimum y value.
+        """
+
+        return np.nanmin(self._y_array) if self.num_pts() > 0 else None
+
+    def y_max(self) -> Optional[numbers.Real]:
+        """
+        Optional maximum y value.
+        """
+
+        return np.nanmax(self._y_array) if self.num_pts() > 0 else None
+
+    def y_mean(self) -> Optional[numbers.Real]:
+        """
+        Optional mean y value.
+        """
+
+        return np.nanmean(self._y_array) if self.num_pts() > 0 else None
+
+    def z_min(self) -> Optional[numbers.Real]:
+        """
+        Optional minimum z value.
+        """
+
+        return np.nanmin(self._z_array) if self.num_pts() > 0 else None
+
+    def z_max(self) -> Optional[numbers.Real]:
+        """
+        Optional maximum z value.
+        """
+
+        return np.nanmax(self._z_array) if self.num_pts() > 0 else None
+
+    def z_mean(self) -> Optional[numbers.Real]:
+        """
+        Optional mean z value.
+        """
+
+        return np.nanmean(self._z_array) if self.num_pts() > 0 else None
+
+    def z_var(self) -> Optional[numbers.Real]:
+        """
+        Optional variance of z values.
+
+        :return: the optional variance of z values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
+          >>> l.z_var()
+          0.0
+        """
+
+        return np.nanvar(self._z_array) if self.num_pts() > 0 else None
+
+    def z_std(self) -> Optional[numbers.Real]:
+        """
+        Optional standard deviation of z values.
+
+        :return: the optional standard deviation of z values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Line.fromPointList([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
+          >>> l.z_std()
+          0.0
+        """
+
+        return np.nanstd(self._z_array) if self.num_pts() > 0 else None
 
     def nanmean_point(self) -> Point:
         """
@@ -390,13 +390,46 @@ class Points:
         """
 
         return Point(
-            x=np.nanmean(self.xs),
-            y=np.nanmean(self.ys),
-            z=np.nanmean(self.zs),
-            t=np.nanmean(self.ts),
-            epsg_code=self.epsg_code()
+            x=np.nanmean(self._x_array),
+            y=np.nanmean(self._y_array),
+            z=np.nanmean(self._z_array)
         )
 
+    def segment(self,
+        ndx: int
+    ) -> Optional[Segment]:
+        """
+        Returns the optional segment starting at index ndx.
+
+        :param ndx: the segment index.
+        :return: the optional segment
+        """
+
+        if ndx < 0 or ndx >= self.num_pts() - 1:
+            return None
+
+        return Segment(
+            start_pt=self.pt(ndx),
+            end_pt=self.pt(ndx + 1)
+        )
+
+    def reversed(self) -> 'Line':
+        """
+        Return a Points instance with reversed point list.
+
+        :return: a new Points instance.
+        """
+
+        xs = self._x_array.reverse()
+        ys = self._y_array.reverse()
+        zs = self._z_array.reverse()
+
+        return Line(
+            epsg_code=self.epsg_code(),
+            x_array=xs,
+            y_array=ys,
+            z_array=zs
+        )
 
 class PointSegmentCollection(list):
     """
@@ -676,7 +709,7 @@ class MultiLine(object):
 
     def to_line(self):
 
-        return Points([point for line in self._lines for point in line.pts()], epsg_cd=self.epsg())
+        return Line([point for line in self._lines for point in line.pts()], epsg_cd=self.epsg())
 
     def densify_2d_multiline(self, sample_distance):
 
@@ -746,6 +779,85 @@ class MultiLines(list):
         super(MultiLines, self).append(item)
 
 
+class MGeoPolygon:
+    """
+    A shapely (multi)polygon with EPSG code.
+
+    """
+
+    def __init__(self,
+                 shapely_geom: Union[Polygon, MultiPolygon],
+                 epsg_code: numbers.Integral
+                 ):
+        """
+        :param shapely_geom: the (multi)polygon
+        :type shapely_geom: Union[Polygon, MultiPolygon]
+        :param epsg_code: the EPSG code of the two geometries
+        :type epsg_code: numbers.Integral
+        """
+
+        check_type(
+            shapely_geom,
+            "Polygon",
+            (Polygon, MultiPolygon)
+        )
+
+        self._geom = shapely_geom
+        self._epsg_code = epsg_code
+
+    @property
+    def geom(self):
+        return self._geom
+
+    @property
+    def epsg_code(self):
+        return self._epsg_code
+
+    def intersect_line(self,
+                       line: LineString,
+                       ) -> Lines:
+        """
+        Determine the intersections between a mpolygon and a line.
+
+        :param line: the line
+        :type line: shapely.geometry.LineString
+        :return: the intersecting lines
+        :rtype: Lines
+        """
+
+        lines = Lines()
+
+        intersections = line.intersection(self.geom)
+
+        if intersections:
+
+            if intersections.geom_type == "LineString":
+
+                inters_ln = line_from_shapely(
+                    shapely_geom=intersections,
+                    epsg_code=self.epsg_code
+                )
+
+                lines.append(inters_ln)
+
+            elif intersections.geom_type == "MultiLineString":
+
+                for intersection_line in intersections:
+
+                    inters_ln = line_from_shapely(
+                        shapely_geom=intersection_line,
+                        epsg_code=self.epsg_code
+                    )
+
+                    lines.append(inters_ln)
+
+            else:
+
+                pass
+
+        return lines
+
+
 class SimpleGeometryCollections(list):
 
     def __init__(self,
@@ -757,10 +869,101 @@ class SimpleGeometryCollections(list):
 
     def append(self, geom):
 
-        if not isinstance(geom, (Point, Segment, Points)):
+        if not isinstance(geom, (Point, Segment, Line)):
             raise Exception(f"Expected Point, Segment or Line but got {type(geom)}")
 
         if geom.epsg_code() != self.epsg_code:
             raise Exception(f"Expected {self.epsg_code} EPSG code but got {geom.epsg_code()}")
 
         self.append(geom)
+
+
+class Lines(list):
+    """
+    Collection of lines.
+
+    """
+
+    def __init__(self,
+                 lines: Optional[List[Points]] = None
+                 ):
+
+        if lines:
+
+            check_type(lines, "Lines", List)
+            for line in lines:
+                check_type(line, "Line", Line)
+            first_line = lines[0]
+            for line in lines[1:]:
+                check_crs(first_line, line)
+
+            super(Lines, self).__init__(lines)
+
+        else:
+
+            super(Lines, self).__init__()
+
+    def append(self,
+               item: Points
+               ) -> None:
+
+        check_type(item, "Line", Line)
+        if len(self) > 0:
+            check_crs(self[0], item)
+
+        super(Lines, self).append(item)
+
+
+def line_from_shapely(
+        shapely_geom: LineString,
+        epsg_code: numbers.Integral
+) -> Points:
+    # Side effects: none
+    """
+    Create a Line instance from a shapely Linestring instance.
+
+    :param shapely_geom: the shapely input LineString instance
+    :type shapely_geom: shapely.geometry.linestring.LineString
+    :param epsg_code: the EPSG code of the LineString instance
+    :type epsg_code: numbers.Integral
+    :return: the converted Line instance
+    :rtype: Line
+    """
+
+    x_array, y_array = shapely_geom.xy
+
+    return Line.fromArrays(
+        x_array,
+        y_array,
+        epsg_cd=epsg_code
+    )
+
+
+def line_to_shapely(
+        src_line: Points
+) -> LineString:
+    """
+    Create a shapely.LineString instance from a Line one.
+
+    :param src_line: the source line to convert to the shapely format
+    :type src_line: Line
+    :return: the shapely LineString instance and the EPSG code
+    :rtype: Tuple[LineString, numbers.Integral]
+    """
+
+    return LineString(src_line.xy_zipped()), src_line.epsg_code()
+
+
+class Segments(list):
+    """
+    Collection of segments, inheriting from list.
+
+    """
+
+    def __init__(self, segments: List[Segment]):
+
+        check_type(segments, "Segments", List)
+        for el in segments:
+            check_type(el, "Segment", Segment)
+
+        super(Segments, self).__init__(segments)

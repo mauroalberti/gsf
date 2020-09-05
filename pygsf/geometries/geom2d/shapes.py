@@ -1145,7 +1145,7 @@ class Segment2D:
         )
 
 
-class CLine2D:
+class Line2D:
     """
     A list of Point2D objects.
     """
@@ -1174,14 +1174,14 @@ class CLine2D:
     def fromArrays(cls,
         xs: array,
         ys: array
-    ) -> 'CLine2D':
+    ) -> 'Line2D':
         """
         Create a Line2D instance from a list of x and y values.
 
         Example:
-          >>> CLine2D.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
+          >>> Line2D.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
           Line2D with 3 points: (1.0000, 3.0000) ... (3.0000, 5.0000)
-          >>> CLine2D.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
+          >>> Line2D.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
           Line2D with 3 points: (1.0000, 3.0000) ... (3.0000, 5.0000)
         """
 
@@ -1205,7 +1205,7 @@ class CLine2D:
     @classmethod
     def fromPointList(cls,
         pt_list: List[List[numbers.Real]]
-    ) -> 'CLine2D':
+    ) -> 'Line2D':
         """
         Create a Line2D instance from a list of x and y values.
 
@@ -1399,7 +1399,7 @@ class CLine2D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = CLine2D.fromPointList([[0, 0], [1, 0], [0, 1]])
+          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
           >>> l.x_min()
           0.0
         """
@@ -1414,7 +1414,7 @@ class CLine2D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = CLine2D.fromPointList([[0, 0], [1, 0], [0, 1]])
+          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
           >>> l.x_max()
           1.0
         """
@@ -1429,7 +1429,7 @@ class CLine2D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = CLine2D.fromPointList([[0, 0], [1, 0], [0, 1]])
+          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
           >>> l.y_min()
           0.0
         """
@@ -1444,14 +1444,14 @@ class CLine2D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = CLine2D.fromPointList([[0, 0], [1, 0], [0, 1]])
+          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
           >>> l.y_max()
           1.0
         """
 
         return max(self._y) if self.num_pts() > 0 else None
 
-    def remove_coincident_points(self) -> Optional['CLine2D']:
+    def remove_coincident_points(self) -> Optional['Line2D']:
         """
         Remove coincident successive points
 
@@ -1461,7 +1461,7 @@ class CLine2D:
         if self.num_pts() == 0:
             return
 
-        new_line = CLine2D(
+        new_line = Line2D(
             pts=[self.pt(0)]
         )
 
@@ -1484,7 +1484,7 @@ class CLine2D:
 
         return segments
 
-    def densify_2d_line(self, sample_distance) -> 'CLine2D':
+    def densify_2d_line(self, sample_distance) -> 'Line2D':
         """
         Densify a line into a new line instance,
         using the provided sample distance.
@@ -1518,13 +1518,6 @@ class CLine2D:
 
         return Line(self.pts() + another.pts())
 
-    def length_3d(self) -> numbers.Real:
-
-        length = 0.0
-        for ndx in range(self.num_pts() - 1):
-            length += self.pt(ndx).dist2DWith(self.pt(ndx + 1))
-        return length
-
     def length_2d(self) -> numbers.Real:
 
         length = 0.0
@@ -1548,25 +1541,6 @@ class CLine2D:
 
         return delta_z
 
-    def step_lengths_3d(self) -> List[numbers.Real]:
-        """
-        Returns the point-to-point 2D distances.
-        It is the distance between a point and its previous one.
-        The list has the same lenght as the source point list.
-
-        :return: the individual 2D segment lengths.
-        :rtype: list of floats.
-
-        Examples:
-        """
-
-        step_length_list = [0.0]
-        for ndx in range(1, self.num_pts()):
-            length = self.pt(ndx).dist2DWith(self.pt(ndx - 1))
-            step_length_list.append(length)
-
-        return step_length_list
-
     def step_lengths_2d(self) -> List[numbers.Real]:
         """
         Returns the point-to-point 2D distances.
@@ -1585,16 +1559,6 @@ class CLine2D:
             step_length_list.append(length)
 
         return step_length_list
-
-    def incremental_length_3d(self) -> List[numbers.Real]:
-        """
-        Returns the accumulated 2D segment lengths.
-
-        :return: accumulated 2D segment lenghts
-        :rtype: list of floats.
-        """
-
-        return list(itertools.accumulate(self.step_lengths_3d()))
 
     def incremental_length_2d(self) -> List[numbers.Real]:
         """
@@ -1621,61 +1585,6 @@ class CLine2D:
             pts=pts
         )
 
-    def slopes_degr(self) -> List[Optional[numbers.Real]]:
-        """
-        Calculates the slopes (in degrees) of each Line segment.
-        The first value is the slope of the first segment.
-        The last value, always None, is the slope of the segment starting at the last point.
-        The number of elements is equal to the number of points in the Line.
-
-        :return: list of slopes (degrees).
-        :rtype: List[Optional[numbers.Real]].
-        """
-
-        lSlopes = []
-
-        segments = self.as_segments()
-        for segment in segments:
-            vector = segment.vector()
-            lSlopes.append(-vector.slope_degr())  # minus because vector convention is positive downward
-
-        lSlopes.append(None)  # None refers to the slope of the Segment2D starting with the last point
-
-        return lSlopes
-
-    def slopes_stats(self) -> Dict:
-        """
-        Returns the line directional slope statistics.
-
-        :return: the statistics parameters: min, max, mean, var, std.
-        """
-
-        return get_statistics(self.slopes_degr())
-
-    def abs_slopes_degr(self) -> List[Optional[numbers.Real]]:
-
-        return [abs(val) for val in self.slopes_degr()]
-
-    def abs_slopes_stats(self) -> Dict:
-        """
-        Returns the line absolute slopes statistics.
-
-        :return: the statistics parameters: min, max, mean, var, std.
-        :rtype: Dictionary.
-        """
-
-        return get_statistics(self.abs_slopes_degr())
-
-    def extremes_distance_3d(self) -> numbers.Real:
-        """
-        Calculate the 2D distance between start and end points.
-
-        :return: the 2D distance between start and end points
-        :rtype: numbers.Real
-        """
-
-        return self.end_pt().dist2DWith(self.start_pt())
-
     def extremes_distance_2d(self) -> numbers.Real:
         """
         Calculate the 2D distance between start and end points.
@@ -1684,20 +1593,6 @@ class CLine2D:
         """
 
         return self.end_pt().dist2DWith(self.start_pt())
-
-    def isClosed_3d(self,
-        tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
-    ) -> bool:
-        """
-        Determine if the line is 2D-closed.
-
-        :param tolerance: the tolerance for considering the line closed
-        :type tolerance: numbers.Real
-        :return: whether the line is to be considered 2D-closed
-        :rtype: bool
-        """
-
-        return self.end_pt().isCoinc2D(self.start_pt(), tolerance=tolerance)
 
     def isClosed_2d(self,
         tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
@@ -1742,22 +1637,6 @@ class CLine2D:
         line = self.clone()
 
         if not line.isClosed_2d():
-
-            line.add_pt(line.start_pt())
-
-        return line
-
-    def close_3d(self) -> 'Line':
-        """
-        Return a line that is 2D-closed.
-
-        :return: a 2D-closed line
-        :rtype: Line
-        """
-
-        line = self.clone()
-
-        if not line.isClosed_3d():
 
             line.add_pt(line.start_pt())
 

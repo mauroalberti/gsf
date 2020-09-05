@@ -3,7 +3,8 @@ import random
 from math import isfinite, radians, pi, degrees, atan2, sin, cos, sqrt, tan
 from typing import Tuple, List, Callable
 
-from pygsf.geometries.geom3d.shapes import CPlane, Point
+from pygsf.geometries.geom3d.shapes import Point
+from pygsf.geometries.geom3d.abstract import CPlane
 from pygsf.mathematics.quaternions import Quaternion, QUAT_MAGN_THRESH
 from pygsf.mathematics.scalars import areClose
 from pygsf.mathematics.utils import normXYZ
@@ -2104,7 +2105,7 @@ class Plane(object):
         normal_versor = self.normDirectFrwrd().asVersor()
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * pt.x + b * pt.y + c * pt.z)
-        return CPlane(a, b, c, d, epsg_code=pt.epsg_code())
+        return CPlane(a, b, c, d)
 
     def slope_x_dir(self) -> numbers.Real:
         """

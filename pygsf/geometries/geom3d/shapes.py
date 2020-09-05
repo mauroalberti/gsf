@@ -1,20 +1,21 @@
-
-from typing import List, Optional, Tuple
+from math import fabs
+from typing import List, Optional, Tuple, Union
 from enum import Enum
 
 import itertools
 import numbers
-from math import *
 from array import array
 
-from shapely.geometry import LineString
-
-from pygsf.crs.geoshapes import Points, PointSegmentCollection, MultiLine
+from pygsf.crs.geoshapes import Line
+from pygsf.geometries.geom3d.abstract import CPlane
+from pygsf.mathematics.defaults import PRACTICAL_MIN_DIST, MIN_SCALAR_VALUE
+from pygsf.mathematics.vectors import Vect
 from pygsf.orientations.orientations import rotVectByAxis
 
 from pygsf.mathematics.statistics import *
 from pygsf.mathematics.quaternions import *
 from pygsf.geometries.geom2d.shapes import *
+from pygsf.utils.types import check_type
 
 
 class Point:
@@ -715,346 +716,15 @@ def pack_to_points(
     return pts
 
 
-class CPlane(object):
-    """
-    Cartesian plane.
-    Expressed by equation:
-    ax + by + cz + d = 0
-
-    Note: CPlane is locational - its position in space is defined.
-    This contrast with Plane, defined just by its attitude, but with undefined position
-
-    """
-
-    def __init__(self,
-                 a: numbers.Real,
-                 b: numbers.Real,
-                 c: numbers.Real,
-                 d: numbers.Real
-                 ):
-
-        if not isinstance(a, numbers.Real):
-            raise Exception("Input value a must be float or int but is {}".format(type(a)))
-        if not isinstance(b, numbers.Real):
-            raise Exception("Input value b must be float or int but is {}".format(type(b)))
-        if not isinstance(c, numbers.Real):
-            raise Exception("Input value c must be float or int but is {}".format(type(c)))
-        if not isinstance(d, numbers.Real):
-            raise Exception("Input value d must be float or int but is {}".format(type(d)))
-
-        norm = sqrt(a*a + b*b + c*c)
-        self._a = float(a) / norm
-        self._b = float(b) / norm
-        self._c = float(c) / norm
-        self._d = float(d) / norm
-
-    def a(self) -> numbers.Real:
-        """
-        Return a coefficient of a CPlane instance.
-
-        Example:
-          >>> CPlane(1, 0, 0, 2).a()
-          1.0
-        """
-
-        return self._a
-
-    def b(self) -> numbers.Real:
-        """
-        Return b coefficient of a CPlane instance.
-
-        Example:
-          >>> CPlane(1, 4, 0, 2).b()
-          0.9701425001453319
-        """
-
-        return self._b
-
-    def c(self) -> numbers.Real:
-        """
-        Return a coefficient of a CPlane instance.
-
-        Example:
-          >>> CPlane(1, 0, 5.4, 2).c()
-          0.9832820049844602
-        """
-
-        return self._c
-
-    def d(self) -> numbers.Real:
-        """
-        Return a coefficient of a CPlane instance.
-
-        Example:
-          >>> CPlane(1, 0, 0, 2).d()
-          2.0
-        """
-
-        return self._d
-
-    def v(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real]:
-        """
-        Return coefficients of a CPlane instance.
-
-        Example:
-          >>> CPlane(1, 1, 7, -4).v()
-          (0.14002800840280097, 0.14002800840280097, 0.9801960588196068, -0.5601120336112039)
-        """
-
-        return self.a(), self.b(), self.c(), self.d()
-
-    @classmethod
-    def fromPoints(cls, pt1, pt2, pt3) -> 'CPlane':
-        """
-        Create a CPlane from three given Point instances.
-
-        Example:
-          >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
-          CPlane(0.0000, 0.0000, 1.0000, 0.0000)
-          >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
-          CPlane(0.0000, 0.0000, 1.0000, 0.0000)
-          >>> CPlane.fromPoints(Point(0, 0, 0), Point(0, 1, 0), Point(0, 0, 1))
-          CPlane(1.0000, 0.0000, 0.0000, 0.0000)
-          >>> CPlane.fromPoints(Point(1,2,3), Point(2,3,4), Point(-1,7,-2))
-          CPlane(-0.7956, 0.2387, 0.5569, -1.3524)
-        """
-
-        if not (isinstance(pt1, Point)):
-            raise Exception("First input point should be Point but is {}".format(type(pt1)))
-
-        if not (isinstance(pt2, Point)):
-            raise Exception("Second input point should be Point but is {}".format(type(pt2)))
-
-        if not (isinstance(pt3, Point)):
-            raise Exception("Third input point should be Point but is {}".format(type(pt3)))
-
-        matr_a = np.array(
-            [[pt1.y, pt1.z, 1],
-             [pt2.y, pt2.z, 1],
-             [pt3.y, pt3.z, 1]])
-
-        matr_b = - np.array(
-            [[pt1.x, pt1.z, 1],
-             [pt2.x, pt2.z, 1],
-             [pt3.x, pt3.z, 1]])
-
-        matr_c = np.array(
-            [[pt1.x, pt1.y, 1],
-             [pt2.x, pt2.y, 1],
-             [pt3.x, pt3.y, 1]])
-
-        matr_d = - np.array(
-            [[pt1.x, pt1.y, pt1.z],
-             [pt2.x, pt2.y, pt2.z],
-             [pt3.x, pt3.y, pt3.z]])
-
-        return cls(
-            np.linalg.det(matr_a),
-            np.linalg.det(matr_b),
-            np.linalg.det(matr_c),
-            np.linalg.det(matr_d)
-        )
-
-    def __repr__(self):
-
-        return "CPlane({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(*self.v())
-
-    def normVersor(self) -> Vect:
-        """
-        Return the versor normal to the cartesian plane.
-
-        Examples:
-          >>> CPlane(0, 0, 5, -2).normVersor()
-          Vect(0.0000, 0.0000, 1.0000)
-          >>> CPlane(0, 7, 0, 5).normVersor()
-          Vect(0.0000, 1.0000, 0.0000)
-        """
-
-        return Vect(self.a(), self.b(), self.c()).versor()
-
-    def toPoint(self) -> Point:
-        """
-        Returns a point lying in the plane (non-unique solution).
-
-        Examples:
-          >>> CPlane(0, 0, 1, -1).toPoint()
-          Point(0.0000, 0.0000, 1.0000)
-        """
-
-        point = Point(
-            *pointSolution(
-                np.array([[self.a(), self.b(), self.c()]]),
-                np.array([-self.d()]))
-        )
-
-        return point
-
-    def intersVersor(self, another) -> Optional[Vect]:
-        """
-        Return intersection versor for two intersecting planes.
-        Return None for not intersecting planes.
-
-        :param another: another Cartesian plane.
-        :type another: CPlane.
-        :return: the intersection line as a vector.
-        :rtype: Optional[Vect].
-        :raise: Exception.
-
-        Examples:
-          >>> a = CPlane(1, 0, 0, 0)
-          >>> b = CPlane(0, 0, 1, 0)
-          >>> a.intersVersor(b)
-          Vect(0.0000, -1.0000, 0.0000)
-          >>> b = CPlane(-1, 0, 0, 0)  # parallel plane, no intersection
-          >>> a.intersVersor(b) is None
-          True
-        """
-
-        check_type(another, "Input Cartesian plane", CPlane)
-
-        return self.normVersor().vCross(another.normVersor()).versor()
-
-    def intersPoint(self,
-            another) -> Optional[Point]:
-        """
-        Return point on intersection line (non-unique solution)
-        for two planes.
-
-        :param another: the second cartesian plane
-        :type another: CPlane
-        :return: the optional instersection point
-        :rtype: Optional[Point]
-        :raise: Exception
-
-        Examples:
-          >>> p_a = CPlane(1, 0, 0, 0)
-          >>> p_b = CPlane(0, 0, 1, 0)
-          >>> p_a.intersPoint(p_b)
-          Point(0.0000, 0.0000, 0.0000, 0.0000)
-          >>> p_b = CPlane(-1, 0, 0, 0)  # parallel plane, no intersection
-          >>> p_a.intersPoint(p_b) is None
-        """
-
-        check_type(another, "Second plane", CPlane)
-
-        # find a point lying on the intersection line (this is a non-unique solution)
-
-        a = np.array([[self.a(), self.b(), self.c()], [another.a(), another.b(), another.c()]])
-        b = np.array([-self.d(), -another.d()])
-        x, y, z = pointSolution(a, b)
-
-        if x is not None and y is not None and z is not None:
-            return Point(x, y, z)
-        else:
-            return None
-
-    def pointDistance(self,
-        pt: Point
-    ) -> numbers.Real:
-        """
-        Calculate the distance between a point and the cartesian plane.
-        Distance expression:
-        distance = a * x1 + b * y1 + c * z1 + d
-        where a, b, c and d are plane parameters of the plane equation:
-         a * x + b * y + c * z + d = 0
-        and x1, y1, and z1 are the point coordinates.
-
-        :param pt: the point to calculate distance with.
-        :type pt: Point.
-        :return: the distance value.
-        :rtype: numbers.Real.
-        :raise: Exception.
-
-        Examples:
-          >>> cpl = CPlane(0, 0, 1, 0)
-          >>> pt = Point(0, 0, 1)
-          >>> cpl.pointDistance(pt)
-          1.0
-          >>> pt = Point(0, 0, 0.5)
-          >>> cpl.pointDistance(pt)
-          0.5
-          >>> pt = Point(0, 0, -0.5)
-          >>> cpl.pointDistance(pt)
-          -0.5
-          >>> pt = Point(10, 20, 0.0)
-          >>> cpl.pointDistance(pt)
-          0.0
-        """
-
-        check_type(pt, "Input point", Point)
-
-        return self.a() * pt.x + self.b() * pt.y + self.c() * pt.z + self.d()
-
-    def isPointInPlane(self,
-        pt: Point
-    ) -> bool:
-        """
-        Check whether a point lies in the current plane.
-
-        :param pt: the point to check.
-        :type pt: Point.
-        :return: whether the point lies in the current plane.
-        :rtype: bool.
-        :raise: Exception.
-
-        Examples:
-          >>> pl = CPlane(0, 0, 1, 0)
-          >>> pt = Point(0, 1, 0)
-          >>> pl.isPointInPlane(pt)
-          True
-          >>> pl = CPlane(0, 0, 1, 0)
-          >>> pt = Point(0, 1, 0)
-          >>> pl.isPointInPlane(pt)
-          True
-        """
-
-        check_type(pt, "Input point", Point)
-
-        if abs(self.pointDistance(pt)) < MIN_SEPARATION_THRESHOLD:
-            return True
-        else:
-            return False
-
-    def angle(self,
-        another: 'CPlane'
-    ) -> numbers.Real:
-        """
-        Calculate angle (in degrees) between two planes.
-
-        :param another: the CPlane instance to calculate angle with.
-        :type another: CPlane.
-        :return: the angle (in degrees) between the two planes.
-        :rtype: numbers.Real.
-        :raise: Exception.
-
-        Examples:
-          >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0))
-          90.0
-          >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0))
-          90.0
-          >>> CPlane(1,0,0,0).angle(CPlane(1,0,1,0))
-          45.0
-          >>> CPlane(1,0,0,0).angle(CPlane(1,0,0,0))
-          0.0
-        """
-
-        check_type(another, "Second Cartesian plane", CPlane)
-
-        angle_degr = self.normVersor().angle(another.normVersor())
-
-        if angle_degr > 90.0:
-            angle_degr = 180.0 - angle_degr
-
-        return angle_degr
-
-
 class Segment:
     """
     Segment is a geometric object defined by the straight line between
     two vertices.
     """
 
-    def __init__(self, start_pt: Point, end_pt: Point):
+    def __init__(self,
+                 start_pt: Point,
+                 end_pt: Point):
         """
         Creates a segment instance provided the two points have the same CRS code.
 
@@ -1075,6 +745,22 @@ class Segment:
 
         self._start_pt = start_pt.clone()
         self._end_pt = end_pt.clone()
+
+    @classmethod
+    def fromVector(cls,
+                   point: Point,
+                   dir_vector: Vect):
+
+        check_type(point, "Input point", Point)
+        check_type(dir_vector, "Directional vector", Vect)
+
+        start_pt = point
+        end_pt = start_pt.shiftByVect(dir_vector)
+
+        return cls(
+            start_pt=start_pt,
+            end_pt=end_pt
+        )
 
     def __repr__(self) -> str:
         """
@@ -1155,16 +841,6 @@ class Segment:
 
         return self.end_pt.z - self.start_pt.z
 
-    def length2D(self) -> numbers.Real:
-        """
-        Returns the horizontal length of the segment.
-
-        :return: the horizontal length of the segment.
-        :rtype: numbers.Real.
-        """
-
-        return self.start_pt.dist2DWith(self.end_pt)
-
     def length3D(self) -> numbers.Real:
 
         return self.start_pt.dist3DWith(self.end_pt)
@@ -1214,65 +890,6 @@ class Segment:
         """
 
         return self.vector().invert()
-
-    def segment_2d_m(self) -> Optional[numbers.Real]:
-
-        denom = self.end_pt.x - self.start_pt.x
-
-        if denom == 0.0:
-            return None
-
-        return (self.end_pt.y - self.start_pt.y) / denom
-
-    def segment_2d_p(self) -> Optional[numbers.Real]:
-
-        s2d_m = self.segment_2d_m()
-
-        if s2d_m is None:
-            return None
-
-        return self.start_pt.y - s2d_m * self.start_pt.x
-
-    def intersection_2d_pt(self,
-        another: 'Segment'
-    ) -> Optional[Point2D]:
-        """
-
-        :param another:
-        :return:
-        """
-
-        check_type(another, "Second segment", Segment)
-
-        check_crs(self, another)
-
-        s_len2d = self.length2D()
-        a_len2d = another.length2D()
-
-        if s_len2d == 0.0 or a_len2d == 0.0:
-            return None
-
-        if self.start_pt.x == self.end_pt.x:  # self segment parallel to y axis
-            x0 = self.start_pt.x
-            m1, p1 = another.segment_2d_m(), another.segment_2d_p()
-            if m1 is None:
-                return None
-            y0 = m1 * x0 + p1
-        elif another.start_pt.x == another.end_pt.x:  # another segment parallel to y axis
-            x0 = another.start_pt.x
-            m1, p1 = self.segment_2d_m(), self.segment_2d_p()
-            if m1 is None:
-                return None
-            y0 = m1 * x0 + p1
-        else:  # no segment parallel to y axis
-            m0, p0 = self.segment_2d_m(), self.segment_2d_p()
-            m1, p1 = another.segment_2d_m(), another.segment_2d_p()
-            if m0 is None or m1 is None:
-                return None
-            x0 = (p1 - p0) / (m0 - m1)
-            y0 = m0 * x0 + p0
-
-        return Point2D(x0, y0)
 
     def contains_pt(self,
         pt: Point
@@ -1339,24 +956,6 @@ class Segment:
             a=segment_length,
             b=length_startpt_pt + length_endpt_pt
         )
-
-    def fast_2d_contains_pt(self,
-        pt2d
-    ) -> bool:
-        """
-        Deprecated. Use 'contains_pt'.
-
-        to work properly, this function requires that the pt lies on the line defined by the segment
-        """
-
-        range_x = self.x_range
-        range_y = self.y_range
-
-        if range_x()[0] <= pt2d.x <= range_x()[1] or \
-                range_y()[0] <= pt2d.y <= range_y()[1]:
-            return True
-        else:
-            return False
 
     def pointAt(self,
         scale_factor: numbers.Real
@@ -1512,103 +1111,6 @@ class Segment:
         return Segment(
             self.start_pt,
             end_pt)
-
-    def densify2d_asSteps(self,
-        densify_distance: numbers.Real
-    ) -> array:
-        """
-        Defines the array storing the incremental lengths according to the provided densify distance.
-
-        :param densify_distance: the step distance.
-        :type densify_distance: numbers.Real.
-        :return: array storing incremental steps, with the last step being equal to the segment length.
-        :rtype: array.
-        """
-
-        if not isinstance(densify_distance, numbers.Real):
-            raise Exception("Densify distance must be float or int")
-
-        if not math.isfinite(densify_distance):
-            raise Exception("Densify distance must be finite")
-
-        if not densify_distance > 0.0:
-            raise Exception("Densify distance must be positive")
-
-        segment_length = self.length2D()
-
-        s_list = []
-        n = 0
-        length = n * densify_distance
-
-        while length < segment_length:
-            s_list.append(length)
-            n += 1
-            length = n * densify_distance
-
-        s_list.append(segment_length)
-
-        return array('d', s_list)
-
-    def densify2d_asPts(self,
-        densify_distance
-    ) -> List[Point]:
-        """
-        Densify a segment by adding additional points
-        separated a distance equal to densify_distance.
-        The result is no longer a Segment instance, instead it is a Line instance.
-
-        :param densify_distance: the distance with which to densify the segment.
-        :type densify_distance: numbers.Real.
-        :return: the set of densified points.
-        :rtype: List[Point].
-        """
-
-        if not isinstance(densify_distance, numbers.Real):
-            raise Exception("Input densify distance must be float or integer")
-
-        if not math.isfinite(densify_distance):
-            raise Exception("Input densify distance must be finite")
-
-        if densify_distance <= 0.0:
-            raise Exception("Input densify distance must be positive")
-
-        length2d = self.length2D()
-
-        vect = self.vector()
-        vers_2d = vect.versor2D()
-        generator_vector = vers_2d.scale(densify_distance)
-
-        pts = [self.start_pt]
-
-        n = 0
-        while True:
-            n += 1
-            new_pt = self.start_pt.shiftByVect(generator_vector.scale(n))
-            distance = self.start_pt.dist2DWith(new_pt)
-            if distance >= length2d:
-                break
-            pts.append(new_pt)
-
-        pts.append(self.end_pt)
-
-        return pts
-
-    def densify2d_asLine(self,
-        densify_distance
-    ) -> 'Points':
-        """
-        Densify a segment by adding additional points
-        separated a distance equal to densify_distance.
-        The result is no longer a Segment instance, instead it is a Line instance.
-
-        :param densify_distance: numbers.Real
-        :return: Line
-        """
-
-        pts = self.densify2d_asPts(densify_distance=densify_distance)
-
-        return Points(
-            pts=pts)
 
     def vertical_plane(self) -> Optional[CPlane]:
         """
@@ -1887,7 +1389,7 @@ def point_or_segment(
     #check_crs(point1, point2)
 
     if point1.dist3DWith(point2) <= tol:
-        return Points.fromPoints([point1, point2]).nanmean_point()
+        return Line.fromPoints([point1, point2]).nanmean_point()
     else:
         return Segment(
             start_pt=point1,
@@ -2031,8 +1533,8 @@ def intersect_segments(
     if s2_endpt_inside:
         return segment2.end_pt.clone()
 
-    cline1 = CLine.fromSegment(segment1)
-    cline2 = CLine.fromSegment(segment2)
+    cline1 = Segment.fromSegment(segment1)
+    cline2 = Segment.fromSegment(segment2)
 
     shortest_segm_or_pt = cline1.shortest_segment_or_point(
         cline2,
@@ -2056,784 +1558,22 @@ def intersect_segments(
     return inters_pt
 
 
-class Segments(list):
+class Line:
     """
-    Collection of segments, inheriting from list.
-
-    """
-
-    def __init__(self, segments: List[Segment]):
-
-        check_type(segments, "Segments", List)
-        for el in segments:
-            check_type(el, "Segment", Segment)
-
-        super(Segments, self).__init__(segments)
-
-
-class CLine:
-    """
-    Cartesian line.
-
-    Defined by a point and a unit vector.
+    A line.
     """
 
     def __init__(self,
-        point: Point,
-        dir_vector: Vect):
-
-        check_type(point, "Input point", Point)
-        check_type(dir_vector, "Directional vector", Vect)
-
-        self._start_pt = point
-        self._dir_vect = dir_vector.versor().upward()
-
-    @property
-    def start_pt(self) -> Point:
-        """
-        Returns the Cartesian line point.
-
-        :return: the Cartesian line point
-        :rtype: Point
-        """
-
-        return self._start_pt
-
-    @property
-    def end_pt(self) -> Point:
-        """
-        Returns the Cartesian line point.
-
-        :return: the Cartesian line point
-        :rtype: Point
-        """
-
-        return self.start_pt.shiftByVect(self.versor)
-
-    @property
-    def versor(self) -> Vect:
-        """
-        Returns .
-
-        :return: the unit vector
-        :rtype: Vect
-        """
-
-        return self._dir_vect
-
-    def points(self) -> Tuple[Point, Point]:
-        """
-        Returns the CLine as a tuple of two points.
-
-        :return: the CLine as a tuple of two points
-        :rtype: Tuple[Point, Point]
-        """
-
-        return self.start_pt, self.end_pt
-
-    def segment(self) -> Segment:
-        """
-        Returns the CLine as a segment.
-
-        :return: the CLine as a segment
-        :rtype: Segment
-        """
-
-        return Segment(
-            start_pt=self.start_pt,
-            end_pt=self.end_pt
-        )
-
-    @classmethod
-    def fromPoints(cls,
-        first_pt: Point,
-        second_pt: Point,
-        tolerance = PRACTICAL_MIN_DIST
-    ) -> 'CLine':
-        """
-        Creates a CLine instance from two distinct points.
-
-        :param tolerance:
-        :param first_pt: the first input point
-        :type first_pt: Point
-        :param second_pt: the second input point
-        :type second_pt: Point
-        :return: a new CLine instance
-        :rtype: CLine
-        """
-
-        check_type(first_pt, "First point", Point)
-        check_type(second_pt, "Second point", Point)
-
-        if first_pt.isCoinc3D(second_pt, tolerance=tolerance):
-            raise Exception("The two input points are practically coincident")
-
-        segment = Segment(
-            start_pt=first_pt,
-            end_pt=second_pt
-        )
-
-        return cls(
-            point=first_pt,
-            dir_vector=segment.vector()
-        )
-
-    @classmethod
-    def fromSegment(cls,
-        segment: Segment):
-        """
-        Creates a Cartesian line from a segment instance.
-
-        :param segment: the segment to convert to Cartesian line
-        :type segment: Segment
-        :return: a new CLine
-        :rtype: CLine
-        """
-
-        return cls.fromPoints(
-            first_pt=segment.start_pt,
-            second_pt=segment.end_pt
-        )
-
-    def shortest_segment_or_point(self,
-        another: 'CLine',
-        tol: numbers.Real = PRACTICAL_MIN_DIST
-    ) -> Optional[Union[Segment, Point]]:
-
-        """
-        Calculates the optional shortest segment - or the intersection point - between two lines represented by two segments.
-
-        Adapted from:
-            http://paulbourke.net/geometry/pointlineplane/
-
-        C code from:
-            http://paulbourke.net/geometry/pointlineplane/lineline.c
-    [
-        typedef struct {
-        double x,y,z;
-        } XYZ;
-
-        /*
-        Calculate the line segment PaPb that is the shortest route between
-        two lines P1P2 and P3P4. Calculate also the values of mua and mub where
-          Pa = P1 + mua (P2 - P1)
-          Pb = P3 + mub (P4 - P3)
-        Return FALSE if no solution exists.
-        */
-        int LineLineIntersect(
-        XYZ p1,XYZ p2,XYZ p3,XYZ p4,XYZ *pa,XYZ *pb,
-        double *mua, double *mub)
-        {
-        XYZ p13,p43,p21;
-        double d1343,d4321,d1321,d4343,d2121;
-        double numer,denom;
-
-        p13.x = p1.x - p3.x;
-        p13.y = p1.y - p3.y;
-        p13.z = p1.z - p3.z;
-        p43.x = p4.x - p3.x;
-        p43.y = p4.y - p3.y;
-        p43.z = p4.z - p3.z;
-        if (ABS(p43.x) < EPS && ABS(p43.y) < EPS && ABS(p43.z) < EPS)
-          return(FALSE);
-        p21.x = p2.x - p1.x;
-        p21.y = p2.y - p1.y;
-        p21.z = p2.z - p1.z;
-        if (ABS(p21.x) < EPS && ABS(p21.y) < EPS && ABS(p21.z) < EPS)
-          return(FALSE);
-
-        d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
-        d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
-        d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
-        d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
-        d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
-
-        denom = d2121 * d4343 - d4321 * d4321;
-        if (ABS(denom) < EPS)
-          return(FALSE);
-        numer = d1343 * d4321 - d1321 * d4343;
-
-        *mua = numer / denom;
-        *mub = (d1343 + d4321 * (*mua)) / d4343;
-
-        pa->x = p1.x + *mua * p21.x;
-        pa->y = p1.y + *mua * p21.y;
-        pa->z = p1.z + *mua * p21.z;
-        pb->x = p3.x + *mub * p43.x;
-        pb->y = p3.y + *mub * p43.y;
-        pb->z = p3.z + *mub * p43.z;
-
-        return(TRUE);
-        }
-
-        :param another: the second Cartesian line.
-        :type another: Cartesian line.
-        :param tol: tolerance value for collapsing a segment into the midpoint.
-        :type tol: numbers.Real
-        :return: the optional shortest segment or an intersection point.
-        :rtype: Optional[Union[Segment, Point]]
-        """
-
-        check_type(another, "Second Cartesian line", CLine)
-
-        p1 = self.start_pt
-        p2 = self.end_pt
-
-        p3 = another.start_pt
-        p4 = another.end_pt
-
-        p13 = Point(
-            x=p1.x - p3.x,
-            y=p1.y - p3.y,
-            z=p1.z - p3.z
-        )
-
-        p43 = Point(
-            x=p4.x - p3.x,
-            y=p4.y - p3.y,
-            z=p4.z - p3.z
-        )
-
-        if p43.asVect().isAlmostZero:
-            return None
-
-        p21 = Point(
-            x=p2.x - p1.x,
-            y=p2.y - p1.y,
-            z=p2.z - p1.z,
-        )
-
-        if p21.asVect().isAlmostZero:
-            return None
-
-        d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z
-        d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z
-        d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z
-        d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z
-        d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z
-
-        denom = d2121 * d4343 - d4321 * d4321
-
-        if fabs(denom) < MIN_SCALAR_VALUE:
-            return None
-
-        numer = d1343 * d4321 - d1321 * d4343
-
-        mua = numer / denom
-        mub = (d1343 + d4321 * mua) / d4343
-
-        pa = Point(
-            x=p1.x + mua * p21.x,
-            y=p1.y + mua * p21.y,
-            z=p1.z + mua * p21.z
-        )
-
-        pb = Point(
-            x=p3.x + mub * p43.x,
-            y=p3.y + mub * p43.y,
-            z=p3.z + mub * p43.z
-        )
-
-        intersection = point_or_segment(
-            point1=pa,
-            point2=pb,
-            tol=tol
-        )
-
-        return intersection
-
-    def pointDistance(self,
-        point: Point
-    ) -> numbers.Real:
-        """
-        Returns the distance between a line and a point.
-
-        Algorithm from Wolfram MathWorld: Point-Line Distance -- 3-Dimensional
-
-        :param point: input point
-        :type point: Point
-        :return: the distance
-        :rtype: numbers.Real
-
-        Examples:
-        """
-
-        v2 = self.end_pt.asVect()
-        v1 = self.start_pt.asVect()
-
-        v0 = point.asVect()
-
-        d = abs((v0 - v1).vCross(v0 - v2)) / abs(v2 - v1)
-
-        return d
-
-
-class Points:
-    """
-    A list of Point objects.
-    """
-
-    def __init__(self,
-        pts: Optional[List[Point]] = None
-    ):
-        """
-        Creates the Line instance.
-
-        :param pts: a list of points
-        :type pts: List of Point instances.
-        :return: a Line instance.
-        :rtype: Line.
-        """
-
-        if pts is None:
-            pts = []
-
-        for pt in pts:
-            if not isinstance(pt, Point):
-                raise Exception("All input data must be point")
-
-        self._x = array('d', [pt.x for pt in pts])
-        self._y = array('d', [pt.y for pt in pts])
-        self._z = array('d', [pt.z for pt in pts])
-
-    @classmethod
-    def fromArrays(cls,
-        xs: array,
-        ys: array,
-        zs: array = None
-    ) -> 'Points':
-        """
-        Create a Line instance from a list of x, y and optional z values.
-
-        Example:
-          >>> Points.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]), zs=array('d',[1,2,3]))
-          Line with 3 points: (1.0000, 3.0000, 1.0000) ... (3.0000, 5.0000, 3.0000)
-          >>> Points.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
-          Line with 3 points: (1.0000, 3.0000, 0.0000) ... (3.0000, 5.0000, 0.0000)
-        """
-
-        if not isinstance(xs, array):
-            raise Exception("X values have type {} instead of array".format(type(xs)))
-
-        if not isinstance(ys, array):
-            raise Exception("Y values have type {} instead of array".format(type(ys)))
-
-        if zs is not None and not isinstance(zs, array):
-            raise Exception("Z values have type {} instead of array or None".format(type(zs)))
-
-        num_vals = len(xs)
-        if len(ys) != num_vals:
-            raise Exception("Y array has length {} while x array has length {}".format(len(ys), num_vals))
-
-        if zs is not None and len(zs) != num_vals:
-            raise Exception("Z array has length {} while x array has length {}".format(len(zs), num_vals))
-
-        if zs is None:
-            zs = array('d', [0.0]*num_vals)
-
-        self = cls()
-
-        self._x = xs
-        self._y = ys
-        self._z = zs
-
-        return self
-
-    @classmethod
-    def fromPointList(cls,
-        pt_list: List[List[numbers.Real]]
-    ) -> 'Points':
-        """
-        Create a Line instance from a list of x, y and optional z values.
-
-        Example:
-          >>> Points.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-          Line with 3 points: (0.0000, 0.0000, 0.0000) ... (0.0000, 1.0000, 0.0000)
-        """
-
-        pts = []
-        for vals in pt_list:
-            if len(vals) == 2:
-                pt = Point(
-                    x=vals[0],
-                    y=vals[1]
-                )
-            elif len(vals) == 3:
-                pt = Point(
-                    x=vals[0],
-                    y=vals[1],
-                    z=vals[2]
-                )
-            else:
-                raise Exception(f"Point input values should be 2 or 3, {len(vals)} got")
-
-            pts.append(pt)
-
-        return cls(pts)
-
-    def pt(self, pt_ndx: numbers.Integral) -> Point:
-        """
-        Extract the point at index pt_ndx.
-
-        :param pt_ndx: point index.
-        :type pt_ndx: numbers.Integral.
-        :return: the extracted Point instance.
-        :rtype: Point.
-
-        Examples:
-        """
-
-        return Point(
-            x=self._x[pt_ndx],
-            y=self._y[pt_ndx],
-            z=self._z[pt_ndx]
-        )
-
-    def values_at(self,
-        ndx: numbers.Integral
-                  ) -> Tuple[float, float, float]:
-        """
-        Return the values at given index.
-
-        :param ndx: the index of the point values to extract
-        :type ndx: numbers.Integral
-        :return: the x, y and z values
-        """
-
-        return (
-            self._x[ndx],
-            self._y[ndx],
-            self._z[ndx]
-        )
-
-    def pts(self):
-
-        return [Point(*self.values_at(ndx)) for ndx in range(self.num_pts())]
-
-    def segment(self,
-        ndx: numbers.Integral
-    ) -> Optional[Segment]:
-        """
-        Returns the optional segment at index ndx.
-
-        :param ndx: the segment index.
-        :type ndx: numbers.Integral
-        :return: the optional segment
-        :rtype: Optional[Segment]
-        """
-
-        start_pt = self.pt(ndx)
-        end_pt = self.pt(ndx + 1)
-
-        if start_pt.isCoinc3D(end_pt):
-            return None
-        else:
-            return Segment(
-                start_pt=self.pt(ndx),
-                end_pt=self.pt(ndx + 1)
-            )
-
-    def intersectSegment(self,
-        segment: Segment
-    ) -> Optional[PointSegmentCollection]:
-        """
-        Calculates the possible intersection between the line and a provided segment.
-
-        :param segment: the input segment
-        :type segment: Segment
-        :return: the optional intersections, points or segments
-        :rtype: Optional[List[Optional[Union[Point, Segment]]]]
-        :raise: Exception
-        """
-
-        if self.num_pts() <= 1:
-            return
-
-        check_type(segment, "Input segment", Segment)
-
-        intersections = [intersect_segments(curr_segment, segment) for curr_segment in self if curr_segment is not None]
-        intersections = list(filter(lambda val: val is not None, intersections))
-        intersections = PointSegmentCollection(intersections)
-
-        return intersections
-
-    def num_pts(self):
-
-        return len(self._x)
-
-    def start_pt(self) -> Optional[Point]:
-        """
-        Return the first point of a Line or None when no points.
-
-        :return: the first point or None.
-        :rtype: optional Point instance.
-        """
-
-        return self.pt(0) if self.num_pts() > 0 else None
-
-    def end_pt(self) -> Optional[Point]:
-        """
-        Return the last point of a Line or None when no points.
-
-        :return: the last point or None.
-        :rtype: optional Point instance.
-        """
-
-        return self.pt(-1) if self.num_pts() > 0 else None
-
-    def __iter__(self):
-        """
-        Return each element of a Line, i.e., its segments.
-        """
-
-        return (self.segment(i) for i in range(self.num_pts()-1))
-
-    def __repr__(self) -> str:
-        """
-        Represents a Line instance as a shortened text.
-
-        :return: a textual shortened representation of a Line instance.
-        :rtype: str.
-        """
-
-        num_points = self.num_pts()
-
-        if num_points == 0:
-            txt = "Empty Line"
-        else:
-            x1, y1, z1 = self.start_pt()
-            if num_points == 1:
-                txt = "Line with unique point: {.4f}.{.4f},{.4f}".format(x1, y1, z1)
-            else:
-                x2, y2, z2 = self.end_pt()
-                txt = "Line with {} points: ({:.4f}, {:.4f}, {:.4f}) ... ({:.4f}, {:.4f}, {:.4f})".format(num_points, x1, y1, z1, x2, y2, z2)
-
-        return txt
-
-    def add_pt(self, pt) -> bool:
-        """
-        In-place transformation of the original Line instance
-        by adding a new point at the end.
-
-        :param pt: the point to add
-        :type pt: Point.
-        :return: status of addition. True when added, False otherwise.
-        :rtype: bool.
-        """
-
-        self._x.append(pt.x)
-        self._y.append(pt.y)
-        self._z.append(pt.z)
-        return True
-
-    def add_pts(self, pt_list) -> numbers.Integral:
-        """
-        In-place transformation of the original Line instance
-        by adding a new set of points at the end.
-
-        :param pt_list: list of Points.
-        :type pt_list: List of Point instances.
-        :return: number of added points
-        :rtype: numbers.Integral.
-        """
-
-        num_added = 0
-        for pt in pt_list:
-            success = self.add_pt(pt)
-            if success:
-                num_added += 1
-
-        return num_added
-
-    def x_list(self) -> List[numbers.Real]:
-
-        return list(self._x)
-
-    def y_list(self) -> List[numbers.Real]:
-
-        return list(self._y)
-
-    def z_list(self) -> List[numbers.Real]:
-
-        return list(self._z)
-
-    def z_array(self) -> np.ndarray:
-
-        return np.array(self._z)
-
-    def xy_lists(self) -> Tuple[List[numbers.Real], List[numbers.Real]]:
-
-        return self.x_list(), self.y_list()
-
-    def xy_zipped(self) -> List[Tuple[numbers.Real, numbers.Real]]:
-
-        return [(x, y) for x, y in zip(self.x_list(), self.y_list())]
-
-    def x_min(self) -> Optional[numbers.Real]:
-        """
-        Optional minimum of x values.
-
-        :return: the optional minimum of x values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Points.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-          >>> l.x_min()
-          0.0
-        """
-
-        return min(self._x) if self.num_pts() > 0 else None
-
-    def x_max(self) -> Optional[numbers.Real]:
-        """
-        Optional maximum of x values.
-
-        :return: the optional maximum of x values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Points.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-          >>> l.x_max()
-          1.0
-        """
-
-        return max(self._x) if self.num_pts() > 0 else None
-
-    def y_min(self) -> Optional[numbers.Real]:
-        """
-        Optional minimum of y values.
-
-        :return: the optional minimum of y values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Points.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-          >>> l.y_min()
-          0.0
-        """
-
-        return min(self._y) if self.num_pts() > 0 else None
-
-    def y_max(self) -> Optional[numbers.Real]:
-        """
-        Optional maximum of y values.
-
-        :return: the optional maximum of y values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Points.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-          >>> l.y_max()
-          1.0
-        """
-
-        return max(self._y) if self.num_pts() > 0 else None
-
-    def z_stats(self) -> Optional[Dict]:
-        """
-        Returns the line elevation statistics.
-
-        :return: the statistics parameters: min, max, mean, var, std.
-        :rtype: Optional dictionary of numbers.Real values.
-        """
-
-        return get_statistics(self.z_array()) if self.num_pts() > 0 else None
-
-    def z_min(self) -> Optional[numbers.Real]:
-        """
-        Optional minimum of z values.
-
-        :return: the optional minimum of z values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Points.fromPointList([[0, 0, 0], [1, 0, 0], [-2.72, 1, -0.7]])
-          >>> l.z_min()
-          -0.7
-        """
-
-        return min(self._z) if self.num_pts() > 0 else None
-
-    def z_max(self) -> Optional[numbers.Real]:
-        """
-        Optional maximum of z values.
-
-        :return: the optional maximum of z values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Points.fromPointList([[0, 0, 0], [1, 0, 4.4], [0, 1, 0]])
-          >>> l.z_max()
-          4.4
-        """
-
-        return max(self._z) if self.num_pts() > 0 else None
-
-    def z_mean(self) -> Optional[numbers.Real]:
-        """
-        Optional mean of z values.
-
-        :return: the optional maximum of z values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Points.fromPointList([[0, 0, 2], [1, 0, 4], [0, 1, 6]])
-          >>> l.z_mean()
-          4.0
-        """
-
-        return np.mean(self._z) if self.num_pts() > 0 else None
-
-    def z_var(self) -> Optional[numbers.Real]:
-        """
-        Optional variance of z values.
-
-        :return: the optional variance of z values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Points.fromPointList([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
-          >>> l.z_var()
-          0.0
-        """
-
-        return np.var(self._z) if self.num_pts() > 0 else None
-
-    def z_std(self) -> Optional[numbers.Real]:
+                 pts: List[Point]):
         """
-        Optional standard deviation of z values.
 
-        :return: the optional standard deviation of z values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Points.fromPointList([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
-          >>> l.z_std()
-          0.0
-        """
-
-        return np.std(self._z) if self.num_pts() > 0 else None
-
-    def remove_coincident_points(self) -> Optional['Points']:
         """
-        Remove coincident successive points
-
-        :return: Line instance
-        :rtype: Optional[Points]
-        """
-
-        if self.num_pts() == 0:
-            return
-
-        new_line = Points(
-            pts=[self.pt(0)]
-        )
 
-        for ndx in range(1, self.num_pts()):
-            if not self.pt(ndx).isCoinc3D(new_line.pt(-1)):
-                new_line.add_pt(self.pt(ndx))
+        check_type(pts, "List", list)
+        for el in pts:
+            check_type(el, "Point", Point)
 
-        return new_line
+        self._pts = pts
 
     def as_segments(self):
         """
@@ -2882,7 +1622,7 @@ class Points:
         and orientation mismatches between the two original lines
         """
 
-        return Points(self.pts() + another.pts())
+        return Line(self.pts() + another.pts())
 
     def length_3d(self) -> numbers.Real:
 
@@ -2989,7 +1729,7 @@ class Points:
         pts = [pt.clone() for pt in self.pts()]
         pts.reverse()
 
-        return Points(
+        return Line(
             pts=pts
         )
 
@@ -3095,7 +1835,7 @@ class Points:
         :rtype: 'Line'
         """
 
-        return Points(self.pts() + self.reversed().pts()[1:])
+        return Line(self.pts() + self.reversed().pts()[1:])
 
     def clone(self) -> 'Points':
         """
@@ -3105,7 +1845,7 @@ class Points:
         :rtype: Points
         """
 
-        return Points(self.pts())
+        return Line(self.pts())
 
     '''
     def close_2d(self) -> 'Points':
@@ -3141,144 +1881,26 @@ class Points:
 
         return line
 
-
-def line_from_shapely(
-        shapely_geom: LineString,
-        epsg_code: numbers.Integral
-) -> Points:
-    # Side effects: none
-    """
-    Create a Line instance from a shapely Linestring instance.
-
-    :param shapely_geom: the shapely input LineString instance
-    :type shapely_geom: shapely.geometry.linestring.LineString
-    :param epsg_code: the EPSG code of the LineString instance
-    :type epsg_code: numbers.Integral
-    :return: the converted Line instance
-    :rtype: Points
-    """
-
-    x_array, y_array = shapely_geom.xy
-
-    return Points.fromArrays(
-        x_array,
-        y_array,
-        epsg_cd=epsg_code
-    )
-
-
-def line_to_shapely(
-        src_line: Points
-) -> LineString:
-    """
-    Create a shapely.LineString instance from a Line one.
-
-    :param src_line: the source line to convert to the shapely format
-    :type src_line: Points
-    :return: the shapely LineString instance and the EPSG code
-    :rtype: Tuple[LineString, numbers.Integral]
-    """
-
-    return LineString(src_line.xy_zipped()), src_line.epsg_code()
-
-
-class Lines(list):
-    """
-    Collection of lines.
-
-    """
-
-    def __init__(self,
-                 lines: Optional[List[Points]] = None
-                 ):
-
-        if lines:
-
-            check_type(lines, "Lines", List)
-            for line in lines:
-                check_type(line, "Line", Points)
-            first_line = lines[0]
-            for line in lines[1:]:
-                check_crs(first_line, line)
-
-            super(Lines, self).__init__(lines)
-
-        else:
-
-            super(Lines, self).__init__()
-
-    def append(self,
-               item: Points
-               ) -> None:
-
-        check_type(item, "Line", Points)
-        if len(self) > 0:
-            check_crs(self[0], item)
-
-        super(Lines, self).append(item)
-
-
-class ParamLine3D(object):
-    """
-    parametric line
-    srcPt: source Point
-    l, m, n: line coefficients
-    """
-
-    def __init__(self, srcPt, l, m, n):
-
-        for v in (l, m, n):
-            if not (-1.0 <= v <= 1.0):
-                raise Exception("Parametric line values must be in -1 to 1 range")
-
-        self._srcPt = srcPt.clone()
-        self._l = l
-        self._m = m
-        self._n = n
-
-    '''
-    def epsg(self) -> numbers.Integral:
+    def remove_coincident_points(self) -> Optional['Points']:
         """
-        Return the EPSG code of the parametric line.
+        Remove coincident successive points
+
+        :return: Line instance
+        :rtype: Optional[Points]
         """
 
-        return self._srcPt.epsg_code()
-    '''
+        if self.num_pts() == 0:
+            return
 
-    def intersect_cartes_plane(self, cartes_plane) -> Optional[Point]:
-        """
-        Return intersection point between parametric line and Cartesian plane.
-
-        :param cartes_plane: a Cartesian plane:
-        :type cartes_plane: CPlane.
-        :return: the intersection point between parametric line and Cartesian plane.
-        :rtype: Point.
-        :raise: Exception.
-        """
-
-        if not isinstance(cartes_plane, CPlane):
-            raise Exception("Method argument should be a Cartesian plane but is {}".format(type(cartes_plane)))
-
-        '''
-        if cartes_plane.epsg_code() != self.epsg():
-            raise Exception("Parametric line has EPSG {} while Cartesian plane has {}".format(self.epsg(), cartes_plane.epsg_code()))
-        '''
-
-        # line parameters
-        x1, y1, z1 = self._srcPt.x, self._srcPt.y, self._srcPt.z
-        l, m, n = self._l, self._m, self._n
-        # Cartesian plane parameters
-        a, b, c, d = cartes_plane.a(), cartes_plane.b(), cartes_plane.c(), cartes_plane.d()
-        try:
-            k = (a * x1 + b * y1 + c * z1 + d) / (a * l + b * m + c * n)
-        except ZeroDivisionError:
-            return None
-
-        return Point(
-            x=x1 - l * k,
-            y=y1 - m * k,
-            z=z1 - n * k
+        new_line = Line(
+            pts=[self.pt(0)]
         )
+
+        for ndx in range(1, self.num_pts()):
+            if not self.pt(ndx).isCoinc3D(new_line.pt(-1)):
+                new_line.add_pt(self.pt(ndx))
+
+        return new_line
 
 
 class JoinTypes(Enum):
@@ -3292,7 +1914,7 @@ class JoinTypes(Enum):
     END_END     = 4  # end point coincident with end point
 
 
-def analizeJoins(first: Union[Points, Segment], second: Union[Points, Segment]) -> List[Optional[JoinTypes]]:
+def analizeJoins(first: Union[Line, Segment], second: Union[Line, Segment]) -> List[Optional[JoinTypes]]:
     """
     Analyze join types between two lines/segments.
 
@@ -3329,5 +1951,156 @@ def analizeJoins(first: Union[Points, Segment], second: Union[Points, Segment]) 
         join_types.append(JoinTypes.END_END)
 
     return join_types
+
+
+def shortest_segment_or_point(
+    first_segment: Segment,
+    second_segment: Segment,
+    tol: numbers.Real = PRACTICAL_MIN_DIST
+) -> Optional[Union[Segment, Point]]:
+
+    """
+    Calculates the optional shortest segment - or the intersection point - between two lines represented by two segments.
+
+    Adapted from:
+        http://paulbourke.net/geometry/pointlineplane/
+
+    C code from:
+        http://paulbourke.net/geometry/pointlineplane/lineline.c
+[
+    typedef struct {
+    double x,y,z;
+    } XYZ;
+
+    /*
+    Calculate the line segment PaPb that is the shortest route between
+    two lines P1P2 and P3P4. Calculate also the values of mua and mub where
+      Pa = P1 + mua (P2 - P1)
+      Pb = P3 + mub (P4 - P3)
+    Return FALSE if no solution exists.
+    */
+    int LineLineIntersect(
+    XYZ p1,XYZ p2,XYZ p3,XYZ p4,XYZ *pa,XYZ *pb,
+    double *mua, double *mub)
+    {
+    XYZ p13,p43,p21;
+    double d1343,d4321,d1321,d4343,d2121;
+    double numer,denom;
+
+    p13.x = p1.x - p3.x;
+    p13.y = p1.y - p3.y;
+    p13.z = p1.z - p3.z;
+    p43.x = p4.x - p3.x;
+    p43.y = p4.y - p3.y;
+    p43.z = p4.z - p3.z;
+    if (ABS(p43.x) < EPS && ABS(p43.y) < EPS && ABS(p43.z) < EPS)
+      return(FALSE);
+    p21.x = p2.x - p1.x;
+    p21.y = p2.y - p1.y;
+    p21.z = p2.z - p1.z;
+    if (ABS(p21.x) < EPS && ABS(p21.y) < EPS && ABS(p21.z) < EPS)
+      return(FALSE);
+
+    d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
+    d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
+    d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
+    d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
+    d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
+
+    denom = d2121 * d4343 - d4321 * d4321;
+    if (ABS(denom) < EPS)
+      return(FALSE);
+    numer = d1343 * d4321 - d1321 * d4343;
+
+    *mua = numer / denom;
+    *mub = (d1343 + d4321 * (*mua)) / d4343;
+
+    pa->x = p1.x + *mua * p21.x;
+    pa->y = p1.y + *mua * p21.y;
+    pa->z = p1.z + *mua * p21.z;
+    pb->x = p3.x + *mub * p43.x;
+    pb->y = p3.y + *mub * p43.y;
+    pb->z = p3.z + *mub * p43.z;
+
+    return(TRUE);
+    }
+
+    :param second_segment: the second Cartesian line.
+    :type second_segment: Cartesian line.
+    :param tol: tolerance value for collapsing a segment into the midpoint.
+    :type tol: numbers.Real
+    :return: the optional shortest segment or an intersection point.
+    :rtype: Optional[Union[Segment, Point]]
+    """
+
+    check_type(second_segment, "Second Cartesian line", Segment)
+
+    p1 = first_segment.start_pt
+    p2 = first_segment.end_pt
+
+    p3 = second_segment.start_pt
+    p4 = second_segment.end_pt
+
+    p13 = Point(
+        x=p1.x - p3.x,
+        y=p1.y - p3.y,
+        z=p1.z - p3.z
+    )
+
+    p43 = Point(
+        x=p4.x - p3.x,
+        y=p4.y - p3.y,
+        z=p4.z - p3.z
+    )
+
+    if p43.asVect().isAlmostZero:
+        return None
+
+    p21 = Point(
+        x=p2.x - p1.x,
+        y=p2.y - p1.y,
+        z=p2.z - p1.z,
+    )
+
+    if p21.asVect().isAlmostZero:
+        return None
+
+    d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z
+    d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z
+    d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z
+    d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z
+    d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z
+
+    denom = d2121 * d4343 - d4321 * d4321
+
+    if fabs(denom) < MIN_SCALAR_VALUE:
+        return None
+
+    numer = d1343 * d4321 - d1321 * d4343
+
+    mua = numer / denom
+    mub = (d1343 + d4321 * mua) / d4343
+
+    pa = Point(
+        x=p1.x + mua * p21.x,
+        y=p1.y + mua * p21.y,
+        z=p1.z + mua * p21.z
+    )
+
+    pb = Point(
+        x=p3.x + mub * p43.x,
+        y=p3.y + mub * p43.y,
+        z=p3.z + mub * p43.z
+    )
+
+    intersection = point_or_segment(
+        point1=pa,
+        point2=pb,
+        tol=tol
+    )
+
+    return intersection
+
+
 
 
