@@ -1,5 +1,5 @@
 import abc
-
+import itertools
 import numbers
 import random
 from array import array
@@ -59,9 +59,6 @@ class Point2D(Shape2D):
 
         self._x = float(x)
         self._y = float(y)
-
-    def clone(self):
-        return Point2D(self._x, self._y)
 
     @property
     def center(self):
@@ -1524,22 +1521,6 @@ class Line2D:
         for ndx in range(self.num_pts() - 1):
             length += self.pt(ndx).dist2DWith(self.pt(ndx + 1))
         return length
-
-    def step_delta_z(self) -> List[numbers.Real]:
-        """
-        Return the difference in elevation between consecutive points:
-        z[ndx+1] - z[ndx]
-
-        :return: a list of height differences.
-        :rtype: list of floats.
-        """
-
-        delta_z = [0.0]
-
-        for ndx in range(1, self.num_pts()):
-            delta_z.append(self.pt(ndx).z - self.pt(ndx - 1).z)
-
-        return delta_z
 
     def step_lengths_2d(self) -> List[numbers.Real]:
         """

@@ -2,12 +2,13 @@
 from typing import List, Iterable
 from operator import attrgetter
 
-from pygsf.spatial.space3d.rasters.geoarray import *
+from pygsf.crs.rasters import *
+from pygsf.crs.geoshapes import *
 from pygsf.geology.base import *
-from pygsf.spatial.space3d.vectorial.polygons import *
 
-from .sets import *
-from ...orientations.orientations import Axis, Azim, Plunge
+from pygsf.geometries.geom3d.abstract import *
+from pygsf.geology.profiles.sets import *
+from pygsf.orientations.orientations import Axis, Azim, Plunge
 
 
 def georef_attitudes_3d_from_grid(
@@ -63,28 +64,28 @@ class LinearProfiler:
     """
 
     def __init__(self,
-        start_pt: Point,
-        end_pt: Point,
-        densify_distance: numbers.Real
+        start_pt: Point2D,
+        end_pt: Point2D,
+        densify_distance: numbers.Real,
+        epsg_code: numbers.Integral
     ):
         """
         Instantiates a 2D linear profile object.
         It is represented by two 2D points and by a densify distance.
 
         :param start_pt: the profile start point.
-        :type start_pt: Point.
         :param end_pt: the profile end point.
-        :type end_pt: Point.
         :param densify_distance: the distance with which to densify the segment profile.
-        :type densify_distance: numbers.Real.
         """
 
         check_type(start_pt, "Input start point", Point)
 
         check_type(end_pt, "Input end point", Point)
 
+        '''
         if start_pt.crs != end_pt.crs:
             raise Exception("Both points must have same CRS")
+        '''
 
         if start_pt.dist2DWith(end_pt) == 0.0:
             raise Exception("Input segment length cannot be zero")
@@ -97,21 +98,19 @@ class LinearProfiler:
         if densify_distance <= 0.0:
             raise Exception("Input densify distance must be positive")
 
-        epsg_cd = start_pt.epsg_code()
+        #epsg_cd = start_pt.epsg_code()
 
-        self._start_pt = Point(
+        self._start_pt = Point2D(
             x=start_pt.x,
-            y=start_pt.y,
-            epsg_code=epsg_cd
+            y=start_pt.y
         )
 
-        self._end_pt = Point(
+        self._end_pt = Point2D(
             x=end_pt.x,
-            y=end_pt.y,
-            epsg_code=epsg_cd
+            y=end_pt.y
         )
 
-        self._crs = Crs(epsg_cd)
+        self._crs = Crs(epsg_code)
 
         self._densify_dist = float(densify_distance)
 
@@ -551,9 +550,6 @@ class LinearProfiler:
         if not isinstance(pt, Point):
             raise Exception(f"Projected point should be Point but is {type(pt)}")
 
-        if self.crs != pt.crs:
-            raise Exception(f"Projected point should have {self.epsg_code()} EPSG but has {pt.epsg_code()}")
-
         if not self.point_in_profile(pt):
             raise Exception(f"Projected point should lie in the profile plane but there is a distance of {self.point_distance(pt)} units")
 
@@ -655,9 +651,6 @@ class LinearProfiler:
 
         if not isinstance(structural_pt, Point):
             raise Exception("Structural point should be Point but is {}".format(type(structural_pt)))
-
-        if self.crs != structural_pt.crs:
-            raise Exception("Structural point should have {} EPSG but has {}".format(self.epsg_code(), structural_pt.epsg_code()))
 
         axis_versor = map_axis.asDirect().asVersor(epsg_cd=structural_pt.epsg_code())
 

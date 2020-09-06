@@ -1,6 +1,8 @@
-# -*- coding: utf-8 -*-
 
-from pygsf.spatial.space3d.vectorial.geometries import *
+import numbers
+
+from pygsf.defaults import *
+from pygsf.geometries.geom3d.shapes import *
 
 
 class Slick(object):

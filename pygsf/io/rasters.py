@@ -1,13 +1,11 @@
 
 import os
 
-from math import isfinite
-
 import gdal
 import rasterio
 
-from pygsf.spatial.space3d.rasters.geoarray import *
-from pygsf.spatial.space3d.rasters.geotransform import *
+from pygsf.crs.rasters import *
+from pygsf.geometries.geom2d.rasters.geotransform import *
 
 from .defaults import GRID_NULL_VALUE
 

@@ -1,8 +1,12 @@
-import numbers
-import random
-from math import isfinite, radians, pi, degrees, atan2, sin, cos, sqrt, tan
-from typing import Tuple, List, Callable
 
+from typing import List, Callable
+
+import random
+from math import pi, radians, degrees, atan2, sin, cos, isfinite, sqrt, tan
+
+import numpy as np
+
+from pygsf.mathematics.scalars import *
 from pygsf.geometries.geom3d.shapes import Point
 from pygsf.geometries.geom3d.abstract import CPlane
 from pygsf.mathematics.quaternions import Quaternion, QUAT_MAGN_THRESH
@@ -11,7 +15,346 @@ from pygsf.mathematics.utils import normXYZ
 from pygsf.mathematics.vectors import Vect
 from pygsf.orientations.direct_utils import plng2colatTop, plng2colatBottom, opposite_trend
 from pygsf.defaults import DIP_ANGLE_THRESHOLD, VECTOR_ANGLE_THRESHOLD, PLANE_ANGLE_THRESHOLD, angle_gplane_thrshld
-from pygsf.spatial.space3d.vectorial.geometries import Plane
+
+
+
+class Azim(object):
+    """
+    Azim class
+    """
+
+    def __init__(self,
+        val: numbers.Real,
+        unit: str = 'd'
+    ):
+        """
+        Creates an azimuth instance.
+
+        :param val: azimuth value
+        :param unit: angle measurement unit, 'd' (default, stands for decimal degrees) or 'r' (stands for radians)
+
+        Examples:
+          >>> Azim(10)
+          Azimuth(10.00°)
+          >>> Azim(370)
+          Azimuth(10.00°)
+          >>> Azim(pi/2, unit='r')
+          Azimuth(90.00°)
+          >>> Azim("10")
+          Traceback (most recent call last):
+          ...
+          Exception: Input azimuth value must be int/float
+          >>> Azim(np.nan)
+          Traceback (most recent call last):
+          ...
+          Exception: Input azimuth value must be finite
+        """
+
+        # unit check
+        if unit not in ("d", "r"):
+            raise Exception("Unit input must be 'd' or 'r'")
+
+        if not (isinstance(val, numbers.Real)):
+            raise Exception("Input azimuth value must be int/float")
+        elif not isfinite(val):
+            raise Exception("Input azimuth value must be finite")
+
+        if unit == 'd':
+            val = radians(val)
+
+        self.a = val % (2*pi)
+
+    @property
+    def d(self
+    ):
+        """
+        Returns the angle in decimal degrees.
+
+        :return: angle in decimal degrees
+
+        Example:
+          >>> Azim(10).d
+          10.0
+          >>> Azim(pi/2, unit='r').d
+          90.0
+        """
+
+        return degrees(self.a)
+
+    @property
+    def r(self
+    ):
+        """
+        Returns the angle in radians.
+
+        :return: angle in radians
+
+        Example:
+          >>> Azim(180).r
+          3.141592653589793
+        """
+
+        return self.a
+
+    @classmethod
+    def fromXY(cls,
+        x: numbers.Real,
+        y: numbers.Real
+    ) -> 'Azim':
+        """
+        Calculates azimuth given cartesian components.
+
+        :param cls: class
+        :param x: x component
+        :param y: y component
+        :return: Azimuth instance
+
+        Examples:
+          >>> Azim.fromXY(1, 1)
+          Azimuth(45.00°)
+          >>> Azim.fromXY(1, -1)
+          Azimuth(135.00°)
+          >>> Azim.fromXY(-1, -1)
+          Azimuth(225.00°)
+          >>> Azim.fromXY(-1, 1)
+          Azimuth(315.00°)
+          >>> Azim.fromXY(0, 0)
+          Azimuth(0.00°)
+          >>> Azim.fromXY(0, np.nan)
+          Traceback (most recent call last):
+          ...
+          Exception: Input x and y values must be finite
+          >>> Azim.fromXY("10", np.nan)
+          Traceback (most recent call last):
+          ...
+          Exception: Input x and y values must be integer or float
+        """
+
+        # input vals checks
+        vals = [x, y]
+        if not all(map(lambda val: isinstance(val, numbers.Real), vals)):
+            raise Exception("Input x and y values must be integer or float")
+        elif not all(map(isfinite, vals)):
+            raise Exception("Input x and y values must be finite")
+
+        angle = atan2(x, y)
+        return cls(angle, unit='r')
+
+    def __repr__(self) -> str:
+
+        return "Azimuth({:.2f}°)".format(self.d)
+
+    def toXY(self
+    ) -> Tuple[numbers.Real, numbers.Real]:
+        """
+        Converts an azimuth to x-y components.
+
+        :return: a tuple storing x and y values:
+        :type: tuple of two floats
+
+        Examples:
+          >>> apprFTuple(Azim(0).toXY())
+          (0.0, 1.0)
+          >>> apprFTuple(Azim(90).toXY())
+          (1.0, 0.0)
+          >>> apprFTuple(Azim(180).toXY())
+          (0.0, -1.0)
+          >>> apprFTuple(Azim(270).toXY())
+          (-1.0, 0.0)
+          >>> apprFTuple(Azim(360).toXY())
+          (0.0, 1.0)
+        """
+
+        return sin(self.a), cos(self.a)
+
+
+class Plunge(object):
+    """
+    Class representing a plunge
+    """
+
+    def __init__(self,
+        val: numbers.Real,
+        unit: str='d'
+    ):
+        """
+        Creates a Plunge instance.
+
+        :param val: plunge value
+        :param unit: angle measurement unit, decimal degrees ('d') or radians ('r')
+
+        Examples:
+          >>> Plunge(10)
+          Plunge(10.00°)
+          >>> Plunge("10")
+          Traceback (most recent call last):
+          ...
+          Exception: Input plunge value must be int/float
+          >>> Plunge(np.nan)
+          Traceback (most recent call last):
+          ...
+          Exception: Input plunge value must be finite
+          >>> Plunge(-100)
+          Traceback (most recent call last):
+          ...
+          Exception: Input value in degrees must be between -90° and 90°
+         """
+
+        # unit check
+        if unit not in ('d', 'r'):
+            raise Exception("Unit input must be 'd' (for degrees) or 'r' (for radians)")
+
+        # val check
+        if not (isinstance(val, numbers.Real)):
+            raise Exception("Input plunge value must be int/float")
+        elif not isfinite(val):
+            raise Exception("Input plunge value must be finite")
+        if unit == 'd' and not (-90.0 <= val <= 90.0):
+            raise Exception("Input value in degrees must be between -90° and 90°")
+        elif unit == 'r' and not (-pi/2 <= val <= pi/2):
+            raise Exception("Input value in radians must be between -pi/2 and pi/2")
+
+        if unit == 'd':
+            val = radians(val)
+
+        self.p = val
+
+    @property
+    def d(self):
+        """
+        Returns the angle in decimal degrees.
+
+        :return: angle in decimal degrees
+
+        Example:
+          >>> Plunge(10).d
+          10.0
+          >>> Plunge(-pi/2, unit='r').d
+          -90.0
+        """
+
+        return degrees(self.p)
+
+    @property
+    def r(self):
+        """
+        Returns the angle in radians.
+
+        :return: angle in radians
+
+        Example:
+          >>> Plunge(90).r
+          1.5707963267948966
+          >>> Plunge(45).r
+          0.7853981633974483
+        """
+
+        return self.p
+
+    @classmethod
+    def fromHZ(cls, h: numbers.Real, z: numbers.Real) -> 'Plunge':
+        """
+        Calculates plunge from h and z components.
+
+        :param cls: class
+        :param h: horizontal component (always positive)
+        :param z: vertical component (positive upward)
+        :return: Plunge instance
+
+        Examples:
+          >>> Plunge.fromHZ(1, 1)
+          Plunge(-45.00°)
+          >>> Plunge.fromHZ(1, -1)
+          Plunge(45.00°)
+          >>> Plunge.fromHZ(0, 1)
+          Plunge(-90.00°)
+          >>> Plunge.fromHZ(0, -1)
+          Plunge(90.00°)
+          >>> Plunge.fromHZ(-1, 0)
+          Traceback (most recent call last):
+          ...
+          Exception: Horizontal component cannot be negative
+          >>> Plunge.fromHZ(0, 0)
+          Traceback (most recent call last):
+          ...
+          Exception: Input h and z values cannot be both zero
+        """
+
+        # input vals check
+
+        vals = [h, z]
+        if not all(map(lambda val: isinstance(val, numbers.Real), vals)):
+            raise Exception("Input h and z values must be integer or float")
+        elif not all(map(isfinite, vals)):
+            raise Exception("Input h and z values must be finite")
+
+        if h == 0.0 and z == 0.0:
+            raise Exception("Input h and z values cannot be both zero")
+        elif h < 0.0:
+            raise Exception("Horizontal component cannot be negative")
+
+        angle = atan2(-z, h)
+
+        return cls(angle, unit='r')
+
+    def __repr__(self) -> str:
+
+        return "Plunge({:.2f}°)".format(self.d)
+
+    def toHZ(self):
+
+        """
+        Converts an azimuth to h-z components.
+
+        :return: a tuple storing h (horizontal) and z values:
+        :type: tuple of two floats
+
+        Examples:
+          >>> apprFTuple(Plunge(0).toHZ())
+          (1.0, 0.0)
+          >>> apprFTuple(Plunge(90).toHZ())
+          (0.0, -1.0)
+          >>> apprFTuple(Plunge(-90).toHZ())
+          (0.0, 1.0)
+          >>> apprFTuple(Plunge(-45).toHZ(), ndec=6)
+          (0.707107, 0.707107)
+          >>> apprFTuple(Plunge(45).toHZ(), ndec=6)
+          (0.707107, -0.707107)
+        """
+
+        return cos(self.p), -sin(self.p)
+
+    @property
+    def isUpward(self):
+        """
+        Check whether the instance is pointing upward or horizontal.
+
+        Examples:
+          >>> Plunge(10).isUpward
+          False
+          >>> Plunge(0.0).isUpward
+          False
+          >>> Plunge(-45).isUpward
+          True
+        """
+
+        return self.r < 0.0
+
+    @property
+    def isDownward(self):
+        """
+        Check whether the instance is pointing downward or horizontal.
+
+        Examples:
+          >>> Plunge(15).isDownward
+          True
+          >>> Plunge(0.0).isDownward
+          False
+          >>> Plunge(-45).isDownward
+          False
+        """
+
+        return self.r > 0.0
 
 
 class Direct(object):
@@ -805,345 +1148,6 @@ class Axis(Direct):
         angle_vers = self.asVersor().angle(another.asVersor())
 
         return min(angle_vers, 180.0 - angle_vers)
-
-
-class Azim(object):
-    """
-    Azim class
-    """
-
-    def __init__(self,
-        val: numbers.Real,
-        unit: str = 'd'
-    ):
-        """
-        Creates an azimuth instance.
-
-        :param val: azimuth value
-        :param unit: angle measurement unit, 'd' (default, stands for decimal degrees) or 'r' (stands for radians)
-
-        Examples:
-          >>> Azim(10)
-          Azimuth(10.00°)
-          >>> Azim(370)
-          Azimuth(10.00°)
-          >>> Azim(pi/2, unit='r')
-          Azimuth(90.00°)
-          >>> Azim("10")
-          Traceback (most recent call last):
-          ...
-          Exception: Input azimuth value must be int/float
-          >>> Azim(np.nan)
-          Traceback (most recent call last):
-          ...
-          Exception: Input azimuth value must be finite
-        """
-
-        # unit check
-        if unit not in ("d", "r"):
-            raise Exception("Unit input must be 'd' or 'r'")
-
-        if not (isinstance(val, numbers.Real)):
-            raise Exception("Input azimuth value must be int/float")
-        elif not isfinite(val):
-            raise Exception("Input azimuth value must be finite")
-
-        if unit == 'd':
-            val = radians(val)
-
-        self.a = val % (2*pi)
-
-    @property
-    def d(self
-    ):
-        """
-        Returns the angle in decimal degrees.
-
-        :return: angle in decimal degrees
-
-        Example:
-          >>> Azim(10).d
-          10.0
-          >>> Azim(pi/2, unit='r').d
-          90.0
-        """
-
-        return degrees(self.a)
-
-    @property
-    def r(self
-    ):
-        """
-        Returns the angle in radians.
-
-        :return: angle in radians
-
-        Example:
-          >>> Azim(180).r
-          3.141592653589793
-        """
-
-        return self.a
-
-    @classmethod
-    def fromXY(cls,
-        x: numbers.Real,
-        y: numbers.Real
-    ) -> 'Azim':
-        """
-        Calculates azimuth given cartesian components.
-
-        :param cls: class
-        :param x: x component
-        :param y: y component
-        :return: Azimuth instance
-
-        Examples:
-          >>> Azim.fromXY(1, 1)
-          Azimuth(45.00°)
-          >>> Azim.fromXY(1, -1)
-          Azimuth(135.00°)
-          >>> Azim.fromXY(-1, -1)
-          Azimuth(225.00°)
-          >>> Azim.fromXY(-1, 1)
-          Azimuth(315.00°)
-          >>> Azim.fromXY(0, 0)
-          Azimuth(0.00°)
-          >>> Azim.fromXY(0, np.nan)
-          Traceback (most recent call last):
-          ...
-          Exception: Input x and y values must be finite
-          >>> Azim.fromXY("10", np.nan)
-          Traceback (most recent call last):
-          ...
-          Exception: Input x and y values must be integer or float
-        """
-
-        # input vals checks
-        vals = [x, y]
-        if not all(map(lambda val: isinstance(val, numbers.Real), vals)):
-            raise Exception("Input x and y values must be integer or float")
-        elif not all(map(isfinite, vals)):
-            raise Exception("Input x and y values must be finite")
-
-        angle = atan2(x, y)
-        return cls(angle, unit='r')
-
-    def __repr__(self) -> str:
-
-        return "Azimuth({:.2f}°)".format(self.d)
-
-    def toXY(self
-    ) -> Tuple[numbers.Real, numbers.Real]:
-        """
-        Converts an azimuth to x-y components.
-
-        :return: a tuple storing x and y values:
-        :type: tuple of two floats
-
-        Examples:
-          >>> apprFTuple(Azim(0).toXY())
-          (0.0, 1.0)
-          >>> apprFTuple(Azim(90).toXY())
-          (1.0, 0.0)
-          >>> apprFTuple(Azim(180).toXY())
-          (0.0, -1.0)
-          >>> apprFTuple(Azim(270).toXY())
-          (-1.0, 0.0)
-          >>> apprFTuple(Azim(360).toXY())
-          (0.0, 1.0)
-        """
-
-        return sin(self.a), cos(self.a)
-
-
-class Plunge(object):
-    """
-    Class representing a plunge
-    """
-
-    def __init__(self,
-        val: numbers.Real,
-        unit: str='d'
-    ):
-        """
-        Creates a Plunge instance.
-
-        :param val: plunge value
-        :param unit: angle measurement unit, decimal degrees ('d') or radians ('r')
-
-        Examples:
-          >>> Plunge(10)
-          Plunge(10.00°)
-          >>> Plunge("10")
-          Traceback (most recent call last):
-          ...
-          Exception: Input plunge value must be int/float
-          >>> Plunge(np.nan)
-          Traceback (most recent call last):
-          ...
-          Exception: Input plunge value must be finite
-          >>> Plunge(-100)
-          Traceback (most recent call last):
-          ...
-          Exception: Input value in degrees must be between -90° and 90°
-         """
-
-        # unit check
-        if unit not in ('d', 'r'):
-            raise Exception("Unit input must be 'd' (for degrees) or 'r' (for radians)")
-
-        # val check
-        if not (isinstance(val, numbers.Real)):
-            raise Exception("Input plunge value must be int/float")
-        elif not isfinite(val):
-            raise Exception("Input plunge value must be finite")
-        if unit == 'd' and not (-90.0 <= val <= 90.0):
-            raise Exception("Input value in degrees must be between -90° and 90°")
-        elif unit == 'r' and not (-pi/2 <= val <= pi/2):
-            raise Exception("Input value in radians must be between -pi/2 and pi/2")
-
-        if unit == 'd':
-            val = radians(val)
-
-        self.p = val
-
-    @property
-    def d(self):
-        """
-        Returns the angle in decimal degrees.
-
-        :return: angle in decimal degrees
-
-        Example:
-          >>> Plunge(10).d
-          10.0
-          >>> Plunge(-pi/2, unit='r').d
-          -90.0
-        """
-
-        return degrees(self.p)
-
-    @property
-    def r(self):
-        """
-        Returns the angle in radians.
-
-        :return: angle in radians
-
-        Example:
-          >>> Plunge(90).r
-          1.5707963267948966
-          >>> Plunge(45).r
-          0.7853981633974483
-        """
-
-        return self.p
-
-    @classmethod
-    def fromHZ(cls, h: numbers.Real, z: numbers.Real) -> 'Plunge':
-        """
-        Calculates plunge from h and z components.
-
-        :param cls: class
-        :param h: horizontal component (always positive)
-        :param z: vertical component (positive upward)
-        :return: Plunge instance
-
-        Examples:
-          >>> Plunge.fromHZ(1, 1)
-          Plunge(-45.00°)
-          >>> Plunge.fromHZ(1, -1)
-          Plunge(45.00°)
-          >>> Plunge.fromHZ(0, 1)
-          Plunge(-90.00°)
-          >>> Plunge.fromHZ(0, -1)
-          Plunge(90.00°)
-          >>> Plunge.fromHZ(-1, 0)
-          Traceback (most recent call last):
-          ...
-          Exception: Horizontal component cannot be negative
-          >>> Plunge.fromHZ(0, 0)
-          Traceback (most recent call last):
-          ...
-          Exception: Input h and z values cannot be both zero
-        """
-
-        # input vals check
-
-        vals = [h, z]
-        if not all(map(lambda val: isinstance(val, numbers.Real), vals)):
-            raise Exception("Input h and z values must be integer or float")
-        elif not all(map(isfinite, vals)):
-            raise Exception("Input h and z values must be finite")
-
-        if h == 0.0 and z == 0.0:
-            raise Exception("Input h and z values cannot be both zero")
-        elif h < 0.0:
-            raise Exception("Horizontal component cannot be negative")
-
-        angle = atan2(-z, h)
-
-        return cls(angle, unit='r')
-
-    def __repr__(self) -> str:
-
-        return "Plunge({:.2f}°)".format(self.d)
-
-    def toHZ(self):
-
-        """
-        Converts an azimuth to h-z components.
-
-        :return: a tuple storing h (horizontal) and z values:
-        :type: tuple of two floats
-
-        Examples:
-          >>> apprFTuple(Plunge(0).toHZ())
-          (1.0, 0.0)
-          >>> apprFTuple(Plunge(90).toHZ())
-          (0.0, -1.0)
-          >>> apprFTuple(Plunge(-90).toHZ())
-          (0.0, 1.0)
-          >>> apprFTuple(Plunge(-45).toHZ(), ndec=6)
-          (0.707107, 0.707107)
-          >>> apprFTuple(Plunge(45).toHZ(), ndec=6)
-          (0.707107, -0.707107)
-        """
-
-        return cos(self.p), -sin(self.p)
-
-    @property
-    def isUpward(self):
-        """
-        Check whether the instance is pointing upward or horizontal.
-
-        Examples:
-          >>> Plunge(10).isUpward
-          False
-          >>> Plunge(0.0).isUpward
-          False
-          >>> Plunge(-45).isUpward
-          True
-        """
-
-        return self.r < 0.0
-
-    @property
-    def isDownward(self):
-        """
-        Check whether the instance is pointing downward or horizontal.
-
-        Examples:
-          >>> Plunge(15).isDownward
-          True
-          >>> Plunge(0.0).isDownward
-          False
-          >>> Plunge(-45).isDownward
-          False
-        """
-
-        return self.r > 0.0
 
 
 class RotationAxis(object):

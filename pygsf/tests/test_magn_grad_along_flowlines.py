@@ -4,7 +4,7 @@
 
 from math import sqrt, degrees, atan
 
-from pygsf.spatial.space3d.rasters.fields import *
+from pygsf.geometries.geom2d.rasters.fields import *
 
 import unittest
 

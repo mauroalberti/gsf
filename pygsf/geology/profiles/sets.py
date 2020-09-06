@@ -1,7 +1,7 @@
 
 
 from .chains import *
-from pygsf.spatial.space3d.vectorial.geometries import PointSegmentCollections
+from pygsf.crs.geoshapes import PointSegmentCollections
 
 
 class TopographicProfileSet(list):

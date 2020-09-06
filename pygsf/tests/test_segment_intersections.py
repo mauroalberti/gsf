@@ -1,12 +1,7 @@
-# coding: utf-8
-
-# # Check segment intersections
-
 
 import unittest
 
-from pygsf.orientations.orientations import RotationAxis
-from pygsf.spatial.space3d.vectorial.geometries import *
+from pygsf.geometries.geom3d.shapes import *
 
 
 class TestSegmentIntersections(unittest.TestCase):

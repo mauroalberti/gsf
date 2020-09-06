@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 
 import numbers
 
-from pygsf.spatial.space3d.vectorial.geometries import *
+from pygsf.geometries.geom3d.shapes import *
 
 
 # Earth WGS84 parameters
@@ -109,18 +107,13 @@ def pt_4326_ecef(pt: Point) -> Optional[Point]:
     :rtype: Point.
     """
 
-    if pt.epsg_code() != 4326:
-        return None
-
-    lon, lat, height, time = pt.x, pt.y, pt.z, pt.t
+    lon, lat, height = pt.x, pt.y, pt.z
     x, y, z = geodetic2ecef(lat, lon, height)
 
     return Point(
         x=x,
         y=y,
-        z=z,
-        t=time,
-        epsg_code=4978
+        z=z
     )
 
 
@@ -132,14 +125,11 @@ def line_4326_ecef(line: Line) -> Optional[Line]:
     :rtype: optional Line.
     """
 
-    if line.epsg_code() != 4326:
-        return None
-
     pts = [pt_4326_ecef(pt) for pt in line.pts()]
 
     return Line(
-        pts=pts,
-        epsg_cd=4978)
+        pts=pts
+    )
 
 
 if __name__ == "__main__":

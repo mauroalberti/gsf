@@ -1,17 +1,10 @@
-# -*- coding: utf-8 -*-
 
-from typing import Dict, Tuple, Union, List, Optional
-
-import numbers
-
+from typing import Tuple, Union
 import os
-
 from osgeo import ogr, osr
-
 import geopandas as gpd
 
-from pygsf.utils.types import *
-from pygsf.spatial.space3d.vectorial.geometries import Line, MultiLine, Point
+from pygsf.crs.geoshapes import *
 
 
 class OGRIOException(Exception):

@@ -4,11 +4,9 @@
 import unittest
 
 import pygsf.orientations.orientations
-import pygsf.spatial.space3d.vectorial.geometries
+import pygsf.geometries.geom3d.shapes
 import pygsf.orientations.direct_utils
-
-from pygsf.mathematics.scalars import areClose
-from pygsf.spatial.space3d.vectorial.geometries import Point, CPlane
+from pygsf.geometries.geom3d.shapes import *
 
 
 class TestOrientations(unittest.TestCase):

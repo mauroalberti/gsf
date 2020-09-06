@@ -1,7 +1,9 @@
 
+from typing import Optional
+
 from array import array
 
-from .elements import *
+from pygsf.geology.profiles.elements import *
 from pygsf.utils.arrays import *
 
 

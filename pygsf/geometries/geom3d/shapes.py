@@ -1,21 +1,14 @@
-from math import fabs
-from typing import List, Optional, Tuple, Union
-from enum import Enum
 
-import itertools
+from typing import List, Optional, Union
+
 import numbers
 from array import array
 
-from pygsf.crs.geoshapes import Line
-from pygsf.geometries.geom3d.abstract import CPlane
-from pygsf.mathematics.defaults import PRACTICAL_MIN_DIST, MIN_SCALAR_VALUE
-from pygsf.mathematics.vectors import Vect
-from pygsf.orientations.orientations import rotVectByAxis
-
+from pygsf.orientations.orientations import *
 from pygsf.mathematics.statistics import *
 from pygsf.mathematics.quaternions import *
 from pygsf.geometries.geom2d.shapes import *
-from pygsf.utils.types import check_type
+from pygsf.utils.types import *
 
 
 class Point:
@@ -409,7 +402,6 @@ class Point:
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
-    '''
     def dist2DWith(self,
         another: 'Point'
     ) -> numbers.Real:
@@ -431,7 +423,6 @@ class Point:
         check_type(another, "Second point", Point)
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
-    '''
 
     def scale(self,
         scale_factor: numbers.Real
@@ -840,6 +831,10 @@ class Segment:
         """
 
         return self.end_pt.z - self.start_pt.z
+
+    def length2D(self) -> numbers.Real:
+
+        return self.start_pt.dist2DWith(self.end_pt)
 
     def length3D(self) -> numbers.Real:
 
@@ -1389,7 +1384,7 @@ def point_or_segment(
     #check_crs(point1, point2)
 
     if point1.dist3DWith(point2) <= tol:
-        return Line.fromPoints([point1, point2]).nanmean_point()
+        return Points.fromPoints([point1, point2]).nanmean_point()
     else:
         return Segment(
             start_pt=point1,
@@ -1574,6 +1569,43 @@ class Line:
             check_type(el, "Point", Point)
 
         self._pts = pts
+
+    def pts(self):
+        return self._pts
+
+    def pt(self,
+           ndx: numbers.Integral):
+        """
+
+        """
+
+        return self._pts[ndx]
+
+    def add_pt(self,
+               pt: Point):
+
+        self._pts.append(pt)
+
+    def num_pts(self):
+        return len(self._pts)
+
+    def x_min(self):
+        return min(map(lambda pt: pt.x, self._pts))
+
+    def x_max(self):
+        return max(map(lambda pt: pt.x, self._pts))
+
+    def y_min(self):
+        return min(map(lambda pt: pt.y, self._pts))
+
+    def y_max(self):
+        return max(map(lambda pt: pt.y, self._pts))
+
+    def z_min(self):
+        return min(map(lambda pt: pt.z, self._pts))
+
+    def z_max(self):
+        return max(map(lambda pt: pt.z, self._pts))
 
     def as_segments(self):
         """
@@ -2025,12 +2057,10 @@ def shortest_segment_or_point(
     return(TRUE);
     }
 
-    :param second_segment: the second Cartesian line.
-    :type second_segment: Cartesian line.
+    :param first_segment: the first segment
+    :param second_segment: the second segment
     :param tol: tolerance value for collapsing a segment into the midpoint.
-    :type tol: numbers.Real
     :return: the optional shortest segment or an intersection point.
-    :rtype: Optional[Union[Segment, Point]]
     """
 
     check_type(second_segment, "Second Cartesian line", Segment)

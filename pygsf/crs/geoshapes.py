@@ -3,18 +3,13 @@ from copy import copy
 
 import numbers
 from typing import Optional, List, Union, Tuple
-from array import array
 
-import numpy as np
 from shapely.geometry import LineString
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
 
-from pygsf.spatial.space3d.vectorial.geometries import *
-
-from pygsf.crs.crs import Crs, check_epsg, check_crs
-from pygsf.geometries.geom3d.shapes import Point, Segment, Line, analizeJoins
-from pygsf.utils.types import check_type
+from pygsf.geometries.geom3d.shapes import *
+from pygsf.utils.types import *
 
 
 class Points:
@@ -105,7 +100,7 @@ class Points:
 
             check_type(point, "Input point {}".format(ndx), Point)
 
-        return Line(
+        return Points(
             epsg_code=epsg_code,
             x_array=array('d', [p.x for p in points]),
             y_array=array('d', [p.y for p in points]),
@@ -261,7 +256,7 @@ class Points:
         self._z_array.append(pt.z)
 
     def add_pts(self,
-                pts: 'Line'):
+                pts: 'Points'):
         """
         In-place transformation of the original Points instance
         by adding a new set of points at the end.
@@ -269,7 +264,7 @@ class Points:
         :param pts: list of Points.
         """
 
-        check_type(pts, "Points", Line)
+        check_type(pts, "Points", Points)
         check_crs(self, pts)
 
         self._x_array.extend(pts.xs)
@@ -284,10 +279,10 @@ class Points:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Line.fromPointList([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          >>> l = Points([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
           >>> l.x_min()
           0.0
-          >>> m = Line.fromPointList([])
+          >>> m = Points([])
           >>> m.x_min()
           None
         """
@@ -358,7 +353,7 @@ class Points:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Line.fromPointList([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
+          >>> l = Points.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
           >>> l.z_var()
           0.0
         """
@@ -373,7 +368,7 @@ class Points:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Line.fromPointList([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
+          >>> l = Points.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
           >>> l.z_std()
           0.0
         """
@@ -424,12 +419,13 @@ class Points:
         ys = self._y_array.reverse()
         zs = self._z_array.reverse()
 
-        return Line(
+        return Points(
             epsg_code=self.epsg_code(),
             x_array=xs,
             y_array=ys,
             z_array=zs
         )
+
 
 class PointSegmentCollection(list):
     """
@@ -455,18 +451,6 @@ class PointSegmentCollection(list):
                 expected_types=numbers.Integral
             )
 
-        if geoms is not None and epsg_code is not None:
-
-            for geom in geoms:
-                check_epsg(
-                    spatial_element=geom,
-                    epsg_code=epsg_code
-                )
-
-        elif geoms is not None and len(geoms) > 0:
-
-            epsg_code = geoms[0].epsg_code()
-
         if geoms is not None and len(geoms) > 0:
 
             super(PointSegmentCollection, self).__init__(geoms)
@@ -486,17 +470,6 @@ class PointSegmentCollection(list):
             name="Spatial element",
             expected_types=(Point, Segment)
         )
-
-        if self.epsg_code is not None:
-
-            check_epsg(
-                spatial_element=spatial_element,
-                epsg_code=self.epsg_code
-            )
-
-        else:
-
-            self.epsg_code = spatial_element.epsg_code()
 
         self.append(spatial_element)
 
@@ -518,21 +491,10 @@ class MultiLine(object):
     MultiLine is a list of Line objects, each one with the same CRS.
     """
 
-    def __init__(self, lines: Optional[List[Points]] = None, epsg_cd: numbers.Integral = -1):
+    def __init__(self, lines: Optional[List[Line]] = None, epsg_cd: numbers.Integral = -1):
 
         if lines is None:
             lines = []
-
-        if lines and epsg_cd == -1:
-            epsg_cd = lines[0].epsg_code()
-
-        for ndx in range(len(lines)):
-            if lines[ndx].epsg_code() != epsg_cd:
-                raise Exception("Input line with index {} should have EPSG code {} but has {}".format(
-                    ndx,
-                    epsg_cd,
-                    lines[ndx].epsg_code()
-                ))
 
         self._lines = lines
         self._crs = Crs(epsg_cd)
@@ -709,7 +671,7 @@ class MultiLine(object):
 
     def to_line(self):
 
-        return Line([point for line in self._lines for point in line.pts()], epsg_cd=self.epsg())
+        return Line([point for line in self._lines for point in line.pts()])
 
     def densify_2d_multiline(self, sample_distance):
 
@@ -871,9 +833,6 @@ class SimpleGeometryCollections(list):
 
         if not isinstance(geom, (Point, Segment, Line)):
             raise Exception(f"Expected Point, Segment or Line but got {type(geom)}")
-
-        if geom.epsg_code() != self.epsg_code:
-            raise Exception(f"Expected {self.epsg_code} EPSG code but got {geom.epsg_code()}")
 
         self.append(geom)
 

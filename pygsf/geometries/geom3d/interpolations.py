@@ -1,9 +1,11 @@
-from .geometries import *
+
+from pygsf.crs.geoshapes import *
+from pygsf.orientations.orientations import *
 
 
 def try_derive_bestfitplane(
     points: Points
-) -> Tuple[bool, Union[str, Plane]]:
+) -> Tuple[bool, Union[str, CPlane]]:
 
     print(points.xs)
     print(points.ys)

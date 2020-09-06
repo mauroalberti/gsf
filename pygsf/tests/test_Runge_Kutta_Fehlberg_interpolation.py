@@ -2,11 +2,8 @@
 
 import unittest
 
-from pygsf.spatial.space3d.rasters.geoarray import *
-
-from pygsf.spatial.space3d.rasters.fields import *
-
-#from pygsf.spatial.movements import interpolate_rkf
+from pygsf.crs.rasters import *
+from pygsf.geometries.geom2d.rasters.fields import *
 
 
 class TestRKFInterpolation(unittest.TestCase):
