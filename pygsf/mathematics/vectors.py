@@ -4,7 +4,7 @@ import numbers
 from pygsf.utils.types import *
 from pygsf.mathematics.defaults import *
 from pygsf.mathematics.arrays import *
-from pygsf.crs.crs import *
+from pygsf.geolocated.crs import *
 
 
 class Vect(object):
@@ -146,9 +146,9 @@ class Vect(object):
     @property
     def crs(self) -> Crs:
         """
-        Returns the crs of the Vector.
+        Returns the geolocated of the Vector.
 
-        :return: the crs.
+        :return: the geolocated.
         :rtype: Crs.
         """
 

@@ -1,7 +1,7 @@
 
 from geopandas import GeoDataFrame
 
-from pygsf.geometries.geom3d.shapes import *
+from pygsf.geometries.space3d.shapes import *
 from pygsf.geodataframes.geodataframes import *
 
 from .base import GeorefAttitude
@@ -44,7 +44,13 @@ def try_extract_georeferenced_attitudes(
             if is_rhrstrike:
                 azimuth = (azimuth + 90.0) % 360.0
 
-            attitudes.append(GeorefAttitude(rec_id, Point(x, y, epsg_code=epsg), CPlane(azimuth, dip_ang)))
+            attitudes.append(
+                GeorefAttitude(
+                    rec_id,
+                    Point(x, y),
+                    Plane(azimuth, dip_ang)
+                )
+            )
 
         return True, attitudes
 

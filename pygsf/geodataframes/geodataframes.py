@@ -4,7 +4,7 @@ import numbers
 
 import geopandas as gpd
 
-from pygsf.geometries.geom3d.shapes import Point
+from pygsf.geometries.space3d.shapes import Point
 
 
 def geodataframe_geom_types(
@@ -121,7 +121,7 @@ def get_epsg(
     """
 
     crs_dict = geodataframe.crs
-    print("Source crs: {}".format(crs_dict))
+    print("Source geolocated: {}".format(crs_dict))
     epsg = -1
     try:
         val = crs_dict["init"]
@@ -166,8 +166,7 @@ def extract_line_points(
         pts.append(
             Point(
                 x=x,
-                y=y,
-                epsg_code=epsg_code
+                y=y
             )
         )
 

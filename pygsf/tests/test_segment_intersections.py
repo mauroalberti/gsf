@@ -1,7 +1,7 @@
 
 import unittest
 
-from pygsf.geometries.geom3d.shapes import *
+from pygsf.geometries.space3d.shapes import *
 
 
 class TestSegmentIntersections(unittest.TestCase):
@@ -25,7 +25,7 @@ class TestSegmentIntersections(unittest.TestCase):
 
             intersection_pt = intersect_segments(random_segment, rotated_segment)
 
-            if not intersection_pt or not intersection_pt.isCoinc3D(center_point, tolerance=1e-2):
+            if not intersection_pt or not intersection_pt.is_coincident(center_point, tolerance=1e-2):
                 print(n)
                 print(random_segment)
                 print(random_interval_value)
@@ -34,7 +34,7 @@ class TestSegmentIntersections(unittest.TestCase):
                 print(rotated_segment)
                 print(intersection_pt)
                 if intersection_pt:
-                    print(center_point.dist3DWith(intersection_pt))
+                    print(center_point.distance(intersection_pt))
 
 
 if __name__ == '__main__':

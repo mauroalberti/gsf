@@ -7,8 +7,8 @@ from math import pi, radians, degrees, atan2, sin, cos, isfinite, sqrt, tan
 import numpy as np
 
 from pygsf.mathematics.scalars import *
-from pygsf.geometries.geom3d.shapes import Point
-from pygsf.geometries.geom3d.abstract import CPlane
+from pygsf.geometries.space3d.shapes import Point
+from pygsf.geometries.space3d.abstract import CPlane
 from pygsf.mathematics.quaternions import Quaternion, QUAT_MAGN_THRESH
 from pygsf.mathematics.scalars import areClose
 from pygsf.mathematics.utils import normXYZ

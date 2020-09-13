@@ -8,11 +8,11 @@ from shapely.geometry import LineString
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
 
-from pygsf.geometries.geom3d.shapes import *
+from pygsf.geometries.space3d.shapes import *
 from pygsf.utils.types import *
 
 
-class Points:
+class GeoPoints:
     """
     Collection of points.
     """
@@ -100,7 +100,7 @@ class Points:
 
             check_type(point, "Input point {}".format(ndx), Point)
 
-        return Points(
+        return GeoPoints(
             epsg_code=epsg_code,
             x_array=array('d', [p.x for p in points]),
             y_array=array('d', [p.y for p in points]),
@@ -264,7 +264,7 @@ class Points:
         :param pts: list of Points.
         """
 
-        check_type(pts, "Points", Points)
+        check_type(pts, "Points", GeoPoints)
         check_crs(self, pts)
 
         self._x_array.extend(pts.xs)
@@ -279,10 +279,10 @@ class Points:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Points([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          >>> l = GeoPoints([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
           >>> l.x_min()
           0.0
-          >>> m = Points([])
+          >>> m = GeoPoints([])
           >>> m.x_min()
           None
         """
@@ -353,7 +353,7 @@ class Points:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Points.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
+          >>> l = GeoPoints.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
           >>> l.z_var()
           0.0
         """
@@ -368,7 +368,7 @@ class Points:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Points.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
+          >>> l = GeoPoints.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
           >>> l.z_std()
           0.0
         """
@@ -419,7 +419,7 @@ class Points:
         ys = self._y_array.reverse()
         zs = self._z_array.reverse()
 
-        return Points(
+        return GeoPoints(
             epsg_code=self.epsg_code(),
             x_array=xs,
             y_array=ys,
@@ -427,7 +427,7 @@ class Points:
         )
 
 
-class PointSegmentCollection(list):
+class GeoPointSegmentCollection(list):
     """
     Collection of point or segment elements.
 
@@ -453,11 +453,11 @@ class PointSegmentCollection(list):
 
         if geoms is not None and len(geoms) > 0:
 
-            super(PointSegmentCollection, self).__init__(geoms)
+            super(GeoPointSegmentCollection, self).__init__(geoms)
 
         else:
 
-            super(PointSegmentCollection, self).__init__()
+            super(GeoPointSegmentCollection, self).__init__()
 
         self.epsg_code = epsg_code
 
@@ -474,19 +474,19 @@ class PointSegmentCollection(list):
         self.append(spatial_element)
 
 
-class PointSegmentCollections(list):
+class GeoPointSegmentCollections(list):
 
-    def __init__(self, atts: List[Tuple[Union[str, numbers.Integral], PointSegmentCollection]]):
+    def __init__(self, atts: List[Tuple[Union[str, numbers.Integral], GeoPointSegmentCollection]]):
 
         check_type(atts, "Point-segment collections", List)
         for label, spat_element in atts:
             check_type(label, "Label", (str, numbers.Integral))
-            check_type(spat_element, "Point-segment collection", PointSegmentCollection)
+            check_type(spat_element, "Point-segment collection", GeoPointSegmentCollection)
 
-        super(PointSegmentCollections, self).__init__(atts)
+        super(GeoPointSegmentCollections, self).__init__(atts)
 
 
-class MultiLine(object):
+class GeoMultiLine(object):
     """
     MultiLine is a list of Line objects, each one with the same CRS.
     """
@@ -524,7 +524,7 @@ class MultiLine(object):
 
         return num_points
 
-    def line(self, ln_ndx: numbers.Integral = 0) -> Optional[Points]:
+    def line(self, ln_ndx: numbers.Integral = 0) -> Optional[GeoPoints]:
         """
         Extracts a line from the multiline instance, based on the provided index.
 
@@ -593,9 +593,9 @@ class MultiLine(object):
         self._lines += [line]
         return True
 
-    def clone(self) -> 'MultiLine':
+    def clone(self) -> 'GeoMultiLine':
 
-        return MultiLine(
+        return GeoMultiLine(
             lines=[line.clone() for line in self._lines],
             epsg_cd=self.epsg()
         )
@@ -679,7 +679,7 @@ class MultiLine(object):
         for line in self.lines():
             lDensifiedLines.append(line.densify_2d_line(sample_distance))
 
-        return MultiLine(lDensifiedLines, self.epsg())
+        return GeoMultiLine(lDensifiedLines, self.epsg())
 
     def remove_coincident_points(self):
 
@@ -687,7 +687,7 @@ class MultiLine(object):
         for line in self.lines():
             cleaned_lines.append(line.remove_coincident_points())
 
-        return MultiLine(cleaned_lines, self.epsg())
+        return GeoMultiLine(cleaned_lines, self.epsg())
 
     def intersectSegment(self,
         segment: Segment
@@ -711,37 +711,37 @@ class MultiLine(object):
         return intersections
 
 
-class MultiLines(list):
+class GeoMultiLines(list):
     """
     Collection of multilines, inheriting from list.
 
     """
 
     def __init__(self,
-                 multilines: List[MultiLine] = None
+                 multilines: List[GeoMultiLine] = None
                  ):
 
         if multilines:
 
             check_type(multilines, "MultiLines", List)
             for el in multilines:
-                check_type(el, "MultiLine", MultiLine)
+                check_type(el, "MultiLine", GeoMultiLine)
 
-            super(MultiLines, self).__init__(multilines)
+            super(GeoMultiLines, self).__init__(multilines)
 
         else:
 
-            super(MultiLines, self).__init__()
+            super(GeoMultiLines, self).__init__()
 
     def append(self,
-               item: MultiLine
+               item: GeoMultiLine
                ) -> None:
 
-        check_type(item, "MultiLine", MultiLine)
-        super(MultiLines, self).append(item)
+        check_type(item, "MultiLine", GeoMultiLine)
+        super(GeoMultiLines, self).append(item)
 
 
-class MGeoPolygon:
+class GeoMPolygon:
     """
     A shapely (multi)polygon with EPSG code.
 
@@ -777,17 +777,17 @@ class MGeoPolygon:
 
     def intersect_line(self,
                        line: LineString,
-                       ) -> Lines:
+                       ) -> GeoLines:
         """
         Determine the intersections between a mpolygon and a line.
 
         :param line: the line
         :type line: shapely.geometry.LineString
         :return: the intersecting lines
-        :rtype: Lines
+        :rtype: GeoLines
         """
 
-        lines = Lines()
+        lines = GeoLines()
 
         intersections = line.intersection(self.geom)
 
@@ -820,12 +820,12 @@ class MGeoPolygon:
         return lines
 
 
-class SimpleGeometryCollections(list):
+class GeoSimpleGeometryCollections(list):
 
     def __init__(self,
                  epsg_code: numbers.Integral = 4326):
 
-        super(SimpleGeometryCollections, self).__init__()
+        super(GeoSimpleGeometryCollections, self).__init__()
 
         self.epsg_code = epsg_code
 
@@ -837,14 +837,14 @@ class SimpleGeometryCollections(list):
         self.append(geom)
 
 
-class Lines(list):
+class GeoLines(list):
     """
     Collection of lines.
 
     """
 
     def __init__(self,
-                 lines: Optional[List[Points]] = None
+                 lines: Optional[List[GeoPoints]] = None
                  ):
 
         if lines:
@@ -856,27 +856,27 @@ class Lines(list):
             for line in lines[1:]:
                 check_crs(first_line, line)
 
-            super(Lines, self).__init__(lines)
+            super(GeoLines, self).__init__(lines)
 
         else:
 
-            super(Lines, self).__init__()
+            super(GeoLines, self).__init__()
 
     def append(self,
-               item: Points
+               item: GeoPoints
                ) -> None:
 
         check_type(item, "Line", Line)
         if len(self) > 0:
             check_crs(self[0], item)
 
-        super(Lines, self).append(item)
+        super(GeoLines, self).append(item)
 
 
 def line_from_shapely(
         shapely_geom: LineString,
         epsg_code: numbers.Integral
-) -> Points:
+) -> GeoPoints:
     # Side effects: none
     """
     Create a Line instance from a shapely Linestring instance.
@@ -893,13 +893,12 @@ def line_from_shapely(
 
     return Line.fromArrays(
         x_array,
-        y_array,
-        epsg_cd=epsg_code
+        y_array
     )
 
 
 def line_to_shapely(
-        src_line: Points
+        src_line: GeoPoints
 ) -> LineString:
     """
     Create a shapely.LineString instance from a Line one.
@@ -913,7 +912,7 @@ def line_to_shapely(
     return LineString(src_line.xy_zipped()), src_line.epsg_code()
 
 
-class Segments(list):
+class GeoSegments(list):
     """
     Collection of segments, inheriting from list.
 
@@ -925,4 +924,4 @@ class Segments(list):
         for el in segments:
             check_type(el, "Segment", Segment)
 
-        super(Segments, self).__init__(segments)
+        super(GeoSegments, self).__init__(segments)

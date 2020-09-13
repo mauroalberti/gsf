@@ -1,5 +1,7 @@
 import abc
 import itertools
+from functools import singledispatch
+
 import numbers
 import random
 from array import array
@@ -30,7 +32,7 @@ class Shape2D(object, metaclass=abc.ABCMeta):
         """Create a clone of the shape"""
 
 
-class Point2D(Shape2D):
+class Point(Shape2D):
     """
     Cartesian point.
     Dimensions: 2D
@@ -81,9 +83,9 @@ class Point2D(Shape2D):
         :rtype: numbers.Real
 
         Examples:
-          >>> Point2D(4, 3).x
+          >>> Point(4, 3).x
           4.0
-          >>> Point2D(-0.39, 3).x
+          >>> Point(-0.39, 3).x
           -0.39
         """
 
@@ -98,9 +100,9 @@ class Point2D(Shape2D):
         :rtype: numbers.Real
 
         Examples:
-          >>> Point2D(4, 3).y
+          >>> Point(4, 3).y
           3.0
-          >>> Point2D(-0.39, 17.42).y
+          >>> Point(-0.39, 17.42).y
           17.42
         """
 
@@ -113,7 +115,7 @@ class Point2D(Shape2D):
         :return:
 
         Examples;
-          >>> x, y = Point2D(1,1)
+          >>> x, y = Point(1,1)
           >>> x == 1
           True
           >>> y == 1
@@ -128,7 +130,7 @@ class Point2D(Shape2D):
         return "Point2D({:.4f}, {:.4f})".format(self.x, self.y)
 
     def __eq__(self,
-        another: 'Point2D'
+        another: 'Point'
     ) -> bool:
         """
         Return True if objects are equal.
@@ -138,15 +140,15 @@ class Point2D(Shape2D):
         :raise: Exception.
 
         Example:
-          >>> Point2D(1., 1.) == Point2D(1, 1)
+          >>> Point(1., 1.) == Point(1, 1)
           True
-          >>> Point2D(1., 1.) == Point2D(1, 1)
+          >>> Point(1., 1.) == Point(1, 1)
           True
-          >>> Point2D(1., 1.) == Point2D(1, -1)
+          >>> Point(1., 1.) == Point(1, -1)
           False
         """
 
-        if not isinstance(another, Point2D):
+        if not isinstance(another, Point):
             raise Exception("Another instance must be a Point2D")
 
         return all([
@@ -156,15 +158,15 @@ class Point2D(Shape2D):
         )
 
     def __ne__(self,
-        another: 'Point2D'
+        another: 'Point'
     ) -> bool:
         """
         Return False if objects are equal.
 
         Example:
-          >>> Point2D(1., 1.) != Point2D(0., 0.)
+          >>> Point(1., 1.) != Point(0., 0.)
           True
-          >>> Point2D(1., 1.) != Point2D(1, 1)
+          >>> Point(1., 1.) != Point(1, 1)
           False
         """
 
@@ -177,68 +179,68 @@ class Point2D(Shape2D):
         :return: double array of x, y values
 
         Examples:
-          >>> Point2D(4, 3).a()
+          >>> Point(4, 3).a()
           (4.0, 3.0)
         """
 
         return self.x, self.y
 
-    def __add__(self, another: 'Point2D') -> 'Point2D':
+    def __add__(self, another: 'Point') -> 'Point':
         """
         Sum of two points.
 
         :param another: the point to add
-        :type another: Point2D
+        :type another: Point
         :return: the sum of the two points
-        :rtype: Point2D
+        :rtype: Point
         :raise: Exception
 
         Example:
-          >>> Point2D(1, 0) + Point2D(0, 1)
+          >>> Point(1, 0) + Point(0, 1)
           Point2D(1.0000, 1.0000)
-          >>> Point2D(1, 1, 1) + Point2D(-1, -1)
+          >>> Point(1, 1, 1) + Point(-1, -1)
           Point2D(0.0000, 0.0000)
         """
 
-        check_type(another, "Second point", Point2D)
+        check_type(another, "Second point", Point)
 
         x0, y0 = self
         x1, y1 = another
 
-        return Point2D(
+        return Point(
             x=x0+x1,
             y=y0+y1
         )
 
     def __sub__(self,
-        another: 'Point2D'
-    ) -> 'Point2D':
+        another: 'Point'
+    ) -> 'Point':
         """Subtract two points.
 
         :param another: the point to subtract
-        :type another: Point2D
+        :type another: Point
         :return: the difference between the two points
-        :rtype: Point2D
+        :rtype: Point
         :raise: Exception
 
         Example:
-          >>> Point2D(1., 1.) - Point2D(1., 1.)
+          >>> Point(1., 1.) - Point(1., 1.)
           Point2D(0.0000, 0.0000)
-          >>> Point2D(1., 1.) - Point2D(1., 1.)
+          >>> Point(1., 1.) - Point(1., 1.)
           Point2D(0.0000, 0.0000)
         """
 
-        check_type(another, "Second point", Point2D)
+        check_type(another, "Second point", Point)
 
         x0, y0 = self
         x1, y1 = another
 
-        return Point2D(
+        return Point(
             x=x0 - x1,
             y=y0 - y1
         )
 
-    def clone(self) -> 'Point2D':
+    def clone(self) -> 'Point':
         """
         Clone a point.
 
@@ -246,7 +248,7 @@ class Point2D(Shape2D):
         :rtype: Point2D.
         """
 
-        return Point2D(*self.a())
+        return Point(*self.a())
 
     def toXY(self) -> Tuple[numbers.Real, numbers.Real]:
         """
@@ -256,7 +258,7 @@ class Point2D(Shape2D):
         :rtype: a tuple of two floats.
 
         Examples:
-          >>> Point2D(1, 0).toXY()
+          >>> Point(1, 0).toXY()
           (1.0, 0.0)
         """
 
@@ -269,14 +271,14 @@ class Point2D(Shape2D):
         :return: Numpy array
 
         Examples:
-          >>> np.allclose(Point2D(1, 2).toArray(), np.array([ 1., 2.]))
+          >>> np.allclose(Point(1, 2).toArray(), np.array([ 1., 2.]))
           True
         """
 
         return np.asarray(self.toXY())
 
     def deltaX(self,
-        another: 'Point2D'
+        another: 'Point'
     ) -> Optional[numbers.Real]:
         """
         Delta between x components of two Point2D Instances.
@@ -286,14 +288,14 @@ class Point2D(Shape2D):
         :raise: Exception
 
         Examples:
-          >>> Point2D(1, 2).deltaX(Point2D(4, 7))
+          >>> Point(1, 2).deltaX(Point(4, 7))
           3.0
         """
 
         return another.x - self.x
 
     def deltaY(self,
-        another: 'Point2D'
+        another: 'Point'
     ) -> Optional[numbers.Real]:
         """
         Delta between y components of two Point2D Instances.
@@ -302,15 +304,15 @@ class Point2D(Shape2D):
         :rtype: optional numbers.Real.
 
         Examples:
-          >>> Point2D(1, 2).deltaY(Point2D(4, 7))
+          >>> Point(1, 2).deltaY(Point(4, 7))
           5.0
         """
 
         return another.y - self.y
 
-    def dist2DWith(self,
-        another: 'Point2D'
-    ) -> numbers.Real:
+    def dist_with(self,
+                  another: 'Point'
+                  ) -> numbers.Real:
         """
         Calculate horizontal (2D) distance between two points.
         TODO: consider case of polar CRS
@@ -322,48 +324,48 @@ class Point2D(Shape2D):
         :raise: Exception.
 
         Examples:
-          >>> Point2D(1., 1.).dist2DWith(Point2D(4., 5.))
+          >>> Point(1., 1.).dist_with(Point(4., 5.))
           5.0
         """
 
-        check_type(another, "Second point", Point2D)
+        check_type(another, "Second point", Point)
 
         return math.sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
     def scale(self,
         scale_factor: numbers.Real
-    ) -> 'Point2D':
+    ) -> 'Point':
         """
         Create a scaled object.
         Note: it does not make sense for polar coordinates.
         TODO: manage polar coordinates cases OR deprecate and remove - after dependency check.
 
         Example;
-          >>> Point2D(1, 0).scale(2.5)
+          >>> Point(1, 0).scale(2.5)
           Point2D(2.5000, 0.0000)
-          >>> Point2D(1, 0).scale(2.5)
+          >>> Point(1, 0).scale(2.5)
           Point2D(2.5000, 0.0000)
         """
 
         x, y = self.x * scale_factor, self.y * scale_factor
-        return Point2D(x, y)
+        return Point(x, y)
 
-    def invert(self) -> 'Point2D':
+    def invert(self) -> 'Point':
         """
         Create a new object with inverted direction.
         Note: it depends on scale method, that could be deprecated/removed.
 
         Examples:
-          >>> Point2D(1, 1).invert()
+          >>> Point(1, 1).invert()
           Point2D(-1.0000, -1.0000)
-          >>> Point2D(2, -1).invert()
+          >>> Point(2, -1).invert()
           Point2D(-2.0000, 1.0000)
         """
 
         return self.scale(-1)
 
     def isCoinc2D(self,
-                  another: 'Point2D',
+                  another: 'Point',
                   tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
                   ) -> bool:
         """
@@ -381,14 +383,14 @@ class Point2D(Shape2D):
 
         """
 
-        check_type(another, "Second point", Point2D)
+        check_type(another, "Second point", Point)
 
-        return self.dist2DWith(another) <= tolerance
+        return self.dist_with(another) <= tolerance
 
     def already_present(self,
-        pt_list: List['Point2D'],
-        tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
-    ) -> Optional[bool]:
+                        pt_list: List['Point'],
+                        tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                        ) -> Optional[bool]:
         """
         Determines if a point is already in a given point list, using an optional distance separation,
 
@@ -408,18 +410,18 @@ class Point2D(Shape2D):
     def shift(self,
         sx: numbers.Real,
         sy: numbers.Real
-    ) -> Optional['Point2D']:
+    ) -> Optional['Point']:
         """
         Create a new object shifted by given amount from the self instance.
 
         Example:
-          >>> Point2D(1, 1).shift(0.5, 1.)
+          >>> Point(1, 1).shift(0.5, 1.)
           Point2D(1.5000, 2.0000)
-          >>> Point2D(1, 2).shift(0.5, 1.)
+          >>> Point(1, 2).shift(0.5, 1.)
           Point2D(1.5000, 3.0000)
        """
 
-        return Point2D(self.x + sx, self.y + sy)
+        return Point(self.x + sx, self.y + sy)
 
     @classmethod
     def random(cls,
@@ -430,20 +432,55 @@ class Point2D(Shape2D):
         Creates a random point.
 
         :return: random point
-        :rtype: Point2D
+        :rtype: Point
         """
 
         vals = [random.uniform(lower_boundary, upper_boundary) for _ in range(2)]
         return cls(*vals)
 
 
-class Segment2D:
+class Points(list):
+    """
+    Collection of points.
+
+    """
+
+    def __init__(self,
+                 points: Optional[List[Point]] = None
+                 ):
+
+        if points:
+
+            check_type(points, "Points", List)
+            for el in points:
+                check_type(el, "Point", Point)
+
+            super(Points, self).__init__(points)
+
+        else:
+
+            super(Points, self).__init__()
+
+    def xs(self):
+
+        return list(map(lambda pt: pt.x, self))
+
+    def ys(self):
+
+        return list(map(lambda pt: pt.y, self))
+
+    def zs(self):
+
+        return list(map(lambda pt: pt.z, self))
+
+
+class Segment(Shape2D):
     """
     Segment2D is a geometric object defined by the straight line between
     two vertices.
     """
 
-    def __init__(self, start_pt: Point2D, end_pt: Point2D):
+    def __init__(self, start_pt: Point, end_pt: Point):
         """
         Creates a segment instance provided the two points have the same CRS code.
 
@@ -451,15 +488,15 @@ class Segment2D:
         :type: Point2D.
         :param end_pt: the end point.
         :type end_pt: Point2D.
-        :return: the new segment instance if both points have the same crs.
+        :return: the new segment instance if both points have the same geolocated.
         :raises: CRSCodeException.
         """
 
-        check_type(start_pt, "Start point", Point2D)
+        check_type(start_pt, "Start point", Point)
 
-        check_type(end_pt, "End point", Point2D)
+        check_type(end_pt, "End point", Point)
 
-        if start_pt.dist2DWith(end_pt) == 0.0:
+        if start_pt.dist_with(end_pt) == 0.0:
             raise Exception("Source points cannot be coincident")
 
         self._start_pt = start_pt.clone()
@@ -479,14 +516,43 @@ class Segment2D:
         )
 
     @property
-    def start_pt(self) -> Point2D:
+    def start_pt(self) -> Point:
 
         return self._start_pt
 
     @property
-    def end_pt(self) -> Point2D:
+    def end_pt(self) -> Point:
 
         return self._end_pt
+
+    def asPoints(self) -> Points:
+        """
+        Return the segments as points.
+        """
+
+        return Points(
+            points=[self.start_pt, self.end_pt]
+        )
+
+    @property
+    def center(self):
+
+        return mean(self.asPoints())
+
+    @property
+    def length(self) -> numbers.Real:
+        """
+        Returns the horizontal length of the segment.
+
+        :return: the horizontal length of the segment.
+        :rtype: numbers.Real.
+        """
+
+        return self.start_pt.dist_with(self.end_pt)
+
+    @property
+    def area(self):
+        return 0.0
 
     def __iter__(self):
         """
@@ -495,14 +561,14 @@ class Segment2D:
 
         return (i for i in [self.start_pt, self.end_pt])
 
-    def clone(self) -> 'Segment2D':
+    def clone(self) -> 'Segment':
 
-        return Segment2D(self._start_pt, self._end_pt)
+        return Segment(self._start_pt, self._end_pt)
 
-    def increasing_x(self) -> 'Segment2D':
+    def increasing_x(self) -> 'Segment':
 
         if self.end_pt.x < self.start_pt.x:
-            return Segment2D(self.end_pt, self.start_pt)
+            return Segment(self.end_pt, self.start_pt)
         else:
             return self.clone()
 
@@ -528,16 +594,6 @@ class Segment2D:
 
         return self.end_pt.y - self.start_pt.y
 
-    def length2D(self) -> numbers.Real:
-        """
-        Returns the horizontal length of the segment.
-
-        :return: the horizontal length of the segment.
-        :rtype: numbers.Real.
-        """
-
-        return self.start_pt.dist2DWith(self.end_pt)
-
     def segment_2d_m(self) -> Optional[numbers.Real]:
 
         denom = self.end_pt.x - self.start_pt.x
@@ -557,20 +613,20 @@ class Segment2D:
         return self.start_pt.y - s2d_m * self.start_pt.x
 
     def intersection_2d_pt(self,
-                           another: 'Segment2D'
-                           ) -> Optional[Point2D]:
+                           another: 'Segment'
+                           ) -> Optional[Point]:
         """
 
         :param another:
         :return:
         """
 
-        check_type(another, "Second segment", Segment2D)
+        check_type(another, "Second segment", Segment)
 
         #check_crs(self, another)
 
-        s_len2d = self.length2D()
-        a_len2d = another.length2D()
+        s_len2d = self.length()
+        a_len2d = another.length()
 
         if s_len2d == 0.0 or a_len2d == 0.0:
             return None
@@ -595,10 +651,10 @@ class Segment2D:
             x0 = (p1 - p0) / (m0 - m1)
             y0 = m0 * x0 + p0
 
-        return Point2D(x0, y0)
+        return Point(x0, y0)
 
     def contains_pt(self,
-                    pt: Point2D
+                    pt: Point
                     ) -> bool:
         """
         Checks whether a point is contained in a segment.
@@ -608,40 +664,40 @@ class Segment2D:
         :raise: Exception.
 
         Examples:
-          >>> segment = Segment2D(Point2D(0, 0, 0), Point2D(1, 0, 0))
-          >>> segment.contains_pt(Point2D(0, 0, 0))
+          >>> segment = Segment(Point(0, 0, 0), Point(1, 0, 0))
+          >>> segment.contains_pt(Point(0, 0, 0))
           True
-          >>> segment.contains_pt(Point2D(1, 0, 0))
+          >>> segment.contains_pt(Point(1, 0, 0))
           True
-          >>> segment.contains_pt(Point2D(0.5, 0, 0))
+          >>> segment.contains_pt(Point(0.5, 0, 0))
           True
-          >>> segment.contains_pt(Point2D(0.5, 0.00001, 0))
+          >>> segment.contains_pt(Point(0.5, 0.00001, 0))
           False
-          >>> segment.contains_pt(Point2D(0.5, 0, 0.00001))
+          >>> segment.contains_pt(Point(0.5, 0, 0.00001))
           False
-          >>> segment.contains_pt(Point2D(1.00001, 0, 0))
+          >>> segment.contains_pt(Point(1.00001, 0, 0))
           False
-          >>> segment.contains_pt(Point2D(0.000001, 0, 0))
+          >>> segment.contains_pt(Point(0.000001, 0, 0))
           True
-          >>> segment.contains_pt(Point2D(-0.000001, 0, 0))
+          >>> segment.contains_pt(Point(-0.000001, 0, 0))
           False
-          >>> segment.contains_pt(Point2D(0.5, 1000, 1000))
+          >>> segment.contains_pt(Point(0.5, 1000, 1000))
           False
-          >>> segment = Segment2D(Point2D(0, 0, 0), Point2D(0, 1, 0))
-          >>> segment.contains_pt(Point2D(0, 0, 0))
+          >>> segment = Segment(Point(0, 0, 0), Point(0, 1, 0))
+          >>> segment.contains_pt(Point(0, 0, 0))
           True
-          >>> segment.contains_pt(Point2D(0, 0.5, 0))
+          >>> segment.contains_pt(Point(0, 0.5, 0))
           True
-          >>> segment.contains_pt(Point2D(0, 1, 0))
+          >>> segment.contains_pt(Point(0, 1, 0))
           True
-          >>> segment.contains_pt(Point2D(0, 1.5, 0))
+          >>> segment.contains_pt(Point(0, 1.5, 0))
           False
-          >>> segment = Segment2D(Point2D(0, 0, 0), Point2D(1, 1, 1))
-          >>> segment.contains_pt(Point2D(0.5, 0.5, 0.5))
+          >>> segment = Segment(Point(0, 0, 0), Point(1, 1, 1))
+          >>> segment.contains_pt(Point(0.5, 0.5, 0.5))
           True
-          >>> segment.contains_pt(Point2D(1, 1, 1))
+          >>> segment.contains_pt(Point(1, 1, 1))
           True
-          >>> segment = Segment2D(Point2D(1,2,3), Point2D(9,8,2))
+          >>> segment = Segment(Point(1,2,3), Point(9,8,2))
           >>> segment.contains_pt(segment.pointAt(0.745))
           True
           >>> segment.contains_pt(segment.pointAt(1.745))
@@ -652,11 +708,11 @@ class Segment2D:
           True
         """
 
-        check_type(pt, "Point2D", Point2D)
+        check_type(pt, "Point2D", Point)
 
-        segment_length = self.length2D()
-        length_startpt_pt = self.start_pt.dist2DWith(pt)
-        length_endpt_pt = self.end_pt.dist2DWith(pt)
+        segment_length = self.length()
+        length_startpt_pt = self.start_pt.dist_with(pt)
+        length_endpt_pt = self.end_pt.dist_with(pt)
 
         return areClose(
             a=segment_length,
@@ -683,7 +739,7 @@ class Segment2D:
 
     def pointAt(self,
                 scale_factor: numbers.Real
-                ) -> Point2D:
+                ) -> Point:
         """
         Returns a point aligned with the segment
         and lying at given scale factor, where 1 is segment length
@@ -692,10 +748,10 @@ class Segment2D:
         :param scale_factor: the scale factor, where 1 is the segment length.
         :type scale_factor: numbers.Real
         :return: Point2D at scale factor
-        :rtype: Point2D
+        :rtype: Point
 
         Examples:
-          >>> s = Segment2D(Point2D(0,0), Point2D(1,0))
+          >>> s = Segment(Point(0,0), Point(1,0))
           >>> s.pointAt(0)
           Point2D(0.0000, 0.0000)
           >>> s.pointAt(0.5)
@@ -708,7 +764,7 @@ class Segment2D:
           Point2D(-2.0000, 0.0000)
           >>> s.pointAt(2)
           Point2D(2.0000, 0.0000)
-          >>> s = Segment2D(Point2D(0,0), Point2D(0,0))
+          >>> s = Segment(Point(0,0), Point(0,0))
           >>> s.pointAt(0)
           Point2D(0.0000, 0.0000)
           >>> s.pointAt(0.5)
@@ -721,10 +777,10 @@ class Segment2D:
           Point2D(0.0000, 0.0000)
           >>> s.pointAt(2)
           Point2D(0.0000, 0.0000)
-          >>> s = Segment2D(Point2D(0,0), Point2D(1,1))
+          >>> s = Segment(Point(0,0), Point(1,1))
           >>> s.pointAt(0.5)
           Point2D(0.5000, 0.5000)
-          >>> s = Segment2D(Point2D(0,0), Point2D(4,0))
+          >>> s = Segment(Point(0,0), Point(4,0))
           >>> s.pointAt(7.5)
           Point2D(30.0000, 0.0000)
         """
@@ -732,7 +788,7 @@ class Segment2D:
         dx = self.delta_x() * scale_factor
         dy = self.delta_y() * scale_factor
 
-        return Point2D(
+        return Point(
             x=self.start_pt.x + dx,
             y=self.start_pt.y + dy
         )
@@ -798,7 +854,7 @@ class Segment2D:
     '''
 
     def pointS(self,
-               point: Point2D
+               point: Point
                ) -> Optional[numbers.Real]:
         """
         Calculates the optional distance of the point along the segment.
@@ -806,22 +862,22 @@ class Segment2D:
         Returns None if the point is not contained in the segment.
 
         :param point: the point to calculate the optional distance in the segment.
-        :type point: Point2D
+        :type point: Point
         :return: the the optional distance of the point along the segment.
         """
 
-        check_type(point, "Input point", Point2D)
+        check_type(point, "Input point", Point)
 
         # check_crs(self, point)
 
         if not self.contains_pt(point):
             return None
 
-        return self.start_pt.dist2DWith(point)
+        return self.start_pt.dist_with(point)
 
     def scale(self,
               scale_factor
-              ) -> 'Segment2D':
+              ) -> 'Segment':
         """
         Scale a segment by the given scale_factor.
         Start point does not change.
@@ -829,12 +885,12 @@ class Segment2D:
         :param scale_factor: the scale factor, where 1 is the segment length.
         :type scale_factor: numbers.Real
         :return: Point2D at scale factor
-        :rtype: Point2D
+        :rtype: Point
         """
 
         end_pt = self.pointAt(scale_factor)
 
-        return Segment2D(
+        return Segment(
             self.start_pt,
             end_pt)
 
@@ -859,7 +915,7 @@ class Segment2D:
         if not densify_distance > 0.0:
             raise Exception("Densify distance must be positive")
 
-        segment_length = self.length2D()
+        segment_length = self.length()
 
         s_list = []
         n = 0
@@ -965,7 +1021,7 @@ class Segment2D:
     '''
 
     def same_start(self,
-                   another: 'Segment2D',
+                   another: 'Segment',
                    tol: numbers.Real = 1e-12
                    ) -> bool:
         """
@@ -979,8 +1035,8 @@ class Segment2D:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment2D(Point2D(0,0), Point2D(1,0))
-          >>> s2 = Segment2D(Point2D(0,0), Point2D(0,1))
+          >>> s1 = Segment(Point(0,0), Point(1,0))
+          >>> s2 = Segment(Point(0,0), Point(0,1))
           >>> s1.same_start(s2)
           True
         """
@@ -991,7 +1047,7 @@ class Segment2D:
         )
 
     def same_end(self,
-                 another: 'Segment2D',
+                 another: 'Segment',
                  tol: numbers.Real = 1e-12
                  ) -> bool:
         """
@@ -1005,8 +1061,8 @@ class Segment2D:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment2D(Point2D(0,0), Point2D(1,0))
-          >>> s2 = Segment2D(Point2D(2,0), Point2D(1,0))
+          >>> s1 = Segment(Point(0,0), Point(1,0))
+          >>> s2 = Segment(Point(2,0), Point(1,0))
           >>> s1.same_end(s2)
           True
         """
@@ -1016,7 +1072,7 @@ class Segment2D:
             tolerance=tol)
 
     def conn_to_other(self,
-                      another: 'Segment2D',
+                      another: 'Segment',
                       tol: numbers.Real = 1e-12
                       ) -> bool:
         """
@@ -1030,8 +1086,8 @@ class Segment2D:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment2D(Point2D(0,0), Point2D(1,0))
-          >>> s2 = Segment2D(Point2D(1,0), Point2D(2,0))
+          >>> s1 = Segment(Point(0,0), Point(1,0))
+          >>> s2 = Segment(Point(1,0), Point(2,0))
           >>> s1.conn_to_other(s2)
           True
         """
@@ -1041,7 +1097,7 @@ class Segment2D:
             tolerance=tol)
 
     def other_connected(self,
-                        another: 'Segment2D',
+                        another: 'Segment',
                         tol: numbers.Real = 1e-12
                         ) -> bool:
         """
@@ -1055,8 +1111,8 @@ class Segment2D:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment2D(Point2D(0,0), Point2D(1,0))
-          >>> s2 = Segment2D(Point2D(-1,0), Point2D(0,0))
+          >>> s1 = Segment(Point(0,0), Point(1,0))
+          >>> s2 = Segment(Point(-1,0), Point(0,0))
           >>> s1.other_connected(s2)
           True
         """
@@ -1066,7 +1122,7 @@ class Segment2D:
             tolerance=tol)
 
     def segment_start_in(self,
-                         another: 'Segment2D'
+                         another: 'Segment'
                          ) -> bool:
         """
         Check whether the second segment contains the first segment start point.
@@ -1077,17 +1133,17 @@ class Segment2D:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment2D(Point2D(0,0), Point2D(1,0))
-          >>> s2 = Segment2D(Point2D(-0.5,0), Point2D(0.5,0))
+          >>> s1 = Segment(Point(0,0), Point(1,0))
+          >>> s2 = Segment(Point(-0.5,0), Point(0.5,0))
           >>> s1.segment_start_in(s2)
           True
-          >>> s1 = Segment2D(Point2D(0,0), Point2D(1,1))
+          >>> s1 = Segment(Point(0,0), Point(1,1))
           >>> s1.segment_start_in(s2)
           True
-          >>> s1 = Segment2D(Point2D(0,1), Point2D(1,1))
+          >>> s1 = Segment(Point(0,1), Point(1,1))
           >>> s1.segment_start_in(s2)
           False
-          >>> s1 = Segment2D(Point2D(-1,-1), Point2D(1,1))
+          >>> s1 = Segment(Point(-1,-1), Point(1,1))
           >>> s1.segment_start_in(s2)
           False
         """
@@ -1095,7 +1151,7 @@ class Segment2D:
         return another.contains_pt(self.start_pt)
 
     def segment_end_in(self,
-                       another: 'Segment2D'
+                       another: 'Segment'
                        ) -> bool:
         """
         Check whether the second segment contains the first segment end point.
@@ -1106,19 +1162,19 @@ class Segment2D:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment2D(Point2D(0,0), Point2D(1,0))
-          >>> s2 = Segment2D(Point2D(-0.5,0), Point2D(0.5,0))
+          >>> s1 = Segment(Point(0,0), Point(1,0))
+          >>> s2 = Segment(Point(-0.5,0), Point(0.5,0))
           >>> s1.segment_end_in(s2)
           False
-          >>> s1 = Segment2D(Point2D(0,0), Point2D(1,1))
+          >>> s1 = Segment(Point(0,0), Point(1,1))
           >>> s1.segment_end_in(s2)
           False
-          >>> s1 = Segment2D(Point2D(0,1), Point2D(1,1))
-          >>> s2 = Segment2D(Point2D(1,1), Point2D(0.5,0))
+          >>> s1 = Segment(Point(0,1), Point(1,1))
+          >>> s2 = Segment(Point(1,1), Point(0.5,0))
           >>> s1.segment_end_in(s2)
           True
-          >>> s1 = Segment2D(Point2D(-1,-1), Point2D(1,1))
-          >>> s2 = Segment2D(Point2D(0,2), Point2D(2,0))
+          >>> s1 = Segment(Point(-1,-1), Point(1,1))
+          >>> s2 = Segment(Point(0,2), Point(2,0))
           >>> s1.segment_end_in(s2)
           True
         """
@@ -1133,22 +1189,34 @@ class Segment2D:
         Creates a random segment.
 
         :return: random segment
-        :rtype: Segment2D
+        :rtype: Segment
         """
 
         return cls(
-            start_pt=Point2D.random(lower_boundary, upper_boundary),
-            end_pt=Point2D.random(lower_boundary, upper_boundary)
+            start_pt=Point.random(lower_boundary, upper_boundary),
+            end_pt=Point.random(lower_boundary, upper_boundary)
         )
 
 
-class Line2D:
+class Line(Shape2D):
     """
     A list of Point2D objects.
     """
 
+    @property
+    def center(self):
+        pass
+
+    @property
+    def area(self):
+        pass
+
+    @property
+    def length(self):
+        pass
+
     def __init__(self,
-        pts: Optional[List[Point2D]] = None
+        pts: Optional[List[Point]] = None
     ):
         """
         Creates the Line2D instance.
@@ -1161,7 +1229,7 @@ class Line2D:
             pts = []
 
         for pt in pts:
-            if not isinstance(pt, Point2D):
+            if not isinstance(pt, Point):
                 raise Exception("All input data must be point")
 
         self._x = array('d', [pt.x for pt in pts])
@@ -1171,14 +1239,14 @@ class Line2D:
     def fromArrays(cls,
         xs: array,
         ys: array
-    ) -> 'Line2D':
+    ) -> 'Line':
         """
         Create a Line2D instance from a list of x and y values.
 
         Example:
-          >>> Line2D.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
+          >>> Line.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
           Line2D with 3 points: (1.0000, 3.0000) ... (3.0000, 5.0000)
-          >>> Line2D.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
+          >>> Line.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
           Line2D with 3 points: (1.0000, 3.0000) ... (3.0000, 5.0000)
         """
 
@@ -1202,19 +1270,19 @@ class Line2D:
     @classmethod
     def fromPointList(cls,
         pt_list: List[List[numbers.Real]]
-    ) -> 'Line2D':
+    ) -> 'Line':
         """
         Create a Line2D instance from a list of x and y values.
 
         Example:
-          >>> Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
+          >>> Line.fromPointList([[0, 0], [1, 0], [0, 1]])
           Line with 3 points: (0.0000, 0.0000) ... (0.0000, 1.0000)
         """
 
         pts = []
         for vals in pt_list:
             if len(vals) == 2:
-                pt = Point2D(
+                pt = Point(
                     x=vals[0],
                     y=vals[1]
                 )
@@ -1225,7 +1293,7 @@ class Line2D:
 
         return cls(pts)
 
-    def pt(self, pt_ndx: numbers.Integral) -> Point2D:
+    def pt(self, pt_ndx: numbers.Integral) -> Point:
         """
         Extract the point at index pt_ndx.
 
@@ -1237,7 +1305,7 @@ class Line2D:
         Examples:
         """
 
-        return Point2D(
+        return Point(
             x=self._x[pt_ndx],
             y=self._y[pt_ndx]
         )
@@ -1260,18 +1328,18 @@ class Line2D:
 
     def pts(self):
 
-        return [Point2D(*self.values_at(ndx)) for ndx in range(self.num_pts())]
+        return [Point(*self.values_at(ndx)) for ndx in range(self.num_pts())]
 
     def segment(self,
         ndx: numbers.Integral
-    ) -> Optional[Segment2D]:
+    ) -> Optional[Segment]:
         """
         Returns the optional segment at index ndx.
 
         :param ndx: the segment index.
         :type ndx: numbers.Integral
         :return: the optional segment
-        :rtype: Optional[Segment2D]
+        :rtype: Optional[Segment]
         """
 
         start_pt = self.pt(ndx)
@@ -1280,7 +1348,7 @@ class Line2D:
         if start_pt.isCoinc2D(end_pt):
             return None
         else:
-            return Segment2D(
+            return Segment(
                 start_pt=self.pt(ndx),
                 end_pt=self.pt(ndx + 1)
             )
@@ -1289,7 +1357,7 @@ class Line2D:
 
         return len(self._x)
 
-    def start_pt(self) -> Optional[Point2D]:
+    def start_pt(self) -> Optional[Point]:
         """
         Return the first point of a Line or None when no points.
 
@@ -1299,7 +1367,7 @@ class Line2D:
 
         return self.pt(0) if self.num_pts() > 0 else None
 
-    def end_pt(self) -> Optional[Point2D]:
+    def end_pt(self) -> Optional[Point]:
         """
         Return the last point of a Line or None when no points.
 
@@ -1396,7 +1464,7 @@ class Line2D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
+          >>> l = Line.fromPointList([[0, 0], [1, 0], [0, 1]])
           >>> l.x_min()
           0.0
         """
@@ -1411,7 +1479,7 @@ class Line2D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
+          >>> l = Line.fromPointList([[0, 0], [1, 0], [0, 1]])
           >>> l.x_max()
           1.0
         """
@@ -1426,7 +1494,7 @@ class Line2D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
+          >>> l = Line.fromPointList([[0, 0], [1, 0], [0, 1]])
           >>> l.y_min()
           0.0
         """
@@ -1441,14 +1509,14 @@ class Line2D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
+          >>> l = Line.fromPointList([[0, 0], [1, 0], [0, 1]])
           >>> l.y_max()
           1.0
         """
 
         return max(self._y) if self.num_pts() > 0 else None
 
-    def remove_coincident_points(self) -> Optional['Line2D']:
+    def remove_coincident_points(self) -> Optional['Line']:
         """
         Remove coincident successive points
 
@@ -1458,7 +1526,7 @@ class Line2D:
         if self.num_pts() == 0:
             return
 
-        new_line = Line2D(
+        new_line = Line(
             pts=[self.pt(0)]
         )
 
@@ -1477,11 +1545,11 @@ class Line2D:
 
         pts_pairs = zip(self.pts()[:-1], self.pts()[1:])
 
-        segments = [Segment2D(pt_a, pt_b) for (pt_a, pt_b) in pts_pairs]
+        segments = [Segment(pt_a, pt_b) for (pt_a, pt_b) in pts_pairs]
 
         return segments
 
-    def densify_2d_line(self, sample_distance) -> 'Line2D':
+    def densify_2d_line(self, sample_distance) -> 'Line':
         """
         Densify a line into a new line instance,
         using the provided sample distance.
@@ -1519,7 +1587,7 @@ class Line2D:
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
-            length += self.pt(ndx).dist2DWith(self.pt(ndx + 1))
+            length += self.pt(ndx).dist_with(self.pt(ndx + 1))
         return length
 
     def step_lengths_2d(self) -> List[numbers.Real]:
@@ -1536,7 +1604,7 @@ class Line2D:
 
         step_length_list = [0.0]
         for ndx in range(1, self.num_pts()):
-            length = self.pt(ndx).dist2DWith(self.pt(ndx - 1))
+            length = self.pt(ndx).dist_with(self.pt(ndx - 1))
             step_length_list.append(length)
 
         return step_length_list
@@ -1573,7 +1641,7 @@ class Line2D:
         :return: the 2D distance between start and end points
         """
 
-        return self.end_pt().dist2DWith(self.start_pt())
+        return self.end_pt().dist_with(self.start_pt())
 
     def isClosed_2d(self,
         tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
@@ -1624,7 +1692,25 @@ class Line2D:
         return line
 
 
-class Circle2D(Shape2D):
+class Ellipse(Shape2D):
+    @property
+    def center(self):
+        pass
+
+    @property
+    def area(self):
+        pass
+
+    @property
+    def length(self):
+        pass
+
+    @property
+    def clone(self):
+        pass
+
+
+class Circle(Ellipse):
 
     def __init__(self,
                  x: numbers.Real,
@@ -1638,7 +1724,7 @@ class Circle2D(Shape2D):
 
     @property
     def center(self):
-        return Point2D(self._x, self._y)
+        return Point(self._x, self._y)
 
     @property
     def radius(self):
@@ -1653,10 +1739,52 @@ class Circle2D(Shape2D):
         return 2.0 * math.pi * self._r
 
     def clone(self):
-        return Circle2D(self._x, self._y, self._r)
+        return Circle(self._x, self._y, self._r)
 
 
-class Square2D(Shape2D):
+class Polygon(Shape2D, metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    @property
+    def num_side(self):
+        """Return numer of sides"""
+
+
+class Triangle(Polygon):
+
+    @property
+    def center(self):
+        pass
+
+    @property
+    def area(self):
+        pass
+
+    @property
+    def length(self):
+        pass
+
+    @property
+    def clone(self):
+        pass
+
+    @property
+    def num_side(self):
+        """Return numer of sides"""
+
+        return 3
+
+
+class Quadrilateral(Polygon, metaclass=abc.ABCMeta):
+
+    @property
+    def num_side(self):
+        """Return numer of sides"""
+
+        return 4
+
+
+class Square(Quadrilateral):
 
     def __init__(self,
                  x: numbers.Real,
@@ -1679,7 +1807,7 @@ class Square2D(Shape2D):
 
     @property
     def center(self):
-        return Point2D(self._x, self._y)
+        return Point(self._x, self._y)
 
     @property
     def area(self):
@@ -1690,5 +1818,23 @@ class Square2D(Shape2D):
         return 4.0 * self._side
 
     def clone(self):
-        return Square2D(self._x, self._y, self._side, self._cc_rotat)
+        return Square(self._x, self._y, self._side, self._cc_rotat)
 
+
+@singledispatch
+def mean(
+        shapes: List[Shape2D]
+) -> Shape2D:
+
+    pass
+
+@mean.register(Points)
+def mean(
+        shapes: Points
+) -> Point:
+    """Mean points center"""
+
+    return Point(
+        x=np.mean(shapes.xs()),
+        y=np.mean(shapes.ys())
+    )

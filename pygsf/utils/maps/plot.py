@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-from pygsf.crs.rasters import *
+from pygsf.geolocated.rasters import *
 
 
 def plot_grid(

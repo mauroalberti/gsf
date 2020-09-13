@@ -4,7 +4,7 @@ import os
 from osgeo import ogr, osr
 import geopandas as gpd
 
-from pygsf.crs.geoshapes import *
+from pygsf.geolocated.geoshapes import *
 
 
 class OGRIOException(Exception):
@@ -154,7 +154,7 @@ def try_read_line_shapefile(
 
         else:  # multiline case
 
-            multiline = MultiLine(epsg_cd=epsg_cd)
+            multiline = GeoMultiLine(epsg_cd=epsg_cd)
 
             for line_geom in curr_geom:
 
@@ -176,7 +176,7 @@ def try_read_line_shapefile(
     return True, results
 
 
-def read_linestring_geometries(line_shp_path: str) -> Optional[MultiLine]:
+def read_linestring_geometries(line_shp_path: str) -> Optional[GeoMultiLine]:
     """
     Read linestring geometries from a shapefile using ogr.
     The geometry type of the input shapefile must be LineString (MultiLineString is not currently managed).
@@ -261,7 +261,7 @@ def read_linestring_geometries(line_shp_path: str) -> Optional[MultiLine]:
 
     datasource.Destroy()
 
-    multiline = MultiLine(
+    multiline = GeoMultiLine(
         lines=lines,
         epsg_cd=epsg_cd
     )

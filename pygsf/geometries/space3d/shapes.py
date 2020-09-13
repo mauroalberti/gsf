@@ -1,13 +1,16 @@
 
-from typing import List, Optional, Union
+from enum import Enum
+from typing import List, Optional
+from math import fabs
 
 import numbers
 from array import array
 
+from pygsf.geolocated.geoshapes import GeoPoints
 from pygsf.orientations.orientations import *
 from pygsf.mathematics.statistics import *
 from pygsf.mathematics.quaternions import *
-from pygsf.geometries.geom2d.shapes import *
+from pygsf.geometries.space2d.shapes import *
 from pygsf.utils.types import *
 
 
@@ -376,9 +379,9 @@ class Point:
 
         return another.z - self.z
 
-    def dist3DWith(self,
-        another: 'Point'
-    ) -> numbers.Real:
+    def distance(self,
+                 another: 'Point'
+                 ) -> numbers.Real:
         """
         Calculate Euclidean spatial distance between two points.
         TODO: consider case of polar CRS
@@ -390,11 +393,11 @@ class Point:
         :raise: Exception.
 
         Examples:
-          >>> Point(1., 1., 1.).dist3DWith(Point(4., 5., 1))
+          >>> Point(1., 1., 1.).distance(Point(4., 5., 1))
           5.0
-          >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1))
+          >>> Point(1, 1, 1).distance(Point(4, 5, 1))
           5.0
-          >>> Point(1, 1, 1).dist3DWith(Point(4, 5, 1))
+          >>> Point(1, 1, 1).distance(Point(4, 5, 1))
           5.0
         """
 
@@ -402,9 +405,9 @@ class Point:
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
-    def dist2DWith(self,
-        another: 'Point'
-    ) -> numbers.Real:
+    def horizontal_distance(self,
+                            another: 'Point'
+                            ) -> numbers.Real:
         """
         Calculate horizontal (2D) distance between two points.
         TODO: consider case of polar CRS
@@ -416,7 +419,7 @@ class Point:
         :raise: Exception.
 
         Examples:
-          >>> Point(1., 1., 1.).dist2DWith(Point(4., 5., 7.))
+          >>> Point(1., 1., 1.).horizontal_distance(Point(4., 5., 7.))
           5.0
         """
 
@@ -476,10 +479,10 @@ class Point:
             z=z
         )
 
-    def isCoinc3D(self,
-                  another: 'Point',
-                  tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
-                  ) -> bool:
+    def is_coincident(self,
+                      another: 'Point',
+                      tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                      ) -> bool:
         """
         Check spatial coincidence of two points
 
@@ -492,15 +495,15 @@ class Point:
         :raise: Exception.
 
         Example:
-          >>> Point(1., 0., -1.).isCoinc3D(Point(1., 1.5, -1.))
+          >>> Point(1., 0., -1.).is_coincident(Point(1., 1.5, -1.))
           False
-          >>> Point(1., 0., 0.).isCoinc3D(Point(1., 0., 0.))
+          >>> Point(1., 0., 0.).is_coincident(Point(1., 0., 0.))
           True
         """
 
         check_type(another, "Second point", Point)
 
-        return self.dist3DWith(another) <= tolerance
+        return self.distance(another) <= tolerance
 
     def already_present(self,
         pt_list: List['Point'],
@@ -518,7 +521,7 @@ class Point:
         """
 
         for pt in pt_list:
-            if self.isCoinc3D(pt, tolerance=tolerance):
+            if self.is_coincident(pt, tolerance=tolerance):
                 return True
         return False
 
@@ -723,7 +726,7 @@ class Segment:
         :type: Point.
         :param end_pt: the end point.
         :type end_pt: Point.
-        :return: the new segment instance if both points have the same crs.
+        :return: the new segment instance if both points have the same geolocated.
         :raises: CRSCodeException.
         """
 
@@ -731,7 +734,7 @@ class Segment:
 
         check_type(end_pt, "End point", Point)
 
-        if start_pt.dist3DWith(end_pt) == 0.0:
+        if start_pt.distance(end_pt) == 0.0:
             raise Exception("Source points cannot be coincident")
 
         self._start_pt = start_pt.clone()
@@ -834,11 +837,11 @@ class Segment:
 
     def length2D(self) -> numbers.Real:
 
-        return self.start_pt.dist2DWith(self.end_pt)
+        return self.start_pt.horizontal_distance(self.end_pt)
 
     def length3D(self) -> numbers.Real:
 
-        return self.start_pt.dist3DWith(self.end_pt)
+        return self.start_pt.distance(self.end_pt)
 
     def deltaZS(self) -> Optional[numbers.Real]:
         """
@@ -944,8 +947,8 @@ class Segment:
         check_type(pt, "Point", Point)
 
         segment_length = self.length3D()
-        length_startpt_pt = self.start_pt.dist3DWith(pt)
-        length_endpt_pt = self.end_pt.dist3DWith(pt)
+        length_startpt_pt = self.start_pt.distance(pt)
+        length_endpt_pt = self.end_pt.distance(pt)
 
         return areClose(
             a=segment_length,
@@ -1064,7 +1067,7 @@ class Segment:
 
         point_projection = self.pointProjection(point)
 
-        return point.dist3DWith(point_projection)
+        return point.distance(point_projection)
 
     def pointS(self,
         point: Point
@@ -1086,7 +1089,7 @@ class Segment:
         if not self.contains_pt(point):
             return None
 
-        return self.start_pt.dist3DWith(point)
+        return self.start_pt.distance(point)
 
     def scale(self,
         scale_factor
@@ -1151,7 +1154,7 @@ class Segment:
           True
         """
 
-        return self.start_pt.isCoinc3D(
+        return self.start_pt.is_coincident(
             another=another.start_pt,
             tolerance=tol
         )
@@ -1177,7 +1180,7 @@ class Segment:
           True
         """
 
-        return self.end_pt.isCoinc3D(
+        return self.end_pt.is_coincident(
             another=another.end_pt,
             tolerance=tol)
 
@@ -1202,7 +1205,7 @@ class Segment:
           True
         """
 
-        return self.end_pt.isCoinc3D(
+        return self.end_pt.is_coincident(
             another=another.start_pt,
             tolerance=tol)
 
@@ -1227,7 +1230,7 @@ class Segment:
           True
         """
 
-        return another.end_pt.isCoinc3D(
+        return another.end_pt.is_coincident(
             another=self.start_pt,
             tolerance=tol)
 
@@ -1383,8 +1386,8 @@ def point_or_segment(
 
     #check_crs(point1, point2)
 
-    if point1.dist3DWith(point2) <= tol:
-        return Points.fromPoints([point1, point2]).nanmean_point()
+    if point1.distance(point2) <= tol:
+        return GeoPoints.fromPoints([point1, point2]).nanmean_point()
     else:
         return Segment(
             start_pt=point1,
@@ -1401,13 +1404,9 @@ def intersect_segments(
     Determines the optional point or segment intersection between the segment pair.
 
     :param segment1: the first segment
-    :type segment1: Segment
     :param segment2: the second segment
-    :type segment2: Segment
     :param tol: the distance tolerance for collapsing a intersection segment into a point
-    :type tol: numbers.Real
     :return: the optional point or segment intersection between the segment pair.
-    :rtype: Optional[Union[Point, Segment]]
 
     Examples:
       >>> s2 = Segment(Point(0,0,0), Point(1,0,0))
@@ -1528,11 +1527,9 @@ def intersect_segments(
     if s2_endpt_inside:
         return segment2.end_pt.clone()
 
-    cline1 = Segment.fromSegment(segment1)
-    cline2 = Segment.fromSegment(segment2)
-
-    shortest_segm_or_pt = cline1.shortest_segment_or_point(
-        cline2,
+    shortest_segm_or_pt = shortest_segment_or_point(
+        segment1,
+        segment2,
         tol=tol
     )
 
@@ -1656,11 +1653,12 @@ class Line:
 
         return Line(self.pts() + another.pts())
 
-    def length_3d(self) -> numbers.Real:
+    @property
+    def length(self) -> numbers.Real:
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
-            length += self.pt(ndx).dist3DWith(self.pt(ndx + 1))
+            length += self.pt(ndx).distance(self.pt(ndx + 1))
         return length
 
     '''
@@ -1702,7 +1700,7 @@ class Line:
 
         step_length_list = [0.0]
         for ndx in range(1, self.num_pts()):
-            length = self.pt(ndx).dist3DWith(self.pt(ndx - 1))
+            length = self.pt(ndx).distance(self.pt(ndx - 1))
             step_length_list.append(length)
 
         return step_length_list
@@ -1818,7 +1816,7 @@ class Line:
         :rtype: numbers.Real
         """
 
-        return self.end_pt().dist3DWith(self.start_pt())
+        return self.pt(-1).distance(self.pt(0))
 
     '''
     def extremes_distance_2d(self) -> numbers.Real:
@@ -1831,9 +1829,9 @@ class Line:
         return self.end_pt().dist2DWith(self.start_pt())
     '''
 
-    def isClosed_3d(self,
-        tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
-    ) -> bool:
+    def is_closed(self,
+                  tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                  ) -> bool:
         """
         Determine if the line is 3D-closed.
 
@@ -1843,7 +1841,7 @@ class Line:
         :rtype: bool
         """
 
-        return self.end_pt().isCoinc3D(self.start_pt(), tolerance=tolerance)
+        return self.pt(-1).is_coincident(self.pt(0), tolerance=tolerance)
 
     '''
     def isClosed_2d(self,
@@ -1867,14 +1865,14 @@ class Line:
         :rtype: 'Line'
         """
 
-        return Line(self.pts() + self.reversed().pts()[1:])
+        return Line(self.pts() + self.reversed()[1:])
 
-    def clone(self) -> 'Points':
+    def clone(self) -> 'Line':
         """
         Clone a line.
 
         :return: the cloned line
-        :rtype: Points
+        :rtype: GeoPoints
         """
 
         return Line(self.pts())
@@ -1897,17 +1895,17 @@ class Line:
         return line
     '''
 
-    def close_3d(self) -> 'Points':
+    def close_3d(self) -> 'Line':
         """
         Return a line that is 3D-closed.
 
         :return: a 3D-closed line
-        :rtype: Points
+        :rtype: GeoPoints
         """
 
         line = self.clone()
 
-        if not line.isClosed_3d():
+        if not line.is_closed():
 
             line.add_pt(line.start_pt())
 
@@ -1918,7 +1916,7 @@ class Line:
         Remove coincident successive points
 
         :return: Line instance
-        :rtype: Optional[Points]
+        :rtype: Optional[GeoPoints]
         """
 
         if self.num_pts() == 0:
@@ -1929,7 +1927,7 @@ class Line:
         )
 
         for ndx in range(1, self.num_pts()):
-            if not self.pt(ndx).isCoinc3D(new_line.pt(-1)):
+            if not self.pt(ndx).is_coincident(new_line.pt(-1)):
                 new_line.add_pt(self.pt(ndx))
 
         return new_line
@@ -1970,16 +1968,16 @@ def analizeJoins(first: Union[Line, Segment], second: Union[Line, Segment]) -> L
 
     join_types = []
 
-    if first.start_pt.isCoinc3D(second.start_pt):
+    if first.start_pt.is_coincident(second.start_pt):
         join_types.append(JoinTypes.START_START)
 
-    if first.start_pt.isCoinc3D(second.end_pt):
+    if first.start_pt.is_coincident(second.end_pt):
         join_types.append(JoinTypes.START_END)
 
-    if first.end_pt.isCoinc3D(second.start_pt):
+    if first.end_pt.is_coincident(second.start_pt):
         join_types.append(JoinTypes.END_START)
 
-    if first.end_pt.isCoinc3D(second.end_pt):
+    if first.end_pt.is_coincident(second.end_pt):
         join_types.append(JoinTypes.END_END)
 
     return join_types

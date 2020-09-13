@@ -4,9 +4,9 @@ import numbers
 import affine
 import numpy as np
 
-from pygsf.geometries.geom2d.rasters.fields import *
-from pygsf.geometries.geom2d.rasters.geotransform import *
-from pygsf.geometries.geom3d.shapes import *
+from pygsf.geometries.space2d.rasters.fields import *
+from pygsf.geometries.space2d.rasters.geotransform import *
+from pygsf.geometries.space3d.shapes import *
 from pygsf.mathematics.arrays import array_bilin_interp
 
 
@@ -81,9 +81,9 @@ class GeoArray(object):
     @property
     def crs(self) -> Crs:
         """
-        Return the geoarray crs.
+        Return the geoarray geolocated.
 
-        :return: the crs.
+        :return: the geolocated.
         :rtype: Crs.
         """
 
@@ -91,9 +91,9 @@ class GeoArray(object):
 
     def epsg_code(self) -> numbers.Integral:
         """
-        Return the geoarray crs EPSG code.
+        Return the geoarray geolocated EPSG code.
 
-        :return: the crs EPSG  code.
+        :return: the geolocated EPSG  code.
         :rtype: numbers.Integral.
         """
 
@@ -391,11 +391,11 @@ class GeoArray(object):
 
         factor = 100
 
-        start_pt = Point2D(*self.ijArrToxy(0, 0))
-        end_pt_j = Point2D(*self.ijArrToxy(0, factor))
-        end_pt_i = Point2D(*self.ijArrToxy(factor, 0))
+        start_pt = Point(*self.ijArrToxy(0, 0))
+        end_pt_j = Point(*self.ijArrToxy(0, factor))
+        end_pt_i = Point(*self.ijArrToxy(factor, 0))
 
-        return end_pt_j.dist2DWith(start_pt)/factor, end_pt_i.dist2DWith(start_pt)/factor
+        return end_pt_j.dist_with(start_pt) / factor, end_pt_i.dist_with(start_pt) / factor
 
     def xy(self, level_ndx: numbers.Integral=0) -> Optional[Tuple[np.ndarray, np.ndarray]]:
         """
@@ -438,7 +438,7 @@ class GeoArray(object):
 
         return array_bilin_interp(self._levels[level_ndx], i, j)
 
-    def interpolate_bilinear_point(self, pt: Point2D, level_ndx=0) -> Optional[Point]:
+    def interpolate_bilinear_point(self, pt: Point, level_ndx=0) -> Optional[Point]:
         """
         Interpolate the z value at a point, returning a Point with elevation extracted from the DEM.
         Interpolation method: bilinear.
@@ -656,7 +656,7 @@ def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[numbers.Real
 def interpolate_rkf(
         geoarray: GeoArray,
         delta_time: numbers.Real,
-        start_pt: Point2D
+        start_pt: Point
     ) -> Tuple[Optional[Point], Optional[numbers.Real]]:
     """
     Interpolate point-like object position according to the Runge-Kutta-Fehlberg method.
@@ -677,14 +677,14 @@ def interpolate_rkf(
 
     check_type(delta_time, "Delta time", numbers.Real)
 
-    check_type(start_pt, "Start point", Point2D)
+    check_type(start_pt, "Start point", Point)
 
     k1_vx, k1_vy = point_velocity(geoarray, start_pt)
 
     if k1_vx is None or k1_vy is None:
         return None, None
 
-    k2_pt = Point2D(
+    k2_pt = Point(
         x=start_pt.x + 0.25 * delta_time * k1_vx,
         y=start_pt.y + 0.25 * delta_time * k1_vy
     )
@@ -694,7 +694,7 @@ def interpolate_rkf(
     if k2_vx is None or k2_vy is None:
         return None, None
 
-    k3_pt = Point2D(
+    k3_pt = Point(
         x=start_pt.x + (3.0 / 32.0) * delta_time * k1_vx + (9.0 / 32.0) * delta_time * k2_vx,
         y=start_pt.y + (3.0 / 32.0) * delta_time * k1_vy + (9.0 / 32.0) * delta_time * k2_vy
     )
@@ -704,7 +704,7 @@ def interpolate_rkf(
     if k3_vx is None or k3_vy is None:
         return None, None
 
-    k4_pt = Point2D(
+    k4_pt = Point(
         x=start_pt.x + (1932.0 / 2197.0) * delta_time * k1_vx - (7200.0 / 2197.0) * delta_time * k2_vx + (7296.0 / 2197.0) * delta_time * k3_vx,
         y=start_pt.y + (1932.0 / 2197.0) * delta_time * k1_vy - (7200.0 / 2197.0) * delta_time * k2_vy + (7296.0 / 2197.0) * delta_time * k3_vy
     )
@@ -714,7 +714,7 @@ def interpolate_rkf(
     if k4_vx is None or k4_vy is None:
         return None, None
 
-    k5_pt = Point2D(
+    k5_pt = Point(
         x=start_pt.x + (439.0 / 216.0) * delta_time * k1_vx - 8.0 * delta_time * k2_vx + (3680.0 / 513.0) * delta_time * k3_vx - (845.0 / 4104.0) * delta_time * k4_vx,
         y=start_pt.y + (439.0 / 216.0) * delta_time * k1_vy - 8.0 * delta_time * k2_vy + (3680.0 / 513.0) * delta_time * k3_vy - (845.0 / 4104.0) * delta_time * k4_vy
     )
@@ -724,7 +724,7 @@ def interpolate_rkf(
     if k5_vx is None or k5_vy is None:
         return None, None
 
-    k6_pt = Point2D(
+    k6_pt = Point(
         x=start_pt.x - (8.0 / 27.0) * delta_time * k1_vx + 2.0 * delta_time * k2_vx - (3544.0 / 2565.0) * delta_time * k3_vx + (1859.0 / 4104.0) * delta_time * k4_vx - (
                           11.0 / 40.0) * delta_time * k5_vx,
         y=start_pt.y - (8.0 / 27.0) * delta_time * k1_vy + 2.0 * delta_time * k2_vy - (3544.0 / 2565.0) * delta_time * k3_vy + (1859.0 / 4104.0) * delta_time * k4_vy - (
@@ -742,7 +742,7 @@ def interpolate_rkf(
     rkf_4o_y = start_pt.y + delta_time * (
             (25.0 / 216.0) * k1_vy + (1408.0 / 2565.0) * k3_vy + (2197.0 / 4104.0) * k4_vy - (
             1.0 / 5.0) * k5_vy)
-    temp_pt = Point2D(
+    temp_pt = Point(
         x=rkf_4o_x,
         y=rkf_4o_y
     )
@@ -753,12 +753,12 @@ def interpolate_rkf(
     interp_y = start_pt.y + delta_time * (
             (16.0 / 135.0) * k1_vy + (6656.0 / 12825.0) * k3_vy + (28561.0 / 56430.0) * k4_vy - (
             9.0 / 50.0) * k5_vy + (2.0 / 55.0) * k6_vy)
-    interp_pt = Point2D(
+    interp_pt = Point(
         x=interp_x,
         y=interp_y
     )
 
-    interp_pt_error_estim = interp_pt.dist2DWith(temp_pt)
+    interp_pt_error_estim = interp_pt.dist_with(temp_pt)
 
     return interp_pt, interp_pt_error_estim
 

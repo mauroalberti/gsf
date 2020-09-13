@@ -1,10 +1,10 @@
 
-from pygsf.crs.geoshapes import *
+from pygsf.geolocated.geoshapes import *
 from pygsf.orientations.orientations import *
 
 
 def try_derive_bestfitplane(
-    points: Points
+    points: GeoPoints
 ) -> Tuple[bool, Union[str, CPlane]]:
 
     print(points.xs)

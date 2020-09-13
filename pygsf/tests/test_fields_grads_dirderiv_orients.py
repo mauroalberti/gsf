@@ -3,7 +3,7 @@
 from math import pi
 from numpy import array
 
-from pygsf.geometries.geom2d.rasters.fields import *
+from pygsf.geometries.space2d.rasters.fields import *
 
 import unittest
 

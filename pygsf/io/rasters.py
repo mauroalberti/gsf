@@ -4,8 +4,8 @@ import os
 import gdal
 import rasterio
 
-from pygsf.crs.rasters import *
-from pygsf.geometries.geom2d.rasters.geotransform import *
+from pygsf.geolocated.rasters import *
+from pygsf.geometries.space2d.rasters.geotransform import *
 
 from .defaults import GRID_NULL_VALUE
 

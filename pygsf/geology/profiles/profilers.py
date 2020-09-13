@@ -2,11 +2,11 @@
 from typing import List, Iterable
 from operator import attrgetter
 
-from pygsf.crs.rasters import *
-from pygsf.crs.geoshapes import *
+from pygsf.geolocated.rasters import *
+from pygsf.geolocated.geoshapes import *
 from pygsf.geology.base import *
 
-from pygsf.geometries.geom3d.abstract import *
+from pygsf.geometries.space3d.abstract import *
 from pygsf.geology.profiles.sets import *
 from pygsf.orientations.orientations import Axis, Azim, Plunge
 
@@ -64,11 +64,11 @@ class LinearProfiler:
     """
 
     def __init__(self,
-        start_pt: Point2D,
-        end_pt: Point2D,
-        densify_distance: numbers.Real,
-        epsg_code: numbers.Integral
-    ):
+                 start_pt: Point,
+                 end_pt: Point,
+                 densify_distance: numbers.Real,
+                 epsg_code: numbers.Integral
+                 ):
         """
         Instantiates a 2D linear profile object.
         It is represented by two 2D points and by a densify distance.
@@ -83,11 +83,11 @@ class LinearProfiler:
         check_type(end_pt, "Input end point", Point)
 
         '''
-        if start_pt.crs != end_pt.crs:
+        if start_pt.geolocated != end_pt.geolocated:
             raise Exception("Both points must have same CRS")
         '''
 
-        if start_pt.dist2DWith(end_pt) == 0.0:
+        if start_pt.dist_with(end_pt) == 0.0:
             raise Exception("Input segment length cannot be zero")
 
         check_type(densify_distance, "Input densify distance", numbers.Real)
@@ -100,12 +100,12 @@ class LinearProfiler:
 
         #epsg_cd = start_pt.epsg_code()
 
-        self._start_pt = Point2D(
+        self._start_pt = Point(
             x=start_pt.x,
             y=start_pt.y
         )
 
-        self._end_pt = Point2D(
+        self._end_pt = Point(
             x=end_pt.x,
             y=end_pt.y
         )
@@ -203,7 +203,8 @@ class LinearProfiler:
         return LinearProfiler(
             start_pt=self.start_pt().clone(),
             end_pt=self.end_pt().clone(),
-            densify_distance=self.densify_dist()
+            densify_distance=self.densify_dist(),
+            epsg_code=epsg_code
         )
 
     def segment(self) -> Segment:
@@ -330,7 +331,8 @@ class LinearProfiler:
         return LinearProfiler(
             start_pt=self.start_pt().shiftByVect(self.left_norm_vers().scale(offset)),
             end_pt=self.end_pt().shiftByVect(self.left_norm_vers().scale(offset)),
-            densify_distance=self.densify_dist()
+            densify_distance=self.densify_dist(),
+            epsg_code=epsg_code
         )
 
     def right_offset(self,
@@ -347,7 +349,8 @@ class LinearProfiler:
         return LinearProfiler(
             start_pt=self.start_pt().shiftByVect(self.right_norm_vers().scale(offset)),
             end_pt=self.end_pt().shiftByVect(self.right_norm_vers().scale(offset)),
-            densify_distance=self.densify_dist()
+            densify_distance=self.densify_dist(),
+            epsg_code=epsg_code
         )
 
     def point_in_profile(self, pt: Point) -> bool:
@@ -450,71 +453,71 @@ class LinearProfiler:
         return topo_profiles
 
     def intersect_line(self,
-       mline: Union[Line, MultiLine],
-    ) -> PointSegmentCollection:
+                       mline: Union[Line, GeoMultiLine],
+                       ) -> GeoPointSegmentCollection:
         """
         Calculates the intersection with a line/multiline.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
 
         :param mline: the line/multiline to intersect profile with
-        :type mline: Union[Line, MultiLine]
+        :type mline: Union[Line, GeoMultiLine]
         :return: the possible intersections
-        :rtype: PointSegmentCollection
+        :rtype: GeoPointSegmentCollection
         """
 
         return mline.intersectSegment(self.segment())
 
     def intersect_lines(self,
-        mlines: Iterable[Union[Line, MultiLine]],
-    ) -> List[List[Optional[Union[Point, Segment]]]]:
+                        mlines: Iterable[Union[Line, GeoMultiLine]],
+                        ) -> List[List[Optional[Union[Point, Segment]]]]:
         """
         Calculates the intersection with a set of lines/multilines.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
 
         :param mlines: an iterable of Lines or MultiLines to intersect profile with
-        :type mlines: Iterable[Union[Line, MultiLine]]
+        :type mlines: Iterable[Union[Line, GeoMultiLine]]
         :return: the possible intersections
         :rtype: List[List[Optional[Point, Segment]]]
         """
 
         results = [self.intersect_line(mline) for mline in mlines]
-        valid_results = [PointSegmentCollection(ndx, res) for ndx, res in enumerate(results) if res]
+        valid_results = [GeoPointSegmentCollection(ndx, res) for ndx, res in enumerate(results) if res]
 
-        return PointSegmentCollections(valid_results)
+        return GeoPointSegmentCollections(valid_results)
 
     def intersect_polygon(self,
-       mpolygon: MPolygon,
-    ) -> Lines:
+                          mpolygon: GeoMPolygon,
+                          ) -> GeoLines:
         """
         Calculates the intersection with a shapely polygon/multipolygon.
         Note: the intersections are considered flat, i.e., in a 2D plane, not 3D.
 
         :param mpolygon: the shapely polygon/multipolygon to intersect profile with
-        :type mpolygon: pygsf.spatial.vectorial.polygons.MPolygon
+        :type mpolygon: pygsf.spatial.vectorial.polygons.MGeoPolygon
         :return: the possible intersections
-        :rtype: Lines
+        :rtype: GeoLines
         """
 
         check_type(
             mpolygon,
             "Polygon",
-            MPolygon
+            GeoMPolygon
         )
 
         line_shapely, epsg_code = line_to_shapely(self.to_line())
         return mpolygon.intersect_line(line=line_shapely)
 
     def intersect_polygons(self,
-       mpolygons: List[MPolygon]
-    ) -> List[Lines]:
+       mpolygons: List[GeoMPolygon]
+    ) -> List[GeoLines]:
         """
         Calculates the intersection with a set of shapely polygon/multipolygon.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
 
         :param mpolygons: the shapely set of polygon/multipolygon to intersect profile with
-        :type mpolygons: List[MPolygon]
+        :type mpolygons: List[GeoMPolygon]
         :return: the possible intersections
-        :rtype: List[Lines]
+        :rtype: List[GeoLines]
         """
 
         results = []
@@ -720,8 +723,8 @@ class LinearProfiler:
         projected_pt = Point(
             x=dummy_inters_pt.x + offset_vector.x,
             y=dummy_inters_pt.y + offset_vector.y,
-            z=dummy_inters_pt.z + offset_vector.z,
-            epsg_code=self.epsg_code())
+            z=dummy_inters_pt.z + offset_vector.z
+        )
 
         return projected_pt
 
@@ -780,7 +783,7 @@ class LinearProfiler:
 
         # distance along projection vector
 
-        dist = georef_attitude.posit.dist3DWith(intersection_point_3d)
+        dist = georef_attitude.posit.distance(intersection_point_3d)
 
         if max_profile_distance is not None and dist > max_profile_distance:
             return None
@@ -812,9 +815,9 @@ class LinearProfiler:
         max_profile_distance: Optional[numbers.Real] = None
     ) -> Optional[List[ProfileAttitude]]:
         """
-        Projects a set of georeferenced geom3d attitudes onto the section profile.
+        Projects a set of georeferenced space3d attitudes onto the section profile.
 
-        :param attitudes_3d: the set of georeferenced geom3d attitudes to plot on the section.
+        :param attitudes_3d: the set of georeferenced space3d attitudes to plot on the section.
         :type attitudes_3d: List[GeorefAttitude]
         :param mapping_method: the method to map the attitudes to the section.
         ;type mapping_method; Dict.
@@ -862,7 +865,7 @@ class LinearProfiler:
 
     def parse_intersections_for_profile(
             self,
-            intersections: PointSegmentCollections
+            intersections: GeoPointSegmentCollections
     ) -> ProfilesIntersections:
         """
         Parse the profile intersections for incorporation
@@ -1040,11 +1043,11 @@ class ParallelProfiler(list):
             max_profile_distance: Optional[numbers.Real] = None
     ) -> AttitudesSet:
         """
-        Projects a set of georeferenced geom3d attitudes onto the section profile.
+        Projects a set of georeferenced space3d attitudes onto the section profile.
 
-        Projects a set of georeferenced geom3d attitudes onto the section profile,
+        Projects a set of georeferenced space3d attitudes onto the section profile,
 
-        :param attitudes_3d: the set of georeferenced geom3d attitudes to plot on the section.
+        :param attitudes_3d: the set of georeferenced space3d attitudes to plot on the section.
         :type attitudes_3d: List[GeorefAttitude]
         :param mapping_method: the method to map the attitudes to the section.
         ;type mapping_method; Dict.

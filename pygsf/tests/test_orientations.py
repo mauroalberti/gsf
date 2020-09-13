@@ -4,9 +4,9 @@
 import unittest
 
 import pygsf.orientations.orientations
-import pygsf.geometries.geom3d.shapes
+import pygsf.geometries.space3d.shapes
 import pygsf.orientations.direct_utils
-from pygsf.geometries.geom3d.shapes import *
+from pygsf.geometries.space3d.shapes import *
 
 
 class TestOrientations(unittest.TestCase):
@@ -53,8 +53,8 @@ class TestOrientations(unittest.TestCase):
 
     def test_plane2cplane(self):
 
-        pl = pygsf.orientations.orientations.Plane(90, 45).toCPlane(Point(0, 0, 0, epsg_code=2000))
-        assert areClose(pl.angle(CPlane(1, 0, 1, 0, epsg_code=2000)), 0.)
+        pl = pygsf.orientations.orientations.Plane(90, 45).toCPlane(Point(0, 0, 0))
+        assert areClose(pl.angle(CPlane(1, 0, 1, 0), 0.))
 
     def test_plane_angle(self):
 

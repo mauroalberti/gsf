@@ -2,8 +2,8 @@
 
 import unittest
 
-from pygsf.crs.rasters import *
-from pygsf.geometries.geom2d.rasters.fields import *
+from pygsf.geolocated.rasters import *
+from pygsf.geometries.space2d.rasters.fields import *
 
 
 class TestRKFInterpolation(unittest.TestCase):
@@ -98,8 +98,7 @@ class TestRKFInterpolation(unittest.TestCase):
 
         first_pt = Point(
             x=0,
-            y=20,
-            epsg_code=32633)
+            y=20)
 
         str_pt = first_pt
         pts_x, pts_y = [first_pt.x], [first_pt.y]
@@ -118,5 +117,5 @@ class TestRKFInterpolation(unittest.TestCase):
             pts_y.append(end_pt.y)
             str_pt = end_pt
 
-        assert end_pt.isCoinc3D(first_pt)
+        assert end_pt.is_coincident(first_pt)
         # After 10 cycles the calculated point position is in the expected (initial) position: x=0, y=200.

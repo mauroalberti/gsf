@@ -4,7 +4,7 @@ from typing import Tuple, Optional
 
 import numpy as np
 
-from pygsf.geometries.geom3d.shapes import Point
+from pygsf.geometries.space3d.shapes import Point
 from pygsf.mathematics.arrays import pointSolution
 from pygsf.mathematics.defaults import MIN_SEPARATION_THRESHOLD
 from pygsf.mathematics.vectors import Vect

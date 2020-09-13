@@ -2,7 +2,7 @@
 import numbers
 
 from pygsf.defaults import *
-from pygsf.geometries.geom3d.shapes import *
+from pygsf.geometries.space3d.shapes import *
 
 
 class Slick(object):

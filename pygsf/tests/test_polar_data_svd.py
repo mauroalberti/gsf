@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from pygsf.spatial.space3d.vectorial.geometries import Plane
+from pygsf.orientations.orientations import Plane
 from pygsf.mathematics.arrays import svd
 
 
