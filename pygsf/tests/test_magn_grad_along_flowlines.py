@@ -1,12 +1,11 @@
-# coding: utf-8
-
 # Testing magnitude gradient along flowlines
 
 from math import sqrt, degrees, atan
 
-from pygsf.geometries.space2d.rasters.fields import *
-
 import unittest
+
+from pygsf.geometries.rasters.fields import *
+from pygsf.geometries.rasters.geotransform import *
 
 
 class TestMagnGradFlwlns(unittest.TestCase):

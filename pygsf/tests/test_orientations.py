@@ -4,9 +4,10 @@
 import unittest
 
 import pygsf.orientations.orientations
-import pygsf.geometries.space3d.shapes
+import pygsf.geometries.shapes.space3d
 import pygsf.orientations.direct_utils
-from pygsf.geometries.space3d.shapes import *
+from pygsf.geometries.shapes.space3d import *
+from pygsf.geometries.shapes.space3d import CPlane
 
 
 class TestOrientations(unittest.TestCase):

@@ -1,12 +1,12 @@
+
 import abc
-import itertools
-from functools import singledispatch
 
 import numbers
 import random
-from array import array
+import array
 
 from pygsf.mathematics.vectors import *
+from pygsf.geometries.shapes.statistics import *
 
 
 class Shape2D(object, metaclass=abc.ABCMeta):
@@ -310,9 +310,9 @@ class Point(Shape2D):
 
         return another.y - self.y
 
-    def dist_with(self,
-                  another: 'Point'
-                  ) -> numbers.Real:
+    def distance(self,
+                 another: 'Point'
+                 ) -> numbers.Real:
         """
         Calculate horizontal (2D) distance between two points.
         TODO: consider case of polar CRS
@@ -324,7 +324,7 @@ class Point(Shape2D):
         :raise: Exception.
 
         Examples:
-          >>> Point(1., 1.).dist_with(Point(4., 5.))
+          >>> Point(1., 1.).distance(Point(4., 5.))
           5.0
         """
 
@@ -364,10 +364,10 @@ class Point(Shape2D):
 
         return self.scale(-1)
 
-    def isCoinc2D(self,
-                  another: 'Point',
-                  tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
-                  ) -> bool:
+    def is_coincident(self,
+                      another: 'Point',
+                      tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                      ) -> bool:
         """
         Check spatial coincidence of two points, limiting to the horizontal (XY) plane.
 
@@ -385,7 +385,7 @@ class Point(Shape2D):
 
         check_type(another, "Second point", Point)
 
-        return self.dist_with(another) <= tolerance
+        return self.distance(another) <= tolerance
 
     def already_present(self,
                         pt_list: List['Point'],
@@ -403,7 +403,7 @@ class Point(Shape2D):
         """
 
         for pt in pt_list:
-            if self.isCoinc2D(pt, tolerance=tolerance):
+            if self.is_coincident(pt, tolerance=tolerance):
                 return True
         return False
 
@@ -439,41 +439,6 @@ class Point(Shape2D):
         return cls(*vals)
 
 
-class Points(list):
-    """
-    Collection of points.
-
-    """
-
-    def __init__(self,
-                 points: Optional[List[Point]] = None
-                 ):
-
-        if points:
-
-            check_type(points, "Points", List)
-            for el in points:
-                check_type(el, "Point", Point)
-
-            super(Points, self).__init__(points)
-
-        else:
-
-            super(Points, self).__init__()
-
-    def xs(self):
-
-        return list(map(lambda pt: pt.x, self))
-
-    def ys(self):
-
-        return list(map(lambda pt: pt.y, self))
-
-    def zs(self):
-
-        return list(map(lambda pt: pt.z, self))
-
-
 class Segment(Shape2D):
     """
     Segment2D is a geometric object defined by the straight line between
@@ -496,7 +461,7 @@ class Segment(Shape2D):
 
         check_type(end_pt, "End point", Point)
 
-        if start_pt.dist_with(end_pt) == 0.0:
+        if start_pt.distance(end_pt) == 0.0:
             raise Exception("Source points cannot be coincident")
 
         self._start_pt = start_pt.clone()
@@ -525,14 +490,12 @@ class Segment(Shape2D):
 
         return self._end_pt
 
-    def asPoints(self) -> Points:
+    def asPoints(self) -> List[Point]:
         """
         Return the segments as points.
         """
 
-        return Points(
-            points=[self.start_pt, self.end_pt]
-        )
+        return [self.start_pt, self.end_pt]
 
     @property
     def center(self):
@@ -548,7 +511,7 @@ class Segment(Shape2D):
         :rtype: numbers.Real.
         """
 
-        return self.start_pt.dist_with(self.end_pt)
+        return self.start_pt.distance(self.end_pt)
 
     @property
     def area(self):
@@ -711,8 +674,8 @@ class Segment(Shape2D):
         check_type(pt, "Point2D", Point)
 
         segment_length = self.length()
-        length_startpt_pt = self.start_pt.dist_with(pt)
-        length_endpt_pt = self.end_pt.dist_with(pt)
+        length_startpt_pt = self.start_pt.distance(pt)
+        length_endpt_pt = self.end_pt.distance(pt)
 
         return areClose(
             a=segment_length,
@@ -873,7 +836,7 @@ class Segment(Shape2D):
         if not self.contains_pt(point):
             return None
 
-        return self.start_pt.dist_with(point)
+        return self.start_pt.distance(point)
 
     def scale(self,
               scale_factor
@@ -1041,7 +1004,7 @@ class Segment(Shape2D):
           True
         """
 
-        return self.start_pt.isCoinc2D(
+        return self.start_pt.is_coincident(
             another=another.start_pt,
             tolerance=tol
         )
@@ -1067,7 +1030,7 @@ class Segment(Shape2D):
           True
         """
 
-        return self.end_pt.isCoinc2D(
+        return self.end_pt.is_coincident(
             another=another.end_pt,
             tolerance=tol)
 
@@ -1092,7 +1055,7 @@ class Segment(Shape2D):
           True
         """
 
-        return self.end_pt.isCoinc2D(
+        return self.end_pt.is_coincident(
             another=another.start_pt,
             tolerance=tol)
 
@@ -1117,7 +1080,7 @@ class Segment(Shape2D):
           True
         """
 
-        return another.end_pt.isCoinc2D(
+        return another.end_pt.is_coincident(
             another=self.start_pt,
             tolerance=tol)
 
@@ -1345,7 +1308,7 @@ class Line(Shape2D):
         start_pt = self.pt(ndx)
         end_pt = self.pt(ndx + 1)
 
-        if start_pt.isCoinc2D(end_pt):
+        if start_pt.is_coincident(end_pt):
             return None
         else:
             return Segment(
@@ -1531,7 +1494,7 @@ class Line(Shape2D):
         )
 
         for ndx in range(1, self.num_pts()):
-            if not self.pt(ndx).isCoinc2D(new_line.pt(-1)):
+            if not self.pt(ndx).is_coincident(new_line.pt(-1)):
                 new_line.add_pt(self.pt(ndx))
 
         return new_line
@@ -1587,7 +1550,7 @@ class Line(Shape2D):
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
-            length += self.pt(ndx).dist_with(self.pt(ndx + 1))
+            length += self.pt(ndx).distance(self.pt(ndx + 1))
         return length
 
     def step_lengths_2d(self) -> List[numbers.Real]:
@@ -1604,7 +1567,7 @@ class Line(Shape2D):
 
         step_length_list = [0.0]
         for ndx in range(1, self.num_pts()):
-            length = self.pt(ndx).dist_with(self.pt(ndx - 1))
+            length = self.pt(ndx).distance(self.pt(ndx - 1))
             step_length_list.append(length)
 
         return step_length_list
@@ -1641,7 +1604,7 @@ class Line(Shape2D):
         :return: the 2D distance between start and end points
         """
 
-        return self.end_pt().dist_with(self.start_pt())
+        return self.end_pt().distance(self.start_pt())
 
     def isClosed_2d(self,
         tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
@@ -1653,7 +1616,7 @@ class Line(Shape2D):
         :return: whether the line is to be considered 2D-closed
         """
 
-        return self.end_pt().isCoinc2D(self.start_pt(), tolerance=tolerance)
+        return self.end_pt().is_coincident(self.start_pt(), tolerance=tolerance)
 
     def walk_backward(self) -> 'Line':
         """
@@ -1820,21 +1783,3 @@ class Square(Quadrilateral):
     def clone(self):
         return Square(self._x, self._y, self._side, self._cc_rotat)
 
-
-@singledispatch
-def mean(
-        shapes: List[Shape2D]
-) -> Shape2D:
-
-    pass
-
-@mean.register(Points)
-def mean(
-        shapes: Points
-) -> Point:
-    """Mean points center"""
-
-    return Point(
-        x=np.mean(shapes.xs()),
-        y=np.mean(shapes.ys())
-    )

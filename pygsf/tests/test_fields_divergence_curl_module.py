@@ -10,8 +10,7 @@
 
 import unittest
 
-from pygsf.geometries.space2d.rasters.fields import *
-
+from pygsf.geometries.rasters.fields import *
 
 
 # Z transfer functions

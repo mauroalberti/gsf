@@ -1,7 +1,7 @@
 
 from geopandas import GeoDataFrame
 
-from pygsf.geometries.space3d.shapes import *
+from pygsf.geometries.shapes.space3d import *
 from pygsf.geodataframes.geodataframes import *
 
 from .base import GeorefAttitude

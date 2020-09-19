@@ -1,7 +1,7 @@
 
 import unittest
 
-from pygsf.geometries.space3d.shapes import *
+from pygsf.geometries.shapes.space3d import *
 
 
 class TestSegmentIntersections(unittest.TestCase):

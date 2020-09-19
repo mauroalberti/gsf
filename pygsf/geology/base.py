@@ -2,9 +2,7 @@
 from collections import namedtuple
 
 from pygsf.geology.faults import *
-from pygsf.geometries.space3d.shapes import Point
-from pygsf.geometries.space3d.abstract import CPlane
-
+from pygsf.geometries.shapes.space3d import Point, CPlane
 
 georef_att_flds = [
     'id',

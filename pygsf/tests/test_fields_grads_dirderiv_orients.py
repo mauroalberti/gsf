@@ -1,11 +1,10 @@
-# coding: utf-8
 
 from math import pi
-from numpy import array
-
-from pygsf.geometries.space2d.rasters.fields import *
 
 import unittest
+
+
+from pygsf.geometries.rasters.fields import *
 
 
 class TestDivergence(unittest.TestCase):
@@ -23,7 +22,7 @@ class TestDivergence(unittest.TestCase):
 
         # Test pygsf gradients and directional derivative
 
-        fld1 = array([
+        fld1 = np.array([
          [1, 1, 1, 1],
          [1, 1, 1, 1],
          [1, 1, 1, 1]])
@@ -36,7 +35,7 @@ class TestDivergence(unittest.TestCase):
          grad_iminus(fld1, cell_size_i=10),
          0.0)
 
-        fld2 = array([
+        fld2 = np.array([
          [10, 10, 10, 10],
          [20, 20, 20, 20],
          [30, 30, 30, 30]])
@@ -84,7 +83,7 @@ class TestDivergence(unittest.TestCase):
         :return:
         """
 
-        fld3 = array([
+        fld3 = np.array([
          [10, 10, 10, 10],
          [20, 20, 20, 20],
          [30, 30, 30, 30]])

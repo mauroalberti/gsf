@@ -6,7 +6,6 @@ from pygsf.geolocated.rasters import *
 from pygsf.geolocated.geoshapes import *
 from pygsf.geology.base import *
 
-from pygsf.geometries.space3d.abstract import *
 from pygsf.geology.profiles.sets import *
 from pygsf.orientations.orientations import Axis, Azim, Plunge
 
@@ -87,7 +86,7 @@ class LinearProfiler:
             raise Exception("Both points must have same CRS")
         '''
 
-        if start_pt.dist_with(end_pt) == 0.0:
+        if start_pt.distance(end_pt) == 0.0:
             raise Exception("Input segment length cannot be zero")
 
         check_type(densify_distance, "Input densify distance", numbers.Real)
@@ -556,7 +555,7 @@ class LinearProfiler:
         if not self.point_in_profile(pt):
             raise Exception(f"Projected point should lie in the profile plane but there is a distance of {self.point_distance(pt)} units")
 
-        if pt.isCoinc2D(self.start_pt()):
+        if pt.is_coincident(self.start_pt()):
             return 0.0
 
         projected_vector = Segment(self.start_pt(), pt).vector()

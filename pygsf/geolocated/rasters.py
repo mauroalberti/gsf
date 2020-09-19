@@ -4,9 +4,9 @@ import numbers
 import affine
 import numpy as np
 
-from pygsf.geometries.space2d.rasters.fields import *
-from pygsf.geometries.space2d.rasters.geotransform import *
-from pygsf.geometries.space3d.shapes import *
+from pygsf.geometries.rasters.fields import *
+from pygsf.geometries.rasters.geotransform import *
+from pygsf.geometries.shapes.space3d import *
 from pygsf.mathematics.arrays import array_bilin_interp
 
 
@@ -395,7 +395,7 @@ class GeoArray(object):
         end_pt_j = Point(*self.ijArrToxy(0, factor))
         end_pt_i = Point(*self.ijArrToxy(factor, 0))
 
-        return end_pt_j.dist_with(start_pt) / factor, end_pt_i.dist_with(start_pt) / factor
+        return end_pt_j.distance(start_pt) / factor, end_pt_i.distance(start_pt) / factor
 
     def xy(self, level_ndx: numbers.Integral=0) -> Optional[Tuple[np.ndarray, np.ndarray]]:
         """
@@ -758,7 +758,7 @@ def interpolate_rkf(
         y=interp_y
     )
 
-    interp_pt_error_estim = interp_pt.dist_with(temp_pt)
+    interp_pt_error_estim = interp_pt.distance(temp_pt)
 
     return interp_pt, interp_pt_error_estim
 

@@ -4,7 +4,7 @@ import numbers
 
 import geopandas as gpd
 
-from pygsf.geometries.space3d.shapes import Point
+from pygsf.geometries.shapes.space3d import Point
 
 
 def geodataframe_geom_types(

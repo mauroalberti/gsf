@@ -3,7 +3,6 @@
 import unittest
 
 from pygsf.geolocated.rasters import *
-from pygsf.geometries.space2d.rasters.fields import *
 
 
 class TestRKFInterpolation(unittest.TestCase):

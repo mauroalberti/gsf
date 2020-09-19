@@ -8,7 +8,7 @@ from shapely.geometry import LineString
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
 
-from pygsf.geometries.space3d.shapes import *
+from pygsf.geometries.shapes.space3d import *
 from pygsf.utils.types import *
 
 
@@ -256,7 +256,7 @@ class GeoPoints:
         self._z_array.append(pt.z)
 
     def add_pts(self,
-                pts: 'Points'):
+                pts: List[Point]):
         """
         In-place transformation of the original Points instance
         by adding a new set of points at the end.
