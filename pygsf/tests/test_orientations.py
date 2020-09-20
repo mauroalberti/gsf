@@ -60,22 +60,22 @@ class TestOrientations(unittest.TestCase):
     def test_plane_angle(self):
 
         assert areClose(
-            pygsf.orientations.orientations.Plane(90, 45).angle(
+            pygsf.orientations.orientations.Plane(90, 45).angle_degr(
                 pygsf.orientations.orientations.Plane(90, 45)), 0.)
         assert areClose(
-            pygsf.orientations.orientations.Plane(90, 45).angle(
+            pygsf.orientations.orientations.Plane(90, 45).angle_degr(
                 pygsf.orientations.orientations.Plane(90, 55)), 10.)
         assert areClose(
-            pygsf.orientations.orientations.Plane(90, 5).angle(
+            pygsf.orientations.orientations.Plane(90, 5).angle_degr(
                 pygsf.orientations.orientations.Plane(270, 5)), 10.)
         assert areClose(
-            pygsf.orientations.orientations.Plane(90, 85).angle(
+            pygsf.orientations.orientations.Plane(90, 85).angle_degr(
                 pygsf.orientations.orientations.Plane(270, 85)), 10.)
         assert areClose(
-            pygsf.orientations.orientations.Plane(0, 0).angle(
+            pygsf.orientations.orientations.Plane(0, 0).angle_degr(
                 pygsf.orientations.orientations.Plane(0, 10)), 10.)
         assert areClose(
-            pygsf.orientations.orientations.Plane(0, 0).angle(
+            pygsf.orientations.orientations.Plane(0, 0).angle_degr(
                 pygsf.orientations.orientations.Plane(180, 0)), 0.)
 
     def tearDown(self):

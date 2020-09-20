@@ -17,7 +17,7 @@ def mean(
         shapes: List[Shape2D]
 ) -> Shape2D:
 
-    pass
+    return None
 
 
 @mean.register(List[Point])

@@ -1921,7 +1921,7 @@ class Plane(object):
 
         return self.normDirectFrwrd().upward()
 
-    def normDirect(self) -> 'Direct':
+    def normal_direction(self) -> 'Direct':
         """
         Wrapper to down_normal_gv.
 
@@ -1930,42 +1930,42 @@ class Plane(object):
 
         return self.normDirectDown()
 
-    def normAxis(self):
+    def normal_axis(self):
         """
         Normal Axis.
 
         :return: Axis normal to the Plane self instance
         """
 
-        return self.normDirectDown().as_axis()
+        return Axis.from_direction(self.normDirectDown())
 
-    def angle(self, another: 'Plane'):
+    def angle_degr(self, another: 'Plane'):
         """
         Calculate angle (in degrees) between two geoplanes.
         Range is 0°-90°.
 
         Examples:
-          >>> Plane(100.0, 50.0).angle(Plane(100.0, 50.0))
+          >>> Plane(100.0, 50.0).angle_degr(Plane(100.0, 50.0))
           0.0
-          >>> Plane(300.0, 10.0).angle(Plane(300.0, 90.0))
+          >>> Plane(300.0, 10.0).angle_degr(Plane(300.0, 90.0))
           80.0
-          >>> Plane(90.0, 90.0).angle(Plane(270.0, 90.0))
+          >>> Plane(90.0, 90.0).angle_degr(Plane(270.0, 90.0))
           0.0
-          >>> areClose(Plane(90.0, 90.0).angle(Plane(130.0, 90.0)), 40)
+          >>> areClose(Plane(90.0, 90.0).angle_degr(Plane(130.0, 90.0)), 40)
           True
-          >>> areClose(Plane(90, 70).angle(Plane(270, 70)), 40)
+          >>> areClose(Plane(90, 70).angle_degr(Plane(270, 70)), 40)
           True
-          >>> areClose(Plane(90.0, 10.0).angle(Plane(270.0, 10.0)), 20.0)
+          >>> areClose(Plane(90.0, 10.0).angle_degr(Plane(270.0, 10.0)), 20.0)
           True
-          >>> areClose(Plane(90.0, 10.0).angle(Plane(270.0, 30.0)), 40.0)
+          >>> areClose(Plane(90.0, 10.0).angle_degr(Plane(270.0, 30.0)), 40.0)
           True
         """
 
         if not isinstance(another, Plane):
             raise Exception("Second instance for angle is of {} type".format(type(another)))
 
-        gpl_axis = self.normDirectFrwrd().as_axis()
-        an_axis = another.normDirectFrwrd().as_axis()
+        gpl_axis = Axis.from_direction(self.normDirectFrwrd())
+        an_axis = Axis.from_direction(another.normDirectFrwrd())
 
         return gpl_axis.angle_as_degrees(an_axis)
 
@@ -1990,7 +1990,7 @@ class Plane(object):
           False
         """
 
-        return self.angle(another) < angle_tolerance
+        return self.angle_degr(another) < angle_tolerance
 
     def contains(self,
         direct: 'Direct',
@@ -2012,7 +2012,7 @@ class Plane(object):
           False
         """
 
-        plane_norm = self.normAxis()
+        plane_norm = self.normal_axis()
 
         return direct.is_sub_orthogonal(plane_norm, angle_tolerance)
 
@@ -2037,10 +2037,10 @@ class Plane(object):
           False
         """
 
-        fst_axis = self.normDirect().as_axis()
+        fst_axis = Axis.from_direction(self.normal_direction())
 
         if isinstance(another, Plane):
-            snd_gaxis = another.normDirect().as_axis()
+            snd_gaxis = Axis.from_direction(another.normal_direction())
         else:
             raise Exception("Not accepted argument type for isSubOrthog method")
 

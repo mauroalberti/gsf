@@ -10,8 +10,8 @@ plane2 = Plane(90, 5)
 
 # plane to xyz
 
-n_axis_1 = plane1.normAxis()
-n_axis_2 = plane2.normAxis()
+n_axis_1 = plane1.normal_axis()
+n_axis_2 = plane2.normal_axis()
 
 normal_1 = n_axis_1.toXYZ()
 normal_2 = n_axis_2.toXYZ()
