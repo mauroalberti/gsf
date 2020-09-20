@@ -6,15 +6,14 @@ from math import pi, radians, degrees, atan2, sin, cos, isfinite, sqrt, tan
 
 import numpy as np
 
+from pygsf.defaults import *
 from pygsf.mathematics.scalars import *
-from pygsf.geometries.shapes.space3d import Point, CPlane
-from pygsf.mathematics.quaternions import Quaternion, QUAT_MAGN_THRESH
-from pygsf.mathematics.scalars import areClose
-from pygsf.mathematics.utils import normXYZ
-from pygsf.mathematics.vectors import Vect
-from pygsf.orientations.direct_utils import plng2colatTop, plng2colatBottom, opposite_trend
-from pygsf.defaults import DIP_ANGLE_THRESHOLD, VECTOR_ANGLE_THRESHOLD, PLANE_ANGLE_THRESHOLD, angle_gplane_thrshld
-
+from pygsf.mathematics.vectors import *
+from pygsf.mathematics.scalars import *
+from pygsf.mathematics.quaternions import *
+from pygsf.mathematics.utils import *
+from pygsf.orientations.direct_utils import *
+from pygsf.geometries.shapes.space3d import *
 
 
 class Azim(object):
@@ -324,32 +323,32 @@ class Plunge(object):
         return cos(self.p), -sin(self.p)
 
     @property
-    def isUpward(self):
+    def is_upward(self):
         """
         Check whether the instance is pointing upward or horizontal.
 
         Examples:
-          >>> Plunge(10).isUpward
+          >>> Plunge(10).is_upward
           False
-          >>> Plunge(0.0).isUpward
+          >>> Plunge(0.0).is_upward
           False
-          >>> Plunge(-45).isUpward
+          >>> Plunge(-45).is_upward
           True
         """
 
         return self.r < 0.0
 
     @property
-    def isDownward(self):
+    def is_downward(self):
         """
         Check whether the instance is pointing downward or horizontal.
 
         Examples:
-          >>> Plunge(15).isDownward
+          >>> Plunge(15).is_downward
           True
-          >>> Plunge(0.0).isDownward
+          >>> Plunge(0.0).is_downward
           False
-          >>> Plunge(-45).isDownward
+          >>> Plunge(-45).is_downward
           False
         """
 
@@ -361,7 +360,10 @@ class Direct(object):
     Class describing a direction, expressed as a polar direction.
     """
 
-    def __init__(self, az: 'Azim', pl: 'Plunge'):
+    def __init__(self,
+                 az: numbers.Real,
+                 pl: numbers.Real
+                 ):
         """
         Creates a polar direction instance.
 
@@ -369,14 +371,8 @@ class Direct(object):
         :param pl: the plunge value
         """
 
-        if not isinstance(az, Azim):
-            raise Exception("First input value must be of type Azim")
-
-        if not isinstance(pl, Plunge):
-            raise Exception("Second input value must be of type Plunge")
-
-        self._az = az
-        self._pl = pl
+        self._az = Azim(az)
+        self._pl = Plunge(pl)
 
     @property
     def d(self):
@@ -685,19 +681,16 @@ class Direct(object):
 
         return plng2colatBottom(self.pl.d)
 
-    def asVersor(
-        self,
-        epsg_cd: numbers.Integral = -1
-    ):
+    def as_versor(self) -> Vect:
         """
         Return the unit vector corresponding to the Direct instance.
 
         Examples:
-          >>> Direct.fromAzPl(0, 90).asVersor()
+          >>> Direct.fromAzPl(0, 90).as_versor()
           Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
-          >>> Direct.fromAzPl(0, -90).asVersor()
+          >>> Direct.fromAzPl(0, -90).as_versor()
           Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
-          >>> Direct.fromAzPl(90, 90).asVersor()
+          >>> Direct.fromAzPl(90, 90).as_versor()
           Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
         """
 
@@ -711,65 +704,65 @@ class Direct(object):
         return Vect(
             x=east_coord,
             y=north_coord,
-            z=-down_coord,
-            epsg_code=epsg_cd)
+            z=-down_coord
+        )
 
     @property
-    def isUpward(self):
+    def is_upward(self):
         """
         Check whether the instance is pointing upward or horizontal.
 
         Examples:
-          >>> Direct.fromAzPl(10, 15).isUpward
+          >>> Direct.fromAzPl(10, 15).is_upward
           False
-          >>> Direct.fromAzPl(257.4, 0.0).isUpward
+          >>> Direct.fromAzPl(257.4, 0.0).is_upward
           False
-          >>> Direct.fromAzPl(90, -45).isUpward
+          >>> Direct.fromAzPl(90, -45).is_upward
           True
         """
 
-        return self.pl.isUpward
+        return self.pl.is_upward
 
     @property
-    def isDownward(self):
+    def is_downward(self):
         """
         Check whether the instance is pointing downward or horizontal.
 
         Examples:
-          >>> Direct.fromAzPl(10, 15).isDownward
+          >>> Direct.fromAzPl(10, 15).is_downward
           True
-          >>> Direct.fromAzPl(257.4, 0.0).isDownward
+          >>> Direct.fromAzPl(257.4, 0.0).is_downward
           False
-          >>> Direct.fromAzPl(90, -45).isDownward
+          >>> Direct.fromAzPl(90, -45).is_downward
           False
         """
 
-        return self.pl.isDownward
+        return self.pl.is_downward
 
     def upward(self):
         """
         Return upward-point geological vector.
 
         Examples:
-          >>> Direct.fromAzPl(90, -45).upward().isSubParallel(Direct.fromAzPl(90.0, -45.0))
+          >>> Direct.fromAzPl(90, -45).upward().is_sub_parallel(Direct.fromAzPl(90.0, -45.0))
           True
-          >>> Direct.fromAzPl(180, 45).upward().isSubParallel(Direct.fromAzPl(0.0, -45.0))
+          >>> Direct.fromAzPl(180, 45).upward().is_sub_parallel(Direct.fromAzPl(0.0, -45.0))
           True
-          >>> Direct.fromAzPl(0, 0).upward().isSubParallel(Direct.fromAzPl(0.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).upward().is_sub_parallel(Direct.fromAzPl(0.0, 0.0))
           True
-          >>> Direct.fromAzPl(0, 90).upward().isSubParallel(Direct.fromAzPl(180.0, -90.0))
+          >>> Direct.fromAzPl(0, 90).upward().is_sub_parallel(Direct.fromAzPl(180.0, -90.0))
           True
-          >>> Direct.fromAzPl(90, -45).upward().isSubParallel(Direct.fromAzPl(90.0, -35.0))
+          >>> Direct.fromAzPl(90, -45).upward().is_sub_parallel(Direct.fromAzPl(90.0, -35.0))
           False
-          >>> Direct.fromAzPl(180, 45).upward().isSubParallel(Direct.fromAzPl(10.0, -45.0))
+          >>> Direct.fromAzPl(180, 45).upward().is_sub_parallel(Direct.fromAzPl(10.0, -45.0))
           False
-          >>> Direct.fromAzPl(0, 0).upward().isSubParallel(Direct.fromAzPl(170.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).upward().is_sub_parallel(Direct.fromAzPl(170.0, 0.0))
           False
-          >>> Direct.fromAzPl(0, 90).upward().isSubParallel(Direct.fromAzPl(180.0, -80.0))
+          >>> Direct.fromAzPl(0, 90).upward().is_sub_parallel(Direct.fromAzPl(180.0, -80.0))
           False
         """
 
-        if not self.isDownward:
+        if not self.is_downward:
             return self.copy()
         else:
             return self.opposite()
@@ -779,30 +772,35 @@ class Direct(object):
         Return downward-pointing geological vector.
 
         Examples:
-          >>> Direct.fromAzPl(90, -45).downward().isSubParallel(Direct.fromAzPl(270.0, 45.0))
+          >>> Direct.fromAzPl(90, -45).downward().is_sub_parallel(Direct.fromAzPl(270.0, 45.0))
           True
-          >>> Direct.fromAzPl(180, 45).downward().isSubParallel(Direct.fromAzPl(180.0, 45.0))
+          >>> Direct.fromAzPl(180, 45).downward().is_sub_parallel(Direct.fromAzPl(180.0, 45.0))
           True
-          >>> Direct.fromAzPl(0, 0).downward().isSubParallel(Direct.fromAzPl(180.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).downward().is_sub_parallel(Direct.fromAzPl(180.0, 0.0))
           False
-          >>> Direct.fromAzPl(0, 90).downward().isSubParallel(Direct.fromAzPl(0.0, 90.0))
+          >>> Direct.fromAzPl(0, 90).downward().is_sub_parallel(Direct.fromAzPl(0.0, 90.0))
           True
-          >>> Direct.fromAzPl(90, -45).downward().isSubParallel(Direct.fromAzPl(270.0, 35.0))
+          >>> Direct.fromAzPl(90, -45).downward().is_sub_parallel(Direct.fromAzPl(270.0, 35.0))
           False
-          >>> Direct.fromAzPl(180, 45).downward().isSubParallel(Direct.fromAzPl(170.0, 45.0))
+          >>> Direct.fromAzPl(180, 45).downward().is_sub_parallel(Direct.fromAzPl(170.0, 45.0))
           False
-          >>> Direct.fromAzPl(0, 0).downward().isSubParallel(Direct.fromAzPl(180.0, 10.0))
+          >>> Direct.fromAzPl(0, 0).downward().is_sub_parallel(Direct.fromAzPl(180.0, 10.0))
           False
-          >>> Direct.fromAzPl(0, 90).downward().isSubParallel(Direct.fromAzPl(0.0, 80.0))
+          >>> Direct.fromAzPl(0, 90).downward().is_sub_parallel(Direct.fromAzPl(0.0, 80.0))
           False
         """
 
-        if not self.isUpward:
+        if not self.is_upward:
             return self.copy()
         else:
             return self.opposite()
 
-    def isAbsDipWithin(self, min_val, max_val, min_val_incl=False, max_value_incl=True):
+    def is_abs_dip_within(self,
+                          min_val: numbers.Real,
+                          max_val: numbers.Real,
+                          min_val_incl: bool = False,
+                          max_value_incl: bool = True
+                          ) -> bool:
         """
         Check whether the absolute value of the dip angle of an Direct instance is intersect a given range
         (default: minimum value is not included, maximum value is included).
@@ -814,13 +812,13 @@ class Direct(object):
         :return: Boolean
 
         Examples:
-          >>> Direct.fromAzPl(90, -45).isAbsDipWithin(30, 60)
+          >>> Direct.fromAzPl(90, -45).is_abs_dip_within(30, 60)
           True
-          >>> Direct.fromAzPl(120, 0).isAbsDipWithin(0, 60)
+          >>> Direct.fromAzPl(120, 0).is_abs_dip_within(0, 60)
           False
-          >>> Direct.fromAzPl(120, 0).isAbsDipWithin(0, 60, min_val_incl=True)
+          >>> Direct.fromAzPl(120, 0).is_abs_dip_within(0, 60, min_val_incl=True)
           True
-          >>> Direct.fromAzPl(120, 60).isAbsDipWithin(0, 60)
+          >>> Direct.fromAzPl(120, 60).is_abs_dip_within(0, 60)
           True
         """
 
@@ -841,57 +839,63 @@ class Direct(object):
         else:
             return True
 
-    def isSubHoriz(self, max_dip_angle=DIP_ANGLE_THRESHOLD):
+    def is_sub_horizontal(self,
+                          max_dip_angle=DIP_ANGLE_THRESHOLD
+                          ) -> bool:
         """
         Check whether the instance is almost horizontal.
 
         Examples:
-          >>> Direct.fromAzPl(10, 15).isSubHoriz()
+          >>> Direct.fromAzPl(10, 15).is_sub_horizontal()
           False
-          >>> Direct.fromAzPl(257, 2).isSubHoriz()
+          >>> Direct.fromAzPl(257, 2).is_sub_horizontal()
           True
-          >>> Direct.fromAzPl(90, -5).isSubHoriz()
+          >>> Direct.fromAzPl(90, -5).is_sub_horizontal()
           False
         """
 
         return abs(self.pl.d) < max_dip_angle
 
-    def isSubVert(self, min_dip_angle=90.0 - DIP_ANGLE_THRESHOLD):
+    def is_sub_vertical(self,
+                        min_dip_angle=90.0 - DIP_ANGLE_THRESHOLD
+                        ) -> bool:
         """
         Check whether the instance is almost vertical.
 
         Examples:
-          >>> Direct.fromAzPl(10, 15).isSubVert()
+          >>> Direct.fromAzPl(10, 15).is_sub_vertical()
           False
-          >>> Direct.fromAzPl(257, 89).isSubVert()
+          >>> Direct.fromAzPl(257, 89).is_sub_vertical()
           True
         """
 
         return abs(self.pl.d) > min_dip_angle
 
-    def angle(self, another):
+    def angle_as_degrees(self,
+                         another: 'Direct'
+                         ) -> numbers.Real:
         """
         Calculate angle (in degrees) between the two Direct instances.
         Range is 0°-180°.
 
         Examples:
-          >>> areClose(Direct.fromAzPl(0, 90).angle(Direct.fromAzPl(90, 0)), 90)
+          >>> areClose(Direct.fromAzPl(0, 90).angle_as_degrees(Direct.fromAzPl(90, 0)), 90)
           True
-          >>> areClose(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(270, 0)), 90)
+          >>> areClose(Direct.fromAzPl(0, 0).angle_as_degrees(Direct.fromAzPl(270, 0)), 90)
           True
-          >>> areClose(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(0, 0)), 0)
+          >>> areClose(Direct.fromAzPl(0, 0).angle_as_degrees(Direct.fromAzPl(0, 0)), 0)
           True
-          >>> areClose(Direct.fromAzPl(0, 0).angle(Direct.fromAzPl(180, 0)), 180)
+          >>> areClose(Direct.fromAzPl(0, 0).angle_as_degrees(Direct.fromAzPl(180, 0)), 180)
           True
-          >>> areClose(Direct.fromAzPl(90, 0).angle(Direct.fromAzPl(270, 0)), 180)
+          >>> areClose(Direct.fromAzPl(90, 0).angle_as_degrees(Direct.fromAzPl(270, 0)), 180)
           True
         """
 
-        angle_vers = self.asVersor().angle(another.asVersor())
+        angle_vers = self.as_versor().angle_as_degrees(another.as_versor())
 
         return angle_vers
 
-    def isSubParallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+    def is_sub_parallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
         """
         Check that two Direct instances are sub-parallel,
 
@@ -900,13 +904,13 @@ class Direct(object):
         :return: Boolean
 
         Examples:
-          >>> Direct.fromAzPl(0, 90).isSubParallel(Direct.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(0, 90).is_sub_parallel(Direct.fromAzPl(90, 0))
           False
-          >>> Direct.fromAzPl(0, 0).isSubParallel(Direct.fromAzPl(0, 1e-6))
+          >>> Direct.fromAzPl(0, 0).is_sub_parallel(Direct.fromAzPl(0, 1e-6))
           True
-          >>> Direct.fromAzPl(0, 90).isSubParallel(Direct.fromAzPl(180, 0))
+          >>> Direct.fromAzPl(0, 90).is_sub_parallel(Direct.fromAzPl(180, 0))
           False
-          >>> Direct.fromAzPl(0, 90).isSubParallel(Direct.fromAzPl(0, -90))
+          >>> Direct.fromAzPl(0, 90).is_sub_parallel(Direct.fromAzPl(0, -90))
           False
         """
 
@@ -914,14 +918,17 @@ class Direct(object):
 
         snd_geoelem = another
 
-        angle = fst_gvect.angle(snd_geoelem)
+        angle = fst_gvect.angle_as_degrees(snd_geoelem)
 
         if isinstance(another, Plane):
             return angle > (90.0 - angle_tolerance)
         else:
             return angle <= angle_tolerance
 
-    def isSubAParallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+    def is_sub_antiparallel(self,
+                            another,
+                            angle_tolerance=VECTOR_ANGLE_THRESHOLD
+                            ) -> bool:
         """
         Check that two Vect instances are almost anti-parallel,
 
@@ -930,21 +937,24 @@ class Direct(object):
         :return: Boolean
 
         Examples:
-          >>> Direct.fromAzPl(0, 90).isSubAParallel(Direct.fromAzPl(90, -89.5))
+          >>> Direct.fromAzPl(0, 90).is_sub_antiparallel(Direct.fromAzPl(90, -89.5))
           True
-          >>> Direct.fromAzPl(0, 0).isSubAParallel(Direct.fromAzPl(180, 1e-6))
+          >>> Direct.fromAzPl(0, 0).is_sub_antiparallel(Direct.fromAzPl(180, 1e-6))
           True
-          >>> Direct.fromAzPl(90, 45).isSubAParallel(Direct.fromAzPl(270, -45.5))
+          >>> Direct.fromAzPl(90, 45).is_sub_antiparallel(Direct.fromAzPl(270, -45.5))
           True
-          >>> Direct.fromAzPl(45, 90).isSubAParallel(Direct.fromAzPl(0, -90))
+          >>> Direct.fromAzPl(45, 90).is_sub_antiparallel(Direct.fromAzPl(0, -90))
           True
-          >>> Direct.fromAzPl(45, 72).isSubAParallel(Direct.fromAzPl(140, -38))
+          >>> Direct.fromAzPl(45, 72).is_sub_antiparallel(Direct.fromAzPl(140, -38))
           False
         """
 
-        return self.angle(another) > (180.0 - angle_tolerance)
+        return self.angle_as_degrees(another) > (180.0 - angle_tolerance)
 
-    def isSubOrthog(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+    def is_sub_orthogonal(self,
+                          another: 'Direct',
+                          angle_tolerance: numbers.Real = VECTOR_ANGLE_THRESHOLD
+                          ) -> bool:
         """
         Check that two Direct instance are sub-orthogonal
 
@@ -953,50 +963,52 @@ class Direct(object):
         :return: Boolean
 
          Examples:
-          >>> Direct.fromAzPl(0, 90).isSubOrthog(Direct.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(0, 90).is_sub_orthogonal(Direct.fromAzPl(90, 0))
           True
-          >>> Direct.fromAzPl(0, 0).isSubOrthog(Direct.fromAzPl(0, 1.e-6))
+          >>> Direct.fromAzPl(0, 0).is_sub_orthogonal(Direct.fromAzPl(0, 1.e-6))
           False
-          >>> Direct.fromAzPl(0, 0).isSubOrthog(Direct.fromAzPl(180, 0))
+          >>> Direct.fromAzPl(0, 0).is_sub_orthogonal(Direct.fromAzPl(180, 0))
           False
-          >>> Direct.fromAzPl(90, 0).isSubOrthog(Direct.fromAzPl(270, 89.5))
+          >>> Direct.fromAzPl(90, 0).is_sub_orthogonal(Direct.fromAzPl(270, 89.5))
           True
-          >>> Direct.fromAzPl(0, 90).isSubOrthog(Direct.fromAzPl(0, 0.5))
+          >>> Direct.fromAzPl(0, 90).is_sub_orthogonal(Direct.fromAzPl(0, 0.5))
           True
         """
 
-        return 90.0 - angle_tolerance <= self.angle(another) <= 90.0 + angle_tolerance
+        return 90.0 - angle_tolerance <= self.angle_as_degrees(another) <= 90.0 + angle_tolerance
 
-    def normVersor(self, another):
+    def normal_versor(self,
+                      another: 'Direct'
+                      ) -> Vect:
         """
         Calculate the versor (Vect) defined by the vector product of two Direct instances.
 
         Examples:
-          >>> Direct.fromAzPl(0, 0).normVersor(Direct.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(0, 0).normal_versor(Direct.fromAzPl(90, 0))
           Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
-          >>> Direct.fromAzPl(45, 0).normVersor(Direct.fromAzPl(310, 0))
+          >>> Direct.fromAzPl(45, 0).normal_versor(Direct.fromAzPl(310, 0))
           Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
-          >>> Direct.fromAzPl(0, 0).normVersor(Direct.fromAzPl(90, 90))
+          >>> Direct.fromAzPl(0, 0).normal_versor(Direct.fromAzPl(90, 90))
           Vect(-1.0000, 0.0000, -0.0000, EPSG: -1)
-          >>> Direct.fromAzPl(315, 45).normVersor(Direct.fromAzPl(315, 44.5)) is None
+          >>> Direct.fromAzPl(315, 45).normal_versor(Direct.fromAzPl(315, 44.5)) is None
           True
         """
 
-        if self.isSubParallel(another):
+        if self.is_sub_parallel(another):
             return None
         else:
-            return self.asVersor().vCross(another.asVersor()).versor()
+            return self.as_versor().cross_product(another.as_versor()).versor()
 
-    def normPlane(self) -> 'Plane':
+    def normal_plane(self) -> 'Plane':
         """
         Return the geological plane that is normal to the direction.
 
         Examples:
-          >>> Direct.fromAzPl(0, 45).normPlane()
+          >>> Direct.fromAzPl(0, 45).normal_plane()
           Plane(180.00, +45.00)
-          >>> Direct.fromAzPl(0, -45).normPlane()
+          >>> Direct.fromAzPl(0, -45).normal_plane()
           Plane(000.00, +45.00)
-          >>> Direct.fromAzPl(0, 90).normPlane()
+          >>> Direct.fromAzPl(0, 90).normal_plane()
           Plane(180.00, +00.00)
         """
 
@@ -1006,71 +1018,62 @@ class Direct(object):
 
         return Plane(dipdir, dipangle)
 
-    def commonPlane(self, another):
+    def common_plane(self, another):
         """
         Calculate Plane instance defined by the two Vect instances.
 
         Examples:
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isSubParallel(Plane(180.0, 0.0))
+          >>> Direct.fromAzPl(0, 0).common_plane(Direct.fromAzPl(90, 0)).is_sub_parallel(Plane(180.0, 0.0))
           True
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isSubParallel(Plane(90.0, 90.0))
+          >>> Direct.fromAzPl(0, 0).common_plane(Direct.fromAzPl(90, 90)).is_sub_parallel(Plane(90.0, 90.0))
           True
-          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(135.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).common_plane(Direct.fromAzPl(135, 45)).is_sub_parallel(Plane(135.0, 45.0))
           True
-          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(225.0, 90.0))
+          >>> Direct.fromAzPl(315, 45).common_plane(Direct.fromAzPl(135, 45)).is_sub_parallel(Plane(225.0, 90.0))
           True
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 0)).isSubParallel(Plane(180.0, 10.0))
+          >>> Direct.fromAzPl(0, 0).common_plane(Direct.fromAzPl(90, 0)).is_sub_parallel(Plane(180.0, 10.0))
           False
-          >>> Direct.fromAzPl(0, 0).commonPlane(Direct.fromAzPl(90, 90)).isSubParallel(Plane(90.0, 80.0))
+          >>> Direct.fromAzPl(0, 0).common_plane(Direct.fromAzPl(90, 90)).is_sub_parallel(Plane(90.0, 80.0))
           False
-          >>> Direct.fromAzPl(45, 0).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(125.0, 45.0))
+          >>> Direct.fromAzPl(45, 0).common_plane(Direct.fromAzPl(135, 45)).is_sub_parallel(Plane(125.0, 45.0))
           False
-          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(135, 45)).isSubParallel(Plane(225.0, 80.0))
+          >>> Direct.fromAzPl(315, 45).common_plane(Direct.fromAzPl(135, 45)).is_sub_parallel(Plane(225.0, 80.0))
           False
-          >>> Direct.fromAzPl(315, 45).commonPlane(Direct.fromAzPl(315, 44.5)) is None
+          >>> Direct.fromAzPl(315, 45).common_plane(Direct.fromAzPl(315, 44.5)) is None
           True
         """
 
-        normal_versor = self.normVersor(another)
+        normal_versor = self.normal_versor(another)
         if normal_versor is None:
             return None
         else:
-            return Direct.fromVect(normal_versor).normPlane()
+            return Direct.fromVect(normal_versor).normal_plane()
 
-    def asAxis(self):
-        """
-        Create Axis instance with the same attitude as the self instance.
-
-        Example:
-          >>> Direct.fromAzPl(220, 32).asAxis()
-          Axis(az: 220.00°, pl: 32.00°)
-        """
-
-        return Axis(self.az, self.pl)
-
-    def normDirect(self, another):
+    def normal_direction(self,
+                         another: 'Direct'
+                         ) -> 'Direct':
         """
         Calculate the instance that is normal to the two provided sources.
         Angle between sources must be larger than MIN_ANGLE_DEGR_DISORIENTATION,
         otherwise a SubparallelLineationException will be raised.
 
         Example:
-          >>> Direct.fromAzPl(0, 0).normDirect(Direct.fromAzPl(0.5, 0)) is None
+          >>> Direct.fromAzPl(0, 0).normal_direction(Direct.fromAzPl(0.5, 0)) is None
           True
-          >>> Direct.fromAzPl(0, 0).normDirect(Direct.fromAzPl(179.5, 0)) is None
+          >>> Direct.fromAzPl(0, 0).normal_direction(Direct.fromAzPl(179.5, 0)) is None
           True
-          >>> Direct.fromAzPl(0, 0).normDirect(Direct.fromAzPl(5.1, 0))
+          >>> Direct.fromAzPl(0, 0).normal_direction(Direct.fromAzPl(5.1, 0))
           Direct(az: 0.00°, pl: 90.00°)
-          >>> Direct.fromAzPl(90, 45).normDirect(Direct.fromAzPl(90, 0))
+          >>> Direct.fromAzPl(90, 45).normal_direction(Direct.fromAzPl(90, 0))
           Direct(az: 180.00°, pl: -0.00°)
         """
 
-        if self.isSubAParallel(another):
+        if self.is_sub_antiparallel(another):
             return None
-        elif self.isSubParallel(another):
+        elif self.is_sub_parallel(another):
             return None
         else:
-            return self.__class__.fromVect(self.normVersor(another))
+            return self.__class__.fromVect(self.normal_versor(another))
 
 
 class Axis(Direct):
@@ -1078,7 +1081,10 @@ class Axis(Direct):
     Polar Axis. Inherits from Orientation
     """
 
-    def __init__(self, az: Azim, pl: Plunge):
+    def __init__(self,
+                 az: numbers.Real,
+                 pl: numbers.Real
+                 ):
 
         super().__init__(az, pl)
 
@@ -1086,65 +1092,87 @@ class Axis(Direct):
 
         return "Axis(az: {:.2f}°, pl: {:.2f}°)".format(*self.d)
 
-    def asDirect(self):
+    @classmethod
+    def from_direction(cls,
+                       direction: Direct
+                       ) -> 'Axis':
+        """
+        Create Axis instance from a direction.
+
+        Example:
+          >>> Axis.from_direction(Direct.fromAzPl(220, 32))
+          Axis(az: 220.00°, pl: 32.00°)
+        """
+
+        return Axis(
+            az=direction.az.d,
+            pl=direction.pl.d
+        )
+
+    def as_direction(self) -> Direct:
         """
         Create Direct instance with the same attitude as the self instance.
 
         Example:
-          >>> Axis.fromAzPl(220, 32).asDirect()
+          >>> Axis.fromAzPl(220, 32).as_direction()
           Direct(az: 220.00°, pl: 32.00°)
         """
 
-        return Direct(self.az, self.pl)
+        return Direct(
+            az=self.az.d,
+            pl=self.pl.d
+        )
 
-    def normAxis(self, another):
+    def normal_axis(self,
+                    another: 'Axis'
+                    ) -> Optional['Axis']:
         """
         Calculate the Axis instance that is perpendicular to the two provided.
         The two source Axis must not be subparallel (threshold is MIN_ANGLE_DEGR_DISORIENTATION),
         otherwise a SubparallelLineationException will be raised.
 
         Example:
-          >>> Axis.fromAzPl(0, 0).normAxis(Axis.fromAzPl(0.5, 0)) is None
+          >>> Axis.fromAzPl(0, 0).normal_axis(Axis.fromAzPl(0.5, 0)) is None
           True
-          >>> Axis.fromAzPl(0, 0).normAxis(Axis.fromAzPl(180, 0)) is None
+          >>> Axis.fromAzPl(0, 0).normal_axis(Axis.fromAzPl(180, 0)) is None
           True
-          >>> Axis.fromAzPl(90, 0).normAxis(Axis.fromAzPl(180, 0))
+          >>> Axis.fromAzPl(90, 0).normal_axis(Axis.fromAzPl(180, 0))
           Axis(az: 0.00°, pl: 90.00°)
-          >>> Axis.fromAzPl(90, 45).normAxis(Axis.fromAzPl(180, 0))
+          >>> Axis.fromAzPl(90, 45).normal_axis(Axis.fromAzPl(180, 0))
           Axis(az: 270.00°, pl: 45.00°)
-          >>> Axis.fromAzPl(270, 45).normAxis(Axis.fromAzPl(180, 90)).isSubParallel(Axis.fromAzPl(180, 0))
+          >>> Axis.fromAzPl(270, 45).normal_axis(Axis.fromAzPl(180, 90)).is_sub_parallel(Axis.fromAzPl(180, 0))
           True
         """
 
-        norm_orien = self.normDirect(another)
+        norm_orien = self.normal_direction(another)
         if norm_orien is None:
             return None
         else:
-            return norm_orien.asAxis()
+            return Axis.from_direction(norm_orien)
 
-    def angle(self, another):
+    def angle_as_degrees(self, another):
         """
         Calculate angle (in degrees) between the two Axis instances.
         Range is 0°-90°.
 
         Examples:
-          >>> areClose(Axis.fromAzPl(0, 90).angle(Axis.fromAzPl(90, 0)), 90)
+          >>> areClose(Axis.fromAzPl(0, 90).angle_as_degrees(Axis.fromAzPl(90, 0)), 90)
           True
-          >>> areClose(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(270, 0)), 90)
+          >>> areClose(Axis.fromAzPl(0, 0).angle_as_degrees(Axis.fromAzPl(270, 0)), 90)
           True
-          >>> areClose(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(0, 0)), 0)
+          >>> areClose(Axis.fromAzPl(0, 0).angle_as_degrees(Axis.fromAzPl(0, 0)), 0)
           True
-          >>> areClose(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(180, 0)), 0)
+          >>> areClose(Axis.fromAzPl(0, 0).angle_as_degrees(Axis.fromAzPl(180, 0)), 0)
           True
-          >>> areClose(Axis.fromAzPl(0, 0).angle(Axis.fromAzPl(179, 0)), 1)
+          >>> areClose(Axis.fromAzPl(0, 0).angle_as_degrees(Axis.fromAzPl(179, 0)), 1)
           True
-          >>> areClose(Axis.fromAzPl(0, -90).angle(Axis.fromAzPl(0, 90)), 0)
+          >>> areClose(Axis.fromAzPl(0, -90).angle_as_degrees(Axis.fromAzPl(0, 90)), 0)
           True
-          >>> areClose(Axis.fromAzPl(90, 0).angle(Axis.fromAzPl(315, 0)), 45)
+          >>> areClose(Axis.fromAzPl(90, 0).angle_as_degrees(Axis.fromAzPl(315, 0)), 45)
           True
         """
 
-        angle_vers = self.asVersor().angle(another.asVersor())
+        angle_vers = self.as_versor().angle_as_degrees(another.as_versor())
 
         return min(angle_vers, 180.0 - angle_vers)
 
@@ -1293,7 +1321,7 @@ class RotationAxis(object):
         :return: Vect
         """
 
-        return self.dr.asVersor()
+        return self.dr.as_versor()
 
     def specular(self):
         """
@@ -1360,7 +1388,7 @@ class RotationAxis(object):
           False
         """
 
-        if not self.dr.isSubParallel(another.dr, angle_tolerance):
+        if not self.dr.is_sub_parallel(another.dr, angle_tolerance):
             return False
 
         if not areClose(self.a, another.a, atol=1.0):
@@ -1377,7 +1405,7 @@ class RotationAxis(object):
         """
 
         rotation_angle_rad = radians(self.a)
-        rotation_vector = self.dr.asVersor()
+        rotation_vector = self.dr.as_versor()
 
         w = cos(rotation_angle_rad / 2.0)
         x, y, z = rotation_vector.scale(sin(rotation_angle_rad / 2.0)).toXYZ()
@@ -1525,10 +1553,10 @@ def rotVectByAxis(
     """
 
     rot_quat = rot_axis.toRotQuater()
-    q = rot_quat.vector(epsg_cd=v.epsg_code())
+    q = rot_quat.vector()
 
-    t = q.scale(2).vCross(v)
-    rot_v = v + t.scale(rot_quat.scalar) + q.vCross(t)
+    t = q.scale(2).cross_product(v)
+    rot_v = v + t.scale(rot_quat.scalar) + q.cross_product(t)
 
     return rot_v
 
@@ -1667,18 +1695,18 @@ class Plane(object):
         return self.dd, self.da
 
     @property
-    def rhrStrike(self):
+    def rhr_strike(self):
         """
         Return the strike according to the right-hand-rule.
 
         Examples:
-          >>> Plane(90, 45).rhrStrike
+          >>> Plane(90, 45).rhr_strike
           0.0
-          >>> Plane(45, 89).rhrStrike
+          >>> Plane(45, 89).rhr_strike
           315.0
-          >>> Plane(275, 38).rhrStrike
+          >>> Plane(275, 38).rhr_strike
           185.0
-          >>> Plane(0, 38).rhrStrike
+          >>> Plane(0, 38).rhr_strike
           270.0
         """
 
@@ -1696,7 +1724,7 @@ class Plane(object):
           (280.0, 87.0)
         """
 
-        return self.rhrStrike, self.da
+        return self.rhr_strike, self.da
 
     @property
     def lhrStrike(self):
@@ -1734,23 +1762,21 @@ class Plane(object):
 
         return "Plane({:06.2f}, {:+06.2f})".format(*self.dda)
 
-    def rhrStrikeOrien(self):
+    def rhr_strike_direction(self):
         """
-        Creates a OrienM instance that is parallel to the right-hand rule strike.
-
-        :return: OrienM instance,
+        Creates a direction instance that is parallel to the right-hand rule strike.
 
         Examples:
-          >>> Plane(90, 45).rhrStrikeOrien()
+          >>> Plane(90, 45).rhr_strike_direction()
           Direct(az: 0.00°, pl: 0.00°)
-          >>> Plane(45, 17).rhrStrikeOrien()
+          >>> Plane(45, 17).rhr_strike_direction()
           Direct(az: 315.00°, pl: 0.00°)
-          >>> Plane(90, 0).rhrStrikeOrien()
+          >>> Plane(90, 0).rhr_strike_direction()
           Direct(az: 0.00°, pl: 0.00°)
         """
 
         return Direct.fromAzPl(
-            az=self.rhrStrike,
+            az=self.rhr_strike,
             pl=0.0)
 
     def lhrStrikeOrien(self):
@@ -1911,7 +1937,7 @@ class Plane(object):
         :return: Axis normal to the Plane self instance
         """
 
-        return self.normDirectDown().asAxis()
+        return self.normDirectDown().as_axis()
 
     def angle(self, another: 'Plane'):
         """
@@ -1938,12 +1964,12 @@ class Plane(object):
         if not isinstance(another, Plane):
             raise Exception("Second instance for angle is of {} type".format(type(another)))
 
-        gpl_axis = self.normDirectFrwrd().asAxis()
-        an_axis = another.normDirectFrwrd().asAxis()
+        gpl_axis = self.normDirectFrwrd().as_axis()
+        an_axis = another.normDirectFrwrd().as_axis()
 
-        return gpl_axis.angle(an_axis)
+        return gpl_axis.angle_as_degrees(an_axis)
 
-    def isSubParallel(self, another, angle_tolerance: numbers.Real=PLANE_ANGLE_THRESHOLD):
+    def is_sub_parallel(self, another, angle_tolerance: numbers.Real=PLANE_ANGLE_THRESHOLD):
         """
         Check that two GPlanes are sub-parallel
 
@@ -1952,15 +1978,15 @@ class Plane(object):
         :return: Boolean
 
          Examples:
-          >>> Plane(0, 90).isSubParallel(Plane(270, 90))
+          >>> Plane(0, 90).is_sub_parallel(Plane(270, 90))
           False
-          >>> Plane(0, 90).isSubParallel(Plane(180, 90))
+          >>> Plane(0, 90).is_sub_parallel(Plane(180, 90))
           True
-          >>> Plane(0, 90).isSubParallel(Plane(0, 0))
+          >>> Plane(0, 90).is_sub_parallel(Plane(0, 0))
           False
-          >>> Plane(0, 0).isSubParallel(Plane(0, 1e-6))
+          >>> Plane(0, 0).is_sub_parallel(Plane(0, 1e-6))
           True
-          >>> Plane(0, 0).isSubParallel(Plane(0, 1.1))
+          >>> Plane(0, 0).is_sub_parallel(Plane(0, 1.1))
           False
         """
 
@@ -1988,9 +2014,9 @@ class Plane(object):
 
         plane_norm = self.normAxis()
 
-        return direct.isSubOrthog(plane_norm, angle_tolerance)
+        return direct.is_sub_orthogonal(plane_norm, angle_tolerance)
 
-    def isSubOrthog(self, another, angle_tolerance: numbers.Real=PLANE_ANGLE_THRESHOLD):
+    def is_sub_orthogonal(self, another, angle_tolerance: numbers.Real=PLANE_ANGLE_THRESHOLD):
         """
         Check that two GPlanes are sub-orthogonal.
 
@@ -1999,26 +2025,26 @@ class Plane(object):
         :return: Boolean
 
          Examples:
-          >>> Plane(0, 90).isSubOrthog(Plane(270, 90))
+          >>> Plane(0, 90).is_sub_orthogonal(Plane(270, 90))
           True
-          >>> Plane(0, 90).isSubOrthog(Plane(180, 90))
+          >>> Plane(0, 90).is_sub_orthogonal(Plane(180, 90))
           False
-          >>> Plane(0, 90).isSubOrthog(Plane(0, 0))
+          >>> Plane(0, 90).is_sub_orthogonal(Plane(0, 0))
           True
-          >>> Plane(0, 0).isSubOrthog(Plane(0, 88))
+          >>> Plane(0, 0).is_sub_orthogonal(Plane(0, 88))
           False
-          >>> Plane(0, 0).isSubOrthog(Plane(0, 45))
+          >>> Plane(0, 0).is_sub_orthogonal(Plane(0, 45))
           False
         """
 
-        fst_axis = self.normDirect().asAxis()
+        fst_axis = self.normDirect().as_axis()
 
         if isinstance(another, Plane):
-            snd_gaxis = another.normDirect().asAxis()
+            snd_gaxis = another.normDirect().as_axis()
         else:
             raise Exception("Not accepted argument type for isSubOrthog method")
 
-        angle = fst_axis.angle(snd_gaxis)
+        angle = fst_axis.angle_as_degrees(snd_gaxis)
 
         if isinstance(another, Plane):
             return angle > 90.0 - angle_tolerance
@@ -2041,14 +2067,14 @@ class Plane(object):
           Direct(az: 0.00°, pl: -45.00°)
           >>> Plane(180, 45).rakeToDirect(-90.0)
           Direct(az: 180.00°, pl: 45.00°)
-          >>> Plane(180, 45).rakeToDirect(180.0).isSubParallel(Direct.fromAzPl(270.00, 0.00))
+          >>> Plane(180, 45).rakeToDirect(180.0).is_sub_parallel(Direct.fromAzPl(270.00, 0.00))
           True
           >>> Plane(180, 45).rakeToDirect(-180.0)
           Direct(az: 270.00°, pl: 0.00°)
         """
 
         rk = radians(rake)
-        strk = radians(self.rhrStrike)
+        strk = radians(self.rhr_strike)
         dip = radians(self.da)
 
         x = cos(rk) * sin(strk) - sin(rk) * cos(dip) * cos(strk)
@@ -2091,21 +2117,23 @@ class Plane(object):
 
         return self.da > (90.0 - dip_angle_threshold)
 
-    def toCPlane(self, pt):
+    def to_cartesian_plane(self,
+                           pt: Point
+                           ) -> CPlane:
         """
         Given a Plane instance and a provided Point instance,
         calculate the corresponding Plane instance.
 
         Example:
-          >>> Plane(0, 0).toCPlane(Point(0, 0, 0))
+          >>> Plane(0, 0).to_cartesian_plane(Point(0, 0, 0))
           CPlane(0.0000, 0.0000, 1.0000, -0.0000, -1)
-          >>> Plane(90, 45).toCPlane(Point(0, 0, 0))
+          >>> Plane(90, 45).to_cartesian_plane(Point(0, 0, 0))
           CPlane(0.7071, 0.0000, 0.7071, -0.0000, -1)
-          >>> Plane(0, 90).toCPlane(Point(0, 0, 0))
+          >>> Plane(0, 90).to_cartesian_plane(Point(0, 0, 0))
           CPlane(0.0000, 1.0000, -0.0000, -0.0000, -1)
         """
 
-        normal_versor = self.normDirectFrwrd().asVersor()
+        normal_versor = self.normDirectFrwrd().as_versor()
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * pt.x + b * pt.y + c * pt.z)
         return CPlane(a, b, c, d)

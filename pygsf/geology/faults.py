@@ -348,9 +348,9 @@ class Fault(object):
             raise Exception("Slickeline must have known movement sense")
 
         sl_gv = self.slickGeom(ndx)
-        angle = sl_gv.angle(self.plane.rhrStrikeOrien())
+        angle = sl_gv.angle_as_degrees(self.plane.rhr_strike_direction())
 
-        if self.plane.dipDirOrien().angle(sl_gv) < 90.0:
+        if self.plane.dipDirOrien().angle_as_degrees(sl_gv) < 90.0:
             return -angle
         else:
             return angle

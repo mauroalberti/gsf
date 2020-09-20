@@ -224,7 +224,7 @@ class LinearProfiler:
         :rtype: numbers.Real.
         """
 
-        return self.segment().length3D()
+        return self.segment().length()
 
     def vector(self) -> Vect:
         """
@@ -304,7 +304,7 @@ class LinearProfiler:
         :rtype: Vect.
         """
 
-        return Vect(0, 0, 1, epsg_code=self.epsg_code()).vCross(self.versor()).versor()
+        return Vect(0, 0, 1, epsg_code=self.epsg_code()).cross_product(self.versor()).versor()
 
     def right_norm_vers(self) -> Vect:
         """
@@ -314,7 +314,7 @@ class LinearProfiler:
         :rtype: Vect.
         """
 
-        return Vect(0, 0, -1, epsg_code=self.epsg_code()).vCross(self.versor()).versor()
+        return Vect(0, 0, -1, epsg_code=self.epsg_code()).cross_product(self.versor()).versor()
 
     def left_offset(self,
         offset: numbers.Real) -> 'LinearProfiler':
@@ -559,9 +559,9 @@ class LinearProfiler:
             return 0.0
 
         projected_vector = Segment(self.start_pt(), pt).vector()
-        cos_alpha = self.vector().angleCos(projected_vector)
+        cos_alpha = self.vector().cosine_of_angle(projected_vector)
 
-        return projected_vector.len3D * cos_alpha
+        return projected_vector.length * cos_alpha
 
     def segment_signed_s(self,
         segment: Segment
@@ -616,13 +616,13 @@ class LinearProfiler:
         if not isinstance(intersection_vector, Vect):
             raise Exception("Input argument should be Vect but is {}".format(type(intersection_vector)))
 
-        angle = degrees(acos(self.normal_versor().angleCos(intersection_vector)))
+        angle = degrees(acos(self.normal_versor().cosine_of_angle(intersection_vector)))
         if abs(90.0 - angle) > 1.0e-4:
             raise Exception("Input argument should lay in the profile plane")
 
         slope_radians = abs(radians(intersection_vector.slope_degr()))
 
-        scalar_product_for_downward_sense = self.vector().vDot(intersection_vector.downward())
+        scalar_product_for_downward_sense = self.vector().dot_product(intersection_vector.downward())
         if scalar_product_for_downward_sense > 0.0:
             intersection_downward_sense = "right"
         elif scalar_product_for_downward_sense == 0.0:
@@ -654,7 +654,7 @@ class LinearProfiler:
         if not isinstance(structural_pt, Point):
             raise Exception("Structural point should be Point but is {}".format(type(structural_pt)))
 
-        axis_versor = map_axis.asDirect().asVersor(epsg_cd=structural_pt.epsg_code())
+        axis_versor = map_axis.as_direction().as_versor(epsg_cd=structural_pt.epsg_code())
 
         l, m, n = axis_versor.x, axis_versor.y, axis_versor.z
 
@@ -686,9 +686,9 @@ class LinearProfiler:
         if self.crs != attitude_pt.crs:
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg_code(), attitude_pt.epsg_code()))
 
-        putative_inters_versor = self.vertical_plane().intersVersor(attitude_plane.toCPlane(attitude_pt))
+        putative_inters_versor = self.vertical_plane().intersVersor(attitude_plane.to_cartesian_plane(attitude_pt))
 
-        if not putative_inters_versor.isValid:
+        if not putative_inters_versor.is_valid:
             return None
 
         return putative_inters_versor
@@ -712,11 +712,11 @@ class LinearProfiler:
         if self.crs != georef_attitude.posit.crs:
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg_code(), georef_attitude.posit.epsg_code()))
 
-        attitude_cplane = georef_attitude.attitude.toCPlane(georef_attitude.posit)
+        attitude_cplane = georef_attitude.attitude.to_cartesian_plane(georef_attitude.posit)
         intersection_versor = self.vertical_plane().intersVersor(attitude_cplane)
         dummy_inters_pt = self.vertical_plane().intersPoint(attitude_cplane)
         dummy_structural_vect = Segment(dummy_inters_pt, georef_attitude.posit).vector()
-        dummy_distance = dummy_structural_vect.vDot(intersection_versor)
+        dummy_distance = dummy_structural_vect.dot_product(intersection_versor)
         offset_vector = intersection_versor.scale(dummy_distance)
 
         projected_pt = Point(

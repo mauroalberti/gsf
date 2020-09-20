@@ -30,13 +30,13 @@ class PTBAxes(object):
         if not (isinstance(p_axis, Axis) and isinstance(t_axis, Axis)):
             raise Exception("P and T axes must be of type Axis")
 
-        if not p_axis.isSubOrthog(t_axis):
+        if not p_axis.is_sub_orthogonal(t_axis):
             raise Exception("P and T axes must be sub-orthogonal")
 
-        b_vect = t_axis.normVersor(p_axis)
+        b_vect = t_axis.normal_versor(p_axis)
 
-        self._t_versor = t_axis.asVersor()
-        self._p_versor = b_vect.vCross(self._t_versor).versor()
+        self._t_versor = t_axis.as_versor()
+        self._p_versor = b_vect.cross_product(self._t_versor).versor()
 
     @classmethod
     def fromVects(cls, p_vector: Vect, t_vector: Vect) -> 'PTBAxes':
@@ -65,13 +65,13 @@ class PTBAxes(object):
         if not isinstance(t_vector, Vect):
             raise Exception("T vector must be of type Vect")
 
-        if t_vector.isAlmostZero:
+        if t_vector.is_close_to_zero:
             raise Exception("T vector cannot be zero-valued")
 
         if not isinstance(p_vector, Vect):
             raise Exception("P vector must be of type Vect")
 
-        if p_vector.isAlmostZero:
+        if p_vector.is_close_to_zero:
             raise Exception("P vector cannot be zero-valued")
 
         return cls(
@@ -99,8 +99,8 @@ class PTBAxes(object):
         if slick.hasUnknownSense:
             raise Exception("Slickenline must have knonw movement sense")
 
-        s_versor = slick.geom.asVersor()
-        f_versor = fault.plane.normDirectFrwrd().asVersor()
+        s_versor = slick.geom.as_versor()
+        f_versor = fault.plane.normDirectFrwrd().as_versor()
 
         p_versor = (f_versor - s_versor).versor()
         t_versor = (f_versor + s_versor).versor()
@@ -198,7 +198,7 @@ class PTBAxes(object):
           Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
         """
 
-        return self.TVersor.vCross(self.PVersor)
+        return self.TVersor.cross_product(self.PVersor)
 
     @property
     def PAxis(self) -> Axis:
@@ -248,13 +248,13 @@ class PTBAxes(object):
         Calculate M plane.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPlane.isSubParallel(Plane(0.0, 90.0))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPlane.is_sub_parallel(Plane(0.0, 90.0))
           True
-          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPlane.isSubParallel(Plane(315.00, 90.00))
+          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPlane.is_sub_parallel(Plane(315.00, 90.00))
           True
         """
 
-        return self.PAxis.commonPlane(self.TAxis)
+        return self.PAxis.common_plane(self.TAxis)
 
     def almostEqual(self, another: 'PTBAxes', tolerance_angle: numbers.Real=VECTOR_ANGLE_THRESHOLD) -> bool:
         """
@@ -283,10 +283,10 @@ class PTBAxes(object):
         if not isinstance(another, PTBAxes):
             raise Exception("Argument must be of PTBAxes type")
 
-        if not self.PAxis.isSubParallel(another.PAxis, tolerance_angle):
+        if not self.PAxis.is_sub_parallel(another.PAxis, tolerance_angle):
             return False
 
-        if not self.TAxis.isSubParallel(another.TAxis, tolerance_angle):
+        if not self.TAxis.is_sub_parallel(another.TAxis, tolerance_angle):
             return False
 
         return True
@@ -369,8 +369,8 @@ def focmechs_invert_rotations(fm1: PTBAxes, fm2: PTBAxes) -> List[RotationAxis]:
 
     # processing of equal focal mechanisms
 
-    t_axes_angle = fm1.TAxis.angle(fm2.TAxis)
-    p_axes_angle = fm1.PAxis.angle(fm2.PAxis)
+    t_axes_angle = fm1.TAxis.angle_as_degrees(fm2.TAxis)
+    p_axes_angle = fm1.PAxis.angle_as_degrees(fm2.PAxis)
 
     if t_axes_angle < 0.5 and p_axes_angle < 0.5:
         return []

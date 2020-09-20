@@ -864,7 +864,7 @@ def plane_dem_intersection(
             i=i,
             j=j))
 
-        return Segment(start_point, end_point).deltaZS()
+        return Segment(start_point, end_point).ratio_delta_zs()
 
     def segment_intersections_array(
             m_arr1: np.ndarray,

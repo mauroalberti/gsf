@@ -820,10 +820,20 @@ class Segment:
             return self.end_pt.z, self.start_pt.z
 
     def delta_x(self) -> numbers.Real:
+        """
+        X delta between segment end point and start point.
+
+        :return: the horizontal, x-parallel distance between segment end point and start point.
+        """
 
         return self.end_pt.x - self.start_pt.x
 
     def delta_y(self) -> numbers.Real:
+        """
+        Y delta between segment end point and start point.
+
+        :return: the horizontal, y-parallel distance between segment end point and start point.
+        """
 
         return self.end_pt.y - self.start_pt.y
 
@@ -831,27 +841,38 @@ class Segment:
         """
         Z delta between segment end point and start point.
 
-        :return: numbers.Real.
+        :return: the vertical distance between segment end point and start point.
         """
 
         return self.end_pt.z - self.start_pt.z
 
-    def length2D(self) -> numbers.Real:
+    def as_vector(self) -> Vect:
+        """
+        Convert a segment to a vector.
+        """
+
+        return Vect(
+            x=self.delta_x(),
+            y=self.delta_y(),
+            z=self.delta_z()
+        )
+
+    def length_horizontal(self) -> numbers.Real:
 
         return self.start_pt.horizontal_distance(self.end_pt)
 
-    def length3D(self) -> numbers.Real:
+    def length(self) -> numbers.Real:
 
         return self.start_pt.distance(self.end_pt)
 
-    def deltaZS(self) -> Optional[numbers.Real]:
+    def ratio_delta_zs(self) -> Optional[numbers.Real]:
         """
         Calculates the delta z - delta s ratio of a segment.
 
         :return: optional numbers.Real.
         """
 
-        len2d = self.length2D()
+        len2d = self.length_horizontal()
 
         if len2d == 0.0:
             return None
@@ -866,7 +887,7 @@ class Segment:
         :return: optional numbers.Real.
         """
 
-        delta_zs = self.deltaZS()
+        delta_zs = self.ratio_delta_zs()
 
         if delta_zs is None:
             return None
@@ -947,7 +968,7 @@ class Segment:
 
         check_type(pt, "Point", Point)
 
-        segment_length = self.length3D()
+        segment_length = self.length()
         length_startpt_pt = self.start_pt.distance(pt)
         length_endpt_pt = self.end_pt.distance(pt)
 
@@ -1040,7 +1061,7 @@ class Segment:
             point
         )
         
-        scale_factor = self.vector().scalarProjection(other_segment.vector()) / self.length3D()
+        scale_factor = self.vector().scalar_projection(other_segment.vector()) / self.length()
         return self.pointAt(scale_factor)
 
     def pointDistance(self,
@@ -1070,9 +1091,9 @@ class Segment:
 
         return point.distance(point_projection)
 
-    def pointS(self,
-        point: Point
-    ) -> Optional[numbers.Real]:
+    def point_s(self,
+                point: Point
+                ) -> Optional[numbers.Real]:
         """
         Calculates the optional distance of the point along the segment.
         A zero value is for a point coinciding with the start point.
@@ -1119,7 +1140,7 @@ class Segment:
         :rtype: Optional[CPlane].
         """
 
-        if self.length2D() == 0.0:
+        if self.length_horizontal() == 0.0:
             return None
 
         # arbitrary point on the same vertical as end point
@@ -1749,7 +1770,7 @@ class Line:
         return list(itertools.accumulate(self.step_lengths_2d()))
     '''
 
-    def reversed(self) -> 'Points':
+    def reversed(self) -> 'Line':
         """
         Return a Line instance with reversed point list.
 
@@ -1858,7 +1879,7 @@ class Line:
         return self.end_pt().isCoinc2D(self.start_pt(), tolerance=tolerance)
     '''
 
-    def walk_backward(self) -> 'Points':
+    def walk_backward(self) -> 'Line':
         """
         Create a new line by walking the line backward from the last point up to the first and thus closing it.
 
@@ -1912,7 +1933,7 @@ class Line:
 
         return line
 
-    def remove_coincident_points(self) -> Optional['Points']:
+    def remove_coincident_points(self) -> Optional['Line']:
         """
         Remove coincident successive points
 
@@ -2082,7 +2103,7 @@ def shortest_segment_or_point(
         z=p4.z - p3.z
     )
 
-    if p43.asVect().isAlmostZero:
+    if p43.asVect().is_close_to_zero:
         return None
 
     p21 = Point(
@@ -2091,7 +2112,7 @@ def shortest_segment_or_point(
         z=p2.z - p1.z,
     )
 
-    if p21.asVect().isAlmostZero:
+    if p21.asVect().is_close_to_zero:
         return None
 
     d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z
@@ -2328,7 +2349,7 @@ class CPlane(object):
 
         check_type(another, "Input Cartesian plane", CPlane)
 
-        return self.normVersor().vCross(another.normVersor()).versor()
+        return self.normVersor().cross_product(another.normal_versor()).versor()
 
     def intersPoint(self,
             another) -> Optional[Point]:
@@ -2456,7 +2477,7 @@ class CPlane(object):
 
         check_type(another, "Second Cartesian plane", CPlane)
 
-        angle_degr = self.normVersor().angle(another.normVersor())
+        angle_degr = self.normVersor().angle_as_degrees(another.normVersor())
 
         if angle_degr > 90.0:
             angle_degr = 180.0 - angle_degr

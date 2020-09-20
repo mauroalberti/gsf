@@ -37,12 +37,12 @@ def isPTBAxes(obj) -> bool:
 
 def isUpward(obj: Direct) -> bool:
 
-    return obj.isUpward
+    return obj.is_upward
 
 
 def isNotUpward(obj: Direct) -> bool:
 
-    return not obj.isUpward
+    return not obj.is_upward
 
 
 

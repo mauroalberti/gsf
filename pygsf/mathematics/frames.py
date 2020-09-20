@@ -20,10 +20,10 @@ class RefFrame(object):
         Examples:
         """
 
-        if not (versor_x.isAlmostUnit and versor_y.isAlmostUnit):
+        if not (versor_x.is_close_to_1 and versor_y.is_close_to_1):
             raise Exception("Input vectors must be near unit")
 
-        if not areClose(versor_x.angle(versor_y), 90.0):
+        if not areClose(versor_x.angle_as_degrees(versor_y), 90.0):
             raise Exception("Input vectors must be sub-orthogonal")
 
         self._x = versor_x
@@ -72,7 +72,7 @@ class RefFrame(object):
           Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
         """
 
-        return self.x.vCross(self.y)
+        return self.x.cross_product(self.y)
 
 
 if __name__ == "__main__":

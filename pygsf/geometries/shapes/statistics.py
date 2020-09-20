@@ -4,12 +4,12 @@ from typing import Tuple, Union, List
 from functools import singledispatch
 import numpy as np
 
-from pygsf.geolocated.geoshapes import GeoPoints
-from pygsf.geometries.shapes.space3d import CPlane
 from pygsf.mathematics.arrays import xyzSvd
 from pygsf.mathematics.vectors import Vect
 from pygsf.orientations.orientations import Direct
 from pygsf.geometries.shapes.space2d import *
+from pygsf.geometries.shapes.space3d import CPlane
+from pygsf.geolocated.geoshapes import GeoPoints
 
 
 @singledispatch
@@ -59,4 +59,4 @@ def try_derive_bestfitplane(
     normal_vector = Vect(normal[0], normal[1], normal[2])
     normal_direct = Direct.fromVect(normal_vector)
 
-    return True, normal_direct.normPlane()
+    return True, normal_direct.normal_plane()

@@ -1,6 +1,6 @@
 
 import abc
-
+import itertools
 import numbers
 import random
 import array
@@ -857,6 +857,46 @@ class Segment(Shape2D):
             self.start_pt,
             end_pt)
 
+    def as_vector(self) -> Vect:
+        """
+        Convert a segment to a vector.
+        """
+
+        return Vect(
+            x=self.delta_x(),
+            y=self.delta_y()
+        )
+
+    def densify2d_asLine(self, densify_distance) -> 'Line':
+        """
+        Densify a segment by adding additional points
+        separated a distance equal to densify_distance.
+        The result is no longer a Segment instance, instead it is a Line instance.
+        :param densify_distance: float
+        :return: Line
+        """
+
+        length2d = self.length()
+
+        vect = self.as_vector()
+        vers_2d = vect.versor_2d()
+        generator_vector = vers_2d.scale(densify_distance)
+
+        interpolated_line = Line(
+            pts=[self.start_pt()])
+
+        n = 0
+        while True:
+            n += 1
+            new_pt = self.start_pt().shiftByVect(generator_vector.scale(n))
+            distance = self.start_pt().dist2DWith(new_pt)
+            if distance >= length2d:
+                break
+            interpolated_line.add_pt(new_pt)
+        interpolated_line.add_pt(self.end_pt())
+
+        return interpolated_line
+
     def densify2d_asSteps(self,
                           densify_distance: numbers.Real
                           ) -> array:
@@ -875,7 +915,7 @@ class Segment(Shape2D):
         if not math.isfinite(densify_distance):
             raise Exception("Densify distance must be finite")
 
-        if not densify_distance > 0.0:
+        if densify_distance <= 0.0:
             raise Exception("Densify distance must be positive")
 
         segment_length = self.length()

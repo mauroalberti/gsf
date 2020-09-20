@@ -486,6 +486,42 @@ class GeoPointSegmentCollections(list):
         super(GeoPointSegmentCollections, self).__init__(atts)
 
 
+class GeoLines(list):
+    """
+    Collection of lines.
+
+    """
+
+    def __init__(self,
+                 lines: Optional[List[GeoPoints]] = None
+                 ):
+
+        if lines:
+
+            check_type(lines, "Lines", List)
+            for line in lines:
+                check_type(line, "Line", Line)
+            first_line = lines[0]
+            for line in lines[1:]:
+                check_crs(first_line, line)
+
+            super(GeoLines, self).__init__(lines)
+
+        else:
+
+            super(GeoLines, self).__init__()
+
+    def append(self,
+               item: GeoPoints
+               ) -> None:
+
+        check_type(item, "Line", Line)
+        if len(self) > 0:
+            check_crs(self[0], item)
+
+        super(GeoLines, self).append(item)
+
+
 class GeoMultiLine(object):
     """
     MultiLine is a list of Line objects, each one with the same CRS.
@@ -835,42 +871,6 @@ class GeoSimpleGeometryCollections(list):
             raise Exception(f"Expected Point, Segment or Line but got {type(geom)}")
 
         self.append(geom)
-
-
-class GeoLines(list):
-    """
-    Collection of lines.
-
-    """
-
-    def __init__(self,
-                 lines: Optional[List[GeoPoints]] = None
-                 ):
-
-        if lines:
-
-            check_type(lines, "Lines", List)
-            for line in lines:
-                check_type(line, "Line", Line)
-            first_line = lines[0]
-            for line in lines[1:]:
-                check_crs(first_line, line)
-
-            super(GeoLines, self).__init__(lines)
-
-        else:
-
-            super(GeoLines, self).__init__()
-
-    def append(self,
-               item: GeoPoints
-               ) -> None:
-
-        check_type(item, "Line", Line)
-        if len(self) > 0:
-            check_crs(self[0], item)
-
-        super(GeoLines, self).append(item)
 
 
 def line_from_shapely(
