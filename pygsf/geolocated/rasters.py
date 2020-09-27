@@ -7,6 +7,7 @@ import numpy as np
 from pygsf.geometries.rasters.fields import *
 from pygsf.geometries.rasters.geotransform import *
 from pygsf.geometries.shapes.space3d import *
+from pygsf.orientations.orientations import *
 from pygsf.mathematics.arrays import array_bilin_interp
 
 
@@ -953,7 +954,10 @@ def plane_dem_intersection(
 
     # plane closure that, given (x, y), derive z
 
-    plane_z_closure = srcPlaneAttitude.closure_plane_from_geo(srcPt)
+    plane_z_closure = closure_plane_from_geo(
+        srcPlaneAttitude,
+        srcPt
+    )
 
     # plane elevations at grid cell centers
 

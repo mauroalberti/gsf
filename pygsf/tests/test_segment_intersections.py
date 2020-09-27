@@ -2,6 +2,7 @@
 import unittest
 
 from pygsf.geometries.shapes.space3d import *
+from pygsf.orientations.orientations import *
 
 
 class TestSegmentIntersections(unittest.TestCase):

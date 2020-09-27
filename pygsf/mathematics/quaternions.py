@@ -81,7 +81,7 @@ class Quaternion(object):
           Vect(4.9000, 1.0300, 5.1200, EPSG: -1)
         """
 
-        return Vect(*self.components()[1:], epsg_code=epsg_cd)
+        return Vect(*self.components()[1:])
 
     @classmethod
     def fromArray(cls, a) -> 'Quaternion':

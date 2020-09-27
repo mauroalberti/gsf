@@ -54,8 +54,8 @@ class TestOrientations(unittest.TestCase):
 
     def test_plane2cplane(self):
 
-        pl = pygsf.orientations.orientations.Plane(90, 45).to_cartesian_plane(Point(0, 0, 0))
-        assert areClose(pl.angle_as_degrees(CPlane(1, 0, 1, 0), 0.))
+        pl = CPlane.from_geological_plane(Plane(90, 45), Point(0, 0, 0))
+        assert areClose(pl.angle_as_degrees(CPlane(1, 0, 1, 0)), 0.0)
 
     def test_plane_angle(self):
 

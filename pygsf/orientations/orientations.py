@@ -2117,6 +2117,7 @@ class Plane(object):
 
         return self.da > (90.0 - dip_angle_threshold)
 
+    '''
     def to_cartesian_plane(self,
                            pt: Point
                            ) -> CPlane:
@@ -2137,6 +2138,7 @@ class Plane(object):
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * pt.x + b * pt.y + c * pt.z)
         return CPlane(a, b, c, d)
+    '''
 
     def slope_x_dir(self) -> numbers.Real:
         """
@@ -2161,26 +2163,3 @@ class Plane(object):
         Example:
         """
         return - cos(radians(self.dd)) * tan(radians(self.da))
-
-    def closure_plane_from_geo(self, src_pt: Point) -> Callable:
-        """
-        Closure that embodies the analytical formula for a given, non-vertical plane.
-        This closure is used to calculate the z value from given horizontal coordinates (x, y).
-
-        :param src_pt: Point_3D instance expressing a location point contained by the plane.
-        :type src_pt: Point_3D.
-
-        :return: lambda (closure) expressing an analytical formula for deriving z given x and y values.
-        """
-
-        x0 = src_pt.x
-        y0 = src_pt.y
-        z0 = src_pt.z
-
-        # slope of the line parallel to the x axis and contained by the plane
-        a = self.slope_x_dir()
-
-        # slope of the line parallel to the y axis and contained by the plane
-        b = self.slope_y_dir()
-
-        return lambda x, y: a * (x - x0) + b * (y - y0) + z0

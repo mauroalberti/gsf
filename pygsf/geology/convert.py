@@ -1,6 +1,7 @@
 
 from geopandas import GeoDataFrame
 
+from pygsf.orientations.orientations import *
 from pygsf.geometries.shapes.space3d import *
 from pygsf.geodataframes.geodataframes import *
 

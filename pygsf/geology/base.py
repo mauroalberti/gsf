@@ -10,7 +10,10 @@ georef_att_flds = [
     'attitude'
 ]
 
-GeorefAttitude = namedtuple('GeorefAttitude', georef_att_flds)
+GeorefAttitude = namedtuple(
+    'GeorefAttitude',
+    georef_att_flds
+)
 
 
 class StructuralSet:

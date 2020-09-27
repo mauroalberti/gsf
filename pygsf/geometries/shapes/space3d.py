@@ -12,6 +12,7 @@ from pygsf.orientations.orientations import *
 from pygsf.mathematics.statistics import *
 from pygsf.mathematics.quaternions import *
 from pygsf.geometries.shapes.space2d import *
+from pygsf.geometries.shapes.statistics import *
 from pygsf.utils.types import check_type
 
 
@@ -582,7 +583,7 @@ class Point:
         return Vect(self.x, self.y, self.z)
 
     def rotate(self,
-        rotation_axis: 'RotationAxis',
+        rotation_axis: RotationAxis,
         center_point: 'Point' = None
         ) -> 'Point':
         """
@@ -1409,7 +1410,7 @@ def point_or_segment(
     #check_crs(point1, point2)
 
     if point1.distance(point2) <= tol:
-        return GeoPoints.fromPoints([point1, point2]).nanmean_point()
+        return mean([point1, point2])
     else:
         return Segment(
             start_pt=point1,
@@ -2292,6 +2293,28 @@ class CPlane(object):
             np.linalg.det(matr_d)
         )
 
+    @classmethod
+    def from_geological_plane(cls,
+                              geol_plane: Plane,
+                              pt: Point):
+        """
+          Given a Plane instance and a provided Point instance,
+          calculate the corresponding Plane instance.
+
+          Example:
+            >>> CPlane.from_geological_plane(Plane(0, 0), Point(0, 0, 0))
+            CPlane(0.0000, 0.0000, 1.0000, -0.0000, -1)
+            >>> CPlane.from_geological_plane(Plane(90, 45), Point(0, 0, 0))
+            CPlane(0.7071, 0.0000, 0.7071, -0.0000, -1)
+            >>> CPlane.from_geological_plane(Plane(0, 90), Point(0, 0, 0))
+            CPlane(0.0000, 1.0000, -0.0000, -0.0000, -1)
+          """
+
+        normal_versor = geol_plane.normDirectFrwrd().as_versor()
+        a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
+        d = - (a * pt.x + b * pt.y + c * pt.z)
+        return CPlane(a, b, c, d)
+
     def __repr__(self):
 
         return "CPlane({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(*self.v())
@@ -2452,9 +2475,9 @@ class CPlane(object):
         else:
             return False
 
-    def angle(self,
-        another: 'CPlane'
-    ) -> numbers.Real:
+    def angle_as_degrees(self,
+                         another: 'CPlane'
+                         ) -> numbers.Real:
         """
         Calculate angle (in degrees) between two planes.
 
@@ -2465,13 +2488,13 @@ class CPlane(object):
         :raise: Exception.
 
         Examples:
-          >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0))
+          >>> CPlane(1,0,0,0).angle_as_degrees(CPlane(0,1,0,0))
           90.0
-          >>> CPlane(1,0,0,0).angle(CPlane(0,1,0,0))
+          >>> CPlane(1,0,0,0).angle_as_degrees(CPlane(0,1,0,0))
           90.0
-          >>> CPlane(1,0,0,0).angle(CPlane(1,0,1,0))
+          >>> CPlane(1,0,0,0).angle_as_degrees(CPlane(1,0,1,0))
           45.0
-          >>> CPlane(1,0,0,0).angle(CPlane(1,0,0,0))
+          >>> CPlane(1,0,0,0).angle_as_degrees(CPlane(1,0,0,0))
           0.0
         """
 
@@ -2546,3 +2569,30 @@ class ParamLine3D(object):
             y=y1 - m * k,
             z=z1 - n * k
         )
+
+
+def closure_plane_from_geo(
+        plane: Plane,
+        src_pt: Point
+) -> Callable:
+    """
+    Closure that embodies the analytical formula for a given, non-vertical plane.
+    This closure is used to calculate the z value from given horizontal coordinates (x, y).
+
+    :param src_pt: Point_3D instance expressing a location point contained by the plane.
+    :type src_pt: Point_3D.
+
+    :return: lambda (closure) expressing an analytical formula for deriving z given x and y values.
+    """
+
+    x0 = src_pt.x
+    y0 = src_pt.y
+    z0 = src_pt.z
+
+    # slope of the line parallel to the x axis and contained by the plane
+    a = plane.slope_x_dir()
+
+    # slope of the line parallel to the y axis and contained by the plane
+    b = plane.slope_y_dir()
+
+    return lambda x, y: a * (x - x0) + b * (y - y0) + z0

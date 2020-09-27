@@ -203,7 +203,7 @@ class LinearProfiler:
             start_pt=self.start_pt().clone(),
             end_pt=self.end_pt().clone(),
             densify_distance=self.densify_dist(),
-            epsg_code=epsg_code
+            epsg_code=self.epsg_code
         )
 
     def segment(self) -> Segment:
@@ -304,7 +304,7 @@ class LinearProfiler:
         :rtype: Vect.
         """
 
-        return Vect(0, 0, 1, epsg_code=self.epsg_code()).cross_product(self.versor()).versor()
+        return Vect(0, 0, 1).cross_product(self.versor()).versor()
 
     def right_norm_vers(self) -> Vect:
         """
@@ -314,7 +314,7 @@ class LinearProfiler:
         :rtype: Vect.
         """
 
-        return Vect(0, 0, -1, epsg_code=self.epsg_code()).cross_product(self.versor()).versor()
+        return Vect(0, 0, -1).cross_product(self.versor()).versor()
 
     def left_offset(self,
         offset: numbers.Real) -> 'LinearProfiler':
@@ -331,7 +331,7 @@ class LinearProfiler:
             start_pt=self.start_pt().shiftByVect(self.left_norm_vers().scale(offset)),
             end_pt=self.end_pt().shiftByVect(self.left_norm_vers().scale(offset)),
             densify_distance=self.densify_dist(),
-            epsg_code=epsg_code
+            epsg_code=self.epsg_code
         )
 
     def right_offset(self,
@@ -349,7 +349,7 @@ class LinearProfiler:
             start_pt=self.start_pt().shiftByVect(self.right_norm_vers().scale(offset)),
             end_pt=self.end_pt().shiftByVect(self.right_norm_vers().scale(offset)),
             densify_distance=self.densify_dist(),
-            epsg_code=epsg_code
+            epsg_code=self.epsg_code
         )
 
     def point_in_profile(self, pt: Point) -> bool:
@@ -654,7 +654,7 @@ class LinearProfiler:
         if not isinstance(structural_pt, Point):
             raise Exception("Structural point should be Point but is {}".format(type(structural_pt)))
 
-        axis_versor = map_axis.as_direction().as_versor(epsg_cd=structural_pt.epsg_code())
+        axis_versor = map_axis.as_direction().as_versor()
 
         l, m, n = axis_versor.x, axis_versor.y, axis_versor.z
 
@@ -683,10 +683,12 @@ class LinearProfiler:
         if not isinstance(attitude_pt, Point):
             raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
 
+        '''
         if self.crs != attitude_pt.crs:
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg_code(), attitude_pt.epsg_code()))
+        '''
 
-        putative_inters_versor = self.vertical_plane().intersVersor(attitude_plane.to_cartesian_plane(attitude_pt))
+        putative_inters_versor = self.vertical_plane().intersVersor(CPlane.from_geological_plane(attitude_plane, attitude_pt))
 
         if not putative_inters_versor.is_valid:
             return None
