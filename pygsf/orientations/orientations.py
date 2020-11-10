@@ -2163,3 +2163,11 @@ class Plane(object):
         Example:
         """
         return - cos(radians(self.dd)) * tan(radians(self.da))
+
+
+
+if __name__ == "__main__":
+
+    import doctest
+    doctest.testmod()
+

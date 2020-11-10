@@ -7,6 +7,11 @@ from math import sqrt, degrees, acos
 from pygsf.mathematics.vectors import *
 
 
+QUAT_NORMALIZ_TOL = 1.0e-6
+QUAT_DIVISION_TOL = 1.0e-10
+QUAT_MAGN_THRESH = 1.0e-6
+
+
 class Quaternion(object):
     """
     Quaternion class.
@@ -735,6 +740,3 @@ if __name__ == "__main__":
 
     import doctest
     doctest.testmod()
-QUAT_NORMALIZ_TOL = 1.0e-6
-QUAT_DIVISION_TOL = 1.0e-10
-QUAT_MAGN_THRESH = 1.0e-6

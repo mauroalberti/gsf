@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-
 
 import unittest
 
-import pygsf.orientations.orientations
-import pygsf.geometries.shapes.space3d
-import pygsf.orientations.direct_utils
+from pygsf.orientations.orientations import *
+from pygsf.geometries.shapes.space3d import *
+from pygsf.orientations.direct_utils import *
 from pygsf.geometries.shapes.space3d import *
 from pygsf.geometries.shapes.space3d import CPlane
 
@@ -21,36 +19,36 @@ class TestOrientations(unittest.TestCase):
         Check expected OrienM results for downward dip.
         """
 
-        assert pygsf.orientations.orientations.Direct.fromAzPl(90, 90).is_downward
-        assert pygsf.orientations.orientations.Direct.fromAzPl(90, -45).is_upward
-        assert areClose(pygsf.orientations.orientations.Direct.fromAzPl(90, 90).as_versor().z, -1.0)
-        assert areClose(pygsf.orientations.orientations.Direct.fromAzPl(90, -90).as_versor().z, 1.0)
-        assert areClose(pygsf.orientations.orientations.Direct.fromAzPl(0, 90).upward().as_versor().z, 1.0)
-        assert areClose(pygsf.orientations.orientations.Direct.fromAzPl(0, -90).downward().as_versor().z, -1.0)
+        assert Direct.fromAzPl(90, 90).is_downward
+        assert Direct.fromAzPl(90, -45).is_upward
+        assert areClose(Direct.fromAzPl(90, 90).as_versor().z, -1.0)
+        assert areClose(Direct.fromAzPl(90, -90).as_versor().z, 1.0)
+        assert areClose(Direct.fromAzPl(0, 90).upward().as_versor().z, 1.0)
+        assert areClose(Direct.fromAzPl(0, -90).downward().as_versor().z, -1.0)
 
     def test_direct_angle(self):
 
-        assert areClose(pygsf.orientations.orientations.Direct.fromAzPl(90, 45).angle_as_degrees(
-            pygsf.orientations.orientations.Direct.fromAzPl(90, 55)), 10.)
-        assert areClose(pygsf.orientations.orientations.Direct.fromAzPl(90, 45).angle_as_degrees(
-            pygsf.orientations.orientations.Direct.fromAzPl(270, 10)), 125.)
-        assert areClose(pygsf.orientations.orientations.Direct.fromAzPl(90, 90).angle_as_degrees(
-            pygsf.orientations.orientations.Direct.fromAzPl(135, 90)), 0.)
-        assert areClose(pygsf.orientations.orientations.Direct.fromAzPl(0, 0).angle_as_degrees(
-            pygsf.orientations.orientations.Direct.fromAzPl(135, 0)), 135.)
-        assert areClose(pygsf.orientations.orientations.Direct.fromAzPl(0, 80).angle_as_degrees(
-            pygsf.orientations.orientations.Direct.fromAzPl(180, 80)), 20.)
+        assert areClose(Direct.fromAzPl(90, 45).angle_as_degrees(
+            Direct.fromAzPl(90, 55)), 10.)
+        assert areClose(Direct.fromAzPl(90, 45).angle_as_degrees(
+            Direct.fromAzPl(270, 10)), 125.)
+        assert areClose(Direct.fromAzPl(90, 90).angle_as_degrees(
+            Direct.fromAzPl(135, 90)), 0.)
+        assert areClose(Direct.fromAzPl(0, 0).angle_as_degrees(
+            Direct.fromAzPl(135, 0)), 135.)
+        assert areClose(Direct.fromAzPl(0, 80).angle_as_degrees(
+            Direct.fromAzPl(180, 80)), 20.)
 
     def test_axis_angle(self):
 
-        assert areClose(pygsf.orientations.orientations.Axis.fromAzPl(90, 0).angle_as_degrees(
-            pygsf.orientations.orientations.Axis.fromAzPl(270, 0)), 0.)
+        assert areClose(Axis.fromAzPl(90, 0).angle_as_degrees(
+            Axis.fromAzPl(270, 0)), 0.)
 
     def test_plane_normal(self):
 
         assert areClose(
-            pygsf.orientations.orientations.Plane(90, 45).normDirectFrwrd().angle_as_degrees(
-                pygsf.orientations.orientations.Direct.fromAzPl(90, -45)), 0.)
+            Plane(90, 45).normDirectFrwrd().angle_as_degrees(
+                Direct.fromAzPl(90, -45)), 0.)
 
     def test_plane2cplane(self):
 
@@ -60,23 +58,23 @@ class TestOrientations(unittest.TestCase):
     def test_plane_angle(self):
 
         assert areClose(
-            pygsf.orientations.orientations.Plane(90, 45).angle_degr(
-                pygsf.orientations.orientations.Plane(90, 45)), 0.)
+            Plane(90, 45).angle_degr(
+                Plane(90, 45)), 0.)
         assert areClose(
-            pygsf.orientations.orientations.Plane(90, 45).angle_degr(
-                pygsf.orientations.orientations.Plane(90, 55)), 10.)
+            Plane(90, 45).angle_degr(
+                Plane(90, 55)), 10.)
         assert areClose(
-            pygsf.orientations.orientations.Plane(90, 5).angle_degr(
-                pygsf.orientations.orientations.Plane(270, 5)), 10.)
+            Plane(90, 5).angle_degr(
+                Plane(270, 5)), 10.)
         assert areClose(
-            pygsf.orientations.orientations.Plane(90, 85).angle_degr(
-                pygsf.orientations.orientations.Plane(270, 85)), 10.)
+            Plane(90, 85).angle_degr(
+                Plane(270, 85)), 10.)
         assert areClose(
-            pygsf.orientations.orientations.Plane(0, 0).angle_degr(
-                pygsf.orientations.orientations.Plane(0, 10)), 10.)
+            Plane(0, 0).angle_degr(
+                Plane(0, 10)), 10.)
         assert areClose(
-            pygsf.orientations.orientations.Plane(0, 0).angle_degr(
-                pygsf.orientations.orientations.Plane(180, 0)), 0.)
+            Plane(0, 0).angle_degr(
+                Plane(180, 0)), 0.)
 
     def tearDown(self):
 

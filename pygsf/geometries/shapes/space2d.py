@@ -846,17 +846,17 @@ class Segment(Shape2D):
         generator_vector = vers_2d.scale(densify_distance)
 
         interpolated_line = Line(
-            pts=[self.start_pt()])
+            pts=[self.start_pt])
 
         n = 0
         while True:
             n += 1
-            new_pt = self.start_pt().shiftByVect(generator_vector.scale(n))
-            distance = self.start_pt().dist2DWith(new_pt)
+            new_pt = self.start_pt.shiftByVect(generator_vector.scale(n))
+            distance = self.start_pt.dist2DWith(new_pt)
             if distance >= length2d:
                 break
             interpolated_line.add_pt(new_pt)
-        interpolated_line.add_pt(self.end_pt())
+        interpolated_line.add_pt(self.end_pt)
 
         return interpolated_line
 
@@ -1509,7 +1509,6 @@ class Line(Shape2D):
 
         return segments
 
-    '''''
     def densify_2d_line(self, sample_distance) -> 'Line':
         """
         Densify a line into a new line instance,
@@ -1534,7 +1533,6 @@ class Line(Shape2D):
         densifyied_line_wo_coinc_pts = densifyied_line.remove_coincident_points()
 
         return densifyied_line_wo_coinc_pts
-    '''''
 
     def join(self, another) -> 'Line':
         """
