@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
-
 
 from pygsf.mathematics.scalars import *
 
-from pygsf.mathematics.vectors import Vect
+from pygsf.mathematics.vectors import *
 
 
 class RefFrame(object):
 
-    def __init__(self, versor_x: Vect, versor_y: Vect):
+    def __init__(self,
+                 versor_x: Vect,
+                 versor_y: Vect):
         """
         Reference frame constructor.
 

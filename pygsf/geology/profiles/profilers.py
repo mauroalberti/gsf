@@ -2,8 +2,8 @@
 from typing import List, Iterable
 from operator import attrgetter
 
-from pygsf.geolocated.rasters import *
-from pygsf.geolocated.geoshapes import *
+from pygsf.georeferenced.rasters import *
+from pygsf.georeferenced.geoshapes import *
 from pygsf.geology.base import *
 
 from pygsf.geology.profiles.sets import *
@@ -63,8 +63,8 @@ class LinearProfiler:
     """
 
     def __init__(self,
-                 start_pt: Point,
-                 end_pt: Point,
+                 start_pt: Point2D,
+                 end_pt: Point2D,
                  densify_distance: numbers.Real,
                  epsg_code: numbers.Integral
                  ):
@@ -77,12 +77,12 @@ class LinearProfiler:
         :param densify_distance: the distance with which to densify the segment profile.
         """
 
-        check_type(start_pt, "Input start point", Point)
+        check_type(start_pt, "Input start point", Point2D)
 
-        check_type(end_pt, "Input end point", Point)
+        check_type(end_pt, "Input end point", Point2D)
 
         '''
-        if start_pt.geolocated != end_pt.geolocated:
+        if start_pt.georeferenced != end_pt.georeferenced:
             raise Exception("Both points must have same CRS")
         '''
 
@@ -99,12 +99,12 @@ class LinearProfiler:
 
         #epsg_cd = start_pt.epsg_code()
 
-        self._start_pt = Point(
+        self._start_pt = Point2D(
             x=start_pt.x,
             y=start_pt.y
         )
 
-        self._end_pt = Point(
+        self._end_pt = Point2D(
             x=end_pt.x,
             y=end_pt.y
         )
@@ -113,7 +113,7 @@ class LinearProfiler:
 
         self._densify_dist = float(densify_distance)
 
-    def start_pt(self) -> Point:
+    def start_pt(self) -> Point2D:
         """
         Returns a copy of the segment start 2D point.
 
@@ -123,7 +123,7 @@ class LinearProfiler:
 
         return self._start_pt.clone()
 
-    def end_pt(self) -> Point:
+    def end_pt(self) -> Point2D:
         """
         Returns a copy of the segment end 2D point.
 
@@ -133,13 +133,13 @@ class LinearProfiler:
 
         return self._end_pt.clone()
 
-    def to_line(self) -> Line:
+    def to_line(self) -> Line2D:
         """
         Convert to a line.
 
         """
 
-        return Line(
+        return Line2D(
             pts=[
                 self.start_pt(),
                 self.end_pt()
@@ -206,7 +206,7 @@ class LinearProfiler:
             epsg_code=self.epsg_code
         )
 
-    def segment(self) -> Segment:
+    def segment(self) -> Segment2D:
         """
         Returns the horizontal segment representing the profile.
 
@@ -214,7 +214,7 @@ class LinearProfiler:
         :rtype: Segment.
         """
 
-        return Segment(start_pt=self._start_pt, end_pt=self._end_pt)
+        return Segment2D(start_pt=self._start_pt, end_pt=self._end_pt)
 
     def length(self) -> numbers.Real:
         """
@@ -266,7 +266,7 @@ class LinearProfiler:
 
         return len(self.densified_points())
 
-    def densified_points(self) -> List[Point]:
+    def densified_points(self) -> List[Point2D]:
         """
         Returns the list of densified 2D points.
 
@@ -276,7 +276,7 @@ class LinearProfiler:
 
         return self.segment().densify2d_asPts(densify_distance=self._densify_dist)
 
-    def vertical_plane(self) -> CPlane:
+    def vertical_plane(self) -> CPlane3D:
         """
         Returns the vertical plane of the segment, as a Cartesian plane.
 
@@ -352,7 +352,7 @@ class LinearProfiler:
             epsg_code=self.epsg_code
         )
 
-    def point_in_profile(self, pt: Point) -> bool:
+    def point_in_profile(self, pt: Point2D) -> bool:
         """
         Checks whether a point lies in the profiler plane.
 
@@ -365,7 +365,7 @@ class LinearProfiler:
 
         return self.vertical_plane().isPointInPlane(pt)
 
-    def point_distance(self, pt: Point) -> numbers.Real:
+    def point_distance(self, pt: Point2D) -> numbers.Real:
         """
         Calculates the point distance from the profiler plane.
 
@@ -452,7 +452,7 @@ class LinearProfiler:
         return topo_profiles
 
     def intersect_line(self,
-                       mline: Union[Line, GeoMultiLine],
+                       mline: Union[Line2D, GeoMultiLine],
                        ) -> GeoPointSegmentCollection:
         """
         Calculates the intersection with a line/multiline.
@@ -467,8 +467,8 @@ class LinearProfiler:
         return mline.intersectSegment(self.segment())
 
     def intersect_lines(self,
-                        mlines: Iterable[Union[Line, GeoMultiLine]],
-                        ) -> List[List[Optional[Union[Point, Segment]]]]:
+                        mlines: Iterable[Union[Line2D, GeoMultiLine]],
+                        ) -> List[List[Optional[Union[Point2D, Segment2D]]]]:
         """
         Calculates the intersection with a set of lines/multilines.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
@@ -533,7 +533,7 @@ class LinearProfiler:
 
     def point_signed_s(
             self,
-            pt: Point) -> numbers.Real:
+            pt: Point2D) -> numbers.Real:
         """
         Calculates the point signed distance from the profile start.
         The projected point must already lay in the profile vertical plane, otherwise an exception is raised.
@@ -549,7 +549,7 @@ class LinearProfiler:
         :raise: Exception.
         """
 
-        if not isinstance(pt, Point):
+        if not isinstance(pt, Point2D):
             raise Exception(f"Projected point should be Point but is {type(pt)}")
 
         if not self.point_in_profile(pt):
@@ -558,20 +558,20 @@ class LinearProfiler:
         if pt.is_coincident(self.start_pt()):
             return 0.0
 
-        projected_vector = Segment(self.start_pt(), pt).vector()
+        projected_vector = Segment2D(self.start_pt(), pt).vector()
         cos_alpha = self.vector().cosine_of_angle(projected_vector)
 
         return projected_vector.length * cos_alpha
 
     def segment_signed_s(self,
-        segment: Segment
+        segment: Segment2D
     ) -> Tuple[numbers.Real, numbers.Real]:
         """
         Calculates the segment signed distances from the profiles start.
         The segment must already lay in the profile vertical plane, otherwise an exception is raised.
 
         :param segment: the analysed segment
-        :type segment: Segment
+        :type segment: Segment2D
         :return: the segment vertices distances from the profile start
         :rtype: Tuple[numbers.Real, numbers.Real]
         """
@@ -582,7 +582,7 @@ class LinearProfiler:
         return segment_start_distance, segment_end_distance
 
     def pt_segm_signed_s(self,
-        geom: Union[Point, Segment]
+        geom: Union[Point2D, Segment2D]
     ) -> array:
         """
         Calculates the point or segment signed distances from the profiles start.
@@ -593,9 +593,9 @@ class LinearProfiler:
         :rtype: array of double
         """
 
-        if isinstance(geom, Point):
+        if isinstance(geom, Point2D):
             return array('d', [self.point_signed_s(geom)])
-        elif isinstance(geom, Segment):
+        elif isinstance(geom, Segment2D):
             return array('d', [*self.segment_signed_s(geom)])
         else:
             return NotImplemented
@@ -633,8 +633,8 @@ class LinearProfiler:
         return slope_radians, intersection_downward_sense
 
     def calculate_axis_intersection(self,
-            map_axis: Axis,
-            structural_pt: Point) -> Optional[Point]:
+                                    map_axis: Axis,
+                                    structural_pt: Point2D) -> Optional[Point2D]:
         """
         Calculates the optional intersection point between an axis passing through a point
         and the profiler plane.
@@ -651,7 +651,7 @@ class LinearProfiler:
         if not isinstance(map_axis, Axis):
             raise Exception("Map axis should be Axis but is {}".format(type(map_axis)))
 
-        if not isinstance(structural_pt, Point):
+        if not isinstance(structural_pt, Point2D):
             raise Exception("Structural point should be Point but is {}".format(type(structural_pt)))
 
         axis_versor = map_axis.as_direction().as_versor()
@@ -665,7 +665,7 @@ class LinearProfiler:
     def calculate_intersection_versor(
             self,
             attitude_plane: Plane,
-            attitude_pt: Point) -> Optional[Vect]:
+            attitude_pt: Point2D) -> Optional[Vect]:
         """
         Calculate the intersection versor between the plane profiler and
         a geological plane with location defined by a Point.
@@ -680,7 +680,7 @@ class LinearProfiler:
         if not isinstance(attitude_plane, Plane):
             raise Exception("Attitude plane should be Plane but is {}".format(type(attitude_plane)))
 
-        if not isinstance(attitude_pt, Point):
+        if not isinstance(attitude_pt, Point2D):
             raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
 
         '''
@@ -688,7 +688,7 @@ class LinearProfiler:
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg_code(), attitude_pt.epsg_code()))
         '''
 
-        putative_inters_versor = self.vertical_plane().intersVersor(CPlane.from_geological_plane(attitude_plane, attitude_pt))
+        putative_inters_versor = self.vertical_plane().intersVersor(CPlane3D.from_geological_plane(attitude_plane, attitude_pt))
 
         if not putative_inters_versor.is_valid:
             return None
@@ -697,7 +697,7 @@ class LinearProfiler:
 
     def nearest_attitude_projection(
             self,
-            georef_attitude: GeorefAttitude) -> Point:
+            georef_attitude: GeorefAttitude) -> Point2D:
         """
         Calculates the nearest projection of a given attitude on a vertical plane.
 
@@ -717,11 +717,11 @@ class LinearProfiler:
         attitude_cplane = georef_attitude.attitude.to_cartesian_plane(georef_attitude.posit)
         intersection_versor = self.vertical_plane().intersVersor(attitude_cplane)
         dummy_inters_pt = self.vertical_plane().intersPoint(attitude_cplane)
-        dummy_structural_vect = Segment(dummy_inters_pt, georef_attitude.posit).vector()
+        dummy_structural_vect = Segment2D(dummy_inters_pt, georef_attitude.posit).vector()
         dummy_distance = dummy_structural_vect.dot_product(intersection_versor)
         offset_vector = intersection_versor.scale(dummy_distance)
 
-        projected_pt = Point(
+        projected_pt = Point2D(
             x=dummy_inters_pt.x + offset_vector.x,
             y=dummy_inters_pt.y + offset_vector.y,
             z=dummy_inters_pt.z + offset_vector.z

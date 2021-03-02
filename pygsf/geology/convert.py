@@ -48,7 +48,7 @@ def try_extract_georeferenced_attitudes(
             attitudes.append(
                 GeorefAttitude(
                     rec_id,
-                    Point(x, y),
+                    Point2D(x, y),
                     Plane(azimuth, dip_ang)
                 )
             )

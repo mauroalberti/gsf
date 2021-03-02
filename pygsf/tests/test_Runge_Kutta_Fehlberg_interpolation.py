@@ -2,7 +2,7 @@
 
 import unittest
 
-from pygsf.geolocated.rasters import *
+from pygsf.georeferenced.rasters import *
 
 
 class TestRKFInterpolation(unittest.TestCase):
@@ -95,7 +95,7 @@ class TestRKFInterpolation(unittest.TestCase):
 
         steps = number_of_cycles * (period / time_increm)
 
-        first_pt = Point(
+        first_pt = Point2D(
             x=0,
             y=20)
 

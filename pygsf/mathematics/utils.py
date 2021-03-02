@@ -2,10 +2,14 @@ import math
 import numbers
 from typing import Tuple
 
-from .defaults import MIN_VECTOR_MAGNITUDE
+from pygsf.mathematics.defaults import MIN_VECTOR_MAGNITUDE
 
 
-def normXYZ(x: numbers.Real, y: numbers.Real, z: numbers.Real) -> Tuple:
+def normXYZ(
+        x: numbers.Real,
+        y: numbers.Real,
+        z: numbers.Real
+) -> Tuple:
     """
     Normalize numeric values.
 

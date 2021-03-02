@@ -4,11 +4,18 @@ import numbers
 import affine
 import numpy as np
 
+from pygsf.mathematics.arrays import array_bilin_interp
+
+from pygsf.orientations.orientations import *
+
 from pygsf.geometries.rasters.fields import *
 from pygsf.geometries.rasters.geotransform import *
+
+from pygsf.geometries.shapes.space2d import *
 from pygsf.geometries.shapes.space3d import *
-from pygsf.orientations.orientations import *
-from pygsf.mathematics.arrays import array_bilin_interp
+
+from pygsf.georeferenced.crs import *
+
 
 
 class GeoArray(object):
@@ -82,9 +89,9 @@ class GeoArray(object):
     @property
     def crs(self) -> Crs:
         """
-        Return the geoarray geolocated.
+        Return the geoarray georeferenced.
 
-        :return: the geolocated.
+        :return: the georeferenced.
         :rtype: Crs.
         """
 
@@ -92,9 +99,9 @@ class GeoArray(object):
 
     def epsg_code(self) -> numbers.Integral:
         """
-        Return the geoarray geolocated EPSG code.
+        Return the geoarray georeferenced EPSG code.
 
-        :return: the geolocated EPSG  code.
+        :return: the georeferenced EPSG  code.
         :rtype: numbers.Integral.
         """
 
@@ -392,9 +399,9 @@ class GeoArray(object):
 
         factor = 100
 
-        start_pt = Point(*self.ijArrToxy(0, 0))
-        end_pt_j = Point(*self.ijArrToxy(0, factor))
-        end_pt_i = Point(*self.ijArrToxy(factor, 0))
+        start_pt = Point2D(*self.ijArrToxy(0, 0))
+        end_pt_j = Point2D(*self.ijArrToxy(0, factor))
+        end_pt_i = Point2D(*self.ijArrToxy(factor, 0))
 
         return end_pt_j.distance(start_pt) / factor, end_pt_i.distance(start_pt) / factor
 
@@ -439,7 +446,10 @@ class GeoArray(object):
 
         return array_bilin_interp(self._levels[level_ndx], i, j)
 
-    def interpolate_bilinear_point(self, pt: Point, level_ndx=0) -> Optional[Point]:
+    def interpolate_bilinear_point(self,
+                                   pt: Point3D,
+                                   level_ndx=0
+    ) -> Optional[Point3D]:
         """
         Interpolate the z value at a point, returning a Point with elevation extracted from the DEM.
         Interpolation method: bilinear.
@@ -454,7 +464,7 @@ class GeoArray(object):
         Examples:
         """
 
-        check_type(pt, "Input point", Point)
+        check_type(pt, "Input point", Point2D)
 
         check_crs(self, pt)
 
@@ -463,7 +473,7 @@ class GeoArray(object):
         z = self.interpolate_bilinear(x=x, y=y, level_ndx=level_ndx)
 
         if z and isfinite(z):
-            return Point(x, y, z)
+            return Point2D(x, y, z)
         else:
             return None
 
@@ -627,7 +637,7 @@ class GeoArray(object):
             inLevels=[flowln_grad])
 
 
-def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
+def point_velocity(geoarray: GeoArray, pt: Point2D) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
     """
     Return the velocity components of a 2D-flow field at a point location, based on bilinear interpolation.
 
@@ -657,8 +667,8 @@ def point_velocity(geoarray: GeoArray, pt: Point) -> Tuple[Optional[numbers.Real
 def interpolate_rkf(
         geoarray: GeoArray,
         delta_time: numbers.Real,
-        start_pt: Point
-    ) -> Tuple[Optional[Point], Optional[numbers.Real]]:
+        start_pt: Point2D
+    ) -> Tuple[Optional[Point2D], Optional[numbers.Real]]:
     """
     Interpolate point-like object position according to the Runge-Kutta-Fehlberg method.
 
@@ -678,14 +688,14 @@ def interpolate_rkf(
 
     check_type(delta_time, "Delta time", numbers.Real)
 
-    check_type(start_pt, "Start point", Point)
+    check_type(start_pt, "Start point", Point2D)
 
     k1_vx, k1_vy = point_velocity(geoarray, start_pt)
 
     if k1_vx is None or k1_vy is None:
         return None, None
 
-    k2_pt = Point(
+    k2_pt = Point2D(
         x=start_pt.x + 0.25 * delta_time * k1_vx,
         y=start_pt.y + 0.25 * delta_time * k1_vy
     )
@@ -695,7 +705,7 @@ def interpolate_rkf(
     if k2_vx is None or k2_vy is None:
         return None, None
 
-    k3_pt = Point(
+    k3_pt = Point2D(
         x=start_pt.x + (3.0 / 32.0) * delta_time * k1_vx + (9.0 / 32.0) * delta_time * k2_vx,
         y=start_pt.y + (3.0 / 32.0) * delta_time * k1_vy + (9.0 / 32.0) * delta_time * k2_vy
     )
@@ -705,7 +715,7 @@ def interpolate_rkf(
     if k3_vx is None or k3_vy is None:
         return None, None
 
-    k4_pt = Point(
+    k4_pt = Point2D(
         x=start_pt.x + (1932.0 / 2197.0) * delta_time * k1_vx - (7200.0 / 2197.0) * delta_time * k2_vx + (7296.0 / 2197.0) * delta_time * k3_vx,
         y=start_pt.y + (1932.0 / 2197.0) * delta_time * k1_vy - (7200.0 / 2197.0) * delta_time * k2_vy + (7296.0 / 2197.0) * delta_time * k3_vy
     )
@@ -715,7 +725,7 @@ def interpolate_rkf(
     if k4_vx is None or k4_vy is None:
         return None, None
 
-    k5_pt = Point(
+    k5_pt = Point2D(
         x=start_pt.x + (439.0 / 216.0) * delta_time * k1_vx - 8.0 * delta_time * k2_vx + (3680.0 / 513.0) * delta_time * k3_vx - (845.0 / 4104.0) * delta_time * k4_vx,
         y=start_pt.y + (439.0 / 216.0) * delta_time * k1_vy - 8.0 * delta_time * k2_vy + (3680.0 / 513.0) * delta_time * k3_vy - (845.0 / 4104.0) * delta_time * k4_vy
     )
@@ -725,7 +735,7 @@ def interpolate_rkf(
     if k5_vx is None or k5_vy is None:
         return None, None
 
-    k6_pt = Point(
+    k6_pt = Point2D(
         x=start_pt.x - (8.0 / 27.0) * delta_time * k1_vx + 2.0 * delta_time * k2_vx - (3544.0 / 2565.0) * delta_time * k3_vx + (1859.0 / 4104.0) * delta_time * k4_vx - (
                           11.0 / 40.0) * delta_time * k5_vx,
         y=start_pt.y - (8.0 / 27.0) * delta_time * k1_vy + 2.0 * delta_time * k2_vy - (3544.0 / 2565.0) * delta_time * k3_vy + (1859.0 / 4104.0) * delta_time * k4_vy - (
@@ -743,7 +753,7 @@ def interpolate_rkf(
     rkf_4o_y = start_pt.y + delta_time * (
             (25.0 / 216.0) * k1_vy + (1408.0 / 2565.0) * k3_vy + (2197.0 / 4104.0) * k4_vy - (
             1.0 / 5.0) * k5_vy)
-    temp_pt = Point(
+    temp_pt = Point2D(
         x=rkf_4o_x,
         y=rkf_4o_y
     )
@@ -754,7 +764,7 @@ def interpolate_rkf(
     interp_y = start_pt.y + delta_time * (
             (16.0 / 135.0) * k1_vy + (6656.0 / 12825.0) * k3_vy + (28561.0 / 56430.0) * k4_vy - (
             9.0 / 50.0) * k5_vy + (2.0 / 55.0) * k6_vy)
-    interp_pt = Point(
+    interp_pt = Point2D(
         x=interp_x,
         y=interp_y
     )
@@ -766,27 +776,27 @@ def interpolate_rkf(
 
 def line_on_grid(
         ga: GeoArray,
-        profile_line: Line
-) -> Optional[Line]:
+        profile_line: Line2D
+) -> Optional[Line2D]:
     """
     Calculates a line draped on a grid.
 
     :param ga: geoarray
     :type ga: GeoArray.
     :param profile_line: the profile line.
-    :type profile_line: Line
+    :type profile_line: Line2D
     :return: the profile.
     :rtype: Optional[Line].
     """
 
-    lnProfile = Line()
+    lnProfile = Line2D()
 
     for point in profile_line.pts():
 
         z = ga.interpolate_bilinear(point.x, point.y)
         if z:
             lnProfile.add_pt(
-                Point(
+                Point2D(
                     x=point.x,
                     y=point.y,
                     z=z
@@ -798,9 +808,9 @@ def line_on_grid(
 
 def plane_dem_intersection(
         srcPlaneAttitude: Plane,
-        srcPt: Point,
+        srcPt: Point2D,
         geo_array: GeoArray,
-        level_ndx: numbers.Integral = 0) -> List[Point]:
+        level_ndx: numbers.Integral = 0) -> List[Point2D]:
     """
     Calculates the intersections (as points) between the grid and a planar analytical surface.
 
@@ -853,19 +863,19 @@ def plane_dem_intersection(
         :rtype: numbers.Real.
         """
 
-        start_point = Point(*ijarr2xyz(
+        start_point = Point2D(*ijarr2xyz(
             ijarr2xy_func=arrij2xy_func,
             xy2z_func=xy2z_func,
             i=i_start,
             j=j_start))
 
-        end_point = Point(*ijarr2xyz(
+        end_point = Point2D(*ijarr2xyz(
             ijarr2xy_func=arrij2xy_func,
             xy2z_func=xy2z_func,
             i=i,
             j=j))
 
-        return Segment(start_point, end_point).ratio_delta_zs()
+        return Segment2D(start_point, end_point).ratio_delta_zs()
 
     def segment_intersections_array(
             m_arr1: np.ndarray,
@@ -908,7 +918,7 @@ def plane_dem_intersection(
 
         return inters_intracells_residuals
 
-    def arrayTo3DPts(direction: str, arr: np.ndarray, ij2xy_func: Callable, xy2z_func: Callable) -> List[Point]:
+    def arrayTo3DPts(direction: str, arr: np.ndarray, ij2xy_func: Callable, xy2z_func: Callable) -> List[Point2D]:
         """
         Converts an array of along-direction (i- or j-) intra-cell segments [0 -> 1[ into
         a list of 3D points.
@@ -939,7 +949,7 @@ def plane_dem_intersection(
                         raise Exception('Unexpected array direction value: {}'.format(direction))
                     x, y = ij2xy_func(i_int, j_int)
                     z = xy2z_func(x, y)
-                    pts.append(Point(x, y, z))
+                    pts.append(Point2D(x, y, z))
 
         return pts
 

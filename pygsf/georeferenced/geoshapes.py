@@ -12,7 +12,7 @@ from pygsf.geometries.shapes.space3d import *
 from pygsf.utils.types import *
 
 
-class GeoPoints:
+class GeoPoints3D:
     """
     Collection of points.
     """
@@ -85,7 +85,7 @@ class GeoPoints:
 
     @classmethod
     def fromPoints(cls,
-                   points: List[Point],
+                   points: List[Point3D],
                    epsg_code: numbers.Integral
                    ):
         """
@@ -98,9 +98,9 @@ class GeoPoints:
 
         for ndx, point in enumerate(points):
 
-            check_type(point, "Input point {}".format(ndx), Point)
+            check_type(point, "Input point {}".format(ndx), Point2D)
 
-        return GeoPoints(
+        return GeoPoints3D(
             epsg_code=epsg_code,
             x_array=array('d', [p.x for p in points]),
             y_array=array('d', [p.y for p in points]),
@@ -140,7 +140,7 @@ class GeoPoints:
 
         return copy(self._z_array)
 
-    def pt(self, pt_ndx: numbers.Integral) -> Point:
+    def pt(self, pt_ndx: numbers.Integral) -> Point3D:
         """
         Extract the point at index pt_ndx.
 
@@ -152,7 +152,7 @@ class GeoPoints:
         Examples:
         """
 
-        return Point(
+        return Point3D(
             x=self._x_array[pt_ndx],
             y=self._y_array[pt_ndx],
             z=self._z_array[pt_ndx]
@@ -177,11 +177,11 @@ class GeoPoints:
 
     def pts(self):
 
-        return [Point(*self.values_at(ndx)) for ndx in range(self.num_pts())]
+        return [Point3D(*self.values_at(ndx)) for ndx in range(self.num_pts())]
 
     def __repr__(self) -> str:
         """
-        Represents a Points instance as a shortened text.
+        Represents a GeoPoints3D instance as a shortened text.
 
         :return: a textual shortened representation of a Points instance.
         """
@@ -189,14 +189,14 @@ class GeoPoints:
         num_points = self.num_pts()
 
         if num_points == 0:
-            txt = "Empty Line"
+            txt = "Empty GeoPoints3D"
         else:
             x1, y1, z1 = self.values_at(0)
             if num_points == 1:
-                txt = "Line with unique point: {.4f}.{.4f},{.4f}".format(x1, y1, z1)
+                txt = "GeoPoints3D with unique point: {.4f}.{.4f},{.4f}".format(x1, y1, z1)
             else:
                 x2, y2, z2 = self.values_at(self.num_pts()-1)
-                txt = "Line with {} points: ({:.4f}, {:.4f}, {:.4f}) ... ({:.4f}, {:.4f}, {:.4f})".format(
+                txt = "GeoPoints3D with {} points: ({:.4f}, {:.4f}, {:.4f}) ... ({:.4f}, {:.4f}, {:.4f})".format(
                     num_points, x1, y1, z1, x2, y2, z2)
 
         return txt
@@ -256,7 +256,7 @@ class GeoPoints:
         self._z_array.append(pt.z)
 
     def add_pts(self,
-                pts: List[Point]):
+                pts: List[Point3D]):
         """
         In-place transformation of the original Points instance
         by adding a new set of points at the end.
@@ -264,7 +264,7 @@ class GeoPoints:
         :param pts: list of Points.
         """
 
-        check_type(pts, "Points", GeoPoints)
+        check_type(pts, "Points", GeoPoints3D)
         check_crs(self, pts)
 
         self._x_array.extend(pts.xs)
@@ -279,10 +279,10 @@ class GeoPoints:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = GeoPoints([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          >>> l = GeoPoints3D([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
           >>> l.x_min()
           0.0
-          >>> m = GeoPoints([])
+          >>> m = GeoPoints3D([])
           >>> m.x_min()
           None
         """
@@ -353,7 +353,7 @@ class GeoPoints:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = GeoPoints.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
+          >>> l = GeoPoints3D.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
           >>> l.z_var()
           0.0
         """
@@ -368,23 +368,23 @@ class GeoPoints:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = GeoPoints.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
+          >>> l = GeoPoints3D.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
           >>> l.z_std()
           0.0
         """
 
         return np.nanstd(self._z_array) if self.num_pts() > 0 else None
 
-    def nanmean_point(self) -> Point:
+    def nanmean_point(self) -> Point2D:
         """
         Returns the nan- excluded mean point of the collection.
         It is the mean point for a collection of point in a x-y-z frame (i.e., not lat-lon).
 
         :return: the nan- excluded mean point of the collection.
-        :rtype: Point
+        :rtype: Point2D
         """
 
-        return Point(
+        return Point3D(
             x=np.nanmean(self._x_array),
             y=np.nanmean(self._y_array),
             z=np.nanmean(self._z_array)
@@ -392,7 +392,7 @@ class GeoPoints:
 
     def segment(self,
         ndx: int
-    ) -> Optional[Segment]:
+    ) -> Optional[Segment2D]:
         """
         Returns the optional segment starting at index ndx.
 
@@ -403,12 +403,12 @@ class GeoPoints:
         if ndx < 0 or ndx >= self.num_pts() - 1:
             return None
 
-        return Segment(
+        return Segment2D(
             start_pt=self.pt(ndx),
             end_pt=self.pt(ndx + 1)
         )
 
-    def reversed(self) -> 'Line':
+    def reversed(self) -> 'Line3D':
         """
         Return a Points instance with reversed point list.
 
@@ -419,7 +419,7 @@ class GeoPoints:
         ys = self._y_array.reverse()
         zs = self._z_array.reverse()
 
-        return GeoPoints(
+        return GeoPoints3D(
             epsg_code=self.epsg_code(),
             x_array=xs,
             y_array=ys,
@@ -435,14 +435,14 @@ class GeoPointSegmentCollection(list):
 
     def __init__(
             self,
-            geoms: Optional[List[Union[Point, Segment]]] = None,
+            geoms: Optional[List[Union[Point3D, Segment2D]]] = None,
             epsg_code: Optional[numbers.Integral] = None
     ):
 
         if geoms is not None:
 
             for geom in geoms:
-                check_type(geom, "Spatial element", (Point, Segment))
+                check_type(geom, "Spatial element", (Point3D, Segment2D))
 
         if epsg_code is not None:
             check_type(
@@ -462,13 +462,13 @@ class GeoPointSegmentCollection(list):
         self.epsg_code = epsg_code
 
     def append(self,
-               spatial_element: Union[Point, Segment]
+               spatial_element: Union[Point3D, Segment2D]
                ) -> None:
 
         check_type(
             var=spatial_element,
             name="Spatial element",
-            expected_types=(Point, Segment)
+            expected_types=(Point3D, Segment2D)
         )
 
         self.append(spatial_element)
@@ -493,14 +493,14 @@ class GeoLines(list):
     """
 
     def __init__(self,
-                 lines: Optional[List[GeoPoints]] = None
+                 lines: Optional[List[GeoPoints3D]] = None
                  ):
 
         if lines:
 
             check_type(lines, "Lines", List)
             for line in lines:
-                check_type(line, "Line", Line)
+                check_type(line, "Line", Line3D)
             first_line = lines[0]
             for line in lines[1:]:
                 check_crs(first_line, line)
@@ -512,10 +512,10 @@ class GeoLines(list):
             super(GeoLines, self).__init__()
 
     def append(self,
-               item: GeoPoints
+               item: GeoPoints3D
                ) -> None:
 
-        check_type(item, "Line", Line)
+        check_type(item, "Line", Line3D)
         if len(self) > 0:
             check_crs(self[0], item)
 
@@ -527,7 +527,7 @@ class GeoMultiLine(object):
     MultiLine is a list of Line objects, each one with the same CRS.
     """
 
-    def __init__(self, lines: Optional[List[Line]] = None, epsg_cd: numbers.Integral = -1):
+    def __init__(self, lines: Optional[List[Line3D]] = None, epsg_cd: numbers.Integral = -1):
 
         if lines is None:
             lines = []
@@ -560,7 +560,7 @@ class GeoMultiLine(object):
 
         return num_points
 
-    def line(self, ln_ndx: numbers.Integral = 0) -> Optional[GeoPoints]:
+    def line(self, ln_ndx: numbers.Integral = 0) -> Optional[GeoPoints3D]:
         """
         Extracts a line from the multiline instance, based on the provided index.
 
@@ -707,7 +707,7 @@ class GeoMultiLine(object):
 
     def to_line(self):
 
-        return Line([point for line in self._lines for point in line.pts()])
+        return Line3D([point for line in self._lines for point in line.pts()])
 
     def densify_2d_multiline(self, sample_distance):
 
@@ -726,18 +726,18 @@ class GeoMultiLine(object):
         return GeoMultiLine(cleaned_lines, self.epsg())
 
     def intersectSegment(self,
-        segment: Segment
-    ) -> List[Optional[Union[Point, 'Segment']]]:
+        segment: Segment2D
+    ) -> List[Optional[Union[Point3D, 'Segment2D']]]:
         """
         Calculates the possible intersection between the multiline and a provided segment.
 
         :param segment: the input segment
-        :type segment: Segment
+        :type segment: Segment2D
         :return: the possible intersections, points or segments
         :rtype: List[List[Optional[Union[Point, 'Segment']]]]
         """
 
-        check_type(segment, "Input segment", Segment)
+        check_type(segment, "Input segment", Segment2D)
         check_crs(self, segment)
 
         intersections = []
@@ -784,7 +784,7 @@ class GeoMPolygon:
     """
 
     def __init__(self,
-                 shapely_geom: Union[Polygon, MultiPolygon],
+                 shapely_geom: Union[Polygon2D, MultiPolygon],
                  epsg_code: numbers.Integral
                  ):
         """
@@ -797,7 +797,7 @@ class GeoMPolygon:
         check_type(
             shapely_geom,
             "Polygon",
-            (Polygon, MultiPolygon)
+            (Polygon2D, MultiPolygon)
         )
 
         self._geom = shapely_geom
@@ -867,7 +867,7 @@ class GeoSimpleGeometryCollections(list):
 
     def append(self, geom):
 
-        if not isinstance(geom, (Point, Segment, Line)):
+        if not isinstance(geom, (Point3D, Segment2D, Line3D)):
             raise Exception(f"Expected Point, Segment or Line but got {type(geom)}")
 
         self.append(geom)
@@ -876,7 +876,7 @@ class GeoSimpleGeometryCollections(list):
 def line_from_shapely(
         shapely_geom: LineString,
         epsg_code: numbers.Integral
-) -> GeoPoints:
+) -> GeoPoints3D:
     # Side effects: none
     """
     Create a Line instance from a shapely Linestring instance.
@@ -886,25 +886,25 @@ def line_from_shapely(
     :param epsg_code: the EPSG code of the LineString instance
     :type epsg_code: numbers.Integral
     :return: the converted Line instance
-    :rtype: Line
+    :rtype: Line3D
     """
 
     x_array, y_array = shapely_geom.xy
 
-    return Line.fromArrays(
+    return Line3D.fromArrays(
         x_array,
         y_array
     )
 
 
 def line_to_shapely(
-        src_line: GeoPoints
+        src_line: GeoPoints3D
 ) -> LineString:
     """
     Create a shapely.LineString instance from a Line one.
 
     :param src_line: the source line to convert to the shapely format
-    :type src_line: Line
+    :type src_line: Line2D
     :return: the shapely LineString instance and the EPSG code
     :rtype: Tuple[LineString, numbers.Integral]
     """
@@ -918,10 +918,10 @@ class GeoSegments(list):
 
     """
 
-    def __init__(self, segments: List[Segment]):
+    def __init__(self, segments: List[Segment2D]):
 
         check_type(segments, "Segments", List)
         for el in segments:
-            check_type(el, "Segment", Segment)
+            check_type(el, "Segment", Segment2D)
 
         super(GeoSegments, self).__init__(segments)

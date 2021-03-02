@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 
 import numbers
 
@@ -39,7 +37,14 @@ def interp_linear(
     return v0 + frac_s * delta_z
 
 
-def scalars_bilin_interp(i: numbers.Real, j: numbers.Real, v00: numbers.Real, v01: numbers.Real, v10: numbers.Real, v11: numbers.Real) -> numbers.Real:
+def scalars_bilin_interp(
+        i: numbers.Real,
+        j: numbers.Real,
+        v00: numbers.Real,
+        v01: numbers.Real,
+        v10: numbers.Real,
+        v11: numbers.Real
+) -> numbers.Real:
     """
     Return an interpolated number based on a bilinear interpolation.
 

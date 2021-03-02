@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
-
 
 from math import floor
 from typing import Optional, Sequence, List
 
 import numpy as np
 
-from .interpolations import scalars_bilin_interp as s_interp_bilinear, interp_linear
-from .scalars import *
+from pygsf.mathematics.interpolations import scalars_bilin_interp as s_interp_bilinear, interp_linear
+from pygsf.mathematics.scalars import *
 
 
 def arrToTuple(arr1D: np.ndarray) -> Tuple[numbers.Real, ...]:

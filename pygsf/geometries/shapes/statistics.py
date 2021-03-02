@@ -4,45 +4,42 @@ from typing import Tuple, Union, List
 from functools import singledispatch
 import numpy as np
 
-from pygsf.mathematics.arrays import xyzSvd
-from pygsf.mathematics.vectors import Vect
-from pygsf.orientations.orientations import Direct
+from pygsf.mathematics.arrays import *
+from pygsf.mathematics.vectors import *
+
+from pygsf.orientations.orientations import *
+
 from pygsf.geometries.shapes.space2d import *
-from pygsf.geometries.shapes.space3d import CPlane
-from pygsf.geolocated.geoshapes import GeoPoints
+from pygsf.geometries.shapes.space3d import *
 
 
 @singledispatch
 def mean(
-        shapes: List[Shape2D]
+        shapes: list
 ) -> Shape2D:
 
     return None
 
 
-@mean.register(List[Point])
+@mean.register(list)
 def mean(
-        shapes: List[Point]
-) -> Point:
+        shapes: list
+) -> Point2D:
     """Mean points center"""
 
-    return Point(
+    return Point2D(
         x=np.mean(shapes.xs()),
         y=np.mean(shapes.ys())
     )
 
 
 def try_derive_bestfitplane(
-    points: GeoPoints
-) -> Tuple[bool, Union[str, CPlane]]:
-
-    print(points.xs)
-    print(points.ys)
-    print(points.zs)
+    points: Points3D
+) -> Tuple[bool, Union[str, CPlane3D]]:
 
     npaXyz = points.asXyzArray()
 
-    print(points.asXyzArray())
+    #print(points.asXyzArray())
 
     xyz_mean = np.mean(npaXyz, axis=0)
 

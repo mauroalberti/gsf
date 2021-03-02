@@ -7,16 +7,16 @@ import itertools
 import numbers
 from array import array
 
-from pygsf.geolocated.geoshapes import GeoPoints
+#from pygsf.georeferenced.geoshapes import GeoPoints
 from pygsf.orientations.orientations import *
 from pygsf.mathematics.statistics import *
 from pygsf.mathematics.quaternions import *
-from pygsf.geometries.shapes.space2d import *
-from pygsf.geometries.shapes.statistics import *
+#from pygsf.geometries.shapes.space2d import *
+#from pygsf.geometries.shapes.statistics import *
 from pygsf.utils.types import check_type
 
 
-class Point:
+class Point3D:
     """
     Cartesian point.
     Dimensions: 3D
@@ -51,7 +51,7 @@ class Point:
 
     @classmethod
     def fromVect(cls,
-        vect: Vect) -> 'Point':
+        vect: Vect) -> 'Point3D':
         """
 
         :param vect:
@@ -73,9 +73,9 @@ class Point:
         :rtype: numbers.Real
 
         Examples:
-          >>> Point(4, 3, 7).x
+          >>> Point3D(4, 3, 7).x
           4.0
-          >>> Point(-0.39, 3, 7).x
+          >>> Point3D(-0.39, 3, 7).x
           -0.39
         """
 
@@ -90,9 +90,9 @@ class Point:
         :rtype: numbers.Real
 
         Examples:
-          >>> Point(4, 3, 7).y
+          >>> Point3D(4, 3, 7).y
           3.0
-          >>> Point(-0.39, 17.42, 7).y
+          >>> Point3D(-0.39, 17.42, 7).y
           17.42
         """
 
@@ -107,9 +107,9 @@ class Point:
         :rtype: numbers.Real
 
         Examples:
-          >>> Point(4, 3, 7).z
+          >>> Point3D(4, 3, 7).z
           7.0
-          >>> Point(-0.39, 17.42, 8.9).z
+          >>> Point3D(-0.39, 17.42, 8.9).z
           8.9
         """
 
@@ -122,7 +122,7 @@ class Point:
         :return:
 
         Examples;
-          >>> x, y, z = Point(1,1)
+          >>> x, y, z = Point3D(1,1)
           >>> x == 1
           True
           >>> y == 1
@@ -137,7 +137,7 @@ class Point:
         return "Point({:.4f}, {:.4f}, {:.4f})".format(self.x, self.y, self.z)
 
     def __eq__(self,
-        another: 'Point'
+        another: 'Point3D'
     ) -> bool:
         """
         Return True if objects are equal.
@@ -147,15 +147,15 @@ class Point:
         :raise: Exception.
 
         Example:
-          >>> Point(1., 1., 1.) == Point(1, 1, 1)
+          >>> Point3D(1., 1., 1.) == Point3D(1, 1, 1)
           True
-          >>> Point(1., 1., 1.) == Point(1, 1, 1)
+          >>> Point3D(1., 1., 1.) == Point3D(1, 1, 1)
           True
-          >>> Point(1., 1., 1.) == Point(1, 1, -1)
+          >>> Point3D(1., 1., 1.) == Point3D(1, 1, -1)
           False
         """
 
-        if not isinstance(another, Point):
+        if not isinstance(another, Point3D):
             raise Exception("Another instance must be a Point")
 
         return all([
@@ -166,15 +166,15 @@ class Point:
         )
 
     def __ne__(self,
-        another: 'Point'
+        another: 'Point3D'
     ) -> bool:
         """
         Return False if objects are equal.
 
         Example:
-          >>> Point(1., 1., 1.) != Point(0., 0., 0.)
+          >>> Point3D(1., 1., 1.) != Point3D(0., 0., 0.)
           True
-          >>> Point(1., 1., 1.) != Point(1, 1, 1)
+          >>> Point3D(1., 1., 1.) != Point3D(1, 1, 1)
           True
         """
 
@@ -187,70 +187,70 @@ class Point:
         :return: double array of x, y, z values
 
         Examples:
-          >>> Point(4, 3, 7).a()
+          >>> Point3D(4, 3, 7).a()
           (4.0, 3.0, 7.0)
         """
 
         return self.x, self.y, self.z
 
-    def __add__(self, another: 'Point') -> 'Point':
+    def __add__(self, another: 'Point3D') -> 'Point3D':
         """
         Sum of two points.
 
         :param another: the point to add
-        :type another: Point
+        :type another: Point3D
         :return: the sum of the two points
-        :rtype: Point
+        :rtype: Point3D
         :raise: Exception
 
         Example:
-          >>> Point(1, 0, 0) + Point(0, 1, 1)
+          >>> Point3D(1, 0, 0) + Point3D(0, 1, 1)
           Point(1.0000, 1.0000, 1.0000)
-          >>> Point(1, 1, 1) + Point(-1, -1, -1)
+          >>> Point3D(1, 1, 1) + Point3D(-1, -1, -1)
           Point(0.0000, 0.0000, 0.0000)
         """
 
-        check_type(another, "Second point", Point)
+        check_type(another, "Second point", Point3D)
 
         x0, y0, z0 = self
         x1, y1, z1 = another
 
-        return Point(
+        return Point3D(
             x=x0+x1,
             y=y0+y1,
             z=z0+z1
         )
 
     def __sub__(self,
-        another: 'Point'
-    ) -> 'Point':
+        another: 'Point3D'
+    ) -> 'Point3D':
         """Subtract two points.
 
         :param another: the point to subtract
-        :type another: Point
+        :type another: Point3D
         :return: the difference between the two points
-        :rtype: Point
+        :rtype: Point3D
         :raise: Exception
 
         Example:
-          >>> Point(1., 1., 1.) - Point(1., 1., 1.)
+          >>> Point3D(1., 1., 1.) - Point3D(1., 1., 1.)
           Point(0.0000, 0.0000, 0.0000)
-          >>> Point(1., 1., 3.) - Point(1., 1., 2.2)
+          >>> Point3D(1., 1., 3.) - Point3D(1., 1., 2.2)
           Point(0.0000, 0.0000, 0.8000)
         """
 
-        check_type(another, "Second point", Point)
+        check_type(another, "Second point", Point3D)
 
         x0, y0, z0 = self
         x1, y1, z1 = another
 
-        return Point(
+        return Point3D(
             x=x0 - x1,
             y=y0 - y1,
             z=z0 - z1
         )
 
-    def clone(self) -> 'Point':
+    def clone(self) -> 'Point3D':
         """
         Clone a point.
 
@@ -258,7 +258,7 @@ class Point:
         :rtype: Point.
         """
 
-        return Point(*self.a())
+        return Point3D(*self.a())
 
     def toXYZ(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real]:
         """
@@ -268,7 +268,7 @@ class Point:
         :rtype: a tuple of three floats.
 
         Examples:
-          >>> Point(1, 0, 3).toXYZ()
+          >>> Point3D(1, 0, 3).toXYZ()
           (1.0, 0.0, 3.0)
         """
 
@@ -281,53 +281,53 @@ class Point:
         :return: Numpy array
 
         Examples:
-          >>> np.allclose(Point(1, 2, 3).toArray(), np.array([ 1., 2., 3., 0.]))
+          >>> np.allclose(Point3D(1, 2, 3).toArray(), np.array([ 1., 2., 3., 0.]))
           True
         """
 
         return np.asarray(self.toXYZ())
 
-    def pXY(self) -> 'Point':
+    def pXY(self) -> 'Point3D':
         """
         Projection on the x-y plane
 
         :return: projected object instance
 
         Examples:
-          >>> Point(2, 3, 4).pXY()
+          >>> Point3D(2, 3, 4).pXY()
           Point(2.0000, 3.0000, 0.0000)
         """
 
-        return Point(self.x, self.y, 0.0)
+        return Point3D(self.x, self.y, 0.0)
 
-    def pXZ(self) -> 'Point':
+    def pXZ(self) -> 'Point3D':
         """
         Projection on the x-z plane
 
         :return: projected object instance
 
         Examples:
-          >>> Point(2, 3, 4).pXZ()
+          >>> Point3D(2, 3, 4).pXZ()
           Point(2.0000, 0.0000, 4.0000)
         """
 
-        return Point(self.x, 0.0, self.z)
+        return Point3D(self.x, 0.0, self.z)
 
-    def pYZ(self) -> 'Point':
+    def pYZ(self) -> 'Point3D':
         """
         Projection on the y-z plane
 
         :return: projected object instance
 
         Examples:
-          >>> Point(2, 3, 4).pYZ()
+          >>> Point3D(2, 3, 4).pYZ()
           Point(0.0000, 3.0000, 4.0000)
         """
 
-        return Point(0.0, self.y, self.z)
+        return Point3D(0.0, self.y, self.z)
 
     def deltaX(self,
-        another: 'Point'
+        another: 'Point3D'
     ) -> Optional[numbers.Real]:
         """
         Delta between x components of two Point Instances.
@@ -337,7 +337,7 @@ class Point:
         :raise: Exception
 
         Examples:
-          >>> Point(1, 2, 3).deltaX(Point(4, 7, 1))
+          >>> Point3D(1, 2, 3).deltaX(Point3D(4, 7, 1))
           3.0
         """
 
@@ -346,7 +346,7 @@ class Point:
         return another.x - self.x
 
     def deltaY(self,
-        another: 'Point'
+        another: 'Point3D'
     ) -> Optional[numbers.Real]:
         """
         Delta between y components of two Point Instances.
@@ -355,7 +355,7 @@ class Point:
         :rtype: optional numbers.Real.
 
         Examples:
-          >>> Point(1, 2, 3).deltaY(Point(4, 7, 1))
+          >>> Point3D(1, 2, 3).deltaY(Point3D(4, 7, 1))
           5.0
         """
 
@@ -364,7 +364,7 @@ class Point:
         return another.y - self.y
 
     def deltaZ(self,
-        another: 'Point'
+        another: 'Point3D'
     ) -> Optional[numbers.Real]:
         """
         Delta between z components of two Point Instances.
@@ -373,7 +373,7 @@ class Point:
         :rtype: optional numbers.Real.
 
         Examples:
-          >>> Point(1, 2, 3).deltaZ(Point(4, 7, 1))
+          >>> Point3D(1, 2, 3).deltaZ(Point3D(4, 7, 1))
           -2.0
         """
 
@@ -382,7 +382,7 @@ class Point:
         return another.z - self.z
 
     def distance(self,
-                 another: 'Point'
+                 another: 'Point3D'
                  ) -> numbers.Real:
         """
         Calculate Euclidean spatial distance between two points.
@@ -395,20 +395,20 @@ class Point:
         :raise: Exception.
 
         Examples:
-          >>> Point(1., 1., 1.).distance(Point(4., 5., 1))
+          >>> Point3D(1., 1., 1.).distance(Point3D(4., 5., 1))
           5.0
-          >>> Point(1, 1, 1).distance(Point(4, 5, 1))
+          >>> Point3D(1, 1, 1).distance(Point3D(4, 5, 1))
           5.0
-          >>> Point(1, 1, 1).distance(Point(4, 5, 1))
+          >>> Point3D(1, 1, 1).distance(Point3D(4, 5, 1))
           5.0
         """
 
-        check_type(another, "Point", Point)
+        check_type(another, "Point", Point3D)
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
     def horizontal_distance(self,
-                            another: 'Point'
+                            another: 'Point3D'
                             ) -> numbers.Real:
         """
         Calculate horizontal (2D) distance between two points.
@@ -421,68 +421,68 @@ class Point:
         :raise: Exception.
 
         Examples:
-          >>> Point(1., 1., 1.).horizontal_distance(Point(4., 5., 7.))
+          >>> Point3D(1., 1., 1.).horizontal_distance(Point3D(4., 5., 7.))
           5.0
         """
 
-        check_type(another, "Second point", Point)
+        check_type(another, "Second point", Point3D)
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
     def scale(self,
         scale_factor: numbers.Real
-    ) -> 'Point':
+    ) -> 'Point3D':
         """
         Create a scaled object.
         Note: it does not make sense for polar coordinates.
         TODO: manage polar coordinates cases OR deprecate and remove - after dependency check.
 
         Example;
-          >>> Point(1, 0, 1).scale(2.5)
+          >>> Point3D(1, 0, 1).scale(2.5)
           Point(2.5000, 0.0000, 2.5000)
-          >>> Point(1, 0, 1).scale(2.5)
+          >>> Point3D(1, 0, 1).scale(2.5)
           Point(2.5000, 0.0000, 2.5000)
         """
 
         x, y, z = self.x * scale_factor, self.y * scale_factor, self.z * scale_factor
-        return Point(x, y, z)
+        return Point3D(x, y, z)
 
-    def invert(self) -> 'Point':
+    def invert(self) -> 'Point3D':
         """
         Create a new object with inverted direction.
         Note: it depends on scale method, that could be deprecated/removed.
 
         Examples:
-          >>> Point(1, 1, 1).invert()
+          >>> Point3D(1, 1, 1).invert()
           Point(-1.0000, -1.0000, -1.0000)
-          >>> Point(2, -1, 4).invert()
+          >>> Point3D(2, -1, 4).invert()
           Point(-2.0000, 1.0000, -4.0000)
         """
 
         return self.scale(-1)
 
-    def reflect_vertical(self) -> 'Point':
+    def reflect_vertical(self) -> 'Point3D':
         """
         Reflect a point along a vertical axis.
 
         :return: reflected point.
-        :rtype: Point
+        :rtype: Point3D
 
         Examples:
-          >>> Point(1,1,1).reflect_vertical()
+          >>> Point3D(1,1,1).reflect_vertical()
           Point(-1.0000, -1.0000, 1.0000)
         """
 
         x, y, z = self
 
-        return Point(
+        return Point3D(
             x=-x,
             y=-y,
             z=z
         )
 
     def is_coincident(self,
-                      another: 'Point',
+                      another: 'Point3D',
                       tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
                       ) -> bool:
         """
@@ -497,20 +497,20 @@ class Point:
         :raise: Exception.
 
         Example:
-          >>> Point(1., 0., -1.).is_coincident(Point(1., 1.5, -1.))
+          >>> Point3D(1., 0., -1.).is_coincident(Point3D(1., 1.5, -1.))
           False
-          >>> Point(1., 0., 0.).is_coincident(Point(1., 0., 0.))
+          >>> Point3D(1., 0., 0.).is_coincident(Point3D(1., 0., 0.))
           True
         """
 
-        check_type(another, "Second point", Point)
+        check_type(another, "Second point", Point3D)
 
         return self.distance(another) <= tolerance
 
     def already_present(self,
-        pt_list: List['Point'],
-        tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
-    ) -> Optional[bool]:
+                        pt_list: List['Point3D'],
+                        tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                        ) -> Optional[bool]:
         """
         Determines if a point is already in a given point list, using an optional distance separation,
 
@@ -531,22 +531,22 @@ class Point:
         sx: numbers.Real,
         sy: numbers.Real,
         sz: numbers.Real
-    ) -> Optional['Point']:
+    ) -> Optional['Point3D']:
         """
         Create a new object shifted by given amount from the self instance.
 
         Example:
-          >>> Point(1, 1, 1).shift(0.5, 1., 1.5)
+          >>> Point3D(1, 1, 1).shift(0.5, 1., 1.5)
           Point(1.5000, 2.0000, 2.5000)
-          >>> Point(1, 2, -1).shift(0.5, 1., 1.5)
+          >>> Point3D(1, 2, -1).shift(0.5, 1., 1.5)
           Point(1.5000, 3.0000, 0.5000)
        """
 
-        return Point(self.x + sx, self.y + sy, self.z + sz)
+        return Point3D(self.x + sx, self.y + sy, self.z + sz)
 
     def shiftByVect(self,
         v: Vect
-    ) -> 'Point':
+    ) -> 'Point3D':
         """
         Create a new point shifted from the self instance by given vector.
 
@@ -557,9 +557,9 @@ class Point:
         :raise: Exception
 
         Example:
-          >>> Point(1, 1, 1).shiftByVect(Vect(0.5, 1., 1.5))
+          >>> Point3D(1, 1, 1).shiftByVect(Vect(0.5, 1., 1.5))
           Point(1.5000, 2.0000, 2.5000)
-          >>> Point(1, 2, -1).shiftByVect(Vect(0.5, 1., 1.5))
+          >>> Point3D(1, 2, -1).shiftByVect(Vect(0.5, 1., 1.5))
           Point(1.5000, 3.0000, 0.5000)
        """
 
@@ -567,16 +567,16 @@ class Point:
 
         sx, sy, sz = v.toXYZ()
 
-        return Point(x + sx, y + sy, z + sz)
+        return Point3D(x + sx, y + sy, z + sz)
 
     def asVect(self) -> 'Vect':
         """
         Create a vector based on the point coordinates
 
         Example:
-          >>> Point(1, 1, 0).asVect()
+          >>> Point3D(1, 1, 0).asVect()
           Vect(1.0000, 1.0000, 0.0000)
-          >>> Point(0.2, 1, 6).asVect()
+          >>> Point3D(0.2, 1, 6).asVect()
           Vect(0.2000, 1.0000, 6.0000)
         """
 
@@ -584,25 +584,25 @@ class Point:
 
     def rotate(self,
         rotation_axis: RotationAxis,
-        center_point: 'Point' = None
-        ) -> 'Point':
+        center_point: 'Point3D' = None
+        ) -> 'Point3D':
         """
         Rotates a point.
         :param rotation_axis:
         :param center_point:
         :return: the rotated point
-        :rtype: Point
+        :rtype: Point3D
 
         Examples:
-          >>> pt = Point(0,0,1)
+          >>> pt = Point3D(0,0,1)
           >>> rot_axis = RotationAxis(0,0,90)
-          >>> center_pt = Point(0,0,0.5)
+          >>> center_pt = Point3D(0,0,0.5)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(0.5000, 0.0000, 0.5000)
-          >>> center_pt = Point(0,0,1)
+          >>> center_pt = Point3D(0,0,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(0.0000, 0.0000, 1.0000)
-          >>> center_pt = Point(0, 0, 2)
+          >>> center_pt = Point3D(0, 0, 2)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(-1.0000, 0.0000, 2.0000)
           >>> rot_axis = RotationAxis(0,0,180)
@@ -610,35 +610,35 @@ class Point:
           Point(-0.0000, 0.0000, 3.0000)
           >>> pt.rotate(rotation_axis=rot_axis)
           Point(0.0000, 0.0000, -1.0000)
-          >>> pt = Point(1,1,1,5)
+          >>> pt = Point3D(1,1,1,5)
           >>> rot_axis = RotationAxis(0,90,90)
           >>> pt.rotate(rotation_axis=rot_axis)
           Point(1.0000, -1.0000, 1.0000)
           >>> rot_axis = RotationAxis(0,90,180)
           >>> pt.rotate(rotation_axis=rot_axis)
           Point(-1.0000, -1.0000, 1.0000)
-          >>> center_pt = Point(1,1,1)
+          >>> center_pt = Point3D(1,1,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(1.0000, 1.0000, 1.0000)
-          >>> center_pt = Point(2,2,10)
+          >>> center_pt = Point3D(2,2,10)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(3.0000, 3.0000, 1.0000)
-          >>> pt = Point(1, 1, 2)
+          >>> pt = Point3D(1, 1, 2)
           >>> rot_axis = RotationAxis(135, 0, 180)
-          >>> center_pt = Point(0,0,1)
+          >>> center_pt = Point3D(0,0,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(-1.0000, -1.0000, 0.0000)
         """
 
         if not center_point:
 
-            center_point = Point(
+            center_point = Point3D(
                 x=0.0,
                 y=0.0,
                 z=0.0
             )
 
-        check_type(center_point, "Center point", Point)
+        check_type(center_point, "Center point", Point3D)
 
         p_diff = self - center_point
 
@@ -651,7 +651,7 @@ class Point:
 
         x, y, z, epsg_cd = rot_vect
 
-        rot_pt = Point(
+        rot_pt = Point3D(
             x=x,
             y=y,
             z=z
@@ -670,7 +670,7 @@ class Point:
         Creates a random point.
 
         :return: random point
-        :rtype: Point
+        :rtype: Point3D
         """
 
         vals = [random.uniform(lower_boundary, upper_boundary) for _ in range(3)]
@@ -681,7 +681,7 @@ def pack_to_points(
     xs: array,
     ys: array,
     zs: Optional[array] = None,
-) -> List[Point]:
+) -> List[Point3D]:
     # Side effects: None
     """
     Create a list of points given a set
@@ -702,7 +702,7 @@ def pack_to_points(
     pts = []
     for x, y, z, t in zip(xs, ys, zs):
         pts.append(
-            Point(
+            Point3D(
                 x,
                 y,
                 z
@@ -712,15 +712,15 @@ def pack_to_points(
     return pts
 
 
-class Segment:
+class Segment3D:
     """
     Segment is a geometric object defined by the straight line between
     two vertices.
     """
 
     def __init__(self,
-                 start_pt: Point,
-                 end_pt: Point):
+                 start_pt: Point3D,
+                 end_pt: Point3D):
         """
         Creates a segment instance provided the two points have the same CRS code.
 
@@ -728,13 +728,13 @@ class Segment:
         :type: Point.
         :param end_pt: the end point.
         :type end_pt: Point.
-        :return: the new segment instance if both points have the same geolocated.
+        :return: the new segment instance if both points have the same georeferenced.
         :raises: CRSCodeException.
         """
 
-        check_type(start_pt, "Start point", Point)
+        check_type(start_pt, "Start point", Point3D)
 
-        check_type(end_pt, "End point", Point)
+        check_type(end_pt, "End point", Point3D)
 
         if start_pt.distance(end_pt) == 0.0:
             raise Exception("Source points cannot be coincident")
@@ -744,10 +744,10 @@ class Segment:
 
     @classmethod
     def fromVector(cls,
-                   point: Point,
+                   point: Point3D,
                    dir_vector: Vect):
 
-        check_type(point, "Input point", Point)
+        check_type(point, "Input point", Point3D)
         check_type(dir_vector, "Directional vector", Vect)
 
         start_pt = point
@@ -772,12 +772,12 @@ class Segment:
         )
 
     @property
-    def start_pt(self) -> Point:
+    def start_pt(self) -> Point3D:
 
         return self._start_pt
 
     @property
-    def end_pt(self) -> Point:
+    def end_pt(self) -> Point3D:
 
         return self._end_pt
 
@@ -788,14 +788,14 @@ class Segment:
 
         return (i for i in [self.start_pt, self.end_pt])
 
-    def clone(self) -> 'Segment':
+    def clone(self) -> 'Segment3D':
 
-        return Segment(self._start_pt, self._end_pt)
+        return Segment3D(self._start_pt, self._end_pt)
 
-    def increasing_x(self) -> 'Segment':
+    def increasing_x(self) -> 'Segment3D':
 
         if self.end_pt.x < self.start_pt.x:
-            return Segment(self.end_pt, self.start_pt)
+            return Segment3D(self.end_pt, self.start_pt)
         else:
             return self.clone()
 
@@ -913,7 +913,7 @@ class Segment:
         return self.vector().invert()
 
     def contains_pt(self,
-        pt: Point
+        pt: Point3D
     ) -> bool:
         """
         Checks whether a point is contained in a segment.
@@ -923,40 +923,40 @@ class Segment:
         :raise: Exception.
 
         Examples:
-          >>> segment = Segment(Point(0, 0, 0), Point(1, 0, 0))
-          >>> segment.contains_pt(Point(0, 0, 0))
+          >>> segment = Segment3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
+          >>> segment.contains_pt(Point3D(0, 0, 0))
           True
-          >>> segment.contains_pt(Point(1, 0, 0))
+          >>> segment.contains_pt(Point3D(1, 0, 0))
           True
-          >>> segment.contains_pt(Point(0.5, 0, 0))
+          >>> segment.contains_pt(Point3D(0.5, 0, 0))
           True
-          >>> segment.contains_pt(Point(0.5, 0.00001, 0))
+          >>> segment.contains_pt(Point3D(0.5, 0.00001, 0))
           False
-          >>> segment.contains_pt(Point(0.5, 0, 0.00001))
+          >>> segment.contains_pt(Point3D(0.5, 0, 0.00001))
           False
-          >>> segment.contains_pt(Point(1.00001, 0, 0))
+          >>> segment.contains_pt(Point3D(1.00001, 0, 0))
           False
-          >>> segment.contains_pt(Point(0.000001, 0, 0))
+          >>> segment.contains_pt(Point3D(0.000001, 0, 0))
           True
-          >>> segment.contains_pt(Point(-0.000001, 0, 0))
+          >>> segment.contains_pt(Point3D(-0.000001, 0, 0))
           False
-          >>> segment.contains_pt(Point(0.5, 1000, 1000))
+          >>> segment.contains_pt(Point3D(0.5, 1000, 1000))
           False
-          >>> segment = Segment(Point(0, 0, 0), Point(0, 1, 0))
-          >>> segment.contains_pt(Point(0, 0, 0))
+          >>> segment = Segment3D(Point3D(0, 0, 0), Point3D(0, 1, 0))
+          >>> segment.contains_pt(Point3D(0, 0, 0))
           True
-          >>> segment.contains_pt(Point(0, 0.5, 0))
+          >>> segment.contains_pt(Point3D(0, 0.5, 0))
           True
-          >>> segment.contains_pt(Point(0, 1, 0))
+          >>> segment.contains_pt(Point3D(0, 1, 0))
           True
-          >>> segment.contains_pt(Point(0, 1.5, 0))
+          >>> segment.contains_pt(Point3D(0, 1.5, 0))
           False
-          >>> segment = Segment(Point(0, 0, 0), Point(1, 1, 1))
-          >>> segment.contains_pt(Point(0.5, 0.5, 0.5))
+          >>> segment = Segment3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
+          >>> segment.contains_pt(Point3D(0.5, 0.5, 0.5))
           True
-          >>> segment.contains_pt(Point(1, 1, 1))
+          >>> segment.contains_pt(Point3D(1, 1, 1))
           True
-          >>> segment = Segment(Point(1,2,3), Point(9,8,2))
+          >>> segment = Segment3D(Point3D(1,2,3), Point3D(9,8,2))
           >>> segment.contains_pt(segment.pointAt(0.745))
           True
           >>> segment.contains_pt(segment.pointAt(1.745))
@@ -967,7 +967,7 @@ class Segment:
           True
         """
 
-        check_type(pt, "Point", Point)
+        check_type(pt, "Point", Point3D)
 
         segment_length = self.length()
         length_startpt_pt = self.start_pt.distance(pt)
@@ -980,7 +980,7 @@ class Segment:
 
     def pointAt(self,
         scale_factor: numbers.Real
-    ) -> Point:
+    ) -> Point3D:
         """
         Returns a point aligned with the segment
         and lying at given scale factor, where 1 is segment length
@@ -989,10 +989,10 @@ class Segment:
         :param scale_factor: the scale factor, where 1 is the segment length.
         :type scale_factor: numbers.Real
         :return: Point at scale factor
-        :rtype: Point
+        :rtype: Point3D
 
         Examples:
-          >>> s = Segment(Point(0,0,0), Point(1,0,0))
+          >>> s = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
           >>> s.pointAt(0)
           Point(0.0000, 0.0000, 0.0000)
           >>> s.pointAt(0.5)
@@ -1005,7 +1005,7 @@ class Segment:
           Point(-2.0000, 0.0000, 0.0000)
           >>> s.pointAt(2)
           Point(2.0000, 0.0000, 0.0000)
-          >>> s = Segment(Point(0,0,0), Point(0,0,1))
+          >>> s = Segment3D(Point3D(0,0,0), Point3D(0,0,1))
           >>> s.pointAt(0)
           Point(0.0000, 0.0000, 0.0000)
           >>> s.pointAt(0.5)
@@ -1018,10 +1018,10 @@ class Segment:
           Point(0.0000, 0.0000, -2.0000)
           >>> s.pointAt(2)
           Point(0.0000, 0.0000, 2.0000)
-          >>> s = Segment(Point(0,0,0), Point(1,1,1))
+          >>> s = Segment3D(Point3D(0,0,0), Point3D(1,1,1))
           >>> s.pointAt(0.5)
           Point(0.5000, 0.5000, 0.5000)
-          >>> s = Segment(Point(0,0,0), Point(4,0,0))
+          >>> s = Segment3D(Point3D(0,0,0), Point3D(4,0,0))
           >>> s.pointAt(7.5)
           Point(30.0000, 0.0000, 0.0000)
         """
@@ -1030,34 +1030,34 @@ class Segment:
         dy = self.delta_y() * scale_factor
         dz = self.delta_z() * scale_factor
 
-        return Point(
+        return Point3D(
             x=self.start_pt.x + dx,
             y=self.start_pt.y + dy,
             z=self.start_pt.z + dz
         )
 
     def pointProjection(self,
-        point: Point
-    ) -> Point:
+        point: Point3D
+    ) -> Point3D:
         """
         Return the point projection on the segment.
 
         Examples:
-          >>> s = Segment(start_pt=Point(0,0,0), end_pt=Point(1,0,0))
-          >>> p = Point(0.5, 1, 4)
+          >>> s = Segment3D(start_pt=Point3D(0,0,0), end_pt=Point3D(1,0,0))
+          >>> p = Point3D(0.5, 1, 4)
           >>> s.pointProjection(p)
           Point(0.5000, 0.0000, 0.0000)
-          >>> s = Segment(start_pt=Point(0,0,0), end_pt=Point(4,0,0))
-          >>> p = Point(7.5, 19.2, -14.72)
+          >>> s = Segment3D(start_pt=Point3D(0,0,0), end_pt=Point3D(4,0,0))
+          >>> p = Point3D(7.5, 19.2, -14.72)
           >>> s.pointProjection(p)
           Point(7.5000, 0.0000, 0.0000)
         """
 
-        check_type(point, "Input point", Point)
+        check_type(point, "Input point", Point3D)
 
         check_crs(self, point)
 
-        other_segment = Segment(
+        other_segment = Segment3D(
             self.start_pt,
             point
         )
@@ -1066,25 +1066,25 @@ class Segment:
         return self.pointAt(scale_factor)
 
     def pointDistance(self,
-        point: Point
+        point: Point3D
     ) -> numbers.Real:
         """
         Returns the point distance to the segment.
 
         :param point: the point to calculate the distance with
-        :type point: Point
+        :type point: Point3D
         :return: the distance of the point to the segment
         :rtype: numbers.Real
 
         Examples:
-          >>> s = Segment(Point(0,0,0), Point(0,0,4))
-          >>> s.pointDistance(Point(-17.2, 0.0, -49,3))
+          >>> s = Segment3D(Point3D(0,0,0), Point3D(0,0,4))
+          >>> s.pointDistance(Point3D(-17.2, 0.0, -49,3))
           17.2
-          >>> s.pointDistance(Point(-17.2, 1.22, -49,3))
+          >>> s.pointDistance(Point3D(-17.2, 1.22, -49,3))
           17.24321315764553
         """
 
-        check_type(point, "Input point", Point)
+        check_type(point, "Input point", Point3D)
 
         #check_crs(self, point)
 
@@ -1093,7 +1093,7 @@ class Segment:
         return point.distance(point_projection)
 
     def point_s(self,
-                point: Point
+                point: Point3D
                 ) -> Optional[numbers.Real]:
         """
         Calculates the optional distance of the point along the segment.
@@ -1101,11 +1101,11 @@ class Segment:
         Returns None if the point is not contained in the segment.
 
         :param point: the point to calculate the optional distance in the segment.
-        :type point: Point
+        :type point: Point3D
         :return: the the optional distance of the point along the segment.
         """
 
-        check_type(point, "Input point", Point)
+        check_type(point, "Input point", Point3D)
 
         #check_crs(self, point)
 
@@ -1116,7 +1116,7 @@ class Segment:
 
     def scale(self,
         scale_factor
-    ) -> 'Segment':
+    ) -> 'Segment3D':
         """
         Scale a segment by the given scale_factor.
         Start point does not change.
@@ -1124,16 +1124,16 @@ class Segment:
         :param scale_factor: the scale factor, where 1 is the segment length.
         :type scale_factor: numbers.Real
         :return: Point at scale factor
-        :rtype: Point
+        :rtype: Point3D
         """
 
         end_pt = self.pointAt(scale_factor)
 
-        return Segment(
+        return Segment3D(
             self.start_pt,
             end_pt)
 
-    def vertical_plane(self) -> Optional['CPlane']:
+    def vertical_plane(self) -> Optional['CPlane3D']:
         """
         Returns the vertical Cartesian plane containing the segment.
 
@@ -1151,15 +1151,15 @@ class Segment:
             sy=0.0,
             sz=1000.0)
 
-        return CPlane.fromPoints(
+        return CPlane3D.fromPoints(
             pt1=self.start_pt,
             pt2=self.end_pt,
             pt3=section_final_pt_up)
 
     def same_start(self,
-        another: 'Segment',
-        tol: numbers.Real = 1e-12
-    ) -> bool:
+                   another: 'Segment3D',
+                   tol: numbers.Real = 1e-12
+                   ) -> bool:
         """
         Check whether the two segments have the same start point.
 
@@ -1171,8 +1171,8 @@ class Segment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
-          >>> s2 = Segment(Point(0,0,0), Point(0,1,0))
+          >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
+          >>> s2 = Segment3D(Point3D(0,0,0), Point3D(0,1,0))
           >>> s1.same_start(s2)
           True
         """
@@ -1183,9 +1183,9 @@ class Segment:
         )
 
     def same_end(self,
-        another: 'Segment',
-        tol: numbers.Real = 1e-12
-    ) -> bool:
+                 another: 'Segment3D',
+                 tol: numbers.Real = 1e-12
+                 ) -> bool:
         """
         Check whether the two segments have the same end point.
 
@@ -1197,8 +1197,8 @@ class Segment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
-          >>> s2 = Segment(Point(2,0,0), Point(1,0,0))
+          >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
+          >>> s2 = Segment3D(Point3D(2,0,0), Point3D(1,0,0))
           >>> s1.same_end(s2)
           True
         """
@@ -1208,9 +1208,9 @@ class Segment:
             tolerance=tol)
 
     def conn_to_other(self,
-        another: 'Segment',
-        tol: numbers.Real = 1e-12
-    ) -> bool:
+                      another: 'Segment3D',
+                      tol: numbers.Real = 1e-12
+                      ) -> bool:
         """
         Check whether the first segment is sequentially connected to the second one.
 
@@ -1222,8 +1222,8 @@ class Segment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
-          >>> s2 = Segment(Point(1,0,0), Point(2,0,0))
+          >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
+          >>> s2 = Segment3D(Point3D(1,0,0), Point3D(2,0,0))
           >>> s1.conn_to_other(s2)
           True
         """
@@ -1233,9 +1233,9 @@ class Segment:
             tolerance=tol)
 
     def other_connected(self,
-        another: 'Segment',
-        tol: numbers.Real = 1e-12
-    ) -> bool:
+                        another: 'Segment3D',
+                        tol: numbers.Real = 1e-12
+                        ) -> bool:
         """
         Check whether the second segment is sequentially connected to the first one.
 
@@ -1247,8 +1247,8 @@ class Segment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
-          >>> s2 = Segment(Point(-1,0,0), Point(0,0,0))
+          >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
+          >>> s2 = Segment3D(Point3D(-1,0,0), Point3D(0,0,0))
           >>> s1.other_connected(s2)
           True
         """
@@ -1258,7 +1258,7 @@ class Segment:
             tolerance=tol)
 
     def segment_start_in(self,
-        another: 'Segment'
+        another: 'Segment3D'
     ) -> bool:
         """
         Check whether the second segment contains the first segment start point.
@@ -1269,17 +1269,17 @@ class Segment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
-          >>> s2 = Segment(Point(-0.5,0,0), Point(0.5,0,0))
+          >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
+          >>> s2 = Segment3D(Point3D(-0.5,0,0), Point3D(0.5,0,0))
           >>> s1.segment_start_in(s2)
           True
-          >>> s1 = Segment(Point(0,0,0), Point(1,1,1))
+          >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1,1,1))
           >>> s1.segment_start_in(s2)
           True
-          >>> s1 = Segment(Point(0,1,0), Point(1,1,1))
+          >>> s1 = Segment3D(Point3D(0,1,0), Point3D(1,1,1))
           >>> s1.segment_start_in(s2)
           False
-          >>> s1 = Segment(Point(-1,-1,-1), Point(1,1,1))
+          >>> s1 = Segment3D(Point3D(-1,-1,-1), Point3D(1,1,1))
           >>> s1.segment_start_in(s2)
           False
         """
@@ -1287,7 +1287,7 @@ class Segment:
         return another.contains_pt(self.start_pt)
 
     def segment_end_in(self,
-        another: 'Segment'
+        another: 'Segment3D'
     ) -> bool:
         """
         Check whether the second segment contains the first segment end point.
@@ -1298,19 +1298,19 @@ class Segment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
-          >>> s2 = Segment(Point(-0.5,0,0), Point(0.5,0,0))
+          >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
+          >>> s2 = Segment3D(Point3D(-0.5,0,0), Point3D(0.5,0,0))
           >>> s1.segment_end_in(s2)
           False
-          >>> s1 = Segment(Point(0,0,0), Point(1,1,1))
+          >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1,1,1))
           >>> s1.segment_end_in(s2)
           False
-          >>> s1 = Segment(Point(0,1,0), Point(1,1,1))
-          >>> s2 = Segment(Point(1,1,1), Point(0.5,0,0))
+          >>> s1 = Segment3D(Point3D(0,1,0), Point3D(1,1,1))
+          >>> s2 = Segment3D(Point3D(1,1,1), Point3D(0.5,0,0))
           >>> s1.segment_end_in(s2)
           True
-          >>> s1 = Segment(Point(-1,-1,3), Point(1,1,3))
-          >>> s2 = Segment(Point(0,2,3), Point(2,0,3))
+          >>> s1 = Segment3D(Point3D(-1,-1,3), Point3D(1,1,3))
+          >>> s2 = Segment3D(Point3D(0,2,3), Point3D(2,0,3))
           >>> s1.segment_end_in(s2)
           True
         """
@@ -1319,34 +1319,34 @@ class Segment:
 
     def rotate(self,
         rotation_axis: 'RotationAxis',
-        center_point: 'Point' = None
-        ) -> 'Segment':
+        center_point: 'Point3D' = None
+        ) -> 'Segment3D':
         """
         Rotates a segment.
         :param rotation_axis:
         :param center_point:
         :return: the rotated segment
-        :rtype: Segment
+        :rtype: Segment3D
 
         Examples:
-        >>> seg = Segment(Point(0,0,0), Point(0,0,1))
+        >>> seg = Segment3D(Point3D(0,0,0), Point3D(0,0,1))
         >>> rot_ax = RotationAxis(0, 0, 90)
         >>> seg.rotate(rot_ax)
         Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
         >>> rot_ax = RotationAxis(0, 0, 180)
         >>> seg.rotate(rot_ax)
         Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(0.0000.0000))
-        >>> centr_pt = Point(0,0,0.5)
+        >>> centr_pt = Point3D(0,0,0.5)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
         Segment(start_pt=Point(-0.0000, 0.0000, 1.0000), end_pt=Point(0.0000, 0.0000, 0.0000))
-        >>> seg = Segment(Point(0,0,0), Point(1,1,0))
-        >>> centr_pt = Point(1,0,0)
+        >>> seg = Segment3D(Point3D(0,0,0), Point3D(1,1,0))
+        >>> centr_pt = Point3D(1,0,0)
         >>> rot_ax = RotationAxis(0, 90, 90)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
         Segment(start_pt=Point(1.0000, 1.0000, 0.0000), end_pt=Point(2.0000, 0.0000, -0.0000))
-        >>> seg = Segment(Point(1,1,1), Point(0,0,0))
+        >>> seg = Segment3D(Point3D(1,1,1), Point3D(0,0,0))
         >>> rot_ax = RotationAxis(135, 0, 180)
-        >>> centr_pt = Point(0.5,0.5,0.5)
+        >>> centr_pt = Point3D(0.5,0.5,0.5)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
         Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 1.0000, 1.0000))
         """
@@ -1363,7 +1363,7 @@ class Segment:
             center_point=center_point
         )
 
-        return Segment(
+        return Segment3D(
             start_pt=rotated_start_pt,
             end_pt=rotated_end_pt
         )
@@ -1376,20 +1376,20 @@ class Segment:
         Creates a random segment.
 
         :return: random segment
-        :rtype: Segment
+        :rtype: Segment3D
         """
 
         return cls(
-            start_pt=Point.random(lower_boundary, upper_boundary),
-            end_pt=Point.random(lower_boundary, upper_boundary)
+            start_pt=Point3D.random(lower_boundary, upper_boundary),
+            end_pt=Point3D.random(lower_boundary, upper_boundary)
         )
 
 
 def point_or_segment(
-        point1: Point,
-        point2: Point,
+        point1: Point3D,
+        point2: Point3D,
         tol: numbers.Real = PRACTICAL_MIN_DIST
-) -> Union[Point, Segment]:
+) -> Union[Point3D, Segment3D]:
     """
     Creates a point or segment based on the points distance.
 
@@ -1404,25 +1404,25 @@ def point_or_segment(
     :raise: Exception.
     """
 
-    check_type(point1, "First point", Point)
-    check_type(point2, "Second point", Point)
+    check_type(point1, "First point", Point3D)
+    check_type(point2, "Second point", Point3D)
 
     #check_crs(point1, point2)
 
     if point1.distance(point2) <= tol:
         return mean([point1, point2])
     else:
-        return Segment(
+        return Segment3D(
             start_pt=point1,
             end_pt=point2
         )
 
 
 def intersect_segments(
-    segment1: Segment,
-    segment2: Segment,
+    segment1: Segment3D,
+    segment2: Segment3D,
     tol: numbers.Real = PRACTICAL_MIN_DIST
-) -> Optional[Union[Point, Segment]]:
+) -> Optional[Union[Point3D, Segment3D]]:
     """
     Determines the optional point or segment intersection between the segment pair.
 
@@ -1432,64 +1432,64 @@ def intersect_segments(
     :return: the optional point or segment intersection between the segment pair.
 
     Examples:
-      >>> s2 = Segment(Point(0,0,0), Point(1,0,0))
-      >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+      >>> s2 = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
+      >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
-      >>> s1 = Segment(Point(-2,0,0), Point(-1,0,0))
+      >>> s1 = Segment3D(Point3D(-2,0,0), Point3D(-1,0,0))
       >>> intersect_segments(s1, s2) is None
       True
-      >>> s1 = Segment(Point(-2,0,0), Point(0,0,0))
+      >>> s1 = Segment3D(Point3D(-2,0,0), Point3D(0,0,0))
       >>> intersect_segments(s1, s2)
       Point(0.0000, 0.0000, 0.0000)
-      >>> s1 = Segment(Point(-2,0,0), Point(0.5,0,0))
+      >>> s1 = Segment3D(Point3D(-2,0,0), Point3D(0.5,0,0))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(0.5000, 0.0000, 0.0000))
-      >>> s1 = Segment(Point(-2,0,0), Point(1,0,0))
+      >>> s1 = Segment3D(Point3D(-2,0,0), Point3D(1,0,0))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
-      >>> s1 = Segment(Point(-2,0,0), Point(2,0,0))
+      >>> s1 = Segment3D(Point3D(-2,0,0), Point3D(2,0,0))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
-      >>> s1 = Segment(Point(0,0,0), Point(0.5,0,0))
+      >>> s1 = Segment3D(Point3D(0,0,0), Point3D(0.5,0,0))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(0.5000, 0.0000, 0.0000))
-      >>> s1 = Segment(Point(0.25,0,0), Point(0.75,0,0))
+      >>> s1 = Segment3D(Point3D(0.25,0,0), Point3D(0.75,0,0))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.2500, 0.0000, 0.0000), end_pt=Point(0.7500, 0.0000, 0.0000))
-      >>> s1 = Segment(Point(0.25,0,0), Point(1,0,0))
+      >>> s1 = Segment3D(Point3D(0.25,0,0), Point3D(1,0,0))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.2500, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
-      >>> s1 = Segment(Point(0.25,0,0), Point(1.25,0,0))
+      >>> s1 = Segment3D(Point3D(0.25,0,0), Point3D(1.25,0,0))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.2500, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
-      >>> s1 = Segment(Point(0,0,0), Point(1.25,0,0))
+      >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1.25,0,0))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
-      >>> s1 = Segment(Point(1,0,0), Point(1.25,0,0))
+      >>> s1 = Segment3D(Point3D(1,0,0), Point3D(1.25,0,0))
       >>> intersect_segments(s1, s2)
       Point(1.0000, 0.0000, 0.0000)
-      >>> s2 = Segment(Point(0,0,0), Point(1,1,1))
-      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(0.75,0.75,0.75))
+      >>> s2 = Segment3D(Point3D(0,0,0), Point3D(1,1,1))
+      >>> s1 = Segment3D(Point3D(0.25,0.25,0.25), Point3D(0.75,0.75,0.75))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.2500, 0.2500, 0.2500), end_pt=Point(0.7500, 0.7500, 0.7500))
-      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,1.75,1.75))
+      >>> s1 = Segment3D(Point3D(0.25,0.25,0.25), Point3D(1.75,1.75,1.75))
       >>> intersect_segments(s1, s2)
       Segment(start_pt=Point(0.2500, 0.2500, 0.2500), end_pt=Point(1.0000, 1.0000, 1.0000))
-      >>> s1 = Segment(Point(0.25,0.25,0.25), Point(1.75,0,1.75))
+      >>> s1 = Segment3D(Point3D(0.25,0.25,0.25), Point3D(1.75,0,1.75))
       >>> intersect_segments(s1, s2)
       Point(0.2500, 0.2500, 0.2500)
-      >>> s1 = Segment(Point(0.25,1,0.25), Point(0.75,0.75,0.75))
+      >>> s1 = Segment3D(Point3D(0.25,1,0.25), Point3D(0.75,0.75,0.75))
       >>> intersect_segments(s1, s2)
       Point(0.7500, 0.7500, 0.7500)
-      >>> s2 = Segment(Point(-1,-1,-1), Point(1,1,1))
-      >>> s1 = Segment(Point(-1,1,1), Point(1,-1,-1))
+      >>> s2 = Segment3D(Point3D(-1,-1,-1), Point3D(1,1,1))
+      >>> s1 = Segment3D(Point3D(-1,1,1), Point3D(1,-1,-1))
       >>> intersect_segments(s1, s2)
       Point(-0.0000, 0.0000, 0.0000)
     """
 
-    check_type(segment1, "First segment", Segment)
-    check_type(segment2, "Second segment", Segment)
+    check_type(segment1, "First segment", Segment3D)
+    check_type(segment2, "Second segment", Segment3D)
 
     #check_crs(segment1, segment2)
 
@@ -1559,7 +1559,7 @@ def intersect_segments(
     if not shortest_segm_or_pt:
         return None
 
-    if not isinstance(shortest_segm_or_pt, Point):
+    if not isinstance(shortest_segm_or_pt, Point3D):
         return None
 
     inters_pt = shortest_segm_or_pt
@@ -1573,20 +1573,20 @@ def intersect_segments(
     return inters_pt
 
 
-class Line:
+class Line3D:
     """
     A line.
     """
 
     def __init__(self,
-                 pts: List[Point]):
+                 pts: List[Point3D]):
         """
 
         """
 
         check_type(pts, "List", list)
         for el in pts:
-            check_type(el, "Point", Point)
+            check_type(el, "Point", Point3D)
 
         self._pts = pts
 
@@ -1602,7 +1602,7 @@ class Line:
         return self._pts[ndx]
 
     def add_pt(self,
-               pt: Point):
+               pt: Point3D):
 
         self._pts.append(pt)
 
@@ -1636,7 +1636,7 @@ class Line:
 
         pts_pairs = zip(self.pts()[:-1], self.pts()[1:])
 
-        segments = [Segment(pt_a, pt_b) for (pt_a, pt_b) in pts_pairs]
+        segments = [Segment3D(pt_a, pt_b) for (pt_a, pt_b) in pts_pairs]
 
         return segments
 
@@ -1667,14 +1667,14 @@ class Line:
         return densifyied_line_wo_coinc_pts
     '''
 
-    def join(self, another) -> List[Point]:
+    def join(self, another) -> List[Point3D]:
         """
         Joins together two lines and returns the join as a new line without point changes,
         with possible overlapping points
         and orientation mismatches between the two original lines
         """
 
-        return Line(self.pts() + another.pts())
+        return Line3D(self.pts() + another.pts())
 
     @property
     def length(self) -> numbers.Real:
@@ -1771,7 +1771,7 @@ class Line:
         return list(itertools.accumulate(self.step_lengths_2d()))
     '''
 
-    def reversed(self) -> 'Line':
+    def reversed(self) -> 'Line3D':
         """
         Return a Line instance with reversed point list.
 
@@ -1782,7 +1782,7 @@ class Line:
         pts = [pt.clone() for pt in self.pts()]
         pts.reverse()
 
-        return Line(
+        return Line3D(
             pts=pts
         )
 
@@ -1880,7 +1880,7 @@ class Line:
         return self.end_pt().isCoinc2D(self.start_pt(), tolerance=tolerance)
     '''
 
-    def walk_backward(self) -> 'Line':
+    def walk_backward(self) -> 'Line3D':
         """
         Create a new line by walking the line backward from the last point up to the first and thus closing it.
 
@@ -1888,17 +1888,17 @@ class Line:
         :rtype: 'Line'
         """
 
-        return Line(self.pts() + self.reversed()[1:])
+        return Line3D(self.pts() + self.reversed()[1:])
 
-    def clone(self) -> 'Line':
+    def clone(self) -> 'Line3D':
         """
         Clone a line.
 
         :return: the cloned line
-        :rtype: GeoPoints
+        :rtype: Line3D
         """
 
-        return Line(self.pts())
+        return Line3D(self.pts())
 
     '''
     def close_2d(self) -> 'Points':
@@ -1918,12 +1918,12 @@ class Line:
         return line
     '''
 
-    def close_3d(self) -> 'Line':
+    def close_3d(self) -> 'Line3D':
         """
         Return a line that is 3D-closed.
 
         :return: a 3D-closed line
-        :rtype: GeoPoints
+        :rtype: Line3D
         """
 
         line = self.clone()
@@ -1934,18 +1934,18 @@ class Line:
 
         return line
 
-    def remove_coincident_points(self) -> Optional['Line']:
+    def remove_coincident_points(self) -> Optional['Line3D']:
         """
         Remove coincident successive points
 
         :return: Line instance
-        :rtype: Optional[GeoPoints]
+        :rtype: Optional[Line3D]
         """
 
         if self.num_pts() == 0:
             return
 
-        new_line = Line(
+        new_line = Line3D(
             pts=[self.pt(0)]
         )
 
@@ -1967,7 +1967,7 @@ class JoinTypes(Enum):
     END_END     = 4  # end point coincident with end point
 
 
-def analizeJoins(first: Union[Line, Segment], second: Union[Line, Segment]) -> List[Optional[JoinTypes]]:
+def analizeJoins(first: Union[Line3D, Segment3D], second: Union[Line3D, Segment3D]) -> List[Optional[JoinTypes]]:
     """
     Analyze join types between two lines/segments.
 
@@ -1979,12 +1979,12 @@ def analizeJoins(first: Union[Line, Segment], second: Union[Line, Segment]) -> L
     :rtype: List[Optional[JoinTypes]].
 
     Examples:
-      >>> first = Segment(Point(x=0,y=0), Point(x=1,y=0))
-      >>> second = Segment(Point(x=1,y=0), Point(x=0,y=0))
+      >>> first = Segment3D(Point3D(x=0,y=0), Point3D(x=1,y=0))
+      >>> second = Segment3D(Point3D(x=1,y=0), Point3D(x=0,y=0))
       >>> analizeJoins(first, second)
       [<JoinTypes.START_END: 2>, <JoinTypes.END_START: 3>]
-      >>> first = Segment(Point(x=0,y=0), Point(x=1,y=0))
-      >>> second = Segment(Point(x=2,y=0), Point(x=3,y=0))
+      >>> first = Segment3D(Point3D(x=0,y=0), Point3D(x=1,y=0))
+      >>> second = Segment3D(Point3D(x=2,y=0), Point3D(x=3,y=0))
       >>> analizeJoins(first, second)
       []
     """
@@ -2007,10 +2007,10 @@ def analizeJoins(first: Union[Line, Segment], second: Union[Line, Segment]) -> L
 
 
 def shortest_segment_or_point(
-    first_segment: Segment,
-    second_segment: Segment,
+    first_segment: Segment3D,
+    second_segment: Segment3D,
     tol: numbers.Real = PRACTICAL_MIN_DIST
-) -> Optional[Union[Segment, Point]]:
+) -> Optional[Union[Segment3D, Point3D]]:
 
     """
     Calculates the optional shortest segment - or the intersection point - between two lines represented by two segments.
@@ -2084,7 +2084,7 @@ def shortest_segment_or_point(
     :return: the optional shortest segment or an intersection point.
     """
 
-    check_type(second_segment, "Second Cartesian line", Segment)
+    check_type(second_segment, "Second Cartesian line", Segment3D)
 
     p1 = first_segment.start_pt
     p2 = first_segment.end_pt
@@ -2092,13 +2092,13 @@ def shortest_segment_or_point(
     p3 = second_segment.start_pt
     p4 = second_segment.end_pt
 
-    p13 = Point(
+    p13 = Point3D(
         x=p1.x - p3.x,
         y=p1.y - p3.y,
         z=p1.z - p3.z
     )
 
-    p43 = Point(
+    p43 = Point3D(
         x=p4.x - p3.x,
         y=p4.y - p3.y,
         z=p4.z - p3.z
@@ -2107,7 +2107,7 @@ def shortest_segment_or_point(
     if p43.asVect().is_close_to_zero:
         return None
 
-    p21 = Point(
+    p21 = Point3D(
         x=p2.x - p1.x,
         y=p2.y - p1.y,
         z=p2.z - p1.z,
@@ -2132,13 +2132,13 @@ def shortest_segment_or_point(
     mua = numer / denom
     mub = (d1343 + d4321 * mua) / d4343
 
-    pa = Point(
+    pa = Point3D(
         x=p1.x + mua * p21.x,
         y=p1.y + mua * p21.y,
         z=p1.z + mua * p21.z
     )
 
-    pb = Point(
+    pb = Point3D(
         x=p3.x + mub * p43.x,
         y=p3.y + mub * p43.y,
         z=p3.z + mub * p43.z
@@ -2153,7 +2153,7 @@ def shortest_segment_or_point(
     return intersection
 
 
-class CPlane(object):
+class CPlane3D(object):
     """
     Cartesian plane.
     Expressed by equation:
@@ -2191,7 +2191,7 @@ class CPlane(object):
         Return a coefficient of a CPlane instance.
 
         Example:
-          >>> CPlane(1, 0, 0, 2).a()
+          >>> CPlane3D(1, 0, 0, 2).a()
           1.0
         """
 
@@ -2202,7 +2202,7 @@ class CPlane(object):
         Return b coefficient of a CPlane instance.
 
         Example:
-          >>> CPlane(1, 4, 0, 2).b()
+          >>> CPlane3D(1, 4, 0, 2).b()
           0.9701425001453319
         """
 
@@ -2213,7 +2213,7 @@ class CPlane(object):
         Return a coefficient of a CPlane instance.
 
         Example:
-          >>> CPlane(1, 0, 5.4, 2).c()
+          >>> CPlane3D(1, 0, 5.4, 2).c()
           0.9832820049844602
         """
 
@@ -2224,7 +2224,7 @@ class CPlane(object):
         Return a coefficient of a CPlane instance.
 
         Example:
-          >>> CPlane(1, 0, 0, 2).d()
+          >>> CPlane3D(1, 0, 0, 2).d()
           2.0
         """
 
@@ -2235,7 +2235,7 @@ class CPlane(object):
         Return coefficients of a CPlane instance.
 
         Example:
-          >>> CPlane(1, 1, 7, -4).v()
+          >>> CPlane3D(1, 1, 7, -4).v()
           (0.14002800840280097, 0.14002800840280097, 0.9801960588196068, -0.5601120336112039)
         """
 
@@ -2247,23 +2247,23 @@ class CPlane(object):
         Create a CPlane from three given Point instances.
 
         Example:
-          >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
+          >>> CPlane3D.fromPoints(Point3D(0, 0, 0), Point3D(1, 0, 0), Point3D(0, 1, 0))
           CPlane(0.0000, 0.0000, 1.0000, 0.0000)
-          >>> CPlane.fromPoints(Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0))
+          >>> CPlane3D.fromPoints(Point3D(0, 0, 0), Point3D(1, 0, 0), Point3D(0, 1, 0))
           CPlane(0.0000, 0.0000, 1.0000, 0.0000)
-          >>> CPlane.fromPoints(Point(0, 0, 0), Point(0, 1, 0), Point(0, 0, 1))
+          >>> CPlane3D.fromPoints(Point3D(0, 0, 0), Point3D(0, 1, 0), Point3D(0, 0, 1))
           CPlane(1.0000, 0.0000, 0.0000, 0.0000)
-          >>> CPlane.fromPoints(Point(1,2,3), Point(2,3,4), Point(-1,7,-2))
+          >>> CPlane3D.fromPoints(Point3D(1,2,3), Point3D(2,3,4), Point3D(-1,7,-2))
           CPlane(-0.7956, 0.2387, 0.5569, -1.3524)
         """
 
-        if not (isinstance(pt1, Point)):
+        if not (isinstance(pt1, Point3D)):
             raise Exception("First input point should be Point but is {}".format(type(pt1)))
 
-        if not (isinstance(pt2, Point)):
+        if not (isinstance(pt2, Point3D)):
             raise Exception("Second input point should be Point but is {}".format(type(pt2)))
 
-        if not (isinstance(pt3, Point)):
+        if not (isinstance(pt3, Point3D)):
             raise Exception("Third input point should be Point but is {}".format(type(pt3)))
 
         matr_a = np.array(
@@ -2296,24 +2296,24 @@ class CPlane(object):
     @classmethod
     def from_geological_plane(cls,
                               geol_plane: Plane,
-                              pt: Point):
+                              pt: Point3D):
         """
           Given a Plane instance and a provided Point instance,
           calculate the corresponding Plane instance.
 
           Example:
-            >>> CPlane.from_geological_plane(Plane(0, 0), Point(0, 0, 0))
+            >>> CPlane3D.from_geological_plane(Plane(0, 0), Point3D(0, 0, 0))
             CPlane(0.0000, 0.0000, 1.0000, -0.0000, -1)
-            >>> CPlane.from_geological_plane(Plane(90, 45), Point(0, 0, 0))
+            >>> CPlane3D.from_geological_plane(Plane(90, 45), Point3D(0, 0, 0))
             CPlane(0.7071, 0.0000, 0.7071, -0.0000, -1)
-            >>> CPlane.from_geological_plane(Plane(0, 90), Point(0, 0, 0))
+            >>> CPlane3D.from_geological_plane(Plane(0, 90), Point3D(0, 0, 0))
             CPlane(0.0000, 1.0000, -0.0000, -0.0000, -1)
           """
 
         normal_versor = geol_plane.normDirectFrwrd().as_versor()
         a, b, c = normal_versor.x, normal_versor.y, normal_versor.z
         d = - (a * pt.x + b * pt.y + c * pt.z)
-        return CPlane(a, b, c, d)
+        return CPlane3D(a, b, c, d)
 
     def __repr__(self):
 
@@ -2324,24 +2324,24 @@ class CPlane(object):
         Return the versor normal to the cartesian plane.
 
         Examples:
-          >>> CPlane(0, 0, 5, -2).normVersor()
+          >>> CPlane3D(0, 0, 5, -2).normVersor()
           Vect(0.0000, 0.0000, 1.0000)
-          >>> CPlane(0, 7, 0, 5).normVersor()
+          >>> CPlane3D(0, 7, 0, 5).normVersor()
           Vect(0.0000, 1.0000, 0.0000)
         """
 
         return Vect(self.a(), self.b(), self.c()).versor()
 
-    def toPoint(self) -> Point:
+    def toPoint(self) -> Point3D:
         """
         Returns a point lying in the plane (non-unique solution).
 
         Examples:
-          >>> CPlane(0, 0, 1, -1).toPoint()
+          >>> CPlane3D(0, 0, 1, -1).toPoint()
           Point(0.0000, 0.0000, 1.0000)
         """
 
-        point = Point(
+        point = Point3D(
             *pointSolution(
                 np.array([[self.a(), self.b(), self.c()]]),
                 np.array([-self.d()]))
@@ -2361,41 +2361,41 @@ class CPlane(object):
         :raise: Exception.
 
         Examples:
-          >>> a = CPlane(1, 0, 0, 0)
-          >>> b = CPlane(0, 0, 1, 0)
+          >>> a = CPlane3D(1, 0, 0, 0)
+          >>> b = CPlane3D(0, 0, 1, 0)
           >>> a.intersVersor(b)
           Vect(0.0000, -1.0000, 0.0000)
-          >>> b = CPlane(-1, 0, 0, 0)  # parallel plane, no intersection
+          >>> b = CPlane3D(-1, 0, 0, 0)  # parallel plane, no intersection
           >>> a.intersVersor(b) is None
           True
         """
 
-        check_type(another, "Input Cartesian plane", CPlane)
+        check_type(another, "Input Cartesian plane", CPlane3D)
 
         return self.normVersor().cross_product(another.normal_versor()).versor()
 
     def intersPoint(self,
-            another) -> Optional[Point]:
+            another) -> Optional[Point3D]:
         """
         Return point on intersection line (non-unique solution)
         for two planes.
 
         :param another: the second cartesian plane
-        :type another: CPlane
+        :type another: CPlane3D
         :return: the optional instersection point
         :rtype: Optional[Point]
         :raise: Exception
 
         Examples:
-          >>> p_a = CPlane(1, 0, 0, 0)
-          >>> p_b = CPlane(0, 0, 1, 0)
+          >>> p_a = CPlane3D(1, 0, 0, 0)
+          >>> p_b = CPlane3D(0, 0, 1, 0)
           >>> p_a.intersPoint(p_b)
           Point(0.0000, 0.0000, 0.0000, 0.0000)
-          >>> p_b = CPlane(-1, 0, 0, 0)  # parallel plane, no intersection
+          >>> p_b = CPlane3D(-1, 0, 0, 0)  # parallel plane, no intersection
           >>> p_a.intersPoint(p_b) is None
         """
 
-        check_type(another, "Second plane", CPlane)
+        check_type(another, "Second plane", CPlane3D)
 
         # find a point lying on the intersection line (this is a non-unique solution)
 
@@ -2404,12 +2404,12 @@ class CPlane(object):
         x, y, z = pointSolution(a, b)
 
         if x is not None and y is not None and z is not None:
-            return Point(x, y, z)
+            return Point3D(x, y, z)
         else:
             return None
 
     def pointDistance(self,
-        pt: Point
+        pt: Point3D
     ) -> numbers.Real:
         """
         Calculate the distance between a point and the cartesian plane.
@@ -2426,27 +2426,27 @@ class CPlane(object):
         :raise: Exception.
 
         Examples:
-          >>> cpl = CPlane(0, 0, 1, 0)
-          >>> pt = Point(0, 0, 1)
+          >>> cpl = CPlane3D(0, 0, 1, 0)
+          >>> pt = Point3D(0, 0, 1)
           >>> cpl.pointDistance(pt)
           1.0
-          >>> pt = Point(0, 0, 0.5)
+          >>> pt = Point3D(0, 0, 0.5)
           >>> cpl.pointDistance(pt)
           0.5
-          >>> pt = Point(0, 0, -0.5)
+          >>> pt = Point3D(0, 0, -0.5)
           >>> cpl.pointDistance(pt)
           -0.5
-          >>> pt = Point(10, 20, 0.0)
+          >>> pt = Point3D(10, 20, 0.0)
           >>> cpl.pointDistance(pt)
           0.0
         """
 
-        check_type(pt, "Input point", Point)
+        check_type(pt, "Input point", Point3D)
 
         return self.a() * pt.x + self.b() * pt.y + self.c() * pt.z + self.d()
 
     def isPointInPlane(self,
-        pt: Point
+        pt: Point3D
     ) -> bool:
         """
         Check whether a point lies in the current plane.
@@ -2458,17 +2458,17 @@ class CPlane(object):
         :raise: Exception.
 
         Examples:
-          >>> pl = CPlane(0, 0, 1, 0)
-          >>> pt = Point(0, 1, 0)
+          >>> pl = CPlane3D(0, 0, 1, 0)
+          >>> pt = Point3D(0, 1, 0)
           >>> pl.isPointInPlane(pt)
           True
-          >>> pl = CPlane(0, 0, 1, 0)
-          >>> pt = Point(0, 1, 0)
+          >>> pl = CPlane3D(0, 0, 1, 0)
+          >>> pt = Point3D(0, 1, 0)
           >>> pl.isPointInPlane(pt)
           True
         """
 
-        check_type(pt, "Input point", Point)
+        check_type(pt, "Input point", Point3D)
 
         if abs(self.pointDistance(pt)) < MIN_SEPARATION_THRESHOLD:
             return True
@@ -2488,17 +2488,17 @@ class CPlane(object):
         :raise: Exception.
 
         Examples:
-          >>> CPlane(1,0,0,0).angle_as_degrees(CPlane(0,1,0,0))
+          >>> CPlane3D(1,0,0,0).angle_as_degrees(CPlane3D(0,1,0,0))
           90.0
-          >>> CPlane(1,0,0,0).angle_as_degrees(CPlane(0,1,0,0))
+          >>> CPlane3D(1,0,0,0).angle_as_degrees(CPlane3D(0,1,0,0))
           90.0
-          >>> CPlane(1,0,0,0).angle_as_degrees(CPlane(1,0,1,0))
+          >>> CPlane3D(1,0,0,0).angle_as_degrees(CPlane3D(1,0,1,0))
           45.0
-          >>> CPlane(1,0,0,0).angle_as_degrees(CPlane(1,0,0,0))
+          >>> CPlane3D(1,0,0,0).angle_as_degrees(CPlane3D(1,0,0,0))
           0.0
         """
 
-        check_type(another, "Second Cartesian plane", CPlane)
+        check_type(another, "Second Cartesian plane", CPlane3D)
 
         angle_degr = self.normVersor().angle_as_degrees(another.normVersor())
 
@@ -2535,7 +2535,7 @@ class ParamLine3D(object):
         return self._srcPt.epsg_code()
     '''
 
-    def intersect_cartes_plane(self, cartes_plane) -> Optional[Point]:
+    def intersect_cartes_plane(self, cartes_plane) -> Optional[Point3D]:
         """
         Return intersection point between parametric line and Cartesian plane.
 
@@ -2546,7 +2546,7 @@ class ParamLine3D(object):
         :raise: Exception.
         """
 
-        if not isinstance(cartes_plane, CPlane):
+        if not isinstance(cartes_plane, CPlane3D):
             raise Exception("Method argument should be a Cartesian plane but is {}".format(type(cartes_plane)))
 
         '''
@@ -2564,7 +2564,7 @@ class ParamLine3D(object):
         except ZeroDivisionError:
             return None
 
-        return Point(
+        return Point3D(
             x=x1 - l * k,
             y=y1 - m * k,
             z=z1 - n * k
@@ -2573,7 +2573,7 @@ class ParamLine3D(object):
 
 def closure_plane_from_geo(
         plane: Plane,
-        src_pt: Point
+        src_pt: Point3D
 ) -> Callable:
     """
     Closure that embodies the analytical formula for a given, non-vertical plane.
@@ -2596,3 +2596,377 @@ def closure_plane_from_geo(
     b = plane.slope_y_dir()
 
     return lambda x, y: a * (x - x0) + b * (y - y0) + z0
+
+
+class Points3D:
+    """
+    Collection of points.
+    """
+
+    def __init__(self,
+                 x_array: array,
+                 y_array: array,
+                 z_array: array
+                 ):
+        """
+        Construct a point list from a set of array values.
+
+        :param x_array: the array storing the x values
+        :param y_array: the array storing the y values
+        :param z_array: the optional array storing the z values
+        """
+
+        check_type(
+            var=x_array,
+            name="X array",
+            expected_types=array
+        )
+
+        check_type(
+            var=y_array,
+            name="Y array",
+            expected_types=array
+        )
+
+        array_length = len(x_array)
+
+        if len(y_array) != array_length:
+            raise Exception(f"Y array has length {len(y_array)} while X array has length {len(x_array)}")
+
+        check_type(
+            var=z_array,
+            name="Z array",
+            expected_types=array
+        )
+
+        if len(z_array) != array_length:
+            raise Exception(f"Z array has length {len(z_array)} while X array has length {len(x_array)}")
+
+        self._x_array = x_array
+        self._y_array = y_array
+        self._z_array = z_array
+
+    def num_pts(self
+                ) -> int:
+        """
+        Numbers of points.
+        """
+
+        return len(self._x_array)
+
+    @classmethod
+    def fromPoints(cls,
+                   points: List[Point3D]
+                   ):
+        """
+
+        :param points: list of points
+        :type points: List[Point]
+        :type epsg_code: numbers.Integral
+        """
+
+        for ndx, point in enumerate(points):
+
+            check_type(point, "Input point {}".format(ndx), Point3D)
+
+        return Points3D(
+            x_array=array('d', [p.x for p in points]),
+            y_array=array('d', [p.y for p in points]),
+            z_array=array('d', [p.z for p in points])
+        )
+
+    @property
+    def xs(self
+           ) -> array:
+        """
+        Returns a copy of the points x values.
+
+        :return: points x values
+        """
+
+        return copy(self._x_array)
+
+    @property
+    def ys(self
+           ) -> array:
+        """
+        Returns a copy of the points y values.
+
+        :return: points y values
+        """
+
+        return copy(self._y_array)
+
+    @property
+    def zs(self
+           ) -> array:
+        """
+        Returns a copy of the points z values.
+
+        :return: points z values
+        """
+
+        return copy(self._z_array)
+
+    def pt(self, pt_ndx: numbers.Integral) -> Point3D:
+        """
+        Extract the point at index pt_ndx.
+
+        :param pt_ndx: point index.
+        :type pt_ndx: numbers.Integral.
+        :return: the extracted Point instance.
+        :rtype: Point.
+
+        Examples:
+        """
+
+        return Point3D(
+            x=self._x_array[pt_ndx],
+            y=self._y_array[pt_ndx],
+            z=self._z_array[pt_ndx]
+        )
+
+    def values_at(self,
+        ndx: numbers.Integral
+                  ) -> Tuple[float, float, float]:
+        """
+        Return the values at given index.
+
+        :param ndx: the index of the point values to extract
+        :type ndx: numbers.Integral
+        :return: the x, y and z values
+        """
+
+        return (
+            self._x_array[ndx],
+            self._y_array[ndx],
+            self._z_array[ndx]
+        )
+
+    def pts(self):
+
+        return [Point3D(*self.values_at(ndx)) for ndx in range(self.num_pts())]
+
+    def __repr__(self) -> str:
+        """
+        Represents a Points instance as a shortened text.
+
+        :return: a textual shortened representation of a Points instance.
+        """
+
+        num_points = self.num_pts()
+
+        if num_points == 0:
+            txt = "Empty Points3D"
+        else:
+            x1, y1, z1 = self.values_at(0)
+            if num_points == 1:
+                txt = "Points3D with unique point: {.4f}.{.4f},{.4f}".format(x1, y1, z1)
+            else:
+                x2, y2, z2 = self.values_at(self.num_pts()-1)
+                txt = "Points3D with {} points: ({:.4f}, {:.4f}, {:.4f}) ... ({:.4f}, {:.4f}, {:.4f})".format(
+                    num_points, x1, y1, z1, x2, y2, z2)
+
+        return txt
+
+    def __iter__(self):
+        """
+        Return each point.
+        """
+
+        return (self.pt(ndx) for ndx in range(self.num_pts()))
+
+    def asXyzArray(self):
+        """
+        Convert to a Numpy x-y-z array
+        """
+
+        return np.vstack(
+            (
+                self.xs,
+                self.ys,
+                self.zs
+            )
+        ).transpose()
+
+    def add_pt(self, pt) -> None:
+        """
+        In-place transformation of the original Points3D instance
+        by adding a new point at the end.
+
+        :param pt: the point to add
+        :return: nothing
+        """
+
+        self._x_array.append(pt.x)
+        self._y_array.append(pt.y)
+        self._z_array.append(pt.z)
+
+    def add_pts(self,
+                pts: List[Point3D]):
+        """
+        In-place transformation of the original Points instance
+        by adding a new set of points at the end.
+
+        :param pts: list of Points.
+        """
+
+        check_type(pts, "Points", Points3D)
+
+        self._x_array.extend(pts.xs)
+        self._y_array.extend(pts.ys)
+        self._z_array.extend(pts.zs)
+
+    def x_min(self) -> Optional[numbers.Real]:
+        """
+        Optional minimum of x values.
+
+        :return: the optional minimum of x values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Points3D([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          >>> l.x_min()
+          0.0
+          >>> m = Points3D([])
+          >>> m.x_min()
+          None
+        """
+
+        return np.nanmin(self._x_array) if self.num_pts() > 0 else None
+
+    def x_max(self) -> Optional[numbers.Real]:
+        """
+        Optional maximum x value.
+        """
+
+        return np.nanmax(self._x_array) if self.num_pts() > 0 else None
+
+    def x_mean(self) -> Optional[numbers.Real]:
+        """
+        Optional mean x value.
+        """
+
+        return np.nanmean(self._x_array) if self.num_pts() > 0 else None
+
+    def y_min(self) -> Optional[numbers.Real]:
+        """
+        Optional minimum y value.
+        """
+
+        return np.nanmin(self._y_array) if self.num_pts() > 0 else None
+
+    def y_max(self) -> Optional[numbers.Real]:
+        """
+        Optional maximum y value.
+        """
+
+        return np.nanmax(self._y_array) if self.num_pts() > 0 else None
+
+    def y_mean(self) -> Optional[numbers.Real]:
+        """
+        Optional mean y value.
+        """
+
+        return np.nanmean(self._y_array) if self.num_pts() > 0 else None
+
+    def z_min(self) -> Optional[numbers.Real]:
+        """
+        Optional minimum z value.
+        """
+
+        return np.nanmin(self._z_array) if self.num_pts() > 0 else None
+
+    def z_max(self) -> Optional[numbers.Real]:
+        """
+        Optional maximum z value.
+        """
+
+        return np.nanmax(self._z_array) if self.num_pts() > 0 else None
+
+    def z_mean(self) -> Optional[numbers.Real]:
+        """
+        Optional mean z value.
+        """
+
+        return np.nanmean(self._z_array) if self.num_pts() > 0 else None
+
+    def z_var(self) -> Optional[numbers.Real]:
+        """
+        Optional variance of z values.
+
+        :return: the optional variance of z values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Points3D.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
+          >>> l.z_var()
+          0.0
+        """
+
+        return np.nanvar(self._z_array) if self.num_pts() > 0 else None
+
+    def z_std(self) -> Optional[numbers.Real]:
+        """
+        Optional standard deviation of z values.
+
+        :return: the optional standard deviation of z values.
+        :rtype: Optional[numbers.Real]
+
+        Examples:
+          >>> l = Points3D.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
+          >>> l.z_std()
+          0.0
+        """
+
+        return np.nanstd(self._z_array) if self.num_pts() > 0 else None
+
+    def nanmean_point(self) -> Point3D:
+        """
+        Returns the nan- excluded mean point of the collection.
+        It is the mean point for a collection of point in a x-y-z frame (i.e., not lat-lon).
+
+        :return: the nan- excluded mean point of the collection.
+        """
+
+        return Point3D(
+            x=np.nanmean(self._x_array),
+            y=np.nanmean(self._y_array),
+            z=np.nanmean(self._z_array)
+        )
+
+    def segment(self,
+        ndx: int
+    ) -> Optional[Segment3D]:
+        """
+        Returns the optional segment starting at index ndx.
+
+        :param ndx: the segment index.
+        :return: the optional segment
+        """
+
+        if ndx < 0 or ndx >= self.num_pts() - 1:
+            return None
+
+        return Segment3D(
+            start_pt=self.pt(ndx),
+            end_pt=self.pt(ndx + 1)
+        )
+
+    def reversed(self) -> 'Points3D':
+        """
+        Return a Points3D instance with reversed point list.
+
+        :return: a new Points3D instance.
+        """
+
+        xs = self._x_array.reverse()
+        ys = self._y_array.reverse()
+        zs = self._z_array.reverse()
+
+        return Points3D(
+            x_array=xs,
+            y_array=ys,
+            z_array=zs
+        )
+

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from typing import Union
 
@@ -17,7 +16,12 @@ class Quaternion(object):
     Quaternion class.
     """
 
-    def __init__(self, w=np.nan, x=np.nan, y=np.nan, z=np.nan):
+    def __init__(self,
+                 w=np.nan,
+                 x=np.nan,
+                 y=np.nan,
+                 z=np.nan
+                 ):
         """
         Construct a Quaternion instance.
 
@@ -40,7 +44,8 @@ class Quaternion(object):
 
         return "Quaternion({:.5f}, {:.5f}, {:.5f}, {:.5f})".format(self.q[0], self.q[1], self.q[2], self.q[3])
 
-    def components(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real]:
+    def components(self
+                   ) -> Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real]:
         """
         Returns the quaternion xyz as a float tuple.
 
@@ -72,7 +77,7 @@ class Quaternion(object):
         return self.q[0]
 
     def vector(self,
-        epsg_cd: numbers.Integral = -1) -> Vect:
+        ) -> Vect:
         """
         Return the vector component of the quaternion.
 
@@ -81,15 +86,17 @@ class Quaternion(object):
 
         Examples:
           >>> Quaternion(0.1, 1.2, 3.1, 0.9).vector()
-          Vect(1.2000, 3.1000, 0.9000, EPSG: -1)
+          Vect(1.2000, 3.1000, 0.9000)
           >>> Quaternion(6.1, 4.9, 1.03, 5.12).vector()
-          Vect(4.9000, 1.0300, 5.1200, EPSG: -1)
+          Vect(4.9000, 1.0300, 5.1200)
         """
 
         return Vect(*self.components()[1:])
 
     @classmethod
-    def fromArray(cls, a) -> 'Quaternion':
+    def fromArray(cls,
+                  a
+                  ) -> 'Quaternion':
         """
         Class method to construct a quaternion from a numpy 1x4 array.
 
@@ -113,7 +120,9 @@ class Quaternion(object):
         return obj
 
     @classmethod
-    def fromVect(cls, vect) -> 'Quaternion':
+    def fromVect(cls,
+                 vect
+                 ) -> 'Quaternion':
         """
         Class method to construct a quaternion from a Vect.
 
@@ -130,7 +139,9 @@ class Quaternion(object):
         return cls(w, x, y, z)
 
     @classmethod
-    def fromRotMatr(cls, matr) -> 'Quaternion':
+    def fromRotMatr(cls,
+                    matr
+                    ) -> 'Quaternion':
         """
         Class method to construct a quaternion from a 3x3 rotation matrix.
         """
@@ -245,7 +256,9 @@ class Quaternion(object):
 
         return Quaternion(w, x, y, z)
 
-    def __eq__(self, another: 'Quaternion') -> bool:
+    def __eq__(self,
+               another: 'Quaternion'
+               ) -> bool:
         """
         Quaternion equality.
 
@@ -268,7 +281,9 @@ class Quaternion(object):
 
         return ((self.q == another.q) | (np.isnan(self.q) & np.isnan(another.q))).all()
 
-    def __ne__(self, another: 'Quaternion') -> bool:
+    def __ne__(self,
+               another: 'Quaternion'
+               ) -> bool:
         """
         Quaternion inequality.
 
@@ -287,7 +302,9 @@ class Quaternion(object):
 
         return not (self == another)
 
-    def __add__(self, another: 'Quaternion') -> 'Quaternion':
+    def __add__(self,
+                another: 'Quaternion'
+                ) -> 'Quaternion':
         """
         Quaternion sum.
 
@@ -306,7 +323,9 @@ class Quaternion(object):
 
         return Quaternion.fromArray(self.q + another.q)
 
-    def __sub__(self, another: 'Quaternion') -> 'Quaternion':
+    def __sub__(self,
+                another: 'Quaternion'
+                ) -> 'Quaternion':
         """
         Quaternion difference.
 
@@ -325,7 +344,9 @@ class Quaternion(object):
 
         return Quaternion.fromArray(self.q - another.q)
 
-    def multByScalar(self, val: numbers.Real) -> 'Quaternion':
+    def multByScalar(self,
+                     val: numbers.Real
+                     ) -> 'Quaternion':
         """
         Multiplication of a quaternion by a scalar value.
 
@@ -360,7 +381,9 @@ class Quaternion(object):
 
         return self.multByScalar(-1)
 
-    def multByQuater(self, another: 'Quaternion') -> 'Quaternion':
+    def multByQuater(self,
+                     another: 'Quaternion'
+                     ) -> 'Quaternion':
         """
         Quaternion multiplication.
         Examples are taken from Kuipers, 2002, chp. 5.
@@ -400,7 +423,9 @@ class Quaternion(object):
                 
         return Quaternion(a, b, c, d)
 
-    def multByVect(self, vect: Vect) -> 'Quaternion':
+    def multByVect(self,
+                   vect: Vect
+                   ) -> 'Quaternion':
         """
         Quaternion multiplication by a Vect.
 
@@ -417,7 +442,9 @@ class Quaternion(object):
 
         return self.multByQuater(Quaternion.fromVect(vect))
 
-    def __mul__(self, another: [numbers.Real, Vect, 'Quaternion']) -> 'Quaternion':
+    def __mul__(self,
+                another: [numbers.Real, Vect, 'Quaternion']
+                ) -> 'Quaternion':
         """
         Wrapper for quaternion multiplication.
         Some examples are taken from Kuipers, 2002, chp. 5.
@@ -556,7 +583,9 @@ class Quaternion(object):
 
         return abs(1.0 - sqrt(self.sqrdNorm())) < QUAT_NORMALIZ_TOL
 
-    def divByScalar(self, denominator: numbers.Real) -> 'Quaternion':
+    def divByScalar(self,
+                    denominator: numbers.Real
+                    ) -> 'Quaternion':
         """
         Division of a quaternion by a scalar.
 
@@ -581,7 +610,9 @@ class Quaternion(object):
         else:
             return Quaternion.fromArray(self.q / denominator)
 
-    def divByQuater(self, another: 'Quaternion') -> 'Quaternion':
+    def divByQuater(self,
+                    another: 'Quaternion'
+                    ) -> 'Quaternion':
         """
         Quaternion division by another quaternion.
 
@@ -598,7 +629,9 @@ class Quaternion(object):
 
         return self * (another.conjugate.divByScalar(another.sqrdNorm()))
 
-    def __truediv__(self, another: Union[numbers.Real, 'Quaternion']) -> 'Quaternion':
+    def __truediv__(self,
+                    another: Union[numbers.Real, 'Quaternion']
+                    ) -> 'Quaternion':
         """
         Wrapper for quaternion division.
         This is only compatible with Python 3.
@@ -645,8 +678,13 @@ class Quaternion(object):
         else:
             return self / sqrt(self.sqrdNorm())
 
-    def isCloseTo(self, another: 'Quaternion',
-        rtol: numbers.Real=1e-012, atol:numbers.Real=1e-12, equal_nan: bool=False, equal_inf: bool=False):
+    def isCloseTo(self,
+            another: 'Quaternion',
+            rtol: numbers.Real = 1e-012,
+            atol:numbers.Real = 1e-12,
+            equal_nan: bool = False,
+            equal_inf: bool = False
+        ) -> bool:
         """
         Check for quaternion equivalence.
 

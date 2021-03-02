@@ -7,13 +7,16 @@ from math import pi, radians, degrees, atan2, sin, cos, isfinite, sqrt, tan
 import numpy as np
 
 from pygsf.defaults import *
+
 from pygsf.mathematics.scalars import *
 from pygsf.mathematics.vectors import *
 from pygsf.mathematics.scalars import *
 from pygsf.mathematics.quaternions import *
 from pygsf.mathematics.utils import *
+
 from pygsf.orientations.direct_utils import *
-from pygsf.geometries.shapes.space3d import *
+
+#from pygsf.geometries.shapes.space3d import *
 
 
 class Azim(object):
@@ -33,11 +36,11 @@ class Azim(object):
 
         Examples:
           >>> Azim(10)
-          Azimuth(10.00°)
+          Azim(10.00°)
           >>> Azim(370)
-          Azimuth(10.00°)
+          Azim(10.00°)
           >>> Azim(pi/2, unit='r')
-          Azimuth(90.00°)
+          Azim(90.00°)
           >>> Azim("10")
           Traceback (most recent call last):
           ...
@@ -63,8 +66,7 @@ class Azim(object):
         self.a = val % (2*pi)
 
     @property
-    def d(self
-    ):
+    def d(self) -> numbers.Real:
         """
         Returns the angle in decimal degrees.
 
@@ -80,8 +82,7 @@ class Azim(object):
         return degrees(self.a)
 
     @property
-    def r(self
-    ):
+    def r(self) -> numbers.Real:
         """
         Returns the angle in radians.
 
@@ -105,19 +106,19 @@ class Azim(object):
         :param cls: class
         :param x: x component
         :param y: y component
-        :return: Azimuth instance
+        :return: Azim instance
 
         Examples:
           >>> Azim.fromXY(1, 1)
-          Azimuth(45.00°)
+          Azim(45.00°)
           >>> Azim.fromXY(1, -1)
-          Azimuth(135.00°)
+          Azim(135.00°)
           >>> Azim.fromXY(-1, -1)
-          Azimuth(225.00°)
+          Azim(225.00°)
           >>> Azim.fromXY(-1, 1)
-          Azimuth(315.00°)
+          Azim(315.00°)
           >>> Azim.fromXY(0, 0)
-          Azimuth(0.00°)
+          Azim(0.00°)
           >>> Azim.fromXY(0, np.nan)
           Traceback (most recent call last):
           ...
@@ -140,7 +141,7 @@ class Azim(object):
 
     def __repr__(self) -> str:
 
-        return "Azimuth({:.2f}°)".format(self.d)
+        return "Azim({:.2f}°)".format(self.d)
 
     def toXY(self
     ) -> Tuple[numbers.Real, numbers.Real]:
@@ -250,7 +251,10 @@ class Plunge(object):
         return self.p
 
     @classmethod
-    def fromHZ(cls, h: numbers.Real, z: numbers.Real) -> 'Plunge':
+    def fromHZ(cls,
+               h: numbers.Real,
+               z: numbers.Real
+        ) -> 'Plunge':
         """
         Calculates plunge from h and z components.
 
@@ -323,7 +327,7 @@ class Plunge(object):
         return cos(self.p), -sin(self.p)
 
     @property
-    def is_upward(self):
+    def is_upward(self) -> bool:
         """
         Check whether the instance is pointing upward or horizontal.
 
@@ -339,7 +343,7 @@ class Plunge(object):
         return self.r < 0.0
 
     @property
-    def is_downward(self):
+    def is_downward(self) -> bool:
         """
         Check whether the instance is pointing downward or horizontal.
 
@@ -375,7 +379,7 @@ class Direct(object):
         self._pl = Plunge(pl)
 
     @property
-    def d(self):
+    def d(self) -> Tuple[numbers.Real, numbers.Real]:
         """
         Returns azimuth and plunge in decimal degrees as a tuple.
 
@@ -391,7 +395,7 @@ class Direct(object):
         return self.az.d, self.pl.d
 
     @property
-    def r(self):
+    def r(self) -> Tuple[numbers.Real, numbers.Real]:
         """
         Returns azimuth and plunge in radians as a tuple.
 
@@ -405,17 +409,17 @@ class Direct(object):
         return self.az.r, self.pl.r
 
     @property
-    def az(self):
+    def az(self) -> Azim:
         """
-        Returns the azimuth instance.
+        Returns the Azim instance.
 
-        :return: Azimuth
+        :return: Azim
         """
 
         return self._az
 
     @property
-    def pl(self):
+    def pl(self) -> Plunge:
         """
         Returns the plunge instance.
 
@@ -425,7 +429,11 @@ class Direct(object):
         return self._pl
 
     @classmethod
-    def fromAzPl(cls, az: numbers.Real, pl: numbers.Real, unit='d'):
+    def fromAzPl(cls,
+                 az: numbers.Real,
+                 pl: numbers.Real,
+                 unit='d'
+                 ):
         """
         Class constructor from trend and plunge.
 
@@ -461,7 +469,11 @@ class Direct(object):
         return cls(azim, plng)
 
     @classmethod
-    def _from_xyz(cls, x: numbers.Real, y: numbers.Real, z: numbers.Real) -> 'Direct':
+    def _from_xyz(cls,
+                  x: numbers.Real,
+                  y: numbers.Real,
+                  z: numbers.Real
+    ) -> 'Direct':
         """
         Private class constructor from three Cartesian values. Note: norm of components is unit.
 
@@ -479,7 +491,11 @@ class Direct(object):
         return cls(az, pl)
 
     @classmethod
-    def fromXYZ(cls, x: numbers.Real, y: numbers.Real, z: numbers.Real) -> 'Direct':
+    def fromXYZ(cls,
+                x: numbers.Real,
+                y: numbers.Real,
+                z: numbers.Real
+    ) -> 'Direct':
         """
         Class constructor from three generic Cartesian values.
 
@@ -517,7 +533,9 @@ class Direct(object):
         return cls._from_xyz(*norm_xyz)
 
     @classmethod
-    def fromVect(cls, vect: Vect) -> [None, 'Direct', 'Axis']:
+    def fromVect(cls,
+                 vect: Vect
+    ) -> [None, 'Direct', 'Axis']:
         """
         Calculate the polar direction parallel to the Vect instance.
         Trend range: [0°, 360°[
@@ -708,7 +726,7 @@ class Direct(object):
         )
 
     @property
-    def is_upward(self):
+    def is_upward(self) -> bool:
         """
         Check whether the instance is pointing upward or horizontal.
 
@@ -724,7 +742,7 @@ class Direct(object):
         return self.pl.is_upward
 
     @property
-    def is_downward(self):
+    def is_downward(self) -> bool:
         """
         Check whether the instance is pointing downward or horizontal.
 
@@ -739,7 +757,7 @@ class Direct(object):
 
         return self.pl.is_downward
 
-    def upward(self):
+    def upward(self) -> Vect:
         """
         Return upward-point geological vector.
 
@@ -767,7 +785,7 @@ class Direct(object):
         else:
             return self.opposite()
 
-    def downward(self):
+    def downward(self) -> Vect:
         """
         Return downward-pointing geological vector.
 
@@ -895,7 +913,10 @@ class Direct(object):
 
         return angle_vers
 
-    def is_sub_parallel(self, another, angle_tolerance=VECTOR_ANGLE_THRESHOLD):
+    def is_sub_parallel(self,
+                        another,
+                        angle_tolerance=VECTOR_ANGLE_THRESHOLD
+        ):
         """
         Check that two Direct instances are sub-parallel,
 
@@ -1018,7 +1039,9 @@ class Direct(object):
 
         return Plane(dipdir, dipangle)
 
-    def common_plane(self, another):
+    def common_plane(self,
+                     another
+    ):
         """
         Calculate Plane instance defined by the two Vect instances.
 
@@ -1051,7 +1074,7 @@ class Direct(object):
 
     def normal_direction(self,
                          another: 'Direct'
-                         ) -> 'Direct':
+    ) -> 'Direct':
         """
         Calculate the instance that is normal to the two provided sources.
         Angle between sources must be larger than MIN_ANGLE_DEGR_DISORIENTATION,
@@ -1095,7 +1118,7 @@ class Axis(Direct):
     @classmethod
     def from_direction(cls,
                        direction: Direct
-                       ) -> 'Axis':
+    ) -> 'Axis':
         """
         Create Axis instance from a direction.
 
@@ -1125,7 +1148,7 @@ class Axis(Direct):
 
     def normal_axis(self,
                     another: 'Axis'
-                    ) -> Optional['Axis']:
+    ) -> Optional['Axis']:
         """
         Calculate the Axis instance that is perpendicular to the two provided.
         The two source Axis must not be subparallel (threshold is MIN_ANGLE_DEGR_DISORIENTATION),
@@ -1150,7 +1173,9 @@ class Axis(Direct):
         else:
             return Axis.from_direction(norm_orien)
 
-    def angle_as_degrees(self, another):
+    def angle_as_degrees(self,
+                         another
+    ):
         """
         Calculate angle (in degrees) between the two Axis instances.
         Range is 0°-90°.
@@ -1182,7 +1207,11 @@ class RotationAxis(object):
     Rotation axis, expressed by an Orientation and a rotation angle.
     """
 
-    def __init__(self, trend: numbers.Real, plunge: numbers.Real, rot_ang: numbers.Real):
+    def __init__(self,
+                 trend: numbers.Real,
+                 plunge: numbers.Real,
+                 rot_ang: numbers.Real
+    ):
         """
         Constructor.
 
@@ -1199,7 +1228,9 @@ class RotationAxis(object):
         self.a = float(rot_ang)
 
     @classmethod
-    def fromQuater(cls, quat: Quaternion):
+    def fromQuater(cls,
+                   quat: Quaternion
+    ):
         """
         Calculates the Rotation Axis expressed by a quaternion.
         The resulting rotation asVect is set to point downward.
@@ -1235,7 +1266,10 @@ class RotationAxis(object):
         return RotationAxis(*rot_direct.d, rot_ang)
 
     @classmethod
-    def fromDirect(cls, direct: Direct, angle: numbers.Real):
+    def fromDirect(cls,
+                   direct: Direct,
+                   angle: numbers.Real
+    ):
         """
         Class constructor from a Direct instance and an angle value.
 
@@ -1256,7 +1290,7 @@ class RotationAxis(object):
     def fromVect(cls,
                  vector: Vect,
                  angle: numbers.Real
-                 ):
+    ):
         """
         Class constructor from a Vect instance and an angle value.
 
@@ -1363,7 +1397,10 @@ class RotationAxis(object):
         rot_ang = - (180.0 - self.rotAngle) % 360.0
         return RotationAxis.fromDirect(self.dr, rot_ang)
 
-    def strictlyEquival(self, another, angle_tolerance: numbers.Real=VECTOR_ANGLE_THRESHOLD) -> bool:
+    def strictlyEquival(self,
+                        another,
+                        angle_tolerance: numbers.Real=VECTOR_ANGLE_THRESHOLD
+    ) -> bool:
         """
         Checks if two RotationAxis are almost equal, based on a strict checking
         of the Direct component and of the rotation angle.
@@ -1473,7 +1510,9 @@ class RotationAxis(object):
         )
 
 
-def sortRotations(rotation_axes: List[RotationAxis]) -> List[RotationAxis]:
+def sortRotations(
+        rotation_axes: List[RotationAxis]
+) -> List[RotationAxis]:
     """
     Sorts a list or rotation axes, based on the rotation angle (absolute value),
     in an increasing order.
@@ -1561,7 +1600,10 @@ def rotVectByAxis(
     return rot_v
 
 
-def rotVectByQuater(quat: Quaternion, vect: Vect) -> Vect:
+def rotVectByQuater(
+        quat: Quaternion,
+        vect: Vect
+) -> Vect:
     """
     Calculates a rotated solution of a Vect instance given a normalized quaternion.
     Original formula in Ref. [1].
@@ -1601,7 +1643,11 @@ class Plane(object):
      - dip angle: [0, 90.0]: downward-pointing.
     """
 
-    def __init__(self, azim: numbers.Real, dip_ang: numbers.Real, is_rhr_strike: bool=False):
+    def __init__(self,
+                 azim: numbers.Real,
+                 dip_ang: numbers.Real,
+                 is_rhr_strike: bool = False
+    ):
         """
         Geological plane constructor.
 
@@ -1969,7 +2015,10 @@ class Plane(object):
 
         return gpl_axis.angle_as_degrees(an_axis)
 
-    def is_sub_parallel(self, another, angle_tolerance: numbers.Real=PLANE_ANGLE_THRESHOLD):
+    def is_sub_parallel(self,
+                        another,
+                        angle_tolerance: numbers.Real = PLANE_ANGLE_THRESHOLD
+    ):
         """
         Check that two GPlanes are sub-parallel
 
@@ -1994,7 +2043,7 @@ class Plane(object):
 
     def contains(self,
         direct: 'Direct',
-        angle_tolerance: numbers.Real=PLANE_ANGLE_THRESHOLD
+        angle_tolerance: numbers.Real = PLANE_ANGLE_THRESHOLD
     ) -> bool:
         """
         Check that a plane contains a direction instance.
@@ -2016,7 +2065,10 @@ class Plane(object):
 
         return direct.is_sub_orthogonal(plane_norm, angle_tolerance)
 
-    def is_sub_orthogonal(self, another, angle_tolerance: numbers.Real=PLANE_ANGLE_THRESHOLD):
+    def is_sub_orthogonal(self,
+                          another,
+                          angle_tolerance: numbers.Real = PLANE_ANGLE_THRESHOLD
+    ):
         """
         Check that two GPlanes are sub-orthogonal.
 
@@ -2051,7 +2103,9 @@ class Plane(object):
         else:
             return angle < angle_tolerance
 
-    def rakeToDirect(self, rake):
+    def rakeToDirect(self,
+                     rake
+    ):
         """
         Calculate the Direct instance given a Plane instance and a rake value.
         The rake is defined according to the Aki and Richards, 1980 conventions:
@@ -2083,7 +2137,9 @@ class Plane(object):
 
         return Direct.fromXYZ(x, y, z)
 
-    def isVLowAngle(self, dip_angle_threshold: numbers.Real=angle_gplane_thrshld):
+    def isVLowAngle(self,
+                    dip_angle_threshold: numbers.Real = angle_gplane_thrshld
+    ):
         """
         Checks if a geological plane is very low angle.
 
@@ -2100,7 +2156,9 @@ class Plane(object):
 
         return self.da < dip_angle_threshold
 
-    def isVHighAngle(self, dip_angle_threshold: numbers.Real=angle_gplane_thrshld):
+    def isVHighAngle(self,
+                     dip_angle_threshold: numbers.Real = angle_gplane_thrshld
+    ):
         """
         Checks if a geological plane is very high angle.
 
@@ -2163,7 +2221,6 @@ class Plane(object):
         Example:
         """
         return - cos(radians(self.dd)) * tan(radians(self.da))
-
 
 
 if __name__ == "__main__":

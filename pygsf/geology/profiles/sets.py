@@ -1,7 +1,7 @@
 
 
 from .chains import *
-from pygsf.geolocated.geoshapes import GeoPointSegmentCollections
+from pygsf.georeferenced.geoshapes import GeoPointSegmentCollections
 
 
 class TopographicProfileSet(list):

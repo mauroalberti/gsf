@@ -394,7 +394,7 @@ class ProfileAttitudes(list):
 
     def __init__(self, atts: List[ProfileAttitude]):
 
-        check_type(atts, "Attitude geolocated", List)
+        check_type(atts, "Attitude georeferenced", List)
         for el in atts:
             check_type(el, "Attitude projection", ProfileAttitude)
 

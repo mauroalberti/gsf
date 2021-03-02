@@ -1,12 +1,14 @@
-# -*- coding: utf-8 -*-
-
 
 from math import radians, tan, sin, cos
 
 import numpy as np
 
 
-def matrScaling(scale_factor_x, scale_factor_y, scale_factor_z):
+def matrScaling(
+        scale_factor_x,
+        scale_factor_y,
+        scale_factor_z
+):
     """
     
     :param scale_factor_x: 
@@ -22,7 +24,10 @@ def matrScaling(scale_factor_x, scale_factor_y, scale_factor_z):
                      (0.0, 0.0, scale_factor_z)])
 
 
-def matrHorizSimpleShear(phi_angle_degr, alpha_angle_degr):
+def matrHorizSimpleShear(
+        phi_angle_degr,
+        alpha_angle_degr
+):
     """
     
     :param phi_angle_degr: 
@@ -44,7 +49,10 @@ def matrHorizSimpleShear(phi_angle_degr, alpha_angle_degr):
                      (0.0, 0.0, 1.0)])
 
 
-def matrVertSimpleShear(phi_angle_degr, alpha_angle_degr):
+def matrVertSimpleShear(
+        phi_angle_degr,
+        alpha_angle_degr
+):
     """
     
     :param phi_angle_degr: 

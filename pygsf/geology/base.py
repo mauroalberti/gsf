@@ -2,7 +2,7 @@
 from collections import namedtuple
 
 from pygsf.geology.faults import *
-from pygsf.geometries.shapes.space3d import Point, CPlane
+from pygsf.geometries.shapes.space3d import Point2D, CPlane3D
 
 georef_att_flds = [
     'id',
@@ -19,11 +19,11 @@ GeorefAttitude = namedtuple(
 class StructuralSet:
 
     def __init__(self,
-            location: Point,
-            stratifications: Optional[List[CPlane]] = None,
-            foliations: Optional[List[CPlane]] = None,
-            faults: Optional[List[Fault]] = None
-    ):
+                 location: Point2D,
+                 stratifications: Optional[List[CPlane3D]] = None,
+                 foliations: Optional[List[CPlane3D]] = None,
+                 faults: Optional[List[Fault]] = None
+                 ):
         """
         Creates a structural set.
 
@@ -37,7 +37,7 @@ class StructuralSet:
         :type faults: Optional[List[CPlane]].
         """
 
-        if not isinstance(location, Point):
+        if not isinstance(location, Point2D):
             raise Exception("Location should be Point but is {}".format(type(location)))
 
         checks = [
@@ -51,7 +51,7 @@ class StructuralSet:
                 if not isinstance(var, List):
                     raise Exception("{} should be a List but is {}".format(name, type(var)))
                 for el in var:
-                    if not isinstance(el, CPlane):
+                    if not isinstance(el, CPlane3D):
                         raise Exception("{} should be CPlane but is {}".format(name, type(el)))
 
         self._location = location

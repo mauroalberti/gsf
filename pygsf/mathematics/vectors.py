@@ -2,9 +2,9 @@
 import numbers
 
 from pygsf.utils.types import *
+
 from pygsf.mathematics.defaults import *
 from pygsf.mathematics.arrays import *
-from pygsf.geolocated.crs import *
 
 
 class Vect(object):

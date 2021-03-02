@@ -55,8 +55,8 @@ def check_crs(
     checked_element: Any
 ) -> None:
     """
-    Check whether two spatial elements have the same geolocated, raising an exception when not equal.
-    The two elements should both implement the geolocated property.
+    Check whether two spatial elements have the same georeferenced, raising an exception when not equal.
+    The two elements should both implement the georeferenced property.
 
     :param template_element: first spatial element.
     :type template_element: Any

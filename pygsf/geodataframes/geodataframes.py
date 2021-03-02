@@ -4,7 +4,7 @@ import numbers
 
 import geopandas as gpd
 
-from pygsf.geometries.shapes.space3d import Point
+from pygsf.geometries.shapes.space3d import Point2D
 
 
 def geodataframe_geom_types(
@@ -121,7 +121,7 @@ def get_epsg(
     """
 
     crs_dict = geodataframe.crs
-    print("Source geolocated: {}".format(crs_dict))
+    print("Source georeferenced: {}".format(crs_dict))
     epsg = -1
     try:
         val = crs_dict["init"]
@@ -138,7 +138,7 @@ def extract_line_points(
     geodataframe: gpd.GeoDataFrame,
     ndx: numbers.Integral,
     epsg_code: numbers.Integral
-) -> List[Point]:
+) -> List[Point2D]:
     """
     Extract a geometry from a GeoDataFrame instance,
     given the geometry index.
@@ -164,7 +164,7 @@ def extract_line_points(
 
     for x, y in zip(xs, ys):
         pts.append(
-            Point(
+            Point2D(
                 x=x,
                 y=y
             )
