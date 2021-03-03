@@ -18,7 +18,7 @@ from pygsf.georeferenced.crs import *
 
 
 
-class GeoArray(object):
+class GeoArray():
     """
     GeoArray class.
     Stores and process georeferenced raster data.

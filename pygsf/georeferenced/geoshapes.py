@@ -8,6 +8,7 @@ from shapely.geometry import LineString
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
 
+from pygsf.georeferenced.crs import *
 from pygsf.geometries.shapes.space3d import *
 from pygsf.utils.types import *
 
@@ -98,7 +99,7 @@ class GeoPoints3D:
 
         for ndx, point in enumerate(points):
 
-            check_type(point, "Input point {}".format(ndx), Point2D)
+            check_type(point, "Input point {}".format(ndx), Point3D)
 
         return GeoPoints3D(
             epsg_code=epsg_code,
@@ -375,13 +376,13 @@ class GeoPoints3D:
 
         return np.nanstd(self._z_array) if self.num_pts() > 0 else None
 
-    def nanmean_point(self) -> Point2D:
+    def nanmean_point(self) -> Point3D:
         """
         Returns the nan- excluded mean point of the collection.
         It is the mean point for a collection of point in a x-y-z frame (i.e., not lat-lon).
 
         :return: the nan- excluded mean point of the collection.
-        :rtype: Point2D
+        :rtype: Point3D
         """
 
         return Point3D(
@@ -392,7 +393,7 @@ class GeoPoints3D:
 
     def segment(self,
         ndx: int
-    ) -> Optional[Segment2D]:
+    ) -> Optional[Segment3D]:
         """
         Returns the optional segment starting at index ndx.
 
@@ -403,7 +404,7 @@ class GeoPoints3D:
         if ndx < 0 or ndx >= self.num_pts() - 1:
             return None
 
-        return Segment2D(
+        return Segment3D(
             start_pt=self.pt(ndx),
             end_pt=self.pt(ndx + 1)
         )
@@ -435,14 +436,14 @@ class GeoPointSegmentCollection(list):
 
     def __init__(
             self,
-            geoms: Optional[List[Union[Point3D, Segment2D]]] = None,
+            geoms: Optional[List[Union[Point3D, Segment3D]]] = None,
             epsg_code: Optional[numbers.Integral] = None
     ):
 
         if geoms is not None:
 
             for geom in geoms:
-                check_type(geom, "Spatial element", (Point3D, Segment2D))
+                check_type(geom, "Spatial element", (Point3D, Segment3D))
 
         if epsg_code is not None:
             check_type(
@@ -462,13 +463,13 @@ class GeoPointSegmentCollection(list):
         self.epsg_code = epsg_code
 
     def append(self,
-               spatial_element: Union[Point3D, Segment2D]
+               spatial_element: Union[Point3D, Segment3D]
                ) -> None:
 
         check_type(
             var=spatial_element,
             name="Spatial element",
-            expected_types=(Point3D, Segment2D)
+            expected_types=(Point3D, Segment3D)
         )
 
         self.append(spatial_element)
@@ -726,18 +727,18 @@ class GeoMultiLine(object):
         return GeoMultiLine(cleaned_lines, self.epsg())
 
     def intersectSegment(self,
-        segment: Segment2D
-    ) -> List[Optional[Union[Point3D, 'Segment2D']]]:
+        segment: Segment3D
+    ) -> List[Optional[Union[Point3D, 'Segment3D']]]:
         """
         Calculates the possible intersection between the multiline and a provided segment.
 
         :param segment: the input segment
-        :type segment: Segment2D
+        :type segment: Segment3D
         :return: the possible intersections, points or segments
         :rtype: List[List[Optional[Union[Point, 'Segment']]]]
         """
 
-        check_type(segment, "Input segment", Segment2D)
+        check_type(segment, "Input segment", Segment3D)
         check_crs(self, segment)
 
         intersections = []
@@ -784,7 +785,7 @@ class GeoMPolygon:
     """
 
     def __init__(self,
-                 shapely_geom: Union[Polygon2D, MultiPolygon],
+                 shapely_geom: Union[Polygon, MultiPolygon],
                  epsg_code: numbers.Integral
                  ):
         """
@@ -797,7 +798,7 @@ class GeoMPolygon:
         check_type(
             shapely_geom,
             "Polygon",
-            (Polygon2D, MultiPolygon)
+            (Polygon, MultiPolygon)
         )
 
         self._geom = shapely_geom
@@ -867,7 +868,7 @@ class GeoSimpleGeometryCollections(list):
 
     def append(self, geom):
 
-        if not isinstance(geom, (Point3D, Segment2D, Line3D)):
+        if not isinstance(geom, (Point3D, Segment3D, Line3D)):
             raise Exception(f"Expected Point, Segment or Line but got {type(geom)}")
 
         self.append(geom)
@@ -904,7 +905,7 @@ def line_to_shapely(
     Create a shapely.LineString instance from a Line one.
 
     :param src_line: the source line to convert to the shapely format
-    :type src_line: Line2D
+    :type src_line: Line3D
     :return: the shapely LineString instance and the EPSG code
     :rtype: Tuple[LineString, numbers.Integral]
     """
@@ -918,10 +919,10 @@ class GeoSegments(list):
 
     """
 
-    def __init__(self, segments: List[Segment2D]):
+    def __init__(self, segments: List[Segment3D]):
 
         check_type(segments, "Segments", List)
         for el in segments:
-            check_type(el, "Segment", Segment2D)
+            check_type(el, "Segment", Segment3D)
 
         super(GeoSegments, self).__init__(segments)
