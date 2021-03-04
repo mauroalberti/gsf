@@ -860,6 +860,10 @@ class Segment2D(Shape2D):
 
         return interpolated_line
 
+    def densify2d_asPts(self, densify_distance) -> List[Point2D]:
+
+        return self.densify2d_asLine(densify_distance=densify_distance).pts()
+
     def densify2d_asSteps(self,
                           densify_distance: numbers.Real
                           ) -> array:

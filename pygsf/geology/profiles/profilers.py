@@ -77,9 +77,9 @@ class LinearProfiler:
         :param densify_distance: the distance with which to densify the segment profile.
         """
 
-        check_type(start_pt, "Input start point", Point2D)
+        check_type(start_pt, "Input start point", (Point2D, Point3D))
 
-        check_type(end_pt, "Input end point", Point2D)
+        check_type(end_pt, "Input end point", (Point2D, Point3D))
 
         '''
         if start_pt.georeferenced != end_pt.georeferenced:
@@ -96,8 +96,6 @@ class LinearProfiler:
 
         if densify_distance <= 0.0:
             raise Exception("Input densify distance must be positive")
-
-        #epsg_cd = start_pt.epsg_code()
 
         self._start_pt = Point2D(
             x=start_pt.x,

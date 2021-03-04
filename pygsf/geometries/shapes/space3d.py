@@ -1579,16 +1579,22 @@ class Line3D:
     """
 
     def __init__(self,
-                 pts: List[Point3D]):
+                 pts: Optional[List[Point3D]] = None):
         """
 
         """
 
-        check_type(pts, "List", list)
-        for el in pts:
-            check_type(el, "Point", Point3D)
+        if pts is not None:
 
-        self._pts = pts
+            check_type(pts, "List", list)
+            for el in pts:
+                check_type(el, "Point", Point3D)
+
+            self._pts = pts
+
+        else:
+
+            self._pts = []
 
     def pts(self):
         return self._pts
@@ -1601,6 +1607,24 @@ class Line3D:
 
         return self._pts[ndx]
 
+    def start_pt(self) -> Optional[Point3D]:
+        """
+        Return the first point of a Line or None when no points.
+
+        :return: the first point or None.
+        """
+
+        return self.pt(0) if self.num_pts() > 0 else None
+
+    def end_pt(self) -> Optional[Point3D]:
+        """
+        Return the last point of a Line or None when no points.
+
+        :return: the last point or None.
+        """
+
+        return self.pt(-1) if self.num_pts() > 0 else None
+
     def add_pt(self,
                pt: Point3D):
 
@@ -1608,6 +1632,14 @@ class Line3D:
 
     def num_pts(self):
         return len(self._pts)
+
+    def x_list(self) -> List[numbers.Real]:
+
+        return list(map(lambda pt: pt.x, self._pts))
+
+    def y_list(self) -> List[numbers.Real]:
+
+        return list(map(lambda pt: pt.y, self._pts))
 
     def x_min(self):
         return min(map(lambda pt: pt.x, self._pts))

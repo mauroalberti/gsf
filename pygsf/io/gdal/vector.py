@@ -260,7 +260,7 @@ def read_linestring_geometries(
 
             x, y, z = geometry.GetX(i), geometry.GetY(i), geometry.GetZ(i)
 
-            line.add_pt(Point(x, y, z))
+            line.add_pt(Point3D(x, y, z))
 
         feature.Destroy()
 

@@ -11,7 +11,6 @@ def check_type(
     :param name:
     :param expected_types:
     :return: None
-    :rtype: None
     :raise: Exception
     """
 
