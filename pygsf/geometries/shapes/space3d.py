@@ -7,12 +7,9 @@ import itertools
 import numbers
 from array import array
 
-#from pygsf.georeferenced.geoshapes import GeoPoints
 from pygsf.orientations.orientations import *
 from pygsf.mathematics.statistics import *
 from pygsf.mathematics.quaternions import *
-#from pygsf.geometries.shapes.space2d import *
-#from pygsf.geometries.shapes.statistics import *
 from pygsf.utils.types import check_type
 
 

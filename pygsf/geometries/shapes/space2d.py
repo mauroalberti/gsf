@@ -298,7 +298,7 @@ class Point2D(Shape2D):
 
         return another.y - self.y
 
-    def distance(self,
+    def dist2DWith(self,
                  another: 'Point2D'
                  ) -> numbers.Real:
         """
@@ -312,7 +312,7 @@ class Point2D(Shape2D):
         :raise: Exception.
 
         Examples:
-          >>> Point2D(1., 1.).distance(Point2D(4., 5.))
+          >>> Point2D(1., 1.).dist2DWith(Point2D(4., 5.))
           5.0
         """
 
@@ -373,7 +373,7 @@ class Point2D(Shape2D):
 
         check_type(another, "Second point", Point2D)
 
-        return self.distance(another) <= tolerance
+        return self.dist2DWith(another) <= tolerance
 
     def already_present(self,
                         pt_list: List['Point2D'],
@@ -446,7 +446,7 @@ class Segment2D(Shape2D):
         check_type(start_pt, "Start point", Point2D)
         check_type(end_pt, "End point", Point2D)
 
-        if start_pt.distance(end_pt) == 0.0:
+        if start_pt.dist2DWith(end_pt) == 0.0:
             raise Exception("Source points cannot be coincident")
 
         self._start_pt = start_pt.clone()
@@ -490,7 +490,7 @@ class Segment2D(Shape2D):
         :rtype: numbers.Real.
         """
 
-        return self.start_pt.distance(self.end_pt)
+        return self.start_pt.dist2DWith(self.end_pt)
 
     def area(self):
         return 0.0
@@ -650,8 +650,8 @@ class Segment2D(Shape2D):
         check_type(pt, "Point", Point2D)
 
         segment_length = self.length()
-        length_startpt_pt = self.start_pt.distance(pt)
-        length_endpt_pt = self.end_pt.distance(pt)
+        length_startpt_pt = self.start_pt.dist2DWith(pt)
+        length_endpt_pt = self.end_pt.dist2DWith(pt)
 
         return areClose(
             a=segment_length,
@@ -799,7 +799,7 @@ class Segment2D(Shape2D):
         if not self.contains_pt(point):
             return None
 
-        return self.start_pt.distance(point)
+        return self.start_pt.dist2DWith(point)
 
     def scale(self,
               scale_factor
@@ -851,7 +851,8 @@ class Segment2D(Shape2D):
         n = 0
         while True:
             n += 1
-            new_pt = self.start_pt.shiftByVect(generator_vector.scale(n))
+            shift_vector = generator_vector.scale(n)
+            new_pt = self.start_pt.shift(shift_vector.x, shift_vector.y)
             distance = self.start_pt.dist2DWith(new_pt)
             if distance >= length2d:
                 break
@@ -1551,7 +1552,7 @@ class Line2D(Shape2D):
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
-            length += self.pt(ndx).distance(self.pt(ndx + 1))
+            length += self.pt(ndx).dist2DWith(self.pt(ndx + 1))
         return length
 
     def step_lengths_2d(self) -> List[numbers.Real]:
@@ -1568,7 +1569,7 @@ class Line2D(Shape2D):
 
         step_length_list = [0.0]
         for ndx in range(1, self.num_pts()):
-            length = self.pt(ndx).distance(self.pt(ndx - 1))
+            length = self.pt(ndx).dist2DWith(self.pt(ndx - 1))
             step_length_list.append(length)
 
         return step_length_list
@@ -1605,7 +1606,7 @@ class Line2D(Shape2D):
         :return: the 2D distance between start and end points
         """
 
-        return self.end_pt().distance(self.start_pt())
+        return self.end_pt().dist2DWith(self.start_pt())
 
     def isClosed_2d(self,
         tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
