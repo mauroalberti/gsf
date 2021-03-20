@@ -52,7 +52,7 @@ class Slick(object):
             raise Exception("Time must be a number")
 
         if known:
-            self.s = Direct.fromAzPl(trend, plunge)
+            self.s = Direct(trend, plunge)
         else:
             self.s = Axis.fromAzPl(trend, plunge)
         self.t = float(time)

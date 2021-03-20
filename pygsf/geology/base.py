@@ -10,7 +10,7 @@ georef_att_flds = [
     'attitude'
 ]
 
-GeorefAttitude = namedtuple(
+ GeorefAttitude = namedtuple(
     'GeorefAttitude',
     georef_att_flds
 )

@@ -2,7 +2,7 @@
 from typing import List, Callable
 
 import random
-from math import pi, radians, degrees, atan2, sin, cos, isfinite, sqrt, tan
+from math import *
 
 import numpy as np
 
@@ -15,8 +15,6 @@ from pygsf.mathematics.quaternions import *
 from pygsf.mathematics.utils import *
 
 from pygsf.orientations.direct_utils import *
-
-#from pygsf.geometries.shapes.space3d import *
 
 
 class Azim(object):
@@ -53,12 +51,12 @@ class Azim(object):
 
         # unit check
         if unit not in ("d", "r"):
-            raise Exception("Unit input must be 'd' or 'r'")
+            raise Exception(f"Unit input must be 'd' or 'r' but {unit} got")
 
         if not (isinstance(val, numbers.Real)):
-            raise Exception("Input azimuth value must be int/float")
+            raise Exception(f"Input azimuth value must be int/float but type {type(val)} got")
         elif not isfinite(val):
-            raise Exception("Input azimuth value must be finite")
+            raise Exception(f"Input azimuth value must be finite but {val} got")
 
         if unit == 'd':
             val = radians(val)
@@ -361,7 +359,7 @@ class Plunge(object):
 
 class Direct(object):
     """
-    Class describing a direction, expressed as a polar direction.
+    Class describing a direction, expressed as a polar direction in degrees.
     """
 
     def __init__(self,
@@ -371,8 +369,8 @@ class Direct(object):
         """
         Creates a polar direction instance.
 
-        :param az: the azimuth value
-        :param pl: the plunge value
+        :param az: the azimuth value in decimal degrees
+        :param pl: the plunge value in decimal degrees
         """
 
         self._az = Azim(az)
@@ -386,10 +384,8 @@ class Direct(object):
         :return: tuple of azimuth and plunge in decimal degrees
 
         Example:
-          >>> Direct.fromAzPl(100, 20).d
+          >>> Direct(100, 20).d
           (100.0, 20.0)
-          >>> Direct.fromAzPl(-pi/2, -pi/4, unit='r').d
-          (270.0, -45.0)
         """
 
         return self.az.d, self.pl.d
@@ -402,7 +398,7 @@ class Direct(object):
         :return: tuple of azimuth and plunge in radians
 
         Example:
-          >>> Direct.fromAzPl(90, 45).r
+          >>> Direct(90, 45).r
           (1.5707963267948966, 0.7853981633974483)
         """
 
@@ -428,6 +424,7 @@ class Direct(object):
 
         return self._pl
 
+    '''
     @classmethod
     def fromAzPl(cls,
                  az: numbers.Real,
@@ -443,21 +440,21 @@ class Direct(object):
         :return: Orientation instance
 
         Examples:
-          >>> Direct.fromAzPl(30, 40)
+          >>> Direct(30, 40)
           Direct(az: 30.00°, pl: 40.00°)
-          >>> Direct.fromAzPl(370, 80)
+          >>> Direct(370, 80)
           Direct(az: 10.00°, pl: 80.00°)
-          >>> Direct.fromAzPl(pi/2, pi/4, unit='r')
+          >>> Direct(pi/2, pi/4, unit='r')
           Direct(az: 90.00°, pl: 45.00°)
-          >>> Direct.fromAzPl(280, -100)
+          >>> Direct(280, -100)
           Traceback (most recent call last):
           ...
           Exception: Input value in degrees must be between -90° and 90°
-          >>> Direct.fromAzPl("10", 0)
+          >>> Direct("10", 0)
           Traceback (most recent call last):
           ...
           Exception: Input azimuth value must be int/float
-          >>> Direct.fromAzPl(100, np.nan)
+          >>> Direct(100, np.nan)
           Traceback (most recent call last):
           ...
           Exception: Input plunge value must be finite
@@ -467,6 +464,7 @@ class Direct(object):
         plng = Plunge(pl, unit=unit)
 
         return cls(azim, plng)
+    '''
 
     @classmethod
     def _from_xyz(cls,
@@ -488,7 +486,7 @@ class Direct(object):
         az = Azim.fromXY(x, y)
         pl = Plunge.fromHZ(h, z)
 
-        return cls(az, pl)
+        return cls(az.d, pl.d)
 
     @classmethod
     def fromXYZ(cls,
@@ -609,22 +607,22 @@ class Direct(object):
         Return a copy of the instance.
 
         Example:
-          >>> Direct.fromAzPl(10, 20).copy()
+          >>> Direct(10, 20).copy()
           Direct(az: 10.00°, pl: 20.00°)
         """
 
-        return self.__class__(self.az, self.pl)
+        return self.__class__(self.az.d, self.pl.d)
 
     def opposite(self):
         """
         Return the opposite direction.
 
         Example:
-          >>> Direct.fromAzPl(0, 30).opposite()
+          >>> Direct(0, 30).opposite()
           Direct(az: 180.00°, pl: -30.00°)
-          >>> Direct.fromAzPl(315, 10).opposite()
+          >>> Direct(315, 10).opposite()
           Direct(az: 135.00°, pl: -10.00°)
-          >>> Direct.fromAzPl(135, 0).opposite()
+          >>> Direct(135, 0).opposite()
           Direct(az: 315.00°, pl: -0.00°)
         """
 
@@ -633,25 +631,25 @@ class Direct(object):
         az = (az + pi) % (2*pi)
         pl = -pl
 
-        return self.__class__.fromAzPl(az, pl, unit='r')
+        return self.__class__(degrees(az), degrees(pl))
 
     def mirrorHoriz(self):
         """
         Return the mirror Orientation using a horizontal plane.
 
         Example:
-          >>> Direct.fromAzPl(0, 30).mirrorHoriz()
+          >>> Direct(0, 30).mirrorHoriz()
           Direct(az: 0.00°, pl: -30.00°)
-          >>> Direct.fromAzPl(315, 10).mirrorHoriz()
+          >>> Direct(315, 10).mirrorHoriz()
           Direct(az: 315.00°, pl: -10.00°)
-          >>> Direct.fromAzPl(135, 0).mirrorHoriz()
+          >>> Direct(135, 0).mirrorHoriz()
           Direct(az: 135.00°, pl: -0.00°)
         """
 
         az = self.az.r
         pl = -self.pl.r
 
-        return self.__class__.fromAzPl(az, pl, unit='r')
+        return self.__class__(degrees(az), degrees(pl))
 
     @property
     def colatNorth(self) -> numbers.Real:
@@ -662,15 +660,15 @@ class Direct(object):
         :rtype: numbers.Real.
 
         Examples:
-          >>> Direct.fromAzPl(320, 90).colatNorth
+          >>> Direct(320, 90).colatNorth
           180.0
-          >>> Direct.fromAzPl(320, 45).colatNorth
+          >>> Direct(320, 45).colatNorth
           135.0
-          >>> Direct.fromAzPl(320, 0).colatNorth
+          >>> Direct(320, 0).colatNorth
           90.0
-          >>> Direct.fromAzPl(320, -45).colatNorth
+          >>> Direct(320, -45).colatNorth
           45.0
-          >>> Direct.fromAzPl(320, -90).colatNorth
+          >>> Direct(320, -90).colatNorth
           0.0
         """
 
@@ -685,15 +683,15 @@ class Direct(object):
         :rtype: numbers.Real.
 
         Examples:
-          >>> Direct.fromAzPl(320, 90).colatSouth
+          >>> Direct(320, 90).colatSouth
           0.0
-          >>> Direct.fromAzPl(320, 45).colatSouth
+          >>> Direct(320, 45).colatSouth
           45.0
-          >>> Direct.fromAzPl(320, 0).colatSouth
+          >>> Direct(320, 0).colatSouth
           90.0
-          >>> Direct.fromAzPl(320, -45).colatSouth
+          >>> Direct(320, -45).colatSouth
           135.0
-          >>> Direct.fromAzPl(320, -90).colatSouth
+          >>> Direct(320, -90).colatSouth
           180.0
         """
 
@@ -704,11 +702,11 @@ class Direct(object):
         Return the unit vector corresponding to the Direct instance.
 
         Examples:
-          >>> Direct.fromAzPl(0, 90).as_versor()
+          >>> Direct(0, 90).as_versor()
           Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
-          >>> Direct.fromAzPl(0, -90).as_versor()
+          >>> Direct(0, -90).as_versor()
           Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
-          >>> Direct.fromAzPl(90, 90).as_versor()
+          >>> Direct(90, 90).as_versor()
           Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
         """
 
@@ -731,11 +729,11 @@ class Direct(object):
         Check whether the instance is pointing upward or horizontal.
 
         Examples:
-          >>> Direct.fromAzPl(10, 15).is_upward
+          >>> Direct(10, 15).is_upward
           False
-          >>> Direct.fromAzPl(257.4, 0.0).is_upward
+          >>> Direct(257.4, 0.0).is_upward
           False
-          >>> Direct.fromAzPl(90, -45).is_upward
+          >>> Direct(90, -45).is_upward
           True
         """
 
@@ -747,11 +745,11 @@ class Direct(object):
         Check whether the instance is pointing downward or horizontal.
 
         Examples:
-          >>> Direct.fromAzPl(10, 15).is_downward
+          >>> Direct(10, 15).is_downward
           True
-          >>> Direct.fromAzPl(257.4, 0.0).is_downward
+          >>> Direct(257.4, 0.0).is_downward
           False
-          >>> Direct.fromAzPl(90, -45).is_downward
+          >>> Direct(90, -45).is_downward
           False
         """
 
@@ -762,21 +760,21 @@ class Direct(object):
         Return upward-point geological vector.
 
         Examples:
-          >>> Direct.fromAzPl(90, -45).upward().is_sub_parallel(Direct.fromAzPl(90.0, -45.0))
+          >>> Direct(90, -45).upward().is_sub_parallel(Direct(90.0, -45.0))
           True
-          >>> Direct.fromAzPl(180, 45).upward().is_sub_parallel(Direct.fromAzPl(0.0, -45.0))
+          >>> Direct(180, 45).upward().is_sub_parallel(Direct(0.0, -45.0))
           True
-          >>> Direct.fromAzPl(0, 0).upward().is_sub_parallel(Direct.fromAzPl(0.0, 0.0))
+          >>> Direct(0, 0).upward().is_sub_parallel(Direct(0.0, 0.0))
           True
-          >>> Direct.fromAzPl(0, 90).upward().is_sub_parallel(Direct.fromAzPl(180.0, -90.0))
+          >>> Direct(0, 90).upward().is_sub_parallel(Direct(180.0, -90.0))
           True
-          >>> Direct.fromAzPl(90, -45).upward().is_sub_parallel(Direct.fromAzPl(90.0, -35.0))
+          >>> Direct(90, -45).upward().is_sub_parallel(Direct(90.0, -35.0))
           False
-          >>> Direct.fromAzPl(180, 45).upward().is_sub_parallel(Direct.fromAzPl(10.0, -45.0))
+          >>> Direct(180, 45).upward().is_sub_parallel(Direct(10.0, -45.0))
           False
-          >>> Direct.fromAzPl(0, 0).upward().is_sub_parallel(Direct.fromAzPl(170.0, 0.0))
+          >>> Direct(0, 0).upward().is_sub_parallel(Direct(170.0, 0.0))
           False
-          >>> Direct.fromAzPl(0, 90).upward().is_sub_parallel(Direct.fromAzPl(180.0, -80.0))
+          >>> Direct(0, 90).upward().is_sub_parallel(Direct(180.0, -80.0))
           False
         """
 
@@ -790,21 +788,21 @@ class Direct(object):
         Return downward-pointing geological vector.
 
         Examples:
-          >>> Direct.fromAzPl(90, -45).downward().is_sub_parallel(Direct.fromAzPl(270.0, 45.0))
+          >>> Direct(90, -45).downward().is_sub_parallel(Direct(270.0, 45.0))
           True
-          >>> Direct.fromAzPl(180, 45).downward().is_sub_parallel(Direct.fromAzPl(180.0, 45.0))
+          >>> Direct(180, 45).downward().is_sub_parallel(Direct(180.0, 45.0))
           True
-          >>> Direct.fromAzPl(0, 0).downward().is_sub_parallel(Direct.fromAzPl(180.0, 0.0))
+          >>> Direct(0, 0).downward().is_sub_parallel(Direct(180.0, 0.0))
           False
-          >>> Direct.fromAzPl(0, 90).downward().is_sub_parallel(Direct.fromAzPl(0.0, 90.0))
+          >>> Direct(0, 90).downward().is_sub_parallel(Direct(0.0, 90.0))
           True
-          >>> Direct.fromAzPl(90, -45).downward().is_sub_parallel(Direct.fromAzPl(270.0, 35.0))
+          >>> Direct(90, -45).downward().is_sub_parallel(Direct(270.0, 35.0))
           False
-          >>> Direct.fromAzPl(180, 45).downward().is_sub_parallel(Direct.fromAzPl(170.0, 45.0))
+          >>> Direct(180, 45).downward().is_sub_parallel(Direct(170.0, 45.0))
           False
-          >>> Direct.fromAzPl(0, 0).downward().is_sub_parallel(Direct.fromAzPl(180.0, 10.0))
+          >>> Direct(0, 0).downward().is_sub_parallel(Direct(180.0, 10.0))
           False
-          >>> Direct.fromAzPl(0, 90).downward().is_sub_parallel(Direct.fromAzPl(0.0, 80.0))
+          >>> Direct(0, 90).downward().is_sub_parallel(Direct(0.0, 80.0))
           False
         """
 
@@ -830,13 +828,13 @@ class Direct(object):
         :return: Boolean
 
         Examples:
-          >>> Direct.fromAzPl(90, -45).is_abs_dip_within(30, 60)
+          >>> Direct(90, -45).is_abs_dip_within(30, 60)
           True
-          >>> Direct.fromAzPl(120, 0).is_abs_dip_within(0, 60)
+          >>> Direct(120, 0).is_abs_dip_within(0, 60)
           False
-          >>> Direct.fromAzPl(120, 0).is_abs_dip_within(0, 60, min_val_incl=True)
+          >>> Direct(120, 0).is_abs_dip_within(0, 60, min_val_incl=True)
           True
-          >>> Direct.fromAzPl(120, 60).is_abs_dip_within(0, 60)
+          >>> Direct(120, 60).is_abs_dip_within(0, 60)
           True
         """
 
@@ -864,11 +862,11 @@ class Direct(object):
         Check whether the instance is almost horizontal.
 
         Examples:
-          >>> Direct.fromAzPl(10, 15).is_sub_horizontal()
+          >>> Direct(10, 15).is_sub_horizontal()
           False
-          >>> Direct.fromAzPl(257, 2).is_sub_horizontal()
+          >>> Direct(257, 2).is_sub_horizontal()
           True
-          >>> Direct.fromAzPl(90, -5).is_sub_horizontal()
+          >>> Direct(90, -5).is_sub_horizontal()
           False
         """
 
@@ -881,9 +879,9 @@ class Direct(object):
         Check whether the instance is almost vertical.
 
         Examples:
-          >>> Direct.fromAzPl(10, 15).is_sub_vertical()
+          >>> Direct(10, 15).is_sub_vertical()
           False
-          >>> Direct.fromAzPl(257, 89).is_sub_vertical()
+          >>> Direct(257, 89).is_sub_vertical()
           True
         """
 
@@ -897,15 +895,15 @@ class Direct(object):
         Range is 0°-180°.
 
         Examples:
-          >>> areClose(Direct.fromAzPl(0, 90).angle_as_degrees(Direct.fromAzPl(90, 0)), 90)
+          >>> areClose(Direct(0, 90).angle_as_degrees(Direct(90, 0)), 90)
           True
-          >>> areClose(Direct.fromAzPl(0, 0).angle_as_degrees(Direct.fromAzPl(270, 0)), 90)
+          >>> areClose(Direct(0, 0).angle_as_degrees(Direct(270, 0)), 90)
           True
-          >>> areClose(Direct.fromAzPl(0, 0).angle_as_degrees(Direct.fromAzPl(0, 0)), 0)
+          >>> areClose(Direct(0, 0).angle_as_degrees(Direct(0, 0)), 0)
           True
-          >>> areClose(Direct.fromAzPl(0, 0).angle_as_degrees(Direct.fromAzPl(180, 0)), 180)
+          >>> areClose(Direct(0, 0).angle_as_degrees(Direct(180, 0)), 180)
           True
-          >>> areClose(Direct.fromAzPl(90, 0).angle_as_degrees(Direct.fromAzPl(270, 0)), 180)
+          >>> areClose(Direct(90, 0).angle_as_degrees(Direct(270, 0)), 180)
           True
         """
 
@@ -925,13 +923,13 @@ class Direct(object):
         :return: Boolean
 
         Examples:
-          >>> Direct.fromAzPl(0, 90).is_sub_parallel(Direct.fromAzPl(90, 0))
+          >>> Direct(0, 90).is_sub_parallel(Direct(90, 0))
           False
-          >>> Direct.fromAzPl(0, 0).is_sub_parallel(Direct.fromAzPl(0, 1e-6))
+          >>> Direct(0, 0).is_sub_parallel(Direct(0, 1e-6))
           True
-          >>> Direct.fromAzPl(0, 90).is_sub_parallel(Direct.fromAzPl(180, 0))
+          >>> Direct(0, 90).is_sub_parallel(Direct(180, 0))
           False
-          >>> Direct.fromAzPl(0, 90).is_sub_parallel(Direct.fromAzPl(0, -90))
+          >>> Direct(0, 90).is_sub_parallel(Direct(0, -90))
           False
         """
 
@@ -958,15 +956,15 @@ class Direct(object):
         :return: Boolean
 
         Examples:
-          >>> Direct.fromAzPl(0, 90).is_sub_antiparallel(Direct.fromAzPl(90, -89.5))
+          >>> Direct(0, 90).is_sub_antiparallel(Direct(90, -89.5))
           True
-          >>> Direct.fromAzPl(0, 0).is_sub_antiparallel(Direct.fromAzPl(180, 1e-6))
+          >>> Direct(0, 0).is_sub_antiparallel(Direct(180, 1e-6))
           True
-          >>> Direct.fromAzPl(90, 45).is_sub_antiparallel(Direct.fromAzPl(270, -45.5))
+          >>> Direct(90, 45).is_sub_antiparallel(Direct(270, -45.5))
           True
-          >>> Direct.fromAzPl(45, 90).is_sub_antiparallel(Direct.fromAzPl(0, -90))
+          >>> Direct(45, 90).is_sub_antiparallel(Direct(0, -90))
           True
-          >>> Direct.fromAzPl(45, 72).is_sub_antiparallel(Direct.fromAzPl(140, -38))
+          >>> Direct(45, 72).is_sub_antiparallel(Direct(140, -38))
           False
         """
 
@@ -984,15 +982,15 @@ class Direct(object):
         :return: Boolean
 
          Examples:
-          >>> Direct.fromAzPl(0, 90).is_sub_orthogonal(Direct.fromAzPl(90, 0))
+          >>> Direct(0, 90).is_sub_orthogonal(Direct(90, 0))
           True
-          >>> Direct.fromAzPl(0, 0).is_sub_orthogonal(Direct.fromAzPl(0, 1.e-6))
+          >>> Direct(0, 0).is_sub_orthogonal(Direct(0, 1.e-6))
           False
-          >>> Direct.fromAzPl(0, 0).is_sub_orthogonal(Direct.fromAzPl(180, 0))
+          >>> Direct(0, 0).is_sub_orthogonal(Direct(180, 0))
           False
-          >>> Direct.fromAzPl(90, 0).is_sub_orthogonal(Direct.fromAzPl(270, 89.5))
+          >>> Direct(90, 0).is_sub_orthogonal(Direct(270, 89.5))
           True
-          >>> Direct.fromAzPl(0, 90).is_sub_orthogonal(Direct.fromAzPl(0, 0.5))
+          >>> Direct(0, 90).is_sub_orthogonal(Direct(0, 0.5))
           True
         """
 
@@ -1005,13 +1003,13 @@ class Direct(object):
         Calculate the versor (Vect) defined by the vector product of two Direct instances.
 
         Examples:
-          >>> Direct.fromAzPl(0, 0).normal_versor(Direct.fromAzPl(90, 0))
+          >>> Direct(0, 0).normal_versor(Direct(90, 0))
           Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
-          >>> Direct.fromAzPl(45, 0).normal_versor(Direct.fromAzPl(310, 0))
+          >>> Direct(45, 0).normal_versor(Direct(310, 0))
           Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
-          >>> Direct.fromAzPl(0, 0).normal_versor(Direct.fromAzPl(90, 90))
+          >>> Direct(0, 0).normal_versor(Direct(90, 90))
           Vect(-1.0000, 0.0000, -0.0000, EPSG: -1)
-          >>> Direct.fromAzPl(315, 45).normal_versor(Direct.fromAzPl(315, 44.5)) is None
+          >>> Direct(315, 45).normal_versor(Direct(315, 44.5)) is None
           True
         """
 
@@ -1025,11 +1023,11 @@ class Direct(object):
         Return the geological plane that is normal to the direction.
 
         Examples:
-          >>> Direct.fromAzPl(0, 45).normal_plane()
+          >>> Direct(0, 45).normal_plane()
           Plane(180.00, +45.00)
-          >>> Direct.fromAzPl(0, -45).normal_plane()
+          >>> Direct(0, -45).normal_plane()
           Plane(000.00, +45.00)
-          >>> Direct.fromAzPl(0, 90).normal_plane()
+          >>> Direct(0, 90).normal_plane()
           Plane(180.00, +00.00)
         """
 
@@ -1046,23 +1044,23 @@ class Direct(object):
         Calculate Plane instance defined by the two Vect instances.
 
         Examples:
-          >>> Direct.fromAzPl(0, 0).common_plane(Direct.fromAzPl(90, 0)).is_sub_parallel(Plane(180.0, 0.0))
+          >>> Direct(0, 0).common_plane(Direct(90, 0)).is_sub_parallel(Plane(180.0, 0.0))
           True
-          >>> Direct.fromAzPl(0, 0).common_plane(Direct.fromAzPl(90, 90)).is_sub_parallel(Plane(90.0, 90.0))
+          >>> Direct(0, 0).common_plane(Direct(90, 90)).is_sub_parallel(Plane(90.0, 90.0))
           True
-          >>> Direct.fromAzPl(45, 0).common_plane(Direct.fromAzPl(135, 45)).is_sub_parallel(Plane(135.0, 45.0))
+          >>> Direct(45, 0).common_plane(Direct(135, 45)).is_sub_parallel(Plane(135.0, 45.0))
           True
-          >>> Direct.fromAzPl(315, 45).common_plane(Direct.fromAzPl(135, 45)).is_sub_parallel(Plane(225.0, 90.0))
+          >>> Direct(315, 45).common_plane(Direct(135, 45)).is_sub_parallel(Plane(225.0, 90.0))
           True
-          >>> Direct.fromAzPl(0, 0).common_plane(Direct.fromAzPl(90, 0)).is_sub_parallel(Plane(180.0, 10.0))
+          >>> Direct(0, 0).common_plane(Direct(90, 0)).is_sub_parallel(Plane(180.0, 10.0))
           False
-          >>> Direct.fromAzPl(0, 0).common_plane(Direct.fromAzPl(90, 90)).is_sub_parallel(Plane(90.0, 80.0))
+          >>> Direct(0, 0).common_plane(Direct(90, 90)).is_sub_parallel(Plane(90.0, 80.0))
           False
-          >>> Direct.fromAzPl(45, 0).common_plane(Direct.fromAzPl(135, 45)).is_sub_parallel(Plane(125.0, 45.0))
+          >>> Direct(45, 0).common_plane(Direct(135, 45)).is_sub_parallel(Plane(125.0, 45.0))
           False
-          >>> Direct.fromAzPl(315, 45).common_plane(Direct.fromAzPl(135, 45)).is_sub_parallel(Plane(225.0, 80.0))
+          >>> Direct(315, 45).common_plane(Direct(135, 45)).is_sub_parallel(Plane(225.0, 80.0))
           False
-          >>> Direct.fromAzPl(315, 45).common_plane(Direct.fromAzPl(315, 44.5)) is None
+          >>> Direct(315, 45).common_plane(Direct(315, 44.5)) is None
           True
         """
 
@@ -1081,13 +1079,13 @@ class Direct(object):
         otherwise a SubparallelLineationException will be raised.
 
         Example:
-          >>> Direct.fromAzPl(0, 0).normal_direction(Direct.fromAzPl(0.5, 0)) is None
+          >>> Direct(0, 0).normal_direction(Direct(0.5, 0)) is None
           True
-          >>> Direct.fromAzPl(0, 0).normal_direction(Direct.fromAzPl(179.5, 0)) is None
+          >>> Direct(0, 0).normal_direction(Direct(179.5, 0)) is None
           True
-          >>> Direct.fromAzPl(0, 0).normal_direction(Direct.fromAzPl(5.1, 0))
+          >>> Direct(0, 0).normal_direction(Direct(5.1, 0))
           Direct(az: 0.00°, pl: 90.00°)
-          >>> Direct.fromAzPl(90, 45).normal_direction(Direct.fromAzPl(90, 0))
+          >>> Direct(90, 45).normal_direction(Direct(90, 0))
           Direct(az: 180.00°, pl: -0.00°)
         """
 
@@ -1123,7 +1121,7 @@ class Axis(Direct):
         Create Axis instance from a direction.
 
         Example:
-          >>> Axis.from_direction(Direct.fromAzPl(220, 32))
+          >>> Axis.from_direction(Direct(220, 32))
           Axis(az: 220.00°, pl: 32.00°)
         """
 
@@ -1224,7 +1222,7 @@ class RotationAxis(object):
         RotationAxis(0.0000, 90.0000, 120.0000)
         """
 
-        self.dr = Direct.fromAzPl(trend, plunge)
+        self.dr = Direct(trend, plunge)
         self.a = float(rot_ang)
 
     @classmethod
@@ -1250,12 +1248,12 @@ class RotationAxis(object):
         if abs(quat) < QUAT_MAGN_THRESH:
 
             rot_ang = 0.0
-            rot_direct = Direct.fromAzPl(0.0, 0.0)
+            rot_direct = Direct(0.0, 0.0)
 
         elif areClose(quat.scalar, 1):
 
             rot_ang = 0.0
-            rot_direct = Direct.fromAzPl(0.0, 0.0)
+            rot_direct = Direct(0.0, 0.0)
 
         else:
 
@@ -1278,9 +1276,9 @@ class RotationAxis(object):
         :return: RotationAxis instance
 
         Example:
-          >>> RotationAxis.fromDirect(Direct.fromAzPl(320, 12), 30)
+          >>> RotationAxis.fromDirect(Direct(320, 12), 30)
           RotationAxis(320.0000, 12.0000, 30.0000)
-          >>> RotationAxis.fromDirect(Direct.fromAzPl(315.0, -0.0), 10)
+          >>> RotationAxis.fromDirect(Direct(315.0, -0.0), 10)
           RotationAxis(315.0000, -0.0000, 10.0000)
         """
 
@@ -1821,7 +1819,7 @@ class Plane(object):
           Direct(az: 0.00°, pl: 0.00°)
         """
 
-        return Direct.fromAzPl(
+        return Direct(
             az=self.rhr_strike,
             pl=0.0)
 
@@ -1838,7 +1836,7 @@ class Plane(object):
           Direct(az: 135.00°, pl: 0.00°)
         """
 
-        return Direct.fromAzPl(
+        return Direct(
             az=self.lhrStrike,
             pl=0.0)
 
@@ -1855,7 +1853,7 @@ class Plane(object):
           Direct(az: 45.00°, pl: 17.00°)
         """
 
-        return Direct.fromAzPl(
+        return Direct(
             az=self.dd,
             pl=self.da)
 
@@ -1915,7 +1913,7 @@ class Plane(object):
         tr = self.dd % 360.0
         pl = self.da - 90.0
 
-        return Direct.fromAzPl(
+        return Direct(
             az=tr,
             pl=pl)
 
@@ -2053,11 +2051,11 @@ class Plane(object):
         :return: True or False
 
         Examples:
-          >>> Plane(90, 0).contains(Direct.fromAzPl(60, 0))
+          >>> Plane(90, 0).contains(Direct(60, 0))
           True
           >>> Plane(90, 0).contains(Axis.fromAzPl(60, 0))
           True
-          >>> Plane(90, 0).contains(Direct.fromAzPl(60, 10))
+          >>> Plane(90, 0).contains(Direct(60, 10))
           False
         """
 
@@ -2121,7 +2119,7 @@ class Plane(object):
           Direct(az: 0.00°, pl: -45.00°)
           >>> Plane(180, 45).rakeToDirect(-90.0)
           Direct(az: 180.00°, pl: 45.00°)
-          >>> Plane(180, 45).rakeToDirect(180.0).is_sub_parallel(Direct.fromAzPl(270.00, 0.00))
+          >>> Plane(180, 45).rakeToDirect(180.0).is_sub_parallel(Direct(270.00, 0.00))
           True
           >>> Plane(180, 45).rakeToDirect(-180.0)
           Direct(az: 270.00°, pl: 0.00°)

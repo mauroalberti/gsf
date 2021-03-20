@@ -8,7 +8,7 @@ from pygsf.geodataframes.geodataframes import *
 from .base import GeorefAttitude
 
 
-def try_extract_georeferenced_attitudes(
+def try_extract_flat_georeferenced_attitudes(
         geodataframe: GeoDataFrame,
         azim_fldnm: str,
         dip_ang_fldnm: str,
@@ -28,7 +28,7 @@ def try_extract_georeferenced_attitudes(
 
     try:
 
-        epsg = get_epsg(geodataframe)
+        #epsg = get_epsg(geodataframe)
 
         attitudes = []
 

@@ -42,7 +42,7 @@ def sols2rotaxis(rot_sol: dict) -> RotationAxis:
 
     pl_from_N = plng2colatBottom(colat)
 
-    gv = Direct.fromAzPl(az, pl_from_N)
+    gv = Direct(az, pl_from_N)
 
     return RotationAxis.fromDirect(gv, rot_ang)
 

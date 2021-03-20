@@ -63,8 +63,8 @@ class LinearProfiler:
     """
 
     def __init__(self,
-                 start_pt: Point2D,
-                 end_pt: Point2D,
+                 start_pt: Union[Point2D, Point3D],
+                 end_pt: Union[Point2D, Point3D],
                  densify_distance: numbers.Real,
                  epsg_code: numbers.Integral
                  ):
@@ -350,7 +350,7 @@ class LinearProfiler:
             epsg_code=self.epsg_code
         )
 
-    def point_in_profile(self, pt: Point2D) -> bool:
+    def point_in_profile(self, pt: Point3D) -> bool:
         """
         Checks whether a point lies in the profiler plane.
 
@@ -361,9 +361,10 @@ class LinearProfiler:
         :raise; Exception.
         """
 
+        check_type(pt, 'Point3D', Point3D)
         return self.vertical_plane().isPointInPlane(pt)
 
-    def point_distance(self, pt: Point2D) -> numbers.Real:
+    def point_distance(self, pt: Point3D) -> numbers.Real:
         """
         Calculates the point distance from the profiler plane.
 
@@ -531,7 +532,7 @@ class LinearProfiler:
 
     def point_signed_s(
             self,
-            pt: Point2D) -> numbers.Real:
+            pt: Point3D) -> numbers.Real:
         """
         Calculates the point signed distance from the profile start.
         The projected point must already lay in the profile vertical plane, otherwise an exception is raised.
@@ -547,8 +548,8 @@ class LinearProfiler:
         :raise: Exception.
         """
 
-        if not isinstance(pt, Point2D):
-            raise Exception(f"Projected point should be Point but is {type(pt)}")
+        if not isinstance(pt, Point3D):
+            raise Exception(f"Projected point should be Point3D but is {type(pt)}")
 
         if not self.point_in_profile(pt):
             raise Exception(f"Projected point should lie in the profile plane but there is a distance of {self.point_distance(pt)} units")
@@ -632,7 +633,7 @@ class LinearProfiler:
 
     def calculate_axis_intersection(self,
                                     map_axis: Axis,
-                                    structural_pt: Point2D) -> Optional[Point2D]:
+                                    structural_pt: Point2D) -> Optional[Point3D]:
         """
         Calculates the optional intersection point between an axis passing through a point
         and the profiler plane.
@@ -642,7 +643,6 @@ class LinearProfiler:
         :param structural_pt: the point through which the axis passes.
         :type structural_pt: Point.
         :return: the optional intersection point.
-        :type: Optional[Point].
         :raise: Exception.
         """
 
@@ -663,7 +663,7 @@ class LinearProfiler:
     def calculate_intersection_versor(
             self,
             attitude_plane: Plane,
-            attitude_pt: Point2D) -> Optional[Vect]:
+            attitude_pt: Point3D) -> Optional[Vect]:
         """
         Calculate the intersection versor between the plane profiler and
         a geological plane with location defined by a Point.
@@ -678,8 +678,8 @@ class LinearProfiler:
         if not isinstance(attitude_plane, Plane):
             raise Exception("Attitude plane should be Plane but is {}".format(type(attitude_plane)))
 
-        if not isinstance(attitude_pt, Point2D):
-            raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
+        if not isinstance(attitude_pt, Point3D):
+            raise Exception("Attitude point should be Point3D but is {}".format(type(attitude_pt)))
 
         '''
         if self.crs != attitude_pt.crs:
@@ -695,7 +695,7 @@ class LinearProfiler:
 
     def nearest_attitude_projection(
             self,
-            georef_attitude: GeorefAttitude) -> Point2D:
+            georef_attitude: GeorefAttitude) -> Point3D:
         """
         Calculates the nearest projection of a given attitude on a vertical plane.
 
@@ -709,17 +709,22 @@ class LinearProfiler:
         if not isinstance(georef_attitude, GeorefAttitude):
             raise Exception("georef_attitude point should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
+        """
         if self.crs != georef_attitude.posit.crs:
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg_code(), georef_attitude.posit.epsg_code()))
+        """
 
-        attitude_cplane = georef_attitude.attitude.to_cartesian_plane(georef_attitude.posit)
+        attitude_cplane = CPlane3D.from_geological_plane(
+            geol_plane=georef_attitude.attitude,
+            pt=georef_attitude.posit)
+        #attitude_cplane = georef_attitude.attitude.to_cartesian_plane(georef_attitude.posit)
         intersection_versor = self.vertical_plane().intersVersor(attitude_cplane)
         dummy_inters_pt = self.vertical_plane().intersPoint(attitude_cplane)
-        dummy_structural_vect = Segment2D(dummy_inters_pt, georef_attitude.posit).vector()
+        dummy_structural_vect = Segment3D(dummy_inters_pt, georef_attitude.posit).vector()
         dummy_distance = dummy_structural_vect.dot_product(intersection_versor)
         offset_vector = intersection_versor.scale(dummy_distance)
 
-        projected_pt = Point2D(
+        projected_pt = Point3D(
             x=dummy_inters_pt.x + offset_vector.x,
             y=dummy_inters_pt.y + offset_vector.y,
             z=dummy_inters_pt.z + offset_vector.z
@@ -749,8 +754,10 @@ class LinearProfiler:
         if not isinstance(georef_attitude, GeorefAttitude):
             raise Exception("Georef attitude should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
+        """
         if self.crs != georef_attitude.posit.crs:
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg_code(), georef_attitude.posit.epsg_code()))
+        """
 
         if map_axis:
             if not isinstance(map_axis, Axis):

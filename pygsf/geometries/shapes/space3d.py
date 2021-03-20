@@ -1138,7 +1138,9 @@ class Segment3D:
         :rtype: Optional[CPlane].
         """
 
-        if self.length_horizontal() == 0.0:
+        if self.length_horizontal() == 0.0:  # collapsed segment
+            return None
+        elif self.length_horizontal() == 0.0:  # vertical segment
             return None
 
         # arbitrary point on the same vertical as end point
@@ -2401,7 +2403,7 @@ class CPlane3D(object):
 
         check_type(another, "Input Cartesian plane", CPlane3D)
 
-        return self.normVersor().cross_product(another.normal_versor()).versor()
+        return self.normVersor().cross_product(another.normVersor()).versor()
 
     def intersPoint(self,
             another) -> Optional[Point3D]:

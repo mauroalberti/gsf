@@ -7,6 +7,7 @@ import random
 from array import array
 
 from pygsf.mathematics.vectors import *
+from pygsf.geometries.shapes.space3d import *
 
 
 class Shape2D(object, metaclass=abc.ABCMeta):
@@ -1168,6 +1169,45 @@ class Segment2D(Shape2D):
             end_pt=Point2D.random(lower_boundary, upper_boundary)
         )
 
+    def vertical_plane(self) -> Optional[CPlane3D]:
+        """
+        Returns the vertical Cartesian plane containing the segment.
+
+        :return: the vertical Cartesian plane containing the segment.
+        :rtype: Optional[CPlane].
+        """
+
+        if self.length() == 0.0:  # collapsed segment
+            return None
+
+        # arbitrary point on the same vertical as end point
+
+        p1 = Point3D(
+            x=self.start_pt.x,
+            y=self.start_pt.y,
+            z=0.0
+        )
+        p2 = Point3D(
+            x=self.end_pt.x,
+            y=self.end_pt.y,
+            z=0.0
+        )
+        p3 = Point3D(
+            x=self.end_pt.x,
+            y=self.end_pt.y,
+            z=1000.0
+        )
+        return CPlane3D.fromPoints(
+            pt1=p1,
+            pt2=p2,
+            pt3=p3)
+
+    def vector(self) -> Vect:
+
+        return Vect(self.delta_x(),
+                    self.delta_y(),
+                    0
+        )
 
 class Line2D(Shape2D):
     """

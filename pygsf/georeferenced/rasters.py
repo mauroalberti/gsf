@@ -446,7 +446,7 @@ class GeoArray():
 
         return array_bilin_interp(self._levels[level_ndx], i, j)
 
-    def interpolate_bilinear_point(self,
+    def  interpolate_bilinear_point(self,
                                    pt: Point3D,
                                    level_ndx=0
     ) -> Optional[Point3D]:
@@ -466,14 +466,14 @@ class GeoArray():
 
         check_type(pt, "Input point", Point2D)
 
-        check_crs(self, pt)
+        #check_crs(self, pt)
 
         x, y = pt.x, pt.y
 
         z = self.interpolate_bilinear(x=x, y=y, level_ndx=level_ndx)
 
         if z and isfinite(z):
-            return Point2D(x, y, z)
+            return Point3D(x, y, z)
         else:
             return None
 
