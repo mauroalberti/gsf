@@ -97,6 +97,7 @@ class GeoArray():
 
         return self._crs
 
+    @property
     def epsg_code(self) -> numbers.Integral:
         """
         Return the geoarray georeferenced EPSG code.
@@ -105,7 +106,7 @@ class GeoArray():
         :rtype: numbers.Integral.
         """
 
-        return self.crs.epsg_code()
+        return self.crs.epsg_code
 
     def define_epsg(self, epsg_cd: numbers.Integral):
         """
@@ -128,7 +129,7 @@ class GeoArray():
         """
 
         num_bands = self.levels_num
-        epsg_code = self.epsg_code()
+        epsg_code = self.epsg_code
         bands_txt = ""
         for band_ndx in range(num_bands):
             band = self.level(level_ndx=band_ndx)
@@ -497,7 +498,7 @@ class GeoArray():
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_code=self.epsg_code(),
+            epsg_code=self.epsg_code,
             inLevels=[magn]
         )
 
@@ -521,7 +522,7 @@ class GeoArray():
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_code=self.epsg_code(),
+            epsg_code=self.epsg_code,
             inLevels=[orient]
         )
 
@@ -547,7 +548,7 @@ class GeoArray():
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_code=self.epsg_code(),
+            epsg_code=self.epsg_code,
             inLevels=[div]
         )
 
@@ -573,7 +574,7 @@ class GeoArray():
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_code=self.epsg_code(),
+            epsg_code=self.epsg_code,
             inLevels=[curl_m])
 
     def magnitude_grads(self, axis: str= '', ndx_fx: numbers.Integral=0, ndx_fy: numbers.Integral=1) -> 'GeoArray':
@@ -610,7 +611,7 @@ class GeoArray():
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_code=self.epsg_code(),
+            epsg_code=self.epsg_code,
             inLevels=magnitude_gradients)
 
     def grad_flowlines(self, ndx_fx: numbers.Integral=0, ndx_fy: numbers.Integral=1) -> 'GeoArray':
@@ -633,7 +634,7 @@ class GeoArray():
 
         return GeoArray(
             inGeotransform=self._gt,
-            epsg_code=self.epsg_code(),
+            epsg_code=self.epsg_code,
             inLevels=[flowln_grad])
 
 

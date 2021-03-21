@@ -9,10 +9,10 @@ from pygsf.mathematics.vectors import *
 
 from pygsf.orientations.orientations import *
 
-from pygsf.geometries.shapes.space2d import *
+#from pygsf.geometries.shapes.space2d import *
 from pygsf.geometries.shapes.space3d import *
 
-
+"""
 @singledispatch
 def mean(
         shapes: list
@@ -25,13 +25,13 @@ def mean(
 def mean(
         shapes: list
 ) -> Point2D:
-    """Mean points center"""
+    '''Mean points center'''
 
     return Point2D(
         x=np.mean(shapes.xs()),
         y=np.mean(shapes.ys())
     )
-
+"""
 
 def try_derive_bestfitplane(
     points: Points3D

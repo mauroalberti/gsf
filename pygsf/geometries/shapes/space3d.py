@@ -1,4 +1,5 @@
 
+import abc
 from enum import Enum
 from typing import List, Optional
 from math import fabs
@@ -11,6 +12,24 @@ from pygsf.orientations.orientations import *
 from pygsf.mathematics.statistics import *
 from pygsf.mathematics.quaternions import *
 from pygsf.utils.types import check_type
+#from pygsf.geometries.shapes.statistics import *
+
+
+class Shape3D(object, metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def area(self):
+        """Calculate shape area"""
+
+    @abc.abstractmethod
+    def length(self):
+        """Calculate shape area"""
+
+    '''
+    @abc.abstractmethod
+    def clone(self):
+        """Create a clone of the shape"""
+    '''
 
 
 class Point3D:
@@ -1383,6 +1402,85 @@ class Segment3D:
             end_pt=Point3D.random(lower_boundary, upper_boundary)
         )
 
+    def densify_as_line3d(self,
+                          densify_distance
+                          ) -> 'Line3D':
+        """
+        Densify a segment by adding additional points
+        separated a distance equal to densify_distance.
+        The result is no longer a Segment instance, instead it is a Line instance.
+
+        :param densify_distance: float
+        :return: a Line3D
+        """
+
+        length3d = self.length()
+
+        segment_versor = self.as_vector().versor()
+        generator_vector = segment_versor.scale(densify_distance)
+
+        interpolated_line = Line3D(
+            pts=[self.start_pt])
+
+        n = 0
+        while True:
+            n += 1
+            shift_vector = generator_vector.scale(n)
+            new_pt = self.start_pt.shift(
+                shift_vector.x,
+                shift_vector.y,
+                shift_vector.z
+            )
+            distance = self.start_pt.distance(new_pt)
+            if distance >= length3d:
+                break
+            interpolated_line.add_pt(new_pt)
+        interpolated_line.add_pt(self.end_pt)
+
+        return interpolated_line
+
+    def densify_as_pts3d(self,
+                         densify_distance
+                         ) -> List[Point3D]:
+
+        return self.densify_as_line3d(densify_distance=densify_distance).pts()
+
+    def densify_as_steps3d(self,
+                           densify_distance: numbers.Real
+                           ) -> array:
+        """
+        Defines the array storing the incremental lengths according to the provided densify distance.
+
+        :param densify_distance: the step distance.
+        :type densify_distance: numbers.Real.
+        :return: array storing incremental steps, with the last step being equal to the segment length.
+        :rtype: array.
+        """
+
+        if not isinstance(densify_distance, numbers.Real):
+            raise Exception("Densify distance must be float or int")
+
+        if not math.isfinite(densify_distance):
+            raise Exception("Densify distance must be finite")
+
+        if densify_distance <= 0.0:
+            raise Exception("Densify distance must be positive")
+
+        segment_length = self.length()
+
+        s_list = []
+        n = 0
+        length = n * densify_distance
+
+        while length < segment_length:
+            s_list.append(length)
+            n += 1
+            length = n * densify_distance
+
+        s_list.append(segment_length)
+
+        return array('d', s_list)
+
 
 def point_or_segment(
         point1: Point3D,
@@ -1409,7 +1507,11 @@ def point_or_segment(
     #check_crs(point1, point2)
 
     if point1.distance(point2) <= tol:
-        return mean([point1, point2])
+        return Point3D(
+            x=(point1.x+ point2.x)/2,
+            y=(point1.y + point2.y) / 2,
+            z=(point1.z + point2.z) / 2
+        )
     else:
         return Segment3D(
             start_pt=point1,
@@ -1572,6 +1674,80 @@ def intersect_segments(
     return inters_pt
 
 
+class PointSegmentCollection(list):
+    """
+    Collection of point or segment elements.
+
+    """
+
+    def __init__(
+            self,
+            geoms: Optional[List[Union[Point3D, Segment3D]]] = None,
+            # epsg_code: Optional[numbers.Integral] = None
+    ):
+
+        if geoms is not None:
+
+            for geom in geoms:
+                check_type(geom, "Spatial element", (Point3D, Segment3D))
+
+        """
+        if epsg_code is not None:
+            check_type(
+                var=epsg_code,
+                name="EPSG code",
+                expected_types=numbers.Integral
+            )
+
+        if geoms is not None and epsg_code is not None:
+
+            for geom in geoms:
+                check_epsg(
+                    spatial_element=geom,
+                    epsg_code=epsg_code
+                )
+
+        elif geoms is not None and len(geoms) > 0:
+
+            epsg_code = geoms[0].epsg_code()
+        """
+
+        if geoms is not None and len(geoms) > 0:
+
+            super(PointSegmentCollection, self).__init__(geoms)
+
+        else:
+
+            super(PointSegmentCollection, self).__init__()
+
+        # self.epsg_code = epsg_code
+
+    def append(self,
+               spatial_element: Union[Point3D, Segment3D]
+               ) -> None:
+
+        check_type(
+            var=spatial_element,
+            name="Spatial element",
+            expected_types=(Point3D, Segment3D)
+        )
+
+        """
+        if self.epsg_code is not None:
+
+            check_epsg(
+                spatial_element=spatial_element,
+                epsg_code=self.epsg_code
+            )
+
+        else:
+
+            self.epsg_code = spatial_element.epsg_code()
+        """
+
+        self.append(spatial_element)
+
+
 class Line3D:
     """
     A line.
@@ -1631,6 +1807,36 @@ class Line3D:
 
     def num_pts(self):
         return len(self._pts)
+
+    def segment(self,
+        ndx: numbers.Integral
+    ) -> Optional[Segment3D]:
+        """
+        Returns the optional segment at index ndx.
+
+        :param ndx: the segment index.
+        :type ndx: numbers.Integral
+        :return: the optional segment
+        :rtype: Optional[Segment]
+        """
+
+        start_pt = self.pt(ndx)
+        end_pt = self.pt(ndx + 1)
+
+        if start_pt.is_coincident(end_pt):
+            return None
+        else:
+            return Segment3D(
+                start_pt=self.pt(ndx),
+                end_pt=self.pt(ndx + 1)
+            )
+
+    def __iter__(self):
+        """
+        Return each element of a Line, i.e., its segments.
+        """
+
+        return (self.segment(i) for i in range(self.num_pts()-1))
 
     def x_list(self) -> List[numbers.Real]:
 
@@ -1986,6 +2192,31 @@ class Line3D:
 
         return new_line
 
+
+    def intersectSegment(self,
+        segment: Segment3D
+    ) -> Optional[PointSegmentCollection]:
+        """
+        Calculates the possible intersection between the line and a provided segment.
+
+        :param segment: the input segment
+        :type segment: Segment
+        :return: the optional intersections, points or segments
+        :rtype: Optional[List[Optional[Union[Point, Segment]]]]
+        :raise: Exception
+        """
+
+        if self.num_pts() <= 1:
+            return
+
+        check_type(segment, "Input segment", Segment3D)
+        #check_crs(self, segment)
+
+        intersections = [intersect_segments(curr_segment, segment) for curr_segment in self if curr_segment is not None]
+        intersections = list(filter(lambda val: val is not None, intersections))
+        intersections = PointSegmentCollection(intersections)
+
+        return intersections
 
 class JoinTypes(Enum):
     """
@@ -2563,7 +2794,7 @@ class ParamLine3D(object):
         Return the EPSG code of the parametric line.
         """
 
-        return self._srcPt.epsg_code()
+        return self._srcPt.epsg_code
     '''
 
     def intersect_cartes_plane(self, cartes_plane) -> Optional[Point3D]:
@@ -2581,8 +2812,8 @@ class ParamLine3D(object):
             raise Exception("Method argument should be a Cartesian plane but is {}".format(type(cartes_plane)))
 
         '''
-        if cartes_plane.epsg_code() != self.epsg():
-            raise Exception("Parametric line has EPSG {} while Cartesian plane has {}".format(self.epsg(), cartes_plane.epsg_code()))
+        if cartes_plane.epsg_code != self.epsg_code:
+            raise Exception("Parametric line has EPSG {} while Cartesian plane has {}".format(self.epsg_code, cartes_plane.epsg_code))
         '''
 
         # line parameters

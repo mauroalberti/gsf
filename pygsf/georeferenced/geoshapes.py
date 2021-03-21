@@ -174,6 +174,7 @@ class GeoPoints2D:
 
         return (self.pt(ndx) for ndx in range(self.num_pts()))
 
+    @property
     def epsg_code(self) -> numbers.Integral:
         """
         The points EPSG code.
@@ -193,7 +194,7 @@ class GeoPoints2D:
         :rtype: Crs
         """
 
-        return Crs(self.epsg_code())
+        return Crs(self.epsg_code)
 
     def asXyArray(self):
         """
@@ -330,7 +331,7 @@ class GeoPoints2D:
         ys = self._y_array.reverse()
 
         return GeoPoints2D(
-            epsg_code=self.epsg_code(),
+            epsg_code=self.epsg_code,
             x_array=xs,
             y_array=ys
         )
@@ -530,6 +531,7 @@ class GeoPoints3D:
 
         return (self.pt(ndx) for ndx in range(self.num_pts()))
 
+    @property
     def epsg_code(self) -> numbers.Integral:
         """
         The points EPSG code.
@@ -549,7 +551,7 @@ class GeoPoints3D:
         :rtype: Crs
         """
 
-        return Crs(self.epsg_code())
+        return Crs(self.epsg_code)
 
     def asXyzArray(self):
         """
@@ -742,7 +744,7 @@ class GeoPoints3D:
         zs = self._z_array.reverse()
 
         return GeoPoints3D(
-            epsg_code=self.epsg_code(),
+            epsg_code=self.epsg_code,
             x_array=xs,
             y_array=ys,
             z_array=zs
@@ -762,7 +764,6 @@ class GeoPointSegmentCollection(list):
     ):
 
         if geoms is not None:
-
             for geom in geoms:
                 check_type(geom, "Spatial element", (Point3D, Segment3D))
 
@@ -808,14 +809,14 @@ class GeoPointSegmentCollections(list):
         super(GeoPointSegmentCollections, self).__init__(atts)
 
 
-class GeoLines(list):
+class GeoLines3D(list):
     """
     Collection of lines.
 
     """
 
     def __init__(self,
-                 lines: Optional[List[GeoPoints3D]] = None
+                 lines: Optional[List[Line3D]] = None
                  ):
 
         if lines:
@@ -827,21 +828,42 @@ class GeoLines(list):
             for line in lines[1:]:
                 check_crs(first_line, line)
 
-            super(GeoLines, self).__init__(lines)
+            super(GeoLines3D, self).__init__(lines)
 
         else:
 
-            super(GeoLines, self).__init__()
+            super(GeoLines3D, self).__init__()
 
     def append(self,
-               item: GeoPoints3D
+               item: Line3D
                ) -> None:
 
         check_type(item, "Line", Line3D)
         if len(self) > 0:
             check_crs(self[0], item)
 
-        super(GeoLines, self).append(item)
+        super(GeoLines3D, self).append(item)
+
+    def intersectSegment(self,
+        segment: Segment3D
+    ) -> List[Optional[Union[Point3D, 'Segment3D']]]:
+        """
+        Calculates the possible intersection between the multiline and a provided segment.
+
+        :param segment: the input segment
+        :type segment: Segment3D
+        :return: the possible intersections, points or segments
+        :rtype: List[List[Optional[Union[Point, 'Segment']]]]
+        """
+
+        check_type(segment, "Input segment", Segment3D)
+        #check_crs(self, segment)
+
+        intersections = []
+        for line in self:
+            intersections.extend(line.intersectSegment(segment))
+
+        return intersections
 
 
 class GeoMultiLine(object):
@@ -866,9 +888,10 @@ class GeoMultiLine(object):
 
         return self._crs
 
-    def epsg(self) -> numbers.Integral:
+    @property
+    def epsg_code(self) -> numbers.Integral:
 
-        return self._crs.epsg_code()
+        return self._crs.epsg_code
 
     def num_lines(self):
 
@@ -916,7 +939,7 @@ class GeoMultiLine(object):
 
         num_lines = self.num_lines()
         num_tot_pts = self.num_tot_pts()
-        epsg = self.epsg()
+        epsg = self.epsg_code
 
         txt = "MultiLine with {} line(s) and {} total point(s) - EPSG: {}".format(num_lines, num_tot_pts, epsg)
 
@@ -955,7 +978,7 @@ class GeoMultiLine(object):
 
         return GeoMultiLine(
             lines=[line.clone() for line in self._lines],
-            epsg_cd=self.epsg()
+            epsg_cd=self.epsg_code
         )
 
     def x_min(self) -> Optional[numbers.Real]:
@@ -1037,7 +1060,7 @@ class GeoMultiLine(object):
         for line in self.lines():
             lDensifiedLines.append(line.densify_2d_line(sample_distance))
 
-        return GeoMultiLine(lDensifiedLines, self.epsg())
+        return GeoMultiLine(lDensifiedLines, self.epsg_code)
 
     def remove_coincident_points(self):
 
@@ -1045,7 +1068,7 @@ class GeoMultiLine(object):
         for line in self.lines():
             cleaned_lines.append(line.remove_coincident_points())
 
-        return GeoMultiLine(cleaned_lines, self.epsg())
+        return GeoMultiLine(cleaned_lines, self.epsg_code)
 
     def intersectSegment(self,
         segment: Segment3D
@@ -1135,17 +1158,17 @@ class GeoMPolygon:
 
     def intersect_line(self,
                        line: LineString,
-                       ) -> GeoLines:
+                       ) -> GeoLines3D:
         """
         Determine the intersections between a mpolygon and a line.
 
         :param line: the line
         :type line: shapely.geometry.LineString
         :return: the intersecting lines
-        :rtype: GeoLines
+        :rtype: GeoLines3D
         """
 
-        lines = GeoLines()
+        lines = GeoLines3D()
 
         intersections = line.intersection(self.geom)
 
@@ -1231,7 +1254,7 @@ def line_to_shapely(
     :rtype: Tuple[LineString, numbers.Integral]
     """
 
-    return LineString(src_line.xy_zipped()), src_line.epsg_code()
+    return LineString(src_line.xy_zipped()), src_line.epsg_code
 
 
 class GeoSegments(list):

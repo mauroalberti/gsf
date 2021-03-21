@@ -19,17 +19,18 @@ class Crs(object):
 
         self._epsg = int(epsg_cd)
 
+    @property
     def epsg_code(self) -> numbers.Integral:
 
         return self._epsg
 
     def valid(self):
 
-        return self.epsg_code() >= min_epsg_crs_code
+        return self.epsg_code >= min_epsg_crs_code
 
     def __repr__(self):
 
-        return "EPSG:{}".format(self.epsg_code())
+        return "EPSG:{}".format(self.epsg_code)
 
     def __eq__(self, another) -> bool:
         """
@@ -47,7 +48,7 @@ class Crs(object):
         if not (isinstance(another, Crs)):
             raise Exception("Input instance should be Crs but is {}".format(type(another)))
 
-        return self.epsg_code() == another.epsg_code()
+        return self.epsg_code == another.epsg_code
 
 
 def check_crs(
@@ -70,8 +71,8 @@ def check_crs(
     if checked_element.crs != template_element.crs:
         raise Exception("checked {} instance has {} EPSG code but {} expected".format(
             type(checked_element).__name__,
-            checked_element.epsg_code(),
-            template_element.epsg_code()
+            checked_element.epsg_code,
+            template_element.epsg_code
         )
     )
 
@@ -93,10 +94,10 @@ def check_epsg(
     :raise: Exception
     """
 
-    if spatial_element.epsg_code() != epsg_code:
+    if spatial_element.epsg_code != epsg_code:
         raise Exception("checked {} instance has {} EPSG code but {} expected".format(
             type(spatial_element).__name__,
-            spatial_element.epsg_code(),
+            spatial_element.epsg_code,
             epsg_code
         )
     )
