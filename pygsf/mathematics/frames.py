@@ -1,6 +1,5 @@
 
 from pygsf.mathematics.scalars import *
-
 from pygsf.mathematics.vectors import *
 
 

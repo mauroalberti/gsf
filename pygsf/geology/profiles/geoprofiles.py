@@ -82,8 +82,6 @@ class GeoProfile:
         Set the projected _attitudes content.
 
         :param prj_attitudes: projected _attitudes.
-        :type prj_attitudes: Attitudes.
-        :return:
         """
 
         check_type(prj_attitudes, "Projected _attitudes", List)

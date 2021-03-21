@@ -1,6 +1,6 @@
 
 """
-MAgnitude parameters
+Magnitude parameters
 """
 
 

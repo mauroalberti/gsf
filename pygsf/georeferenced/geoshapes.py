@@ -1270,3 +1270,4 @@ class GeoSegments(list):
             check_type(el, "Segment", Segment3D)
 
         super(GeoSegments, self).__init__(segments)
+

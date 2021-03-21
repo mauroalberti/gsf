@@ -1,7 +1,9 @@
-# -*- coding: utf-8 -*-
 
-
-def string2dict(strng, valsep=",", kvsep="="):
+def string2dict(
+        strng,
+        valsep=",",
+        kvsep="="
+):
     """
     Creates a dictionary from a string.
 

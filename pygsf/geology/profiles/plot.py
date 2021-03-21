@@ -139,6 +139,7 @@ def _(
             color=topo_color
         )
 
+    print(f"Profile attitudes: {geoprofile.profile_attitudes}")
     if geoprofile.profile_attitudes:
 
         print("Making attitudes")

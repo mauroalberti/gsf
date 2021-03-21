@@ -73,7 +73,7 @@ def try_open_shapefile(
 def reading_line_shapefile(
         shp_path: str,
         flds: Optional[List[str]] = None
-    ) -> Tuple[bool, Union[str, GeoLines3D]]:
+    ) -> Tuple[bool, Union[str, List[Tuple[list, tuple]]]]:
     """
     Read results geometries from a line shapefile using ogr.
     TODO: it could read also other formats, but it has to be checked.
@@ -102,11 +102,11 @@ def reading_line_shapefile(
 
         # get internal layer
 
-        lyr = ds.GetLayer()
+        layer = ds.GetLayer()
 
         # get projection
 
-        srs = lyr.GetSpatialRef()
+        srs = layer.GetSpatialRef()
         srs.AutoIdentifyEPSG()
         authority = srs.GetAuthorityName(None)
         if authority.upper() == "EPSG":
@@ -120,7 +120,7 @@ def reading_line_shapefile(
 
         # loop in layer features
 
-        for feat in lyr:
+        for feat in layer:
 
             # get attributes
 
@@ -130,6 +130,8 @@ def reading_line_shapefile(
                 feat_attributes = ()
 
             # get geometries
+
+            feat_geometries = []
 
             curr_geom = feat.GetGeometryRef()
 
@@ -156,7 +158,7 @@ def reading_line_shapefile(
                     x, y, z = curr_geom.GetX(i), curr_geom.GetY(i), curr_geom.GetZ(i)
                     line.add_pt(Point3D(x, y, z))
 
-                geolines_3d.append(line)
+                feat_geometries = line
 
             else:  # multiline case
 
@@ -168,9 +170,9 @@ def reading_line_shapefile(
                         x, y, z = line_geom.GetX(i), line_geom.GetY(i), line_geom.GetZ(i)
                         line.add_pt(Point3D(x, y, z))
 
-                    geolines_3d.append(line)
+                    feat_geometries.append(line)
 
-            results.append((geolines_3d, feat_attributes))
+            results.append((feat_geometries, feat_attributes))
 
         del ds
 

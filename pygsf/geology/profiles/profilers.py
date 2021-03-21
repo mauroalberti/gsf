@@ -819,7 +819,7 @@ class LinearProfiler:
             src_dip_dir=georef_attitude.attitude.dd,
             src_dip_ang=georef_attitude.attitude.da
         )
-        print("Profile attitude: {}".format(profile_attitude))
+        #print("Profile attitude: {}".format(profile_attitude))
 
         return profile_attitude
 

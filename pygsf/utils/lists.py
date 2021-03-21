@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
-
 
 from typing import List, Callable, Any
 
 
-def find_val(func: Callable[[List], Any], lst: List) -> Any:
+def find_val(
+        func: Callable[[List], Any],
+        lst: List
+) -> Any:
     """
     Applies a function to a list when not empty,
     otherwise return None.

@@ -1,7 +1,10 @@
 
+from typing import Any
+
+
 def check_type(
-        var,
-        name,
+        var: Any,
+        name: str,
         expected_types
 ):
     """
