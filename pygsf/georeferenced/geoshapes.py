@@ -905,7 +905,7 @@ class GeoMultiLine(object):
 
         return num_points
 
-    def line(self, ln_ndx: numbers.Integral = 0) -> Optional[GeoPoints3D]:
+    def line(self, ln_ndx: numbers.Integral = 0) -> Optional[Line3D]:
         """
         Extracts a line from the multiline instance, based on the provided index.
 
@@ -924,14 +924,14 @@ class GeoMultiLine(object):
 
     def __iter__(self):
         """
-        Return the elements of a MultiLine, i.e., its lines.
+        Return the elements of a GeoMultiLine, i.e., its lines.
         """
 
         return (self.line(i) for i in range(0, self.num_lines()-1))
 
     def __repr__(self) -> str:
         """
-        Represents a MultiLine instance as a shortened text.
+        Represents a GeoMultiLine instance as a shortened text.
 
         :return: a textual shortened representation of a MultiLine instance.
         :rtype: basestring.
@@ -941,7 +941,7 @@ class GeoMultiLine(object):
         num_tot_pts = self.num_tot_pts()
         epsg = self.epsg_code
 
-        txt = "MultiLine with {} line(s) and {} total point(s) - EPSG: {}".format(num_lines, num_tot_pts, epsg)
+        txt = "GeoMultiLine with {} line(s) and {} total point(s) - EPSG: {}".format(num_lines, num_tot_pts, epsg)
 
         return txt
 

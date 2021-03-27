@@ -116,7 +116,7 @@ class Point2D(Shape2D):
 
     def __repr__(self) -> str:
 
-        return "Point({:.4f}, {:.4f})".format(self.x, self.y)
+        return "Point2D({:.4f}, {:.4f})".format(self.x, self.y)
 
     def __eq__(self,
         another: 'Point2D'

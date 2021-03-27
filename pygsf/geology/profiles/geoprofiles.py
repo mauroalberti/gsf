@@ -4,6 +4,28 @@ from .sets import *
 z_padding = 0.2
 
 
+class TrackSource(Enum):
+    """
+    The profile source type.
+    """
+
+    UNDEFINED  = auto()
+    LINE_LAYER = auto()
+    DIGITATION = auto()
+    POINT_LIST = auto()
+    GPX_FILE   = auto()
+
+
+class GPXElevationUsage(Enum):
+    """
+    The profile source type.
+    """
+
+    NOT_USED = auto()
+    USE_WITH_DEMS = auto()
+    ONLY_TO_USE = auto()
+
+
 class GeoProfile:
 
     """

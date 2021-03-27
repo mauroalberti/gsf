@@ -56,16 +56,9 @@ class ProfileAttitude:
         :rtype: str.
         """
 
-        return"ProfileAttitude(id={}, s={}, z={}, slope_degr={}, down_sense={}, dist={}, src_dip_dir={}, src_dip_ang={})".format(
-            self.id,
-            self.s,
-            self.z,
-            self.slope_degr,
-            self.down_sense,
-            self.dist,
-            self.src_dip_dir,
-            self.src_dip_ang
-        )
+        return f"ProfileAttitude(id={self.id}, s={self.s}, z={self.z}, " \
+               f"slope_degr={self.slope_degr}, down_sense={self.down_sense}, " \
+               f"dist={self.dist}, src_dip_dir={self.src_dip_dir}, src_dip_ang={self.src_dip_ang})"
 
     def create_segment_for_plot(
             self,
