@@ -1,13 +1,14 @@
 
+from typing import Optional, Union
 import numbers
-from typing import Optional, List, Union, Tuple
 
-from pygsf.utils.types import *
-from pygsf.mathematics.vectors import *
+from pygsf.mathematics.defaults import MIN_SEPARATION_THRESHOLD, MAX_SCALAR_VALUE
+from pygsf.mathematics.scalars import areClose
+from pygsf.mathematics.vectors import Vect
+from pygsf.utils.types import check_type
 
 
-
-class GeoPoint:
+class GeoPoint4D:
 
     def __init__(self,
                  x: Union[numbers.Integral, numbers.Real],
@@ -54,7 +55,7 @@ class GeoPoint:
     def fromVect(cls,
         vect: Vect,
         epsg_cd: Optional[numbers.Integral] = -1
-    ) -> 'GeoPoint':
+    ) -> 'GeoPoint4D':
 
         return cls(
             x=vect.x,
@@ -73,9 +74,9 @@ class GeoPoint:
         :rtype: numbers.Real
 
         Examples:
-          >>> GeoPoint(4, 3, 7).x
+          >>> GeoPoint4D(4, 3, 7).x
           4.0
-          >>> GeoPoint(-0.39, 3, 7).x
+          >>> GeoPoint4D(-0.39, 3, 7).x
           -0.39
         """
 
@@ -90,9 +91,9 @@ class GeoPoint:
         :rtype: numbers.Real
 
         Examples:
-          >>> GeoPoint(4, 3, 7).y
+          >>> GeoPoint4D(4, 3, 7).y
           3.0
-          >>> GeoPoint(-0.39, 17.42, 7).y
+          >>> GeoPoint4D(-0.39, 17.42, 7).y
           17.42
         """
 
@@ -107,9 +108,9 @@ class GeoPoint:
         :rtype: numbers.Real
 
         Examples:
-          >>> GeoPoint(4, 3, 7).z
+          >>> GeoPoint4D(4, 3, 7).z
           7.0
-          >>> GeoPoint(-0.39, 17.42, 8.9).z
+          >>> GeoPoint4D(-0.39, 17.42, 8.9).z
           8.9
         """
 
@@ -142,7 +143,7 @@ class GeoPoint:
         :return:
 
         Examples;
-          >>> x, y, z, t, epsg_code = GeoPoint(1, 1, 2, None, 32633)
+          >>> x, y, z, t, epsg_code = GeoPoint4D(1, 1, 2, None, 32633)
           >>> x == 1.0
           True
           >>> y == 1.0
@@ -162,7 +163,7 @@ class GeoPoint:
         return f"GeoPoint(x={self.x:.4f}, y={self.y:.4f}, z={self.z:.4f}, time={self.t}, epsg_code={self.epsg_code})"
 
     def __eq__(self,
-        another: 'GeoPoint'
+        another: 'GeoPoint4D'
     ) -> bool:
         """
         Return True if objects are equal.
@@ -172,15 +173,15 @@ class GeoPoint:
         :raise: Exception.
 
         Example:
-          >>> GeoPoint(1., 1., 1.) == GeoPoint(1, 1, 1)
+          >>> GeoPoint4D(1., 1., 1.) == GeoPoint4D(1, 1, 1)
           True
-          >>> GeoPoint(1., 1., 1.) == GeoPoint(1, 1, 1)
+          >>> GeoPoint4D(1., 1., 1.) == GeoPoint4D(1, 1, 1)
           True
-          >>> GeoPoint(1., 1., 1.) == GeoPoint(1, 1, -1)
+          >>> GeoPoint4D(1., 1., 1.) == GeoPoint4D(1, 1, -1)
           False
         """
 
-        if not isinstance(another, GeoPoint):
+        if not isinstance(another, GeoPoint4D):
             raise Exception("Another instance must be a Point")
 
         return all(
@@ -194,15 +195,15 @@ class GeoPoint:
         )
 
     def __ne__(self,
-        another: 'GeoPoint'
+        another: 'GeoPoint4D'
     ) -> bool:
         """
         Return False if objects are equal.
 
         Example:
-          >>> GeoPoint(1., 1., 1.) != GeoPoint(0., 0., 0.)
+          >>> GeoPoint4D(1., 1., 1.) != GeoPoint4D(0., 0., 0.)
           True
-          >>> GeoPoint(1., 1., 1.) != GeoPoint(1, 1, 1)
+          >>> GeoPoint4D(1., 1., 1.) != GeoPoint4D(1, 1, 1)
           True
         """
 
@@ -216,13 +217,13 @@ class GeoPoint:
         :return: double array of x, y, z values
 
         Examples:
-          >>> GeoPoint(4, 3, 7).a()
+          >>> GeoPoint4D(4, 3, 7).a()
           (4.0, 3.0, 7.0, None, -1)
         """
 
         return self.x, self.y, self.z, self.t, self.epsg_code
 
-    def clone(self) -> 'GeoPoint':
+    def clone(self) -> 'GeoPoint4D':
         """
         Clone a point.
 
@@ -230,7 +231,7 @@ class GeoPoint:
         :rtype: Point.
         """
 
-        return GeoPoint(*self.a())
+        return GeoPoint4D(*self.a())
 
     def toXYZ(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real]:
         """
@@ -240,7 +241,7 @@ class GeoPoint:
         :rtype: a tuple of three floats.
 
         Examples:
-          >>> GeoPoint(1, 0, 3).toXYZ()
+          >>> GeoPoint4D(1, 0, 3).toXYZ()
           (1.0, 0.0, 3.0)
         """
 
@@ -253,53 +254,53 @@ class GeoPoint:
         :return: Numpy array
 
         Examples:
-          >>> np.allclose(GeoPoint(1, 2, 3).toArray(), np.array([ 1., 2., 3.]))
+          >>> np.allclose(GeoPoint4D(1, 2, 3).toArray(), np.array([ 1., 2., 3.]))
           True
         """
 
         return np.asarray(self.toXYZ())
 
-    def pXY(self) -> 'GeoPoint':
+    def pXY(self) -> 'GeoPoint4D':
         """
         Projection on the x-y plane
 
         :return: projected object instance
 
         Examples:
-          >>> GeoPoint(2, 3, 4).pXY()
+          >>> GeoPoint4D(2, 3, 4).pXY()
           Point(2.0000, 3.0000, 0.0000)
         """
 
-        return GeoPoint(self.x, self.y, 0.0)
+        return GeoPoint4D(self.x, self.y, 0.0)
 
-    def pXZ(self) -> 'GeoPoint':
+    def pXZ(self) -> 'GeoPoint4D':
         """
         Projection on the x-z plane
 
         :return: projected object instance
 
         Examples:
-          >>> GeoPoint(2, 3, 4).pXZ()
+          >>> GeoPoint4D(2, 3, 4).pXZ()
           Point(2.0000, 0.0000, 4.0000)
         """
 
-        return GeoPoint(self.x, 0.0, self.z)
+        return GeoPoint4D(self.x, 0.0, self.z)
 
-    def pYZ(self) -> 'GeoPoint':
+    def pYZ(self) -> 'GeoPoint4D':
         """
         Projection on the y-z plane
 
         :return: projected object instance
 
         Examples:
-          >>> GeoPoint(2, 3, 4).pYZ()
+          >>> GeoPoint4D(2, 3, 4).pYZ()
           Point(0.0000, 3.0000, 4.0000)
         """
 
-        return GeoPoint(0.0, self.y, self.z)
+        return GeoPoint4D(0.0, self.y, self.z)
 
     def deltaX(self,
-        another: 'GeoPoint'
+        another: 'GeoPoint4D'
     ) -> Optional[numbers.Real]:
         """
         Delta between x components of two Point Instances.
@@ -309,7 +310,7 @@ class GeoPoint:
         :raise: Exception
 
         Examples:
-          >>> GeoPoint(1, 2, 3).deltaX(GeoPoint(4, 7, 1))
+          >>> GeoPoint4D(1, 2, 3).deltaX(GeoPoint4D(4, 7, 1))
           3.0
         """
 
@@ -318,7 +319,7 @@ class GeoPoint:
         return another.x - self.x
 
     def deltaY(self,
-        another: 'GeoPoint'
+        another: 'GeoPoint4D'
     ) -> Optional[numbers.Real]:
         """
         Delta between y components of two Point Instances.
@@ -327,7 +328,7 @@ class GeoPoint:
         :rtype: optional numbers.Real.
 
         Examples:
-          >>> GeoPoint(1, 2, 3).deltaY(GeoPoint(4, 7, 1))
+          >>> GeoPoint4D(1, 2, 3).deltaY(GeoPoint4D(4, 7, 1))
           5.0
         """
 
@@ -336,7 +337,7 @@ class GeoPoint:
         return another.y - self.y
 
     def deltaZ(self,
-        another: 'GeoPoint'
+        another: 'GeoPoint4D'
     ) -> Optional[numbers.Real]:
         """
         Delta between z components of two Point Instances.
@@ -345,7 +346,7 @@ class GeoPoint:
         :rtype: optional numbers.Real.
 
         Examples:
-          >>> GeoPoint(1, 2, 3).deltaZ(GeoPoint(4, 7, 1))
+          >>> GeoPoint4D(1, 2, 3).deltaZ(GeoPoint4D(4, 7, 1))
           -2.0
         """
 
@@ -354,7 +355,7 @@ class GeoPoint:
         return another.z - self.z
 
     def deltaT(self,
-        another: 'GeoPoint'
+        another: 'GeoPoint4D'
     ) -> Optional[datetime.timedelta]:
         """
         Delta between t components of two Point Instances.
@@ -367,7 +368,7 @@ class GeoPoint:
         return another.t - self.t
 
     def distance(self,
-                 another: 'GeoPoint'
+                 another: 'GeoPoint4D'
                  ) -> numbers.Real:
         """
         Calculate Euclidean spatial distance between two points.
@@ -380,20 +381,20 @@ class GeoPoint:
         :raise: Exception.
 
         Examples:
-          >>> GeoPoint(1., 1., 1.).distance(GeoPoint(4., 5., 1))
+          >>> GeoPoint4D(1., 1., 1.).distance(GeoPoint4D(4., 5., 1))
           5.0
-          >>> GeoPoint(1, 1, 1).distance(GeoPoint(4, 5, 1))
+          >>> GeoPoint4D(1, 1, 1).distance(GeoPoint4D(4, 5, 1))
           5.0
-          >>> GeoPoint(1, 1, 1).distance(GeoPoint(4, 5, 1))
+          >>> GeoPoint4D(1, 1, 1).distance(GeoPoint4D(4, 5, 1))
           5.0
         """
 
-        check_type(another, "GeoPoint", GeoPoint)
+        check_type(another, "GeoPoint", GeoPoint4D)
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
 
     def horizontal_distance(self,
-                            another: 'GeoPoint'
+                            another: 'GeoPoint4D'
                             ) -> numbers.Real:
         """
         Calculate horizontal (2D) distance between two points.
@@ -406,31 +407,31 @@ class GeoPoint:
         :raise: Exception.
 
         Examples:
-          >>> GeoPoint(1., 1., 1.).horizontal_distance(GeoPoint(4., 5., 7.))
+          >>> GeoPoint4D(1., 1., 1.).horizontal_distance(GeoPoint4D(4., 5., 7.))
           5.0
         """
 
-        check_type(another, "Second point", GeoPoint)
+        check_type(another, "Second point", GeoPoint4D)
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
     def scale(self,
         scale_factor: numbers.Real
-    ) -> 'GeoPoint':
+    ) -> 'GeoPoint4D':
         """
         Create a scaled object.
         Note: it does not make sense for polar coordinates.
         TODO: manage polar coordinates cases OR deprecate and remove - after dependency check.
 
         Example;
-          >>> GeoPoint(1, 0, 1).scale(2.5)
+          >>> GeoPoint4D(1, 0, 1).scale(2.5)
           Point(2.5000, 0.0000, 2.5000)
-          >>> GeoPoint(1, 0, 1).scale(2.5)
+          >>> GeoPoint4D(1, 0, 1).scale(2.5)
           Point(2.5000, 0.0000, 2.5000)
         """
 
         x, y, z = self.x * scale_factor, self.y * scale_factor, self.z * scale_factor
-        return GeoPoint(
+        return GeoPoint4D(
             x=x,
             y=y,
             z=z,
@@ -438,35 +439,35 @@ class GeoPoint:
             epsg_cd=self.epsg_code
         )
 
-    def invert(self) -> 'GeoPoint':
+    def invert(self) -> 'GeoPoint4D':
         """
         Create a new object with inverted direction.
         Note: it depends on scale method, that could be deprecated/removed.
 
         Examples:
-          >>> GeoPoint(1, 1, 1).invert()
+          >>> GeoPoint4D(1, 1, 1).invert()
           Point(-1.0000, -1.0000, -1.0000)
-          >>> GeoPoint(2, -1, 4).invert()
+          >>> GeoPoint4D(2, -1, 4).invert()
           Point(-2.0000, 1.0000, -4.0000)
         """
 
         return self.scale(-1)
 
-    def reflect_vertical(self) -> 'GeoPoint':
+    def reflect_vertical(self) -> 'GeoPoint4D':
         """
         Reflect a point along a vertical axis.
 
         :return: reflected point.
-        :rtype: GeoPoint
+        :rtype: GeoPoint4D
 
         Examples:
-          >>> GeoPoint(1,1,1).reflect_vertical()
+          >>> GeoPoint4D(1,1,1).reflect_vertical()
           Point(-1.0000, -1.0000, 1.0000)
         """
 
         x, y, z, t, epsg_cd = self
 
-        return GeoPoint(
+        return GeoPoint4D(
             x=-x,
             y=-y,
             z=z,
@@ -475,7 +476,7 @@ class GeoPoint:
         )
 
     def is_coincident(self,
-                      another: 'GeoPoint',
+                      another: 'GeoPoint4D',
                       tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
                       ) -> bool:
         """
@@ -490,18 +491,18 @@ class GeoPoint:
         :raise: Exception.
 
         Example:
-          >>> GeoPoint(1., 0., -1.).is_coincident(GeoPoint(1., 1.5, -1.))
+          >>> GeoPoint4D(1., 0., -1.).is_coincident(GeoPoint4D(1., 1.5, -1.))
           False
-          >>> GeoPoint(1., 0., 0.).is_coincident(GeoPoint(1., 0., 0.))
+          >>> GeoPoint4D(1., 0., 0.).is_coincident(GeoPoint4D(1., 0., 0.))
           True
         """
 
-        check_type(another, "Second point", GeoPoint)
+        check_type(another, "Second point", GeoPoint4D)
 
         return self.distance(another) <= tolerance
 
     def already_present(self,
-                        pt_list: List['GeoPoint'],
+                        pt_list: List['GeoPoint4D'],
                         tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
                         ) -> Optional[bool]:
         """
@@ -525,18 +526,18 @@ class GeoPoint:
         sy: numbers.Real,
         sz: numbers.Real = 0.0,
         st: Optional[datetime.timedelta] = None
-    ) -> Optional['GeoPoint']:
+    ) -> Optional['GeoPoint4D']:
         """
         Create a new object shifted by given amount from the self instance.
 
         Example:
-          >>> GeoPoint(1, 1, 1).shift(0.5, 1., 1.5)
+          >>> GeoPoint4D(1, 1, 1).shift(0.5, 1., 1.5)
           Point(1.5000, 2.0000, 2.5000)
-          >>> GeoPoint(1, 2, -1).shift(0.5, 1., 1.5)
+          >>> GeoPoint4D(1, 2, -1).shift(0.5, 1., 1.5)
           Point(1.5000, 3.0000, 0.5000)
        """
 
-        return GeoPoint(
+        return GeoPoint4D(
             x=self.x + sx,
             y=self.y + sy,
             z=self.z + sz,
@@ -546,7 +547,7 @@ class GeoPoint:
 
     def shiftByVect(self,
         v: Vect
-    ) -> 'GeoPoint':
+    ) -> 'GeoPoint4D':
         """
         Create a new point shifted from the self instance by given vector.
 
@@ -557,9 +558,9 @@ class GeoPoint:
         :raise: Exception
 
         Example:
-          >>> GeoPoint(1, 1, 1).shiftByVect(Vect(0.5, 1., 1.5))
+          >>> GeoPoint4D(1, 1, 1).shiftByVect(Vect(0.5, 1., 1.5))
           Point(1.5000, 2.0000, 2.5000)
-          >>> GeoPoint(1, 2, -1).shiftByVect(Vect(0.5, 1., 1.5))
+          >>> GeoPoint4D(1, 2, -1).shiftByVect(Vect(0.5, 1., 1.5))
           Point(1.5000, 3.0000, 0.5000)
        """
 
@@ -567,7 +568,7 @@ class GeoPoint:
 
         sx, sy, sz = v.toXYZ()
 
-        return GeoPoint(
+        return GeoPoint4D(
             x=x + sx,
             y=y + sy,
             z=z + sz,
@@ -580,9 +581,9 @@ class GeoPoint:
         Create a vector based on the point coordinates
 
         Example:
-          >>> GeoPoint(1, 1, 0).asVect()
+          >>> GeoPoint4D(1, 1, 0).asVect()
           Vect(1.0000, 1.0000, 0.0000)
-          >>> GeoPoint(0.2, 1, 6).asVect()
+          >>> GeoPoint4D(0.2, 1, 6).asVect()
           Vect(0.2000, 1.0000, 6.0000)
         """
 
@@ -594,25 +595,25 @@ class GeoPoint:
 
     def rotate(self,
         rotation_axis: RotationAxis,
-        center_point: 'GeoPoint' = None
-        ) -> 'GeoPoint':
+        center_point: 'GeoPoint4D' = None
+        ) -> 'GeoPoint4D':
         """
         Rotates a point.
         :param rotation_axis:
         :param center_point:
         :return: the rotated point
-        :rtype: GeoPoint
+        :rtype: GeoPoint4D
 
         Examples:
-          >>> pt = GeoPoint(0,0,1)
+          >>> pt = GeoPoint4D(0,0,1)
           >>> rot_axis = RotationAxis(0,0,90)
-          >>> center_pt = GeoPoint(0,0,0.5)
+          >>> center_pt = GeoPoint4D(0,0,0.5)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(0.5000, 0.0000, 0.5000)
-          >>> center_pt = GeoPoint(0,0,1)
+          >>> center_pt = GeoPoint4D(0,0,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(0.0000, 0.0000, 1.0000)
-          >>> center_pt = GeoPoint(0, 0, 2)
+          >>> center_pt = GeoPoint4D(0, 0, 2)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(-1.0000, 0.0000, 2.0000)
           >>> rot_axis = RotationAxis(0,0,180)
@@ -620,35 +621,35 @@ class GeoPoint:
           Point(-0.0000, 0.0000, 3.0000)
           >>> pt.rotate(rotation_axis=rot_axis)
           Point(0.0000, 0.0000, -1.0000)
-          >>> pt = GeoPoint(1,1,1,5)
+          >>> pt = GeoPoint4D(1,1,1,5)
           >>> rot_axis = RotationAxis(0,90,90)
           >>> pt.rotate(rotation_axis=rot_axis)
           Point(1.0000, -1.0000, 1.0000)
           >>> rot_axis = RotationAxis(0,90,180)
           >>> pt.rotate(rotation_axis=rot_axis)
           Point(-1.0000, -1.0000, 1.0000)
-          >>> center_pt = GeoPoint(1,1,1)
+          >>> center_pt = GeoPoint4D(1,1,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(1.0000, 1.0000, 1.0000)
-          >>> center_pt = GeoPoint(2,2,10)
+          >>> center_pt = GeoPoint4D(2,2,10)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(3.0000, 3.0000, 1.0000)
-          >>> pt = GeoPoint(1, 1, 2)
+          >>> pt = GeoPoint4D(1, 1, 2)
           >>> rot_axis = RotationAxis(135, 0, 180)
-          >>> center_pt = GeoPoint(0,0,1)
+          >>> center_pt = GeoPoint4D(0,0,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
           Point(-1.0000, -1.0000, 0.0000)
         """
 
         if not center_point:
 
-            center_point = GeoPoint(
+            center_point = GeoPoint4D(
                 x=0.0,
                 y=0.0,
                 z=0.0
             )
 
-        check_type(center_point, "Center point", GeoPoint)
+        check_type(center_point, "Center point", GeoPoint4D)
 
         p_diff = self - center_point
 
@@ -661,7 +662,7 @@ class GeoPoint:
 
         x, y, z, epsg_cd = rot_vect
 
-        rot_pt = GeoPoint(
+        rot_pt = GeoPoint4D(
             x=x,
             y=y,
             z=z
@@ -680,22 +681,22 @@ class GeoPoint:
         Creates a random point.
 
         :return: random point
-        :rtype: GeoPoint
+        :rtype: GeoPoint4D
         """
 
         vals = [random.uniform(lower_boundary, upper_boundary) for _ in range(3)]
         return cls(*vals)
 
 
-class GeoSegment:
+class GeoSegment4D:
     """
     Segment is a geometric object defined by the straight line between
     two vertices.
     """
 
     def __init__(self,
-                 start_pt: GeoPoint,
-                 end_pt: GeoPoint):
+                 start_pt: GeoPoint4D,
+                 end_pt: GeoPoint4D):
         """
         Creates a segment instance provided the two points have the same CRS code.
 
@@ -710,13 +711,13 @@ class GeoSegment:
         check_type(
             var=start_pt,
             name="Start point",
-            expected_types=GeoPoint
+            expected_types=GeoPoint4D
         )
 
         check_type(
             var=end_pt,
             name="End point",
-            expected_types=GeoPoint
+            expected_types=GeoPoint4D
         )
 
         if start_pt.distance(end_pt) == 0.0:
@@ -727,10 +728,10 @@ class GeoSegment:
 
     @classmethod
     def fromVector(cls,
-                   point: GeoPoint,
+                   point: GeoPoint4D,
                    dir_vector: Vect):
 
-        check_type(point, "Input point", GeoPoint)
+        check_type(point, "Input point", GeoPoint4D)
         check_type(dir_vector, "Directional vector", Vect)
 
         start_pt = point
@@ -752,12 +753,12 @@ class GeoSegment:
         return f"Segment(start_pt={self.start_pt}, end_pt={self.end_pt})"
 
     @property
-    def start_pt(self) -> GeoPoint:
+    def start_pt(self) -> GeoPoint4D:
 
         return self._start_pt
 
     @property
-    def end_pt(self) -> GeoPoint:
+    def end_pt(self) -> GeoPoint4D:
 
         return self._end_pt
 
@@ -768,17 +769,17 @@ class GeoSegment:
 
         return (i for i in [self.start_pt, self.end_pt])
 
-    def clone(self) -> 'GeoSegment':
+    def clone(self) -> 'GeoSegment4D':
 
-        return GeoSegment(
+        return GeoSegment4D(
             start_pt=self._start_pt,
             end_pt=self._end_pt
         )
 
-    def increasing_x(self) -> 'GeoSegment':
+    def increasing_x(self) -> 'GeoSegment4D':
 
         if self.end_pt.x < self.start_pt.x:
-            return GeoSegment(
+            return GeoSegment4D(
                 start_pt=self.end_pt,
                 end_pt=self.start_pt
             )
@@ -899,7 +900,7 @@ class GeoSegment:
         return self.vector().invert()
 
     def contains_pt(self,
-                    pt: GeoPoint
+                    pt: GeoPoint4D
                     ) -> bool:
         """
         Checks whether a point is contained in a segment.
@@ -909,40 +910,40 @@ class GeoSegment:
         :raise: Exception.
 
         Examples:
-          >>> segment = GeoSegment(GeoPoint(0, 0, 0), GeoPoint(1, 0, 0))
-          >>> segment.contains_pt(GeoPoint(0, 0, 0))
+          >>> segment = GeoSegment4D(GeoPoint4D(0, 0, 0), GeoPoint4D(1, 0, 0))
+          >>> segment.contains_pt(GeoPoint4D(0, 0, 0))
           True
-          >>> segment.contains_pt(GeoPoint(1, 0, 0))
+          >>> segment.contains_pt(GeoPoint4D(1, 0, 0))
           True
-          >>> segment.contains_pt(GeoPoint(0.5, 0, 0))
+          >>> segment.contains_pt(GeoPoint4D(0.5, 0, 0))
           True
-          >>> segment.contains_pt(GeoPoint(0.5, 0.00001, 0))
+          >>> segment.contains_pt(GeoPoint4D(0.5, 0.00001, 0))
           False
-          >>> segment.contains_pt(GeoPoint(0.5, 0, 0.00001))
+          >>> segment.contains_pt(GeoPoint4D(0.5, 0, 0.00001))
           False
-          >>> segment.contains_pt(GeoPoint(1.00001, 0, 0))
+          >>> segment.contains_pt(GeoPoint4D(1.00001, 0, 0))
           False
-          >>> segment.contains_pt(GeoPoint(0.000001, 0, 0))
+          >>> segment.contains_pt(GeoPoint4D(0.000001, 0, 0))
           True
-          >>> segment.contains_pt(GeoPoint(-0.000001, 0, 0))
+          >>> segment.contains_pt(GeoPoint4D(-0.000001, 0, 0))
           False
-          >>> segment.contains_pt(GeoPoint(0.5, 1000, 1000))
+          >>> segment.contains_pt(GeoPoint4D(0.5, 1000, 1000))
           False
-          >>> segment = GeoSegment(GeoPoint(0, 0, 0), GeoPoint(0, 1, 0))
-          >>> segment.contains_pt(GeoPoint(0, 0, 0))
+          >>> segment = GeoSegment4D(GeoPoint4D(0, 0, 0), GeoPoint4D(0, 1, 0))
+          >>> segment.contains_pt(GeoPoint4D(0, 0, 0))
           True
-          >>> segment.contains_pt(GeoPoint(0, 0.5, 0))
+          >>> segment.contains_pt(GeoPoint4D(0, 0.5, 0))
           True
-          >>> segment.contains_pt(GeoPoint(0, 1, 0))
+          >>> segment.contains_pt(GeoPoint4D(0, 1, 0))
           True
-          >>> segment.contains_pt(GeoPoint(0, 1.5, 0))
+          >>> segment.contains_pt(GeoPoint4D(0, 1.5, 0))
           False
-          >>> segment = GeoSegment(GeoPoint(0, 0, 0), GeoPoint(1, 1, 1))
-          >>> segment.contains_pt(GeoPoint(0.5, 0.5, 0.5))
+          >>> segment = GeoSegment4D(GeoPoint4D(0, 0, 0), GeoPoint4D(1, 1, 1))
+          >>> segment.contains_pt(GeoPoint4D(0.5, 0.5, 0.5))
           True
-          >>> segment.contains_pt(GeoPoint(1, 1, 1))
+          >>> segment.contains_pt(GeoPoint4D(1, 1, 1))
           True
-          >>> segment = GeoSegment(GeoPoint(1,2,3), GeoPoint(9,8,2))
+          >>> segment = GeoSegment4D(GeoPoint4D(1,2,3), GeoPoint4D(9,8,2))
           >>> segment.contains_pt(segment.pointAt(0.745))
           True
           >>> segment.contains_pt(segment.pointAt(1.745))
@@ -953,7 +954,7 @@ class GeoSegment:
           True
         """
 
-        check_type(pt, "Point", GeoPoint)
+        check_type(pt, "Point", GeoPoint4D)
 
         segment_length = self.length()
         length_startpt_pt = self.start_pt.distance(pt)
@@ -966,7 +967,7 @@ class GeoSegment:
 
     def pointAt(self,
                 scale_factor: numbers.Real
-                ) -> GeoPoint:
+                ) -> GeoPoint4D:
         """
         Returns a point aligned with the segment
         and lying at given scale factor, where 1 is segment length
@@ -975,10 +976,10 @@ class GeoSegment:
         :param scale_factor: the scale factor, where 1 is the segment length.
         :type scale_factor: numbers.Real
         :return: Point at scale factor
-        :rtype: GeoPoint
+        :rtype: GeoPoint4D
 
         Examples:
-          >>> s = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,0,0))
+          >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,0,0))
           >>> s.pointAt(0)
           Point(0.0000, 0.0000, 0.0000)
           >>> s.pointAt(0.5)
@@ -991,7 +992,7 @@ class GeoSegment:
           Point(-2.0000, 0.0000, 0.0000)
           >>> s.pointAt(2)
           Point(2.0000, 0.0000, 0.0000)
-          >>> s = GeoSegment(GeoPoint(0,0,0), GeoPoint(0,0,1))
+          >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(0,0,1))
           >>> s.pointAt(0)
           Point(0.0000, 0.0000, 0.0000)
           >>> s.pointAt(0.5)
@@ -1004,10 +1005,10 @@ class GeoSegment:
           Point(0.0000, 0.0000, -2.0000)
           >>> s.pointAt(2)
           Point(0.0000, 0.0000, 2.0000)
-          >>> s = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,1,1))
+          >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,1,1))
           >>> s.pointAt(0.5)
           Point(0.5000, 0.5000, 0.5000)
-          >>> s = GeoSegment(GeoPoint(0,0,0), GeoPoint(4,0,0))
+          >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(4,0,0))
           >>> s.pointAt(7.5)
           Point(30.0000, 0.0000, 0.0000)
         """
@@ -1016,34 +1017,34 @@ class GeoSegment:
         dy = self.delta_y() * scale_factor
         dz = self.delta_z() * scale_factor
 
-        return GeoPoint(
+        return GeoPoint4D(
             x=self.start_pt.x + dx,
             y=self.start_pt.y + dy,
             z=self.start_pt.z + dz
         )
 
     def pointProjection(self,
-                        point: GeoPoint
-                        ) -> GeoPoint:
+                        point: GeoPoint4D
+                        ) -> GeoPoint4D:
         """
         Return the point projection on the segment.
 
         Examples:
-          >>> s = GeoSegment(start_pt=GeoPoint(0,0,0), end_pt=GeoPoint(1,0,0))
-          >>> p = GeoPoint(0.5, 1, 4)
+          >>> s = GeoSegment4D(start_pt=GeoPoint4D(0,0,0), end_pt=GeoPoint4D(1,0,0))
+          >>> p = GeoPoint4D(0.5, 1, 4)
           >>> s.pointProjection(p)
           Point(0.5000, 0.0000, 0.0000)
-          >>> s = GeoSegment(start_pt=GeoPoint(0,0,0), end_pt=GeoPoint(4,0,0))
-          >>> p = GeoPoint(7.5, 19.2, -14.72)
+          >>> s = GeoSegment4D(start_pt=GeoPoint4D(0,0,0), end_pt=GeoPoint4D(4,0,0))
+          >>> p = GeoPoint4D(7.5, 19.2, -14.72)
           >>> s.pointProjection(p)
           Point(7.5000, 0.0000, 0.0000)
         """
 
-        check_type(point, "Input point", GeoPoint)
+        check_type(point, "Input point", GeoPoint4D)
 
         check_crs(self, point)
 
-        other_segment = GeoSegment(
+        other_segment = GeoSegment4D(
             self.start_pt,
             point
         )
@@ -1052,25 +1053,25 @@ class GeoSegment:
         return self.pointAt(scale_factor)
 
     def pointDistance(self,
-                      point: GeoPoint
+                      point: GeoPoint4D
                       ) -> numbers.Real:
         """
         Returns the point distance to the segment.
 
         :param point: the point to calculate the distance with
-        :type point: GeoPoint
+        :type point: GeoPoint4D
         :return: the distance of the point to the segment
         :rtype: numbers.Real
 
         Examples:
-          >>> s = GeoSegment(GeoPoint(0,0,0), GeoPoint(0,0,4))
-          >>> s.pointDistance(GeoPoint(-17.2, 0.0, -49,3))
+          >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(0,0,4))
+          >>> s.pointDistance(GeoPoint4D(-17.2, 0.0, -49,3))
           17.2
-          >>> s.pointDistance(GeoPoint(-17.2, 1.22, -49,3))
+          >>> s.pointDistance(GeoPoint4D(-17.2, 1.22, -49,3))
           17.24321315764553
         """
 
-        check_type(point, "Input point", GeoPoint)
+        check_type(point, "Input point", GeoPoint4D)
 
         # check_crs(self, point)
 
@@ -1079,7 +1080,7 @@ class GeoSegment:
         return point.distance(point_projection)
 
     def point_s(self,
-                point: GeoPoint
+                point: GeoPoint4D
                 ) -> Optional[numbers.Real]:
         """
         Calculates the optional distance of the point along the segment.
@@ -1087,11 +1088,11 @@ class GeoSegment:
         Returns None if the point is not contained in the segment.
 
         :param point: the point to calculate the optional distance in the segment.
-        :type point: GeoPoint
+        :type point: GeoPoint4D
         :return: the the optional distance of the point along the segment.
         """
 
-        check_type(point, "Input point", GeoPoint)
+        check_type(point, "Input point", GeoPoint4D)
 
         # check_crs(self, point)
 
@@ -1102,7 +1103,7 @@ class GeoSegment:
 
     def scale(self,
               scale_factor
-              ) -> 'GeoSegment':
+              ) -> 'GeoSegment4D':
         """
         Scale a segment by the given scale_factor.
         Start point does not change.
@@ -1110,12 +1111,12 @@ class GeoSegment:
         :param scale_factor: the scale factor, where 1 is the segment length.
         :type scale_factor: numbers.Real
         :return: Point at scale factor
-        :rtype: GeoPoint
+        :rtype: GeoPoint4D
         """
 
         end_pt = self.pointAt(scale_factor)
 
-        return GeoSegment(
+        return GeoSegment4D(
             self.start_pt,
             end_pt)
 
@@ -1145,7 +1146,7 @@ class GeoSegment:
             pt3=section_final_pt_up)
 
     def same_start(self,
-                   another: 'GeoSegment',
+                   another: 'GeoSegment4D',
                    tol: numbers.Real = 1e-12
                    ) -> bool:
         """
@@ -1159,8 +1160,8 @@ class GeoSegment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,0,0))
-          >>> s2 = GeoSegment(GeoPoint(0,0,0), GeoPoint(0,1,0))
+          >>> s1 = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,0,0))
+          >>> s2 = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(0,1,0))
           >>> s1.same_start(s2)
           True
         """
@@ -1171,7 +1172,7 @@ class GeoSegment:
         )
 
     def same_end(self,
-                 another: 'GeoSegment',
+                 another: 'GeoSegment4D',
                  tol: numbers.Real = 1e-12
                  ) -> bool:
         """
@@ -1185,8 +1186,8 @@ class GeoSegment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,0,0))
-          >>> s2 = GeoSegment(GeoPoint(2,0,0), GeoPoint(1,0,0))
+          >>> s1 = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,0,0))
+          >>> s2 = GeoSegment4D(GeoPoint4D(2,0,0), GeoPoint4D(1,0,0))
           >>> s1.same_end(s2)
           True
         """
@@ -1196,7 +1197,7 @@ class GeoSegment:
             tolerance=tol)
 
     def conn_to_other(self,
-                      another: 'GeoSegment',
+                      another: 'GeoSegment4D',
                       tol: numbers.Real = 1e-12
                       ) -> bool:
         """
@@ -1210,8 +1211,8 @@ class GeoSegment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,0,0))
-          >>> s2 = GeoSegment(GeoPoint(1,0,0), GeoPoint(2,0,0))
+          >>> s1 = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,0,0))
+          >>> s2 = GeoSegment4D(GeoPoint4D(1,0,0), GeoPoint4D(2,0,0))
           >>> s1.conn_to_other(s2)
           True
         """
@@ -1221,7 +1222,7 @@ class GeoSegment:
             tolerance=tol)
 
     def other_connected(self,
-                        another: 'GeoSegment',
+                        another: 'GeoSegment4D',
                         tol: numbers.Real = 1e-12
                         ) -> bool:
         """
@@ -1235,8 +1236,8 @@ class GeoSegment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,0,0))
-          >>> s2 = GeoSegment(GeoPoint(-1,0,0), GeoPoint(0,0,0))
+          >>> s1 = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,0,0))
+          >>> s2 = GeoSegment4D(GeoPoint4D(-1,0,0), GeoPoint4D(0,0,0))
           >>> s1.other_connected(s2)
           True
         """
@@ -1246,7 +1247,7 @@ class GeoSegment:
             tolerance=tol)
 
     def segment_start_in(self,
-                         another: 'GeoSegment'
+                         another: 'GeoSegment4D'
                          ) -> bool:
         """
         Check whether the second segment contains the first segment start point.
@@ -1257,17 +1258,17 @@ class GeoSegment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,0,0))
-          >>> s2 = GeoSegment(GeoPoint(-0.5,0,0), GeoPoint(0.5,0,0))
+          >>> s1 = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,0,0))
+          >>> s2 = GeoSegment4D(GeoPoint4D(-0.5,0,0), GeoPoint4D(0.5,0,0))
           >>> s1.segment_start_in(s2)
           True
-          >>> s1 = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,1,1))
+          >>> s1 = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,1,1))
           >>> s1.segment_start_in(s2)
           True
-          >>> s1 = GeoSegment(GeoPoint(0,1,0), GeoPoint(1,1,1))
+          >>> s1 = GeoSegment4D(GeoPoint4D(0,1,0), GeoPoint4D(1,1,1))
           >>> s1.segment_start_in(s2)
           False
-          >>> s1 = GeoSegment(GeoPoint(-1,-1,-1), GeoPoint(1,1,1))
+          >>> s1 = GeoSegment4D(GeoPoint4D(-1,-1,-1), GeoPoint4D(1,1,1))
           >>> s1.segment_start_in(s2)
           False
         """
@@ -1275,7 +1276,7 @@ class GeoSegment:
         return another.contains_pt(self.start_pt)
 
     def segment_end_in(self,
-                       another: 'GeoSegment'
+                       another: 'GeoSegment4D'
                        ) -> bool:
         """
         Check whether the second segment contains the first segment end point.
@@ -1286,19 +1287,19 @@ class GeoSegment:
         :rtype: bool.
 
         Examples:
-          >>> s1 = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,0,0))
-          >>> s2 = GeoSegment(GeoPoint(-0.5,0,0), GeoPoint(0.5,0,0))
+          >>> s1 = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,0,0))
+          >>> s2 = GeoSegment4D(GeoPoint4D(-0.5,0,0), GeoPoint4D(0.5,0,0))
           >>> s1.segment_end_in(s2)
           False
-          >>> s1 = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,1,1))
+          >>> s1 = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,1,1))
           >>> s1.segment_end_in(s2)
           False
-          >>> s1 = GeoSegment(GeoPoint(0,1,0), GeoPoint(1,1,1))
-          >>> s2 = GeoSegment(GeoPoint(1,1,1), GeoPoint(0.5,0,0))
+          >>> s1 = GeoSegment4D(GeoPoint4D(0,1,0), GeoPoint4D(1,1,1))
+          >>> s2 = GeoSegment4D(GeoPoint4D(1,1,1), GeoPoint4D(0.5,0,0))
           >>> s1.segment_end_in(s2)
           True
-          >>> s1 = GeoSegment(GeoPoint(-1,-1,3), GeoPoint(1,1,3))
-          >>> s2 = GeoSegment(GeoPoint(0,2,3), GeoPoint(2,0,3))
+          >>> s1 = GeoSegment4D(GeoPoint4D(-1,-1,3), GeoPoint4D(1,1,3))
+          >>> s2 = GeoSegment4D(GeoPoint4D(0,2,3), GeoPoint4D(2,0,3))
           >>> s1.segment_end_in(s2)
           True
         """
@@ -1307,34 +1308,34 @@ class GeoSegment:
 
     def rotate(self,
                rotation_axis: 'RotationAxis',
-               center_point: 'GeoPoint' = None
-               ) -> 'GeoSegment':
+               center_point: 'GeoPoint4D' = None
+               ) -> 'GeoSegment4D':
         """
         Rotates a segment.
         :param rotation_axis:
         :param center_point:
         :return: the rotated segment
-        :rtype: GeoSegment
+        :rtype: GeoSegment4D
 
         Examples:
-        >>> seg = GeoSegment(GeoPoint(0,0,0), GeoPoint(0,0,1))
+        >>> seg = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(0,0,1))
         >>> rot_ax = RotationAxis(0, 0, 90)
         >>> seg.rotate(rot_ax)
         Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
         >>> rot_ax = RotationAxis(0, 0, 180)
         >>> seg.rotate(rot_ax)
         Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(0.0000.0000))
-        >>> centr_pt = GeoPoint(0,0,0.5)
+        >>> centr_pt = GeoPoint4D(0,0,0.5)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
         Segment(start_pt=Point(-0.0000, 0.0000, 1.0000), end_pt=Point(0.0000, 0.0000, 0.0000))
-        >>> seg = GeoSegment(GeoPoint(0,0,0), GeoPoint(1,1,0))
-        >>> centr_pt = GeoPoint(1,0,0)
+        >>> seg = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,1,0))
+        >>> centr_pt = GeoPoint4D(1,0,0)
         >>> rot_ax = RotationAxis(0, 90, 90)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
         Segment(start_pt=Point(1.0000, 1.0000, 0.0000), end_pt=Point(2.0000, 0.0000, -0.0000))
-        >>> seg = GeoSegment(GeoPoint(1,1,1), GeoPoint(0,0,0))
+        >>> seg = GeoSegment4D(GeoPoint4D(1,1,1), GeoPoint4D(0,0,0))
         >>> rot_ax = RotationAxis(135, 0, 180)
-        >>> centr_pt = GeoPoint(0.5,0.5,0.5)
+        >>> centr_pt = GeoPoint4D(0.5,0.5,0.5)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
         Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 1.0000, 1.0000))
         """
@@ -1351,7 +1352,7 @@ class GeoSegment:
             center_point=center_point
         )
 
-        return GeoSegment(
+        return GeoSegment4D(
             start_pt=rotated_start_pt,
             end_pt=rotated_end_pt
         )
@@ -1364,12 +1365,12 @@ class GeoSegment:
         Creates a random segment.
 
         :return: random segment
-        :rtype: GeoSegment
+        :rtype: GeoSegment4D
         """
 
         return cls(
-            start_pt=GeoPoint.random(lower_boundary, upper_boundary),
-            end_pt=GeoPoint.random(lower_boundary, upper_boundary)
+            start_pt=GeoPoint4D.random(lower_boundary, upper_boundary),
+            end_pt=GeoPoint4D.random(lower_boundary, upper_boundary)
         )
 
     def densify_as_line3d(self,
@@ -1411,7 +1412,7 @@ class GeoSegment:
 
     def densify_as_pts3d(self,
                          densify_distance
-                         ) -> List[GeoPoint]:
+                         ) -> List[GeoPoint4D]:
 
         return self.densify_as_line3d(densify_distance=densify_distance).pts()
 
@@ -1450,5 +1451,3 @@ class GeoSegment:
         s_list.append(segment_length)
 
         return array('d', s_list)
-
-

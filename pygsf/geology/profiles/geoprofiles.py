@@ -1,4 +1,6 @@
 
+from enum import Enum, auto
+
 from .sets import *
 
 z_padding = 0.2

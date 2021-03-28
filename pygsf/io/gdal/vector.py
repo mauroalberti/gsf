@@ -9,8 +9,9 @@ from osgeo import ogr, osr
 
 import geopandas as gpd
 
+from pygsf.georeferenced.geoshapes3d import GeoLines3D, GeoMultiLine3D
 from pygsf.utils.types import *
-from pygsf.georeferenced.geoshapes import *
+#from pygsf.georeferenced.geoshapes import *
 
 
 class OGRIOException(Exception):
@@ -298,7 +299,7 @@ def try_read_line_shapefile(
 
 def read_linestring_geometries(
         line_shp_path: str
-) -> Optional[GeoMultiLine]:
+) -> Optional[GeoMultiLine3D]:
     """
     Read linestring geometries from a shapefile using ogr.
     The geometry type of the input shapefile must be LineString (MultiLineString is not currently managed).
@@ -381,7 +382,7 @@ def read_linestring_geometries(
 
     datasource.Destroy()
 
-    multiline = GeoMultiLine(
+    multiline = GeoMultiLine3D(
         lines=lines,
         epsg_cd=epsg_cd
     )

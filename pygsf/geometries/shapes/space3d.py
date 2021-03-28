@@ -2841,8 +2841,9 @@ def closure_plane_from_geo(
     Closure that embodies the analytical formula for a given, non-vertical plane.
     This closure is used to calculate the z value from given horizontal coordinates (x, y).
 
-    :param src_pt: Point_3D instance expressing a location point contained by the plane.
-    :type src_pt: Point_3D.
+    :param plane: the geological plane
+    :param src_pt: the 3D point expressing a location point contained by the plane.
+
 
     :return: lambda (closure) expressing an analytical formula for deriving z given x and y values.
     """
@@ -2923,8 +2924,6 @@ class Points3D:
         """
 
         :param points: list of points
-        :type points: List[Point]
-        :type epsg_code: numbers.Integral
         """
 
         for ndx, point in enumerate(points):

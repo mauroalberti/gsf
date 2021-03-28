@@ -357,7 +357,7 @@ class Plunge(object):
         return self.r > 0.0
 
 
-class Direct(object):
+class Direct:
     """
     Class describing a direction, expressed as a polar direction in degrees.
     """
@@ -755,7 +755,7 @@ class Direct(object):
 
         return self.pl.is_downward
 
-    def upward(self) -> Vect:
+    def upward(self) -> 'Direct':
         """
         Return upward-point geological vector.
 
@@ -783,7 +783,7 @@ class Direct(object):
         else:
             return self.opposite()
 
-    def downward(self) -> Vect:
+    def downward(self) -> 'Direct':
         """
         Return downward-pointing geological vector.
 
@@ -998,7 +998,7 @@ class Direct(object):
 
     def normal_versor(self,
                       another: 'Direct'
-                      ) -> Vect:
+                      ) -> Optional[Vect]:
         """
         Calculate the versor (Vect) defined by the vector product of two Direct instances.
 
@@ -1072,11 +1072,10 @@ class Direct(object):
 
     def normal_direction(self,
                          another: 'Direct'
-    ) -> 'Direct':
+    ) -> Optional['Direct']:
         """
         Calculate the instance that is normal to the two provided sources.
         Angle between sources must be larger than MIN_ANGLE_DEGR_DISORIENTATION,
-        otherwise a SubparallelLineationException will be raised.
 
         Example:
           >>> Direct(0, 0).normal_direction(Direct(0.5, 0)) is None
@@ -1633,7 +1632,7 @@ def rotVectByQuater(
     return rotated_v.vector()
 
 
-class Plane(object):
+class Plane:
     """
     Geological plane.
     Defined by dip direction and dip angle (both in degrees):

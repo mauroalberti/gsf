@@ -2,8 +2,11 @@
 from typing import List, Iterable
 from operator import attrgetter
 
+from pygsf.georeferenced.geoshapes2d import GeoMPolygon2D, line2d_to_shapely
+from pygsf.georeferenced.geoshapes3d import GeoLines3D, GeoMultiLine3D, GeoPointSegmentCollection3D, \
+    GeoPointSegmentCollections3D
 from pygsf.georeferenced.rasters import *
-from pygsf.georeferenced.geoshapes import *
+#from pygsf.georeferenced.geoshapes import *
 from pygsf.geology.base import *
 
 from pygsf.geology.profiles.sets import *
@@ -456,8 +459,8 @@ class LinearProfiler:
         return topo_profiles
 
     def intersect_line(self,
-                       mline: Union[Line2D, GeoMultiLine],
-                       ) -> GeoPointSegmentCollection:
+                       mline: Union[Line2D, GeoMultiLine3D],
+                       ) -> GeoPointSegmentCollection3D:
         """
         Calculates the intersection with a line/multiline.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
@@ -465,13 +468,13 @@ class LinearProfiler:
         :param mline: the line/multiline to intersect profile with
         :type mline: Union[Line, GeoMultiLine]
         :return: the possible intersections
-        :rtype: GeoPointSegmentCollection
+        :rtype: GeoPointSegmentCollection3D
         """
 
         return mline.intersectSegment(self.segment())
 
     def intersect_lines(self,
-                        mlines: Iterable[Union[Line2D, GeoMultiLine]],
+                        mlines: Iterable[Union[Line2D, GeoMultiLine3D]],
                         ) -> List[List[Optional[Union[Point2D, Segment2D]]]]:
         """
         Calculates the intersection with a set of lines/multilines.
@@ -484,13 +487,13 @@ class LinearProfiler:
         """
 
         results = [self.intersect_line(mline) for mline in mlines]
-        valid_results = [[ndx, GeoPointSegmentCollection(geoms=res, epsg_code=self.epsg_code)] for ndx, res in enumerate(results) if res]
+        valid_results = [[ndx, GeoPointSegmentCollection3D(geoms=res, epsg_code=self.epsg_code)] for ndx, res in enumerate(results) if res]
 
-        return GeoPointSegmentCollections(valid_results)
+        return GeoPointSegmentCollections3D(valid_results)
 
     def intersect_polygon(self,
-                          mpolygon: GeoMPolygon,
-                          ) -> GeoLines3D:
+                          mpolygon: GeoMPolygon2D,
+                          ) -> GeoLines2D:
         """
         Calculates the intersection with a shapely polygon/multipolygon.
         Note: the intersections are considered flat, i.e., in a 2D plane, not 3D.
@@ -504,14 +507,14 @@ class LinearProfiler:
         check_type(
             mpolygon,
             "Polygon",
-            GeoMPolygon
+            GeoMPolygon2D
         )
 
-        line_shapely, epsg_code = line_to_shapely(self.to_line())
+        line_shapely, epsg_code = line2d_to_shapely(self.to_line())
         return mpolygon.intersect_line(line=line_shapely)
 
     def intersect_polygons(self,
-       mpolygons: List[GeoMPolygon]
+       mpolygons: List[GeoMPolygon2D]
     ) -> List[GeoLines3D]:
         """
         Calculates the intersection with a set of shapely polygon/multipolygon.
@@ -880,7 +883,7 @@ class LinearProfiler:
 
     def parse_intersections_for_profile(
             self,
-            intersections: GeoPointSegmentCollections
+            intersections: GeoPointSegmentCollections3D
     ) -> ProfilesIntersections:
         """
         Parse the profile intersections for incorporation

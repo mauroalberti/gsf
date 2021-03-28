@@ -97,7 +97,7 @@ def latLengthOneMinuteSecond() -> numbers.Real:
     return latitude_one_degree_45degr_meters / 3600.0
 
 
-def pt_4326_ecef(pt: Point2D) -> Optional[Point2D]:
+def pt_4326_ecef(pt: Point3D) -> Optional[Point3D]:
     """
     Project a point from EPSG:4326 to ECEF
 
@@ -110,14 +110,14 @@ def pt_4326_ecef(pt: Point2D) -> Optional[Point2D]:
     lon, lat, height = pt.x, pt.y, pt.z
     x, y, z = geodetic2ecef(lat, lon, height)
 
-    return Point2D(
+    return Point3D(
         x=x,
         y=y,
         z=z
     )
 
 
-def line_4326_ecef(line: Line2D) -> Optional[Line2D]:
+def line_4326_ecef(line: Line3D) -> Optional[Line3D]:
     """
     Converts from WGS84 to ECEF reference system, provided its CRS is EPSG:4326.
 
@@ -127,7 +127,7 @@ def line_4326_ecef(line: Line2D) -> Optional[Line2D]:
 
     pts = [pt_4326_ecef(pt) for pt in line.pts()]
 
-    return Line2D(
+    return Line3D(
         pts=pts
     )
 
