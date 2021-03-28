@@ -5,6 +5,7 @@ from pygsf.utils.types import *
 
 from pygsf.mathematics.defaults import *
 from pygsf.mathematics.arrays import *
+from pygsf.georeferenced.crs import *
 
 
 class Vect(object):
@@ -375,8 +376,6 @@ class Vect(object):
 
         check_type(another, "Second vector", Vect)
 
-        check_crs(self, another)
-
         x, y, z = arrToTuple(self.a + another.a)
         return self.__class__(x, y, z)
 
@@ -678,8 +677,6 @@ class Vect(object):
         """
 
         check_type(another, "Second vector", Vect)
-
-        check_crs(self, another)
 
         return self.cosine_of_angle(another) * another.length
 

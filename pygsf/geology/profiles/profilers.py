@@ -2,11 +2,9 @@
 from typing import List, Iterable
 from operator import attrgetter
 
-from pygsf.georeferenced.geoshapes2d import GeoMPolygon2D, line2d_to_shapely
-from pygsf.georeferenced.geoshapes3d import GeoLines3D, GeoMultiLine3D, GeoPointSegmentCollection3D, \
-    GeoPointSegmentCollections3D
+from pygsf.georeferenced.geoshapes2d import *
+from pygsf.georeferenced.geoshapes3d import *
 from pygsf.georeferenced.rasters import *
-#from pygsf.georeferenced.geoshapes import *
 from pygsf.geology.base import *
 
 from pygsf.geology.profiles.sets import *

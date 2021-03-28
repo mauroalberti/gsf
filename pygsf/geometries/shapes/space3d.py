@@ -5,6 +5,8 @@ from typing import List, Optional
 from math import fabs
 import itertools
 
+import copy
+
 import numbers
 from array import array
 
@@ -12,7 +14,7 @@ from pygsf.orientations.orientations import *
 from pygsf.mathematics.statistics import *
 from pygsf.mathematics.quaternions import *
 from pygsf.utils.types import check_type
-#from pygsf.geometries.shapes.statistics import *
+from pygsf.georeferenced.crs import *
 
 
 class Shape3D(object, metaclass=abc.ABCMeta):
@@ -221,9 +223,9 @@ class Point3D:
 
         Example:
           >>> Point3D(1, 0, 0) + Point3D(0, 1, 1)
-          Point(1.0000, 1.0000, 1.0000)
+          Point3D(1.0000, 1.0000, 1.0000)
           >>> Point3D(1, 1, 1) + Point3D(-1, -1, -1)
-          Point(0.0000, 0.0000, 0.0000)
+          Point3D(0.0000, 0.0000, 0.0000)
         """
 
         check_type(another, "Second point", Point3D)
@@ -250,9 +252,9 @@ class Point3D:
 
         Example:
           >>> Point3D(1., 1., 1.) - Point3D(1., 1., 1.)
-          Point(0.0000, 0.0000, 0.0000)
+          Point3D(0.0000, 0.0000, 0.0000)
           >>> Point3D(1., 1., 3.) - Point3D(1., 1., 2.2)
-          Point(0.0000, 0.0000, 0.8000)
+          Point3D(0.0000, 0.0000, 0.8000)
         """
 
         check_type(another, "Second point", Point3D)
@@ -311,7 +313,7 @@ class Point3D:
 
         Examples:
           >>> Point3D(2, 3, 4).pXY()
-          Point(2.0000, 3.0000, 0.0000)
+          Point3D(2.0000, 3.0000, 0.0000)
         """
 
         return Point3D(self.x, self.y, 0.0)
@@ -324,7 +326,7 @@ class Point3D:
 
         Examples:
           >>> Point3D(2, 3, 4).pXZ()
-          Point(2.0000, 0.0000, 4.0000)
+          Point3D(2.0000, 0.0000, 4.0000)
         """
 
         return Point3D(self.x, 0.0, self.z)
@@ -337,7 +339,7 @@ class Point3D:
 
         Examples:
           >>> Point3D(2, 3, 4).pYZ()
-          Point(0.0000, 3.0000, 4.0000)
+          Point3D(0.0000, 3.0000, 4.0000)
         """
 
         return Point3D(0.0, self.y, self.z)
@@ -357,8 +359,6 @@ class Point3D:
           3.0
         """
 
-        check_crs(self, another)
-
         return another.x - self.x
 
     def deltaY(self,
@@ -375,8 +375,6 @@ class Point3D:
           5.0
         """
 
-        check_crs(self, another)
-
         return another.y - self.y
 
     def deltaZ(self,
@@ -392,8 +390,6 @@ class Point3D:
           >>> Point3D(1, 2, 3).deltaZ(Point3D(4, 7, 1))
           -2.0
         """
-
-        check_crs(self, another)
 
         return another.z - self.z
 
@@ -455,9 +451,9 @@ class Point3D:
 
         Example;
           >>> Point3D(1, 0, 1).scale(2.5)
-          Point(2.5000, 0.0000, 2.5000)
+          Point3D(2.5000, 0.0000, 2.5000)
           >>> Point3D(1, 0, 1).scale(2.5)
-          Point(2.5000, 0.0000, 2.5000)
+          Point3D(2.5000, 0.0000, 2.5000)
         """
 
         x, y, z = self.x * scale_factor, self.y * scale_factor, self.z * scale_factor
@@ -470,9 +466,9 @@ class Point3D:
 
         Examples:
           >>> Point3D(1, 1, 1).invert()
-          Point(-1.0000, -1.0000, -1.0000)
+          Point3D(-1.0000, -1.0000, -1.0000)
           >>> Point3D(2, -1, 4).invert()
-          Point(-2.0000, 1.0000, -4.0000)
+          Point3D(-2.0000, 1.0000, -4.0000)
         """
 
         return self.scale(-1)
@@ -486,7 +482,7 @@ class Point3D:
 
         Examples:
           >>> Point3D(1,1,1).reflect_vertical()
-          Point(-1.0000, -1.0000, 1.0000)
+          Point3D(-1.0000, -1.0000, 1.0000)
         """
 
         x, y, z = self
@@ -553,9 +549,9 @@ class Point3D:
 
         Example:
           >>> Point3D(1, 1, 1).shift(0.5, 1., 1.5)
-          Point(1.5000, 2.0000, 2.5000)
+          Point3D(1.5000, 2.0000, 2.5000)
           >>> Point3D(1, 2, -1).shift(0.5, 1., 1.5)
-          Point(1.5000, 3.0000, 0.5000)
+          Point3D(1.5000, 3.0000, 0.5000)
        """
 
         return Point3D(self.x + sx, self.y + sy, self.z + sz)
@@ -574,9 +570,9 @@ class Point3D:
 
         Example:
           >>> Point3D(1, 1, 1).shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 2.0000, 2.5000)
+          Point3D(1.5000, 2.0000, 2.5000)
           >>> Point3D(1, 2, -1).shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 3.0000, 0.5000)
+          Point3D(1.5000, 3.0000, 0.5000)
        """
 
         x, y, z = self
@@ -614,36 +610,36 @@ class Point3D:
           >>> rot_axis = RotationAxis(0,0,90)
           >>> center_pt = Point3D(0,0,0.5)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(0.5000, 0.0000, 0.5000)
+          Point3D(0.5000, 0.0000, 0.5000)
           >>> center_pt = Point3D(0,0,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(0.0000, 0.0000, 1.0000)
+          Point3D(0.0000, 0.0000, 1.0000)
           >>> center_pt = Point3D(0, 0, 2)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(-1.0000, 0.0000, 2.0000)
+          Point3D(-1.0000, 0.0000, 2.0000)
           >>> rot_axis = RotationAxis(0,0,180)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(-0.0000, 0.0000, 3.0000)
+          Point3D(-0.0000, 0.0000, 3.0000)
           >>> pt.rotate(rotation_axis=rot_axis)
-          Point(0.0000, 0.0000, -1.0000)
+          Point3D(0.0000, 0.0000, -1.0000)
           >>> pt = Point3D(1,1,1,5)
           >>> rot_axis = RotationAxis(0,90,90)
           >>> pt.rotate(rotation_axis=rot_axis)
-          Point(1.0000, -1.0000, 1.0000)
+          Point3D(1.0000, -1.0000, 1.0000)
           >>> rot_axis = RotationAxis(0,90,180)
           >>> pt.rotate(rotation_axis=rot_axis)
-          Point(-1.0000, -1.0000, 1.0000)
+          Point3D(-1.0000, -1.0000, 1.0000)
           >>> center_pt = Point3D(1,1,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(1.0000, 1.0000, 1.0000)
+          Point3D(1.0000, 1.0000, 1.0000)
           >>> center_pt = Point3D(2,2,10)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(3.0000, 3.0000, 1.0000)
+          Point3D(3.0000, 3.0000, 1.0000)
           >>> pt = Point3D(1, 1, 2)
           >>> rot_axis = RotationAxis(135, 0, 180)
           >>> center_pt = Point3D(0,0,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(-1.0000, -1.0000, 0.0000)
+          Point3D(-1.0000, -1.0000, 0.0000)
         """
 
         if not center_point:
@@ -665,7 +661,7 @@ class Point3D:
             rot_axis=rotation_axis
         )
 
-        x, y, z, epsg_cd = rot_vect
+        x, y, z = rot_vect
 
         rot_pt = Point3D(
             x=x,
@@ -704,13 +700,9 @@ def pack_to_points(
     of input arrays.
 
     :param xs: array of x values
-    :type xs: array
     :param ys: array of y values
-    :type ys: array
     :param zs: optional array of z values
-    :type zs: Optional[array]
-    :return: a list of Point instances
-    :rtype: List[Point]
+    :return: a list of Point3D instances
     """
 
     if zs is None:
@@ -782,7 +774,7 @@ class Segment3D:
         :rtype: str.
         """
 
-        return "Segment(start_pt={}, end_pt={})".format(
+        return "Segment3D(start_pt={}, end_pt={})".format(
             self.start_pt,
             self.end_pt
         )
@@ -1010,36 +1002,36 @@ class Segment3D:
         Examples:
           >>> s = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
           >>> s.pointAt(0)
-          Point(0.0000, 0.0000, 0.0000)
+          Point3D(0.0000, 0.0000, 0.0000)
           >>> s.pointAt(0.5)
-          Point(0.5000, 0.0000, 0.0000)
+          Point3D(0.5000, 0.0000, 0.0000)
           >>> s.pointAt(1)
-          Point(1.0000, 0.0000, 0.0000)
+          Point3D(1.0000, 0.0000, 0.0000)
           >>> s.pointAt(-1)
-          Point(-1.0000, 0.0000, 0.0000)
+          Point3D(-1.0000, 0.0000, 0.0000)
           >>> s.pointAt(-2)
-          Point(-2.0000, 0.0000, 0.0000)
+          Point3D(-2.0000, 0.0000, 0.0000)
           >>> s.pointAt(2)
-          Point(2.0000, 0.0000, 0.0000)
+          Point3D(2.0000, 0.0000, 0.0000)
           >>> s = Segment3D(Point3D(0,0,0), Point3D(0,0,1))
           >>> s.pointAt(0)
-          Point(0.0000, 0.0000, 0.0000)
+          Point3D(0.0000, 0.0000, 0.0000)
           >>> s.pointAt(0.5)
-          Point(0.0000, 0.0000, 0.5000)
+          Point3D(0.0000, 0.0000, 0.5000)
           >>> s.pointAt(1)
-          Point(0.0000, 0.0000, 1.0000)
+          Point3D(0.0000, 0.0000, 1.0000)
           >>> s.pointAt(-1)
-          Point(0.0000.0000, 0.0000, -1)
+          Point3D(0.0000.0000, 0.0000)
           >>> s.pointAt(-2)
-          Point(0.0000, 0.0000, -2.0000)
+          Point3D(0.0000, 0.0000, -2.0000)
           >>> s.pointAt(2)
-          Point(0.0000, 0.0000, 2.0000)
+          Point3D(0.0000, 0.0000, 2.0000)
           >>> s = Segment3D(Point3D(0,0,0), Point3D(1,1,1))
           >>> s.pointAt(0.5)
-          Point(0.5000, 0.5000, 0.5000)
+          Point3D(0.5000, 0.5000, 0.5000)
           >>> s = Segment3D(Point3D(0,0,0), Point3D(4,0,0))
           >>> s.pointAt(7.5)
-          Point(30.0000, 0.0000, 0.0000)
+          Point3D(30.0000, 0.0000, 0.0000)
         """
 
         dx = self.delta_x() * scale_factor
@@ -1062,16 +1054,14 @@ class Segment3D:
           >>> s = Segment3D(start_pt=Point3D(0,0,0), end_pt=Point3D(1,0,0))
           >>> p = Point3D(0.5, 1, 4)
           >>> s.pointProjection(p)
-          Point(0.5000, 0.0000, 0.0000)
+          Point3D(0.5000, 0.0000, 0.0000)
           >>> s = Segment3D(start_pt=Point3D(0,0,0), end_pt=Point3D(4,0,0))
           >>> p = Point3D(7.5, 19.2, -14.72)
           >>> s.pointProjection(p)
-          Point(7.5000, 0.0000, 0.0000)
+          Point3D(7.5000, 0.0000, 0.0000)
         """
 
         check_type(point, "Input point", Point3D)
-
-        check_crs(self, point)
 
         other_segment = Segment3D(
             self.start_pt,
@@ -1094,9 +1084,9 @@ class Segment3D:
 
         Examples:
           >>> s = Segment3D(Point3D(0,0,0), Point3D(0,0,4))
-          >>> s.pointDistance(Point3D(-17.2, 0.0, -49,3))
+          >>> s.pointDistance(Point3D(-17.2, 0.0, -49))
           17.2
-          >>> s.pointDistance(Point3D(-17.2, 1.22, -49,3))
+          >>> s.pointDistance(Point3D(-17.2, 1.22, -49))
           17.24321315764553
         """
 
@@ -1154,7 +1144,7 @@ class Segment3D:
         Returns the vertical Cartesian plane containing the segment.
 
         :return: the vertical Cartesian plane containing the segment.
-        :rtype: Optional[CPlane].
+        :rtype: Optional[CPlane3D].
         """
 
         if self.length_horizontal() == 0.0:  # collapsed segment
@@ -1350,23 +1340,21 @@ class Segment3D:
         >>> seg = Segment3D(Point3D(0,0,0), Point3D(0,0,1))
         >>> rot_ax = RotationAxis(0, 0, 90)
         >>> seg.rotate(rot_ax)
-        Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
+        Segment3D(start_pt=Point3D(0.0000, 0.0000, 0.0000), end_pt=Point3D(1.0000, 0.0000, 0.0000))
         >>> rot_ax = RotationAxis(0, 0, 180)
-        >>> seg.rotate(rot_ax)
-        Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(0.0000.0000))
         >>> centr_pt = Point3D(0,0,0.5)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
-        Segment(start_pt=Point(-0.0000, 0.0000, 1.0000), end_pt=Point(0.0000, 0.0000, 0.0000))
+        Segment3D(start_pt=Point3D(-0.0000, 0.0000, 1.0000), end_pt=Point3D(0.0000, 0.0000, 0.0000))
         >>> seg = Segment3D(Point3D(0,0,0), Point3D(1,1,0))
         >>> centr_pt = Point3D(1,0,0)
         >>> rot_ax = RotationAxis(0, 90, 90)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
-        Segment(start_pt=Point(1.0000, 1.0000, 0.0000), end_pt=Point(2.0000, 0.0000, -0.0000))
+        Segment3D(start_pt=Point3D(1.0000, 1.0000, 0.0000), end_pt=Point3D(2.0000, 0.0000, -0.0000))
         >>> seg = Segment3D(Point3D(1,1,1), Point3D(0,0,0))
         >>> rot_ax = RotationAxis(135, 0, 180)
         >>> centr_pt = Point3D(0.5,0.5,0.5)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
-        Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 1.0000, 1.0000))
+        Segment3D(start_pt=Point3D(0.0000, 0.0000, 0.0000), end_pt=Point3D(1.0000, 1.0000, 1.0000))
         """
 
         start_pt, end_pt = self
@@ -1536,57 +1524,57 @@ def intersect_segments(
       >>> s2 = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
       >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
+      Segment3D(start_pt=Point3D(0.0000, 0.0000, 0.0000), end_pt=Point3D(1.0000, 0.0000, 0.0000))
       >>> s1 = Segment3D(Point3D(-2,0,0), Point3D(-1,0,0))
       >>> intersect_segments(s1, s2) is None
       True
       >>> s1 = Segment3D(Point3D(-2,0,0), Point3D(0,0,0))
       >>> intersect_segments(s1, s2)
-      Point(0.0000, 0.0000, 0.0000)
+      Point3D(0.0000, 0.0000, 0.0000)
       >>> s1 = Segment3D(Point3D(-2,0,0), Point3D(0.5,0,0))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(0.5000, 0.0000, 0.0000))
+      Segment3D(start_pt=Point3D(0.0000, 0.0000, 0.0000), end_pt=Point3D(0.5000, 0.0000, 0.0000))
       >>> s1 = Segment3D(Point3D(-2,0,0), Point3D(1,0,0))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
+      Segment3D(start_pt=Point3D(0.0000, 0.0000, 0.0000), end_pt=Point3D(1.0000, 0.0000, 0.0000))
       >>> s1 = Segment3D(Point3D(-2,0,0), Point3D(2,0,0))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
+      Segment3D(start_pt=Point3D(0.0000, 0.0000, 0.0000), end_pt=Point3D(1.0000, 0.0000, 0.0000))
       >>> s1 = Segment3D(Point3D(0,0,0), Point3D(0.5,0,0))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(0.5000, 0.0000, 0.0000))
+      Segment3D(start_pt=Point3D(0.0000, 0.0000, 0.0000), end_pt=Point3D(0.5000, 0.0000, 0.0000))
       >>> s1 = Segment3D(Point3D(0.25,0,0), Point3D(0.75,0,0))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.2500, 0.0000, 0.0000), end_pt=Point(0.7500, 0.0000, 0.0000))
+      Segment3D(start_pt=Point3D(0.2500, 0.0000, 0.0000), end_pt=Point3D(0.7500, 0.0000, 0.0000))
       >>> s1 = Segment3D(Point3D(0.25,0,0), Point3D(1,0,0))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.2500, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
+      Segment3D(start_pt=Point3D(0.2500, 0.0000, 0.0000), end_pt=Point3D(1.0000, 0.0000, 0.0000))
       >>> s1 = Segment3D(Point3D(0.25,0,0), Point3D(1.25,0,0))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.2500, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
+      Segment3D(start_pt=Point3D(0.2500, 0.0000, 0.0000), end_pt=Point3D(1.0000, 0.0000, 0.0000))
       >>> s1 = Segment3D(Point3D(0,0,0), Point3D(1.25,0,0))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
+      Segment3D(start_pt=Point3D(0.0000, 0.0000, 0.0000), end_pt=Point3D(1.0000, 0.0000, 0.0000))
       >>> s1 = Segment3D(Point3D(1,0,0), Point3D(1.25,0,0))
       >>> intersect_segments(s1, s2)
-      Point(1.0000, 0.0000, 0.0000)
+      Point3D(1.0000, 0.0000, 0.0000)
       >>> s2 = Segment3D(Point3D(0,0,0), Point3D(1,1,1))
       >>> s1 = Segment3D(Point3D(0.25,0.25,0.25), Point3D(0.75,0.75,0.75))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.2500, 0.2500, 0.2500), end_pt=Point(0.7500, 0.7500, 0.7500))
+      Segment3D(start_pt=Point3D(0.2500, 0.2500, 0.2500), end_pt=Point3D(0.7500, 0.7500, 0.7500))
       >>> s1 = Segment3D(Point3D(0.25,0.25,0.25), Point3D(1.75,1.75,1.75))
       >>> intersect_segments(s1, s2)
-      Segment(start_pt=Point(0.2500, 0.2500, 0.2500), end_pt=Point(1.0000, 1.0000, 1.0000))
+      Segment3D(start_pt=Point3D(0.2500, 0.2500, 0.2500), end_pt=Point3D(1.0000, 1.0000, 1.0000))
       >>> s1 = Segment3D(Point3D(0.25,0.25,0.25), Point3D(1.75,0,1.75))
       >>> intersect_segments(s1, s2)
-      Point(0.2500, 0.2500, 0.2500)
+      Point3D(0.2500, 0.2500, 0.2500)
       >>> s1 = Segment3D(Point3D(0.25,1,0.25), Point3D(0.75,0.75,0.75))
       >>> intersect_segments(s1, s2)
-      Point(0.7500, 0.7500, 0.7500)
+      Point3D(0.7500, 0.7500, 0.7500)
       >>> s2 = Segment3D(Point3D(-1,-1,-1), Point3D(1,1,1))
       >>> s1 = Segment3D(Point3D(-1,1,1), Point3D(1,-1,-1))
       >>> intersect_segments(s1, s2)
-      Point(-0.0000, 0.0000, 0.0000)
+      Point3D(0.0000, 0.0000, 0.0000)
     """
 
     check_type(segment1, "First segment", Segment3D)
@@ -1763,7 +1751,7 @@ class Line3D:
 
             check_type(pts, "List", list)
             for el in pts:
-                check_type(el, "Point", Point3D)
+                check_type(el, "Point3D", Point3D)
 
             self._pts = pts
 
@@ -2200,9 +2188,7 @@ class Line3D:
         Calculates the possible intersection between the line and a provided segment.
 
         :param segment: the input segment
-        :type segment: Segment
         :return: the optional intersections, points or segments
-        :rtype: Optional[List[Optional[Union[Point, Segment]]]]
         :raise: Exception
         """
 
@@ -2210,7 +2196,6 @@ class Line3D:
             return
 
         check_type(segment, "Input segment", Segment3D)
-        #check_crs(self, segment)
 
         intersections = [intersect_segments(curr_segment, segment) for curr_segment in self if curr_segment is not None]
         intersections = list(filter(lambda val: val is not None, intersections))
@@ -2421,7 +2406,7 @@ class CPlane3D(object):
     Expressed by equation:
     ax + by + cz + d = 0
 
-    Note: CPlane is locational - its position in space is defined.
+    Note: CPlane3D is locational - its position in space is defined.
     This contrast with Plane, defined just by its attitude, but with undefined position
 
     """
@@ -2450,7 +2435,7 @@ class CPlane3D(object):
 
     def a(self) -> numbers.Real:
         """
-        Return a coefficient of a CPlane instance.
+        Return a coefficient of a CPlane3D instance.
 
         Example:
           >>> CPlane3D(1, 0, 0, 2).a()
@@ -2461,7 +2446,7 @@ class CPlane3D(object):
 
     def b(self) -> numbers.Real:
         """
-        Return b coefficient of a CPlane instance.
+        Return b coefficient of a CPlane3D instance.
 
         Example:
           >>> CPlane3D(1, 4, 0, 2).b()
@@ -2472,7 +2457,7 @@ class CPlane3D(object):
 
     def c(self) -> numbers.Real:
         """
-        Return a coefficient of a CPlane instance.
+        Return a coefficient of a CPlane3D instance.
 
         Example:
           >>> CPlane3D(1, 0, 5.4, 2).c()
@@ -2483,7 +2468,7 @@ class CPlane3D(object):
 
     def d(self) -> numbers.Real:
         """
-        Return a coefficient of a CPlane instance.
+        Return a coefficient of a CPlane3D instance.
 
         Example:
           >>> CPlane3D(1, 0, 0, 2).d()
@@ -2494,7 +2479,7 @@ class CPlane3D(object):
 
     def v(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real]:
         """
-        Return coefficients of a CPlane instance.
+        Return coefficients of a CPlane3D instance.
 
         Example:
           >>> CPlane3D(1, 1, 7, -4).v()
@@ -2504,19 +2489,19 @@ class CPlane3D(object):
         return self.a(), self.b(), self.c(), self.d()
 
     @classmethod
-    def fromPoints(cls, pt1, pt2, pt3) -> 'CPlane':
+    def fromPoints(cls, pt1, pt2, pt3) -> 'CPlane3D':
         """
-        Create a CPlane from three given Point instances.
+        Create a CPlane3D from three given Point instances.
 
         Example:
           >>> CPlane3D.fromPoints(Point3D(0, 0, 0), Point3D(1, 0, 0), Point3D(0, 1, 0))
-          CPlane(0.0000, 0.0000, 1.0000, 0.0000)
+          CPlane3D(0.0000, 0.0000, 1.0000, 0.0000)
           >>> CPlane3D.fromPoints(Point3D(0, 0, 0), Point3D(1, 0, 0), Point3D(0, 1, 0))
-          CPlane(0.0000, 0.0000, 1.0000, 0.0000)
+          CPlane3D(0.0000, 0.0000, 1.0000, 0.0000)
           >>> CPlane3D.fromPoints(Point3D(0, 0, 0), Point3D(0, 1, 0), Point3D(0, 0, 1))
-          CPlane(1.0000, 0.0000, 0.0000, 0.0000)
+          CPlane3D(1.0000, 0.0000, 0.0000, 0.0000)
           >>> CPlane3D.fromPoints(Point3D(1,2,3), Point3D(2,3,4), Point3D(-1,7,-2))
-          CPlane(-0.7956, 0.2387, 0.5569, -1.3524)
+          CPlane3D(-0.7956, 0.2387, 0.5569, -1.3524)
         """
 
         if not (isinstance(pt1, Point3D)):
@@ -2565,11 +2550,11 @@ class CPlane3D(object):
 
           Example:
             >>> CPlane3D.from_geological_plane(Plane(0, 0), Point3D(0, 0, 0))
-            CPlane(0.0000, 0.0000, 1.0000, -0.0000, -1)
+            CPlane3D(0.0000, 0.0000, 1.0000, -0.0000)
             >>> CPlane3D.from_geological_plane(Plane(90, 45), Point3D(0, 0, 0))
-            CPlane(0.7071, 0.0000, 0.7071, -0.0000, -1)
+            CPlane3D(0.7071, 0.0000, 0.7071, -0.0000)
             >>> CPlane3D.from_geological_plane(Plane(0, 90), Point3D(0, 0, 0))
-            CPlane(0.0000, 1.0000, -0.0000, -0.0000, -1)
+            CPlane3D(0.0000, 1.0000, -0.0000, -0.0000)
           """
 
         normal_versor = geol_plane.normDirectFrwrd().as_versor()
@@ -2579,7 +2564,7 @@ class CPlane3D(object):
 
     def __repr__(self):
 
-        return "CPlane({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(*self.v())
+        return "CPlane3D({:.4f}, {:.4f}, {:.4f}, {:.4f})".format(*self.v())
 
     def normVersor(self) -> Vect:
         """
@@ -2600,7 +2585,7 @@ class CPlane3D(object):
 
         Examples:
           >>> CPlane3D(0, 0, 1, -1).toPoint()
-          Point(0.0000, 0.0000, 1.0000)
+          Point3D(0.0000, 0.0000, 1.0000)
         """
 
         point = Point3D(
@@ -2617,7 +2602,7 @@ class CPlane3D(object):
         Return None for not intersecting planes.
 
         :param another: another Cartesian plane.
-        :type another: CPlane.
+        :type another: CPlane3D.
         :return: the intersection line as a vector.
         :rtype: Optional[Vect].
         :raise: Exception.
@@ -2652,7 +2637,7 @@ class CPlane3D(object):
           >>> p_a = CPlane3D(1, 0, 0, 0)
           >>> p_b = CPlane3D(0, 0, 1, 0)
           >>> p_a.intersPoint(p_b)
-          Point(0.0000, 0.0000, 0.0000, 0.0000)
+          Point3D(0.0000, 0.0000, 0.0000)
           >>> p_b = CPlane3D(-1, 0, 0, 0)  # parallel plane, no intersection
           >>> p_a.intersPoint(p_b) is None
         """
@@ -2738,13 +2723,13 @@ class CPlane3D(object):
             return False
 
     def angle_as_degrees(self,
-                         another: 'CPlane'
+                         another: 'CPlane3D'
                          ) -> numbers.Real:
         """
         Calculate angle (in degrees) between two planes.
 
-        :param another: the CPlane instance to calculate angle with.
-        :type another: CPlane.
+        :param another: the CPlane3D instance to calculate angle with.
+        :type another: CPlane3D.
         :return: the angle (in degrees) between the two planes.
         :rtype: numbers.Real.
         :raise: Exception.
@@ -2802,7 +2787,7 @@ class ParamLine3D(object):
         Return intersection point between parametric line and Cartesian plane.
 
         :param cartes_plane: a Cartesian plane:
-        :type cartes_plane: CPlane.
+        :type cartes_plane: CPlane3D.
         :return: the intersection point between parametric line and Cartesian plane.
         :rtype: Point.
         :raise: Exception.
@@ -3064,7 +3049,8 @@ class Points3D:
         self._z_array.append(pt.z)
 
     def add_pts(self,
-                pts: List[Point3D]):
+                pts: 'Points3D'
+                ):
         """
         In-place transformation of the original Points instance
         by adding a new set of points at the end.
@@ -3084,14 +3070,6 @@ class Points3D:
 
         :return: the optional minimum of x values.
         :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Points3D([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-          >>> l.x_min()
-          0.0
-          >>> m = Points3D([])
-          >>> m.x_min()
-          None
         """
 
         return np.nanmin(self._x_array) if self.num_pts() > 0 else None
@@ -3160,7 +3138,7 @@ class Points3D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Points3D.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
+          >>> l = Points3D.fromPoints([Point3D(0, 0, 2), Point3D(1, 0, 2), Point3D(0, 1, 2)])
           >>> l.z_var()
           0.0
         """
@@ -3175,7 +3153,7 @@ class Points3D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = Points3D.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]])
+          >>> l = Points3D.fromPoints([Point3D(0, 0, 2), Point3D(1, 0, 2), Point3D(0, 1, 2)])
           >>> l.z_std()
           0.0
         """

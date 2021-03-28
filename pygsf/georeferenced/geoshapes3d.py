@@ -1,9 +1,11 @@
 
-from typing import Optional, List, Tuple
+import copy
+from typing import Optional, List, Tuple, Union
 
 import numbers
 import array
 
+import numpy as np
 
 from pygsf.geometries.shapes.space3d import Point3D, Segment3D, Line3D, analizeJoins
 from pygsf.georeferenced.crs import Crs, check_crs
@@ -19,7 +21,7 @@ class GeoPoints3D:
                  epsg_code: numbers.Integral,
                  x_array: array,
                  y_array: array,
-                 z_array: Optional[array] = None
+                 z_array: Optional['array'] = None
                  ):
         """
         Construct a point list from a set of array values and an EPSG code.
@@ -253,7 +255,7 @@ class GeoPoints3D:
         self._z_array.append(pt.z)
 
     def add_pts(self,
-                pts: List[Point3D]):
+                pts: 'GeoPoints3D'):
         """
         In-place transformation of the original Points instance
         by adding a new set of points at the end.
@@ -486,7 +488,10 @@ class GeoMultiLine3D(object):
     MultiLine is a list of Line objects, each one with the same CRS.
     """
 
-    def __init__(self, lines: Optional[List[Line3D]] = None, epsg_cd: numbers.Integral = -1):
+    def __init__(self,
+                 lines: Optional[List[Line3D]] = None,
+                 epsg_cd: numbers.Integral = -1
+                 ):
 
         if lines is None:
             lines = []

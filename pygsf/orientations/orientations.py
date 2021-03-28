@@ -1134,7 +1134,7 @@ class Axis(Direct):
         Create Direct instance with the same attitude as the self instance.
 
         Example:
-          >>> Axis.fromAzPl(220, 32).as_direction()
+          >>> Axis(220, 32).as_direction()
           Direct(az: 220.00°, pl: 32.00°)
         """
 
@@ -1152,15 +1152,15 @@ class Axis(Direct):
         otherwise a SubparallelLineationException will be raised.
 
         Example:
-          >>> Axis.fromAzPl(0, 0).normal_axis(Axis.fromAzPl(0.5, 0)) is None
+          >>> Axis(0, 0).normal_axis(Axis(0.5, 0)) is None
           True
-          >>> Axis.fromAzPl(0, 0).normal_axis(Axis.fromAzPl(180, 0)) is None
+          >>> Axis(0, 0).normal_axis(Axis(180, 0)) is None
           True
-          >>> Axis.fromAzPl(90, 0).normal_axis(Axis.fromAzPl(180, 0))
+          >>> Axis(90, 0).normal_axis(Axis(180, 0))
           Axis(az: 0.00°, pl: 90.00°)
-          >>> Axis.fromAzPl(90, 45).normal_axis(Axis.fromAzPl(180, 0))
+          >>> Axis(90, 45).normal_axis(Axis(180, 0))
           Axis(az: 270.00°, pl: 45.00°)
-          >>> Axis.fromAzPl(270, 45).normal_axis(Axis.fromAzPl(180, 90)).is_sub_parallel(Axis.fromAzPl(180, 0))
+          >>> Axis(270, 45).normal_axis(Axis(180, 90)).is_sub_parallel(Axis(180, 0))
           True
         """
 
@@ -1178,19 +1178,19 @@ class Axis(Direct):
         Range is 0°-90°.
 
         Examples:
-          >>> areClose(Axis.fromAzPl(0, 90).angle_as_degrees(Axis.fromAzPl(90, 0)), 90)
+          >>> areClose(Axis(0, 90).angle_as_degrees(Axis(90, 0)), 90)
           True
-          >>> areClose(Axis.fromAzPl(0, 0).angle_as_degrees(Axis.fromAzPl(270, 0)), 90)
+          >>> areClose(Axis(0, 0).angle_as_degrees(Axis(270, 0)), 90)
           True
-          >>> areClose(Axis.fromAzPl(0, 0).angle_as_degrees(Axis.fromAzPl(0, 0)), 0)
+          >>> areClose(Axis(0, 0).angle_as_degrees(Axis(0, 0)), 0)
           True
-          >>> areClose(Axis.fromAzPl(0, 0).angle_as_degrees(Axis.fromAzPl(180, 0)), 0)
+          >>> areClose(Axis(0, 0).angle_as_degrees(Axis(180, 0)), 0)
           True
-          >>> areClose(Axis.fromAzPl(0, 0).angle_as_degrees(Axis.fromAzPl(179, 0)), 1)
+          >>> areClose(Axis(0, 0).angle_as_degrees(Axis(179, 0)), 1)
           True
-          >>> areClose(Axis.fromAzPl(0, -90).angle_as_degrees(Axis.fromAzPl(0, 90)), 0)
+          >>> areClose(Axis(0, -90).angle_as_degrees(Axis(0, 90)), 0)
           True
-          >>> areClose(Axis.fromAzPl(90, 0).angle_as_degrees(Axis.fromAzPl(315, 0)), 45)
+          >>> areClose(Axis(90, 0).angle_as_degrees(Axis(315, 0)), 45)
           True
         """
 
@@ -2052,7 +2052,7 @@ class Plane:
         Examples:
           >>> Plane(90, 0).contains(Direct(60, 0))
           True
-          >>> Plane(90, 0).contains(Axis.fromAzPl(60, 0))
+          >>> Plane(90, 0).contains(Axis(60, 0))
           True
           >>> Plane(90, 0).contains(Direct(60, 10))
           False

@@ -1,11 +1,11 @@
 
-from typing import Optional, Union
+import datetime
+
 import numbers
 
-from pygsf.mathematics.defaults import MIN_SEPARATION_THRESHOLD, MAX_SCALAR_VALUE
-from pygsf.mathematics.scalars import areClose
-from pygsf.mathematics.vectors import Vect
-from pygsf.utils.types import check_type
+from pygsf.georeferenced.crs import *
+from pygsf.orientations.orientations import *
+from pygsf.geometries.shapes.space3d import *
 
 
 class GeoPoint4D:
@@ -28,7 +28,7 @@ class GeoPoint4D:
         """
 
         check_type(
-            var=epsg_code,
+            var=epsg_cd,
             name="EPSG code",
             expected_types=numbers.Integral
         )
@@ -160,7 +160,7 @@ class GeoPoint4D:
 
     def __repr__(self) -> str:
 
-        return f"GeoPoint(x={self.x:.4f}, y={self.y:.4f}, z={self.z:.4f}, time={self.t}, epsg_code={self.epsg_code})"
+        return f"GeoPoint4D(x={self.x:.4f}, y={self.y:.4f}, z={self.z:.4f}, time={self.t}, epsg_code={self.epsg_code})"
 
     def __eq__(self,
         another: 'GeoPoint4D'
@@ -268,7 +268,7 @@ class GeoPoint4D:
 
         Examples:
           >>> GeoPoint4D(2, 3, 4).pXY()
-          Point(2.0000, 3.0000, 0.0000)
+          Point4D(2.0000, 3.0000, 0.0000, None)
         """
 
         return GeoPoint4D(self.x, self.y, 0.0)
@@ -281,7 +281,7 @@ class GeoPoint4D:
 
         Examples:
           >>> GeoPoint4D(2, 3, 4).pXZ()
-          Point(2.0000, 0.0000, 4.0000)
+          Point4D(2.0000, 0.0000, 4.0000, None)
         """
 
         return GeoPoint4D(self.x, 0.0, self.z)
@@ -294,7 +294,7 @@ class GeoPoint4D:
 
         Examples:
           >>> GeoPoint4D(2, 3, 4).pYZ()
-          Point(0.0000, 3.0000, 4.0000)
+          Point4D(0.0000, 3.0000, 4.0000, None)
         """
 
         return GeoPoint4D(0.0, self.y, self.z)
@@ -425,9 +425,9 @@ class GeoPoint4D:
 
         Example;
           >>> GeoPoint4D(1, 0, 1).scale(2.5)
-          Point(2.5000, 0.0000, 2.5000)
+          Point4D(2.5000, 0.0000, 2.5000, None)
           >>> GeoPoint4D(1, 0, 1).scale(2.5)
-          Point(2.5000, 0.0000, 2.5000)
+          Point4D(2.5000, 0.0000, 2.5000, None)
         """
 
         x, y, z = self.x * scale_factor, self.y * scale_factor, self.z * scale_factor
@@ -446,9 +446,9 @@ class GeoPoint4D:
 
         Examples:
           >>> GeoPoint4D(1, 1, 1).invert()
-          Point(-1.0000, -1.0000, -1.0000)
+          Point4D(-1.0000, -1.0000, -1.0000, None)
           >>> GeoPoint4D(2, -1, 4).invert()
-          Point(-2.0000, 1.0000, -4.0000)
+          Point4D(-2.0000, 1.0000, -4.0000, None)
         """
 
         return self.scale(-1)
@@ -462,7 +462,7 @@ class GeoPoint4D:
 
         Examples:
           >>> GeoPoint4D(1,1,1).reflect_vertical()
-          Point(-1.0000, -1.0000, 1.0000)
+          Point4D(-1.0000, -1.0000, 1.0000)
         """
 
         x, y, z, t, epsg_cd = self
@@ -646,29 +646,27 @@ class GeoPoint4D:
             center_point = GeoPoint4D(
                 x=0.0,
                 y=0.0,
-                z=0.0
+                z=0.0,
+                t=self.t,
+                epsg_cd=self.epsg_code
             )
 
         check_type(center_point, "Center point", GeoPoint4D)
 
-        p_diff = self - center_point
-
-        p_vect = p_diff.asVect()
+        p_vect = GeoSegment4D(start_pt=center_point, end_pt=self).as_vector()
 
         rot_vect = rotVectByAxis(
             v=p_vect,
             rot_axis=rotation_axis
         )
 
-        x, y, z, epsg_cd = rot_vect
+        x, y, z = rot_vect
 
-        rot_pt = GeoPoint4D(
-            x=x,
-            y=y,
-            z=z
+        transl_pt = center_point.shift(
+            sx=x,
+            sy=y,
+            sz=z
         )
-
-        transl_pt = center_point + rot_pt
 
         return transl_pt
 

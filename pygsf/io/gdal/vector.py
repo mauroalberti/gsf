@@ -1,17 +1,27 @@
 
-from typing import Dict, Tuple, Union, List, Optional
-
-import numbers
+from typing import Dict, Tuple, Union
 
 import os
 
-from osgeo import ogr, osr
+try:
+    from osgeo import ogr
+except ImportError:
+    import ogr
+
+try:
+    from osgeo import gdal
+except ImportError:
+    import gdal
+
+try:
+    from osgeo import osr
+except ImportError:
+    import osr
 
 import geopandas as gpd
 
-from pygsf.georeferenced.geoshapes3d import GeoLines3D, GeoMultiLine3D
+from pygsf.georeferenced.geoshapes3d import *
 from pygsf.utils.types import *
-#from pygsf.georeferenced.geoshapes import *
 
 
 class OGRIOException(Exception):
@@ -187,7 +197,7 @@ def reading_line_shapefile(
 def try_read_line_shapefile(
         shp_path: str,
         flds: Optional[List[str]] = None
-    ) -> Tuple[bool, Union[str, List[Tuple[list, tuple]]]]:
+    ) -> Tuple[bool, Union[str, List[Tuple[GeoMultiLine3D, tuple]]]]:
     """
     Deprecated. Use 'reading_line_shapefile'.
 
@@ -260,7 +270,9 @@ def try_read_line_shapefile(
             geom_type = "multiline"
         else:
             del ds
-            return False, "Geometry type is {}, line expected".format(geom_type)
+            return False, "Geometry type is {}, line expected".format(geometry_type)
+
+        multiline = GeoMultiLine3D(epsg_cd=epsg_cd)
 
         if geom_type == "simpleline":
 
@@ -271,26 +283,22 @@ def try_read_line_shapefile(
 
                 line.add_pt(Point3D(x, y, z))
 
-            feat_geometries = line
+            multiline.add_line(line)
 
         else:  # multiline case
 
-            multiline = MultiLine(epsg_cd=epsg_cd)
-
             for line_geom in curr_geom:
 
-                line = Line(epsg_cd=epsg_cd)
+                line = Line3D()
 
                 for i in range(line_geom.GetPointCount()):
                     x, y, z = line_geom.GetX(i), line_geom.GetY(i), line_geom.GetZ(i)
 
-                    line.add_pt(Point(x, y, z, epsg_code=epsg_cd))
+                    line.add_pt(Point3D(x, y, z))
 
                 multiline.add_line(line)
 
-            feat_geometries = multiline
-
-        results.append((feat_geometries, feat_attributes))
+        results.append((multiline, feat_attributes))
 
     del ds
 
@@ -721,3 +729,36 @@ def ogr_get_solution_shapefile(path, fields_dict_list):
 
     outShapefile, outShapelayer = shapefile_create(path, ogr.wkbPoint25D, fields_dict_list, crs=None)
     return outShapefile, outShapelayer, prev_solution_list
+
+
+def ogr_write_point_result(
+        point_shapelayer,
+        field_list,
+        rec_values_list2,
+        geom_type=ogr.wkbPoint25D
+):
+    outshape_featdef = point_shapelayer.GetLayerDefn()
+
+    for rec_value_list in rec_values_list2:
+
+        # pre-processing for new feature in output layer
+        curr_Pt_geom = ogr.Geometry(geom_type)
+        if geom_type == ogr.wkbPoint25D:
+            curr_Pt_geom.AddPoint(rec_value_list[1], rec_value_list[2], rec_value_list[3])
+        else:
+            curr_Pt_geom.AddPoint(rec_value_list[1], rec_value_list[2])
+
+        # create a new feature
+        curr_Pt_shape = ogr.Feature(outshape_featdef)
+        curr_Pt_shape.SetGeometry(curr_Pt_geom)
+
+        for fld_name, fld_value in zip(field_list, rec_value_list):
+            curr_Pt_shape.SetField(fld_name, fld_value)
+
+        # add the feature to the output layer
+        point_shapelayer.CreateFeature(curr_Pt_shape)
+
+        # destroy no longer used objects
+        curr_Pt_geom.Destroy()
+        curr_Pt_shape.Destroy()
+

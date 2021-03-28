@@ -18,9 +18,9 @@ class PTBAxes(object):
         based on fixed T orientation.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0))
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0))
           PTBAxes(P Axis(az: 360.00°, pl: -0.00°), T Axis(az: 90.00°, pl: 0.00°))
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(80, 0))
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(80, 0))
           Traceback (most recent call last):
           ...
           Exception: P and T axes must be sub-orthogonal
@@ -165,7 +165,7 @@ class PTBAxes(object):
         :return: P versor instance
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).PVersor
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).PVersor
           Vect(-0.0000, 1.0000, 0.0000, EPSG: -1)
         """
 
@@ -179,7 +179,7 @@ class PTBAxes(object):
         :return: T versor instance
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).TVersor
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).TVersor
           Vect(1.0000, 0.0000, -0.0000, EPSG: -1)
         """
 
@@ -193,7 +193,7 @@ class PTBAxes(object):
         :return: B versor instance
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).BVersor
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).BVersor
           Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
         """
 
@@ -205,9 +205,9 @@ class PTBAxes(object):
         Return the P axis.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).PAxis
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).PAxis
           Axis(az: 360.00°, pl: -0.00°)
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).PAxis
+          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis(90, 0)).PAxis
           Axis(az: 360.00°, pl: 90.00°)
         """
 
@@ -219,9 +219,9 @@ class PTBAxes(object):
         Return the T axis.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).TAxis
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).TAxis
           Axis(az: 90.00°, pl: 0.00°)
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, -90), t_axis=Axis.fromAzPl(90, 0)).TAxis
+          >>> PTBAxes(p_axis=Axis(0, -90), t_axis=Axis(90, 0)).TAxis
           Axis(az: 90.00°, pl: 0.00°)
         """
 
@@ -233,9 +233,9 @@ class PTBAxes(object):
         Calculate the B axis.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).BAxis
+          >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).BAxis
           Axis(az: 0.00°, pl: -90.00°)
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(0, 0)).BAxis
+          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis(0, 0)).BAxis
           Axis(az: 270.00°, pl: -0.00°)
         """
 
@@ -247,9 +247,9 @@ class PTBAxes(object):
         Calculate M plane.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(0, 90), t_axis=Axis.fromAzPl(90, 0)).MPlane.is_sub_parallel(Plane(0.0, 90.0))
+          >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis(90, 0)).MPlane.is_sub_parallel(Plane(0.0, 90.0))
           True
-          >>> PTBAxes(p_axis=Axis.fromAzPl(45, 45), t_axis=Axis.fromAzPl(225, 45)).MPlane.is_sub_parallel(Plane(315.00, 90.00))
+          >>> PTBAxes(p_axis=Axis(45, 45), t_axis=Axis(225, 45)).MPlane.is_sub_parallel(Plane(315.00, 90.00))
           True
         """
 
@@ -265,16 +265,16 @@ class PTBAxes(object):
         :return: Boolean.
 
         Examples:
-          >>> fm1 = PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0))
-          >>> fm2 = PTBAxes(p_axis=Axis.fromAzPl(0, 0.5), t_axis=Axis.fromAzPl(90, 0))
+          >>> fm1 = PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0))
+          >>> fm2 = PTBAxes(p_axis=Axis(0, 0.5), t_axis=Axis(90, 0))
           >>> fm1.almostEqual(fm2)
           True
-          >>> fm3 = PTBAxes(p_axis=Axis.fromAzPl(180.5, 0), t_axis=Axis.fromAzPl(90.5, 0))
+          >>> fm3 = PTBAxes(p_axis=Axis(180.5, 0), t_axis=Axis(90.5, 0))
           >>> fm1.almostEqual(fm3)
           True
           >>> fm3.almostEqual(fm2)
           True
-          >>> fm4 = PTBAxes(p_axis=Axis.fromAzPl(181.5, 0), t_axis=Axis.fromAzPl(91.5, 0))
+          >>> fm4 = PTBAxes(p_axis=Axis(181.5, 0), t_axis=Axis(91.5, 0))
           >>> fm1.almostEqual(fm4)
           False
         """
@@ -300,7 +300,7 @@ class PTBAxes(object):
         :return: a 3x3 numpy arrays fo floats.
 
         Example:
-          >>> arraysAreClose(PTBAxes(p_axis=Axis.fromAzPl(0, 0), t_axis=Axis.fromAzPl(90, 0)).toMatrix(), np.identity(3))
+          >>> arraysAreClose(PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).toMatrix(), np.identity(3))
           True
         """
 
@@ -321,9 +321,9 @@ class PTBAxes(object):
         :return: a Quaternion instance.
 
         Example:
-          >>> PTBAxes(p_axis=Axis.fromAzPl(232, 41), t_axis=Axis.fromAzPl(120, 24)).toQuatern()
+          >>> PTBAxes(p_axis=Axis(232, 41), t_axis=Axis(120, 24)).toQuatern()
           Quaternion(-0.41567, 0.85017, -0.31120, -0.08706)
-          >>> PTBAxes(p_axis=Axis.fromAzPl(51, 17), t_axis=Axis.fromAzPl(295, 55)).toQuatern()
+          >>> PTBAxes(p_axis=Axis(51, 17), t_axis=Axis(295, 55)).toQuatern()
           Quaternion(0.38380, 0.30459, 0.80853, -0.32588)
         """
 

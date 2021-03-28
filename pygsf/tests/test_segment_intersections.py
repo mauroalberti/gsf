@@ -11,7 +11,7 @@ class TestSegmentIntersections(unittest.TestCase):
 
         for _ in range(n):
 
-            random_segment = Segment2D.random()
+            random_segment = Segment3D.random()
 
             random_interval_value = random.uniform(0, 1)
 

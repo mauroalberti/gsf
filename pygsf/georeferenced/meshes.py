@@ -1,6 +1,5 @@
-import json
 
-from qygsf.geometries.shapes.space4d import Segment4D
+import json
 
 try:
     from osgeo import ogr
@@ -12,11 +11,15 @@ try:
 except ImportError:
     import gdal
 
-from qygsf.mathematics.transformations import *
+from pygsf.geometries.shapes.space4d import Segment4D
+from pygsf.utils.arrays import *
+from pygsf.mathematics.transformations import *
+from pygsf.io.gdal.vector import *
 
-from qygsf.geometries.shapes.space3d import *
-from qygsf.io.gdal.vector import *
-from qygsf.errors import *
+
+from pygsf.geometries.shapes.space3d import *
+from pygsf.io.gdal.vector import *
+#from pygsf.errors import *
 
 
 class TriangBeam(object):
