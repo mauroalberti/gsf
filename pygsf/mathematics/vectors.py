@@ -221,7 +221,7 @@ class Vect(object):
 
         Examples:
           >>> Vect(2, 3, 4).pYZ()
-          Vect(0.0000, 3.0000, 4.0000, EPSG: -1)
+          Vect(0.0000, 3.0000, 4.0000)
         """
 
         return self.__class__(0.0, self.y, self.z)
@@ -398,8 +398,6 @@ class Vect(object):
         """
 
         check_type(another, "Second vector", Vect)
-
-        check_crs(self, another)
 
         x, y, z = arrToTuple(self.a - another.a)
         return self.__class__(x, y, z)
@@ -696,8 +694,6 @@ class Vect(object):
         """
 
         check_type(another, "Second vector", Vect)
-
-        check_crs(self, another)
 
         return self.scalar_projection(another) / self.length
 

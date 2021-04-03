@@ -193,7 +193,7 @@ class Point3D:
           >>> Point3D(1., 1., 1.) != Point3D(0., 0., 0.)
           True
           >>> Point3D(1., 1., 1.) != Point3D(1, 1, 1)
-          True
+          False
         """
 
         return not (self == another)
@@ -299,7 +299,7 @@ class Point3D:
         :return: Numpy array
 
         Examples:
-          >>> np.allclose(Point3D(1, 2, 3).toArray(), np.array([ 1., 2., 3., 0.]))
+          >>> np.allclose(Point3D(1, 2, 3).toArray(), np.array([ 1., 2., 3.]))
           True
         """
 
@@ -622,7 +622,7 @@ class Point3D:
           Point3D(-0.0000, 0.0000, 3.0000)
           >>> pt.rotate(rotation_axis=rot_axis)
           Point3D(0.0000, 0.0000, -1.0000)
-          >>> pt = Point3D(1,1,1,5)
+          >>> pt = Point3D(1,1,1)
           >>> rot_axis = RotationAxis(0,90,90)
           >>> pt.rotate(rotation_axis=rot_axis)
           Point3D(1.0000, -1.0000, 1.0000)
@@ -1021,7 +1021,7 @@ class Segment3D:
           >>> s.pointAt(1)
           Point3D(0.0000, 0.0000, 1.0000)
           >>> s.pointAt(-1)
-          Point3D(0.0000.0000, 0.0000)
+          Point3D(0.0000, 0.0000, -1.0000)
           >>> s.pointAt(-2)
           Point3D(0.0000, 0.0000, -2.0000)
           >>> s.pointAt(2)

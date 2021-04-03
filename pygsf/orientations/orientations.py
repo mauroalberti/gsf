@@ -42,11 +42,11 @@ class Azim(object):
           >>> Azim("10")
           Traceback (most recent call last):
           ...
-          Exception: Input azimuth value must be int/float
+          Exception: Input azimuth value must be int/float but type <class 'str'> got
           >>> Azim(np.nan)
           Traceback (most recent call last):
           ...
-          Exception: Input azimuth value must be finite
+          Exception: Input azimuth value must be finite but nan got
         """
 
         # unit check
@@ -577,23 +577,17 @@ class Direct:
         :return: tuple of x, y and z components.
 
         Examples:
-          >>> az, pl = Azim(90), Plunge(0)
-          >>> apprFTuple(Direct(az, pl).toXYZ())
+          >>> apprFTuple(Direct(90, 0).toXYZ())
           (1.0, 0.0, 0.0)
-          >>> az, pl = Azim(135), Plunge(45)
-          >>> apprFTuple(Direct(az, pl).toXYZ(), ndec=6)
+          >>> apprFTuple(Direct(135, 45).toXYZ(), ndec=6)
           (0.5, -0.5, -0.707107)
-          >>> az, pl = Azim(135), Plunge(0)
-          >>> apprFTuple(Direct(az, pl).toXYZ(), ndec=6)
+          >>> apprFTuple(Direct(135, 0).toXYZ(), ndec=6)
           (0.707107, -0.707107, 0.0)
-          >>> az, pl = Azim(180), Plunge(45)
-          >>> apprFTuple(Direct(az, pl).toXYZ(), ndec=6)
+          >>> apprFTuple(Direct(180, 45).toXYZ(), ndec=6)
           (0.0, -0.707107, -0.707107)
-          >>> az, pl = Azim(225), Plunge(-45)
-          >>> apprFTuple(Direct(az, pl).toXYZ(), ndec=6)
+          >>> apprFTuple(Direct(225, -45).toXYZ(), ndec=6)
           (-0.5, -0.5, 0.707107)
-          >>> az, pl = Azim(270), Plunge(90)
-          >>> apprFTuple(Direct(az, pl).toXYZ(), ndec=6)
+          >>> apprFTuple(Direct(270, 90).toXYZ(), ndec=6)
           (0.0, 0.0, -1.0)
         """
 
@@ -703,11 +697,11 @@ class Direct:
 
         Examples:
           >>> Direct(0, 90).as_versor()
-          Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
+          Vect(0.0000, 0.0000, -1.0000)
           >>> Direct(0, -90).as_versor()
-          Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
+          Vect(0.0000, 0.0000, 1.0000)
           >>> Direct(90, 90).as_versor()
-          Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
+          Vect(0.0000, 0.0000, -1.0000)
         """
 
         az, pl = self.r
@@ -1004,11 +998,11 @@ class Direct:
 
         Examples:
           >>> Direct(0, 0).normal_versor(Direct(90, 0))
-          Vect(0.0000, 0.0000, -1.0000, EPSG: -1)
+          Vect(0.0000, 0.0000, -1.0000)
           >>> Direct(45, 0).normal_versor(Direct(310, 0))
-          Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
+          Vect(0.0000, 0.0000, 1.0000)
           >>> Direct(0, 0).normal_versor(Direct(90, 90))
-          Vect(-1.0000, 0.0000, -0.0000, EPSG: -1)
+          Vect(-1.0000, 0.0000, -0.0000)
           >>> Direct(315, 45).normal_versor(Direct(315, 44.5)) is None
           True
         """
@@ -1554,38 +1548,38 @@ def rotVectByAxis(
       >>> v = Vect(1,0,1)
       >>> rotation = RotationAxis(0, -90, 90)
       >>> rotVectByAxis(v, rotation)
-      Vect(0.0000, 1.0000, 1.0000, EPSG: -1)
+      Vect(0.0000, 1.0000, 1.0000)
       >>> rotation = RotationAxis(0, 90, 90)
       >>> rotVectByAxis(v, rotation)
-      Vect(0.0000, -1.0000, 1.0000, EPSG: -1)
+      Vect(0.0000, -1.0000, 1.0000)
       >>> rotation = RotationAxis(0, -90, 180)
       >>> rotVectByAxis(v, rotation)
-      Vect(-1.0000, 0.0000, 1.0000, EPSG: -1)
+      Vect(-1.0000, 0.0000, 1.0000)
       >>> rotation = RotationAxis(0, -90, 270)
       >>> rotVectByAxis(v, rotation)
-      Vect(-0.0000, -1.0000, 1.0000, EPSG: -1)
+      Vect(-0.0000, -1.0000, 1.0000)
       >>> rotation = RotationAxis(90, 0, 90)
       >>> rotVectByAxis(v, rotation)
-      Vect(1.0000, -1.0000, 0.0000, EPSG: -1)
+      Vect(1.0000, -1.0000, 0.0000)
       >>> rotation = RotationAxis(90, 0, 180)
       >>> rotVectByAxis(v, rotation)
-      Vect(1.0000, 0.0000, -1.0000, EPSG: -1)
+      Vect(1.0000, 0.0000, -1.0000)
       >>> rotation = RotationAxis(90, 0, 270)
       >>> rotVectByAxis(v, rotation)
-      Vect(1.0000, 1.0000, -0.0000, EPSG: -1)
+      Vect(1.0000, 1.0000, -0.0000)
       >>> rotation = RotationAxis(90, 0, 360)
       >>> rotVectByAxis(v, rotation)
-      Vect(1.0000, 0.0000, 1.0000, EPSG: -1)
+      Vect(1.0000, 0.0000, 1.0000)
       >>> rotation = RotationAxis(0, -90, 90)
       >>> v = Vect(0,0,3)
       >>> rotVectByAxis(v, rotation)
-      Vect(0.0000, 0.0000, 3.0000, EPSG: -1)
+      Vect(0.0000, 0.0000, 3.0000)
       >>> rotation = RotationAxis(90, -45, 180)
       >>> rotVectByAxis(v, rotation)
-      Vect(3.0000, -0.0000, -0.0000, EPSG: -1)
-      >>> v = Vect(0,0,3, epsg_code=32633)
+      Vect(3.0000, -0.0000, -0.0000)
+      >>> v = Vect(0,0,3)
       >>> rotVectByAxis(v, rotation)
-      Vect(3.0000, -0.0000, -0.0000, EPSG: 32633)
+      Vect(3.0000, -0.0000, -0.0000)
     """
 
     rot_quat = rot_axis.toRotQuater()
@@ -1613,15 +1607,15 @@ def rotVectByQuater(
     Example:
       >>> q = Quaternion.i()  # rotation of 180° around the x axis
       >>> rotVectByQuater(q, Vect(0, 1, 0))
-      Vect(0.0000, -1.0000, 0.0000, EPSG: -1)
+      Vect(0.0000, -1.0000, 0.0000)
       >>> rotVectByQuater(q, Vect(0, 1, 1))
-      Vect(0.0000, -1.0000, -1.0000, EPSG: -1)
+      Vect(0.0000, -1.0000, -1.0000)
       >>> q = Quaternion.k()  # rotation of 180° around the z axis
       >>> rotVectByQuater(q, Vect(0, 1, 1))
-      Vect(0.0000, -1.0000, 1.0000, EPSG: -1)
+      Vect(0.0000, -1.0000, 1.0000)
       >>> q = Quaternion.j()  # rotation of 180° around the y axis
       >>> rotVectByQuater(q, Vect(1, 0, 1))
-      Vect(-1.0000, 0.0000, -1.0000, EPSG: -1)
+      Vect(-1.0000, 0.0000, -1.0000)
     """
 
     q = quat.normalize()

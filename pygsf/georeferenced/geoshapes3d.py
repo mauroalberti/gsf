@@ -3,7 +3,7 @@ import copy
 from typing import Optional, List, Tuple, Union
 
 import numbers
-import array
+from array import array
 
 import numpy as np
 
@@ -95,7 +95,6 @@ class GeoPoints3D:
         """
 
         for ndx, point in enumerate(points):
-
             check_type(point, "Input point {}".format(ndx), Point3D)
 
         return GeoPoints3D(
@@ -278,10 +277,10 @@ class GeoPoints3D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = GeoPoints3D([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+          >>> l = GeoPoints3D.fromPoints([Point3D(0, 0, 0), Point3D(1, 0, 0), Point3D(0, 1, 0)], epsg_code=32633)
           >>> l.x_min()
           0.0
-          >>> m = GeoPoints3D([])
+          >>> m = GeoPoints3D.fromPoints([], epsg_code=32633)
           >>> m.x_min()
           None
         """
@@ -352,7 +351,7 @@ class GeoPoints3D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = GeoPoints3D.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
+          >>> l = GeoPoints3D.fromPoints([Point3D(0, 0, 2), Point3D(1, 0, 2), Point3D(0, 1, 2)], epsg_code=32633)
           >>> l.z_var()
           0.0
         """
@@ -367,7 +366,7 @@ class GeoPoints3D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = GeoPoints3D.fromPoints([[0, 0, 2], [1, 0, 2], [0, 1, 2]], epsg_code=32633)
+          >>> l = GeoPoints3D.fromPoints([Point3D(0, 0, 2), Point3D(1, 0, 2), Point3D(0, 1, 2)], epsg_code=32633)
           >>> l.z_std()
           0.0
         """

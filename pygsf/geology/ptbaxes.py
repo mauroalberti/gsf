@@ -19,7 +19,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0))
-          PTBAxes(P Axis(az: 360.00°, pl: -0.00°), T Axis(az: 90.00°, pl: 0.00°))
+          PTBAxes(P Axis(az: 0.00°, pl: -0.00°), T Axis(az: 90.00°, pl: 0.00°))
           >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(80, 0))
           Traceback (most recent call last):
           ...
@@ -50,7 +50,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes.fromVects(p_vector=Vect(0,1,0), t_vector=Vect(1,0,0))
-          PTBAxes(P Axis(az: 360.00°, pl: -0.00°), T Axis(az: 90.00°, pl: -0.00°))
+          PTBAxes(P Axis(az: 0.00°, pl: -0.00°), T Axis(az: 90.00°, pl: -0.00°))
           >>> PTBAxes.fromVects(p_vector=Vect(1,0,0), t_vector=Vect(0,0,-1))
           PTBAxes(P Axis(az: 90.00°, pl: -0.00°), T Axis(az: 0.00°, pl: 90.00°))
           >>> PTBAxes.fromVects(p_vector=Vect(-1,1,0), t_vector=Vect(1,1,0))
@@ -87,7 +87,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes.fromFaultSlick(Fault(90, 45, slickenlines=[Slick(90, 45)]))
-          PTBAxes(P Axis(az: 360.00°, pl: -90.00°), T Axis(az: 90.00°, pl: -0.00°))
+          PTBAxes(P Axis(az: 0.00°, pl: -90.00°), T Axis(az: 90.00°, pl: -0.00°))
         """
 
         if not isinstance(fault, Fault):
@@ -166,7 +166,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).PVersor
-          Vect(-0.0000, 1.0000, 0.0000, EPSG: -1)
+          Vect(-0.0000, 1.0000, 0.0000)
         """
 
         return self._p_versor
@@ -180,7 +180,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).TVersor
-          Vect(1.0000, 0.0000, -0.0000, EPSG: -1)
+          Vect(1.0000, 0.0000, -0.0000)
         """
 
         return self._t_versor
@@ -194,7 +194,7 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).BVersor
-          Vect(0.0000, 0.0000, 1.0000, EPSG: -1)
+          Vect(0.0000, 0.0000, 1.0000)
         """
 
         return self.TVersor.cross_product(self.PVersor)
@@ -206,9 +206,9 @@ class PTBAxes(object):
 
         Example:
           >>> PTBAxes(p_axis=Axis(0, 0), t_axis=Axis(90, 0)).PAxis
-          Axis(az: 360.00°, pl: -0.00°)
+          Axis(az: 0.00°, pl: -0.00°)
           >>> PTBAxes(p_axis=Axis(0, 90), t_axis=Axis(90, 0)).PAxis
-          Axis(az: 360.00°, pl: 90.00°)
+          Axis(az: 0.00°, pl: 90.00°)
         """
 
         return Axis.fromVect(self.PVersor)

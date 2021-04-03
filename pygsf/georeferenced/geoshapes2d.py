@@ -4,7 +4,7 @@ import copy
 from typing import List, Tuple, Optional, Union
 
 import numbers
-import array
+from array import array
 
 import numpy as np
 
@@ -247,10 +247,10 @@ class GeoPoints2D:
         :rtype: Optional[numbers.Real]
 
         Examples:
-          >>> l = GeoPoints2D([[0, 0], [1, 0], [0, 1]])
+          >>> l = GeoPoints2D.fromPoints([Point2D(0, 0), Point2D(1, 0), Point2D(0, 1)], epsg_code=32633)
           >>> l.x_min()
           0.0
-          >>> m = GeoPoints2D([])
+          >>> m = GeoPoints2D.fromPoints([], epsg_code=32633)
           >>> m.x_min()
           None
         """

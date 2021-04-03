@@ -127,6 +127,17 @@ class GeoPoint4D:
         return self._t
 
     @property
+    def crs(self) -> Crs:
+        """
+        The points CRS.
+
+        :return: the points CRS
+        :rtype: Crs
+        """
+
+        return Crs(self.epsg_code)
+
+    @property
     def epsg_code(self) -> numbers.Integral:
         """
         Return the EPSG code of the current point.
@@ -204,7 +215,7 @@ class GeoPoint4D:
           >>> GeoPoint4D(1., 1., 1.) != GeoPoint4D(0., 0., 0.)
           True
           >>> GeoPoint4D(1., 1., 1.) != GeoPoint4D(1, 1, 1)
-          True
+          False
         """
 
         return not (self == another)
@@ -268,7 +279,7 @@ class GeoPoint4D:
 
         Examples:
           >>> GeoPoint4D(2, 3, 4).pXY()
-          Point4D(2.0000, 3.0000, 0.0000, None)
+          GeoPoint4D(x=2.0000, y=3.0000, z=0.0000, time=None, epsg_code=-1)
         """
 
         return GeoPoint4D(self.x, self.y, 0.0)
@@ -281,7 +292,7 @@ class GeoPoint4D:
 
         Examples:
           >>> GeoPoint4D(2, 3, 4).pXZ()
-          Point4D(2.0000, 0.0000, 4.0000, None)
+          GeoPoint4D(x=2.0000, y=0.0000, z=4.0000, time=None, epsg_code=-1)
         """
 
         return GeoPoint4D(self.x, 0.0, self.z)
@@ -294,7 +305,7 @@ class GeoPoint4D:
 
         Examples:
           >>> GeoPoint4D(2, 3, 4).pYZ()
-          Point4D(0.0000, 3.0000, 4.0000, None)
+          GeoPoint4D(x=0.0000, y=3.0000, z=4.0000, time=None, epsg_code=-1)
         """
 
         return GeoPoint4D(0.0, self.y, self.z)
@@ -383,10 +394,6 @@ class GeoPoint4D:
         Examples:
           >>> GeoPoint4D(1., 1., 1.).distance(GeoPoint4D(4., 5., 1))
           5.0
-          >>> GeoPoint4D(1, 1, 1).distance(GeoPoint4D(4, 5, 1))
-          5.0
-          >>> GeoPoint4D(1, 1, 1).distance(GeoPoint4D(4, 5, 1))
-          5.0
         """
 
         check_type(another, "GeoPoint", GeoPoint4D)
@@ -425,9 +432,7 @@ class GeoPoint4D:
 
         Example;
           >>> GeoPoint4D(1, 0, 1).scale(2.5)
-          Point4D(2.5000, 0.0000, 2.5000, None)
-          >>> GeoPoint4D(1, 0, 1).scale(2.5)
-          Point4D(2.5000, 0.0000, 2.5000, None)
+          GeoPoint4D(x=2.5000, y=0.0000, z=2.5000, time=None, epsg_code=-1)
         """
 
         x, y, z = self.x * scale_factor, self.y * scale_factor, self.z * scale_factor
@@ -446,9 +451,9 @@ class GeoPoint4D:
 
         Examples:
           >>> GeoPoint4D(1, 1, 1).invert()
-          Point4D(-1.0000, -1.0000, -1.0000, None)
+          GeoPoint4D(x=-1.0000, y=-1.0000, z=-1.0000, time=None, epsg_code=-1)
           >>> GeoPoint4D(2, -1, 4).invert()
-          Point4D(-2.0000, 1.0000, -4.0000, None)
+          GeoPoint4D(x=-2.0000, y=1.0000, z=-4.0000, time=None, epsg_code=-1)
         """
 
         return self.scale(-1)
@@ -461,8 +466,8 @@ class GeoPoint4D:
         :rtype: GeoPoint4D
 
         Examples:
-          >>> GeoPoint4D(1,1,1).reflect_vertical()
-          Point4D(-1.0000, -1.0000, 1.0000)
+          >>> GeoPoint4D(1, 1, 1).reflect_vertical()
+          GeoPoint4D(x=-1.0000, y=-1.0000, z=1.0000, time=None, epsg_code=-1)
         """
 
         x, y, z, t, epsg_cd = self
@@ -537,11 +542,17 @@ class GeoPoint4D:
           Point(1.5000, 3.0000, 0.5000)
        """
 
+        if self.t is None:
+            time = None
+        elif st is None:
+            time = self.t + st
+        else:
+            time =
         return GeoPoint4D(
             x=self.x + sx,
             y=self.y + sy,
             z=self.z + sz,
-            t=self.t + st,
+            t=time,
             epsg_cd=self.epsg_code
         )
 
@@ -559,9 +570,9 @@ class GeoPoint4D:
 
         Example:
           >>> GeoPoint4D(1, 1, 1).shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 2.0000, 2.5000)
+          GeoPoint4D(x=1.5000, y=2.0000, z=2.5000, time=None, epsg_code=-1)
           >>> GeoPoint4D(1, 2, -1).shiftByVect(Vect(0.5, 1., 1.5))
-          Point(1.5000, 3.0000, 0.5000)
+          GeoPoint4D(x=1.5000, y=3.0000, z=0.5000, time=None, epsg_code=-1)
        """
 
         x, y, z, t, epsg_cd = self
@@ -609,36 +620,36 @@ class GeoPoint4D:
           >>> rot_axis = RotationAxis(0,0,90)
           >>> center_pt = GeoPoint4D(0,0,0.5)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(0.5000, 0.0000, 0.5000)
+          GeoPoint4D(0.5000, 0.0000, 0.5000)
           >>> center_pt = GeoPoint4D(0,0,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(0.0000, 0.0000, 1.0000)
+          GeoPoint4D(0.0000, 0.0000, 1.0000)
           >>> center_pt = GeoPoint4D(0, 0, 2)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(-1.0000, 0.0000, 2.0000)
+          GeoPoint4D(-1.0000, 0.0000, 2.0000)
           >>> rot_axis = RotationAxis(0,0,180)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(-0.0000, 0.0000, 3.0000)
+          GeoPoint4D(-0.0000, 0.0000, 3.0000)
           >>> pt.rotate(rotation_axis=rot_axis)
-          Point(0.0000, 0.0000, -1.0000)
-          >>> pt = GeoPoint4D(1,1,1,5)
+          GeoPoint4D(0.0000, 0.0000, -1.0000)
+          >>> pt = GeoPoint4D(1, 1, 1)
           >>> rot_axis = RotationAxis(0,90,90)
           >>> pt.rotate(rotation_axis=rot_axis)
-          Point(1.0000, -1.0000, 1.0000)
+          GeoPoint4D(1.0000, -1.0000, 1.0000)
           >>> rot_axis = RotationAxis(0,90,180)
           >>> pt.rotate(rotation_axis=rot_axis)
-          Point(-1.0000, -1.0000, 1.0000)
+          GeoPoint4D(-1.0000, -1.0000, 1.0000)
           >>> center_pt = GeoPoint4D(1,1,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(1.0000, 1.0000, 1.0000)
+          GeoPoint4D(1.0000, 1.0000, 1.0000)
           >>> center_pt = GeoPoint4D(2,2,10)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(3.0000, 3.0000, 1.0000)
+          GeoPoint4D(3.0000, 3.0000, 1.0000)
           >>> pt = GeoPoint4D(1, 1, 2)
           >>> rot_axis = RotationAxis(135, 0, 180)
           >>> center_pt = GeoPoint4D(0,0,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          Point(-1.0000, -1.0000, 0.0000)
+          GeoPoint4D(-1.0000, -1.0000, 0.0000)
         """
 
         if not center_point:
@@ -652,6 +663,9 @@ class GeoPoint4D:
             )
 
         check_type(center_point, "Center point", GeoPoint4D)
+
+        if self.distance(center_point) == 0:
+            return self.clone()
 
         p_vect = GeoSegment4D(start_pt=center_point, end_pt=self).as_vector()
 
@@ -718,6 +732,11 @@ class GeoSegment4D:
             expected_types=GeoPoint4D
         )
 
+        check_crs(
+            template_element=start_pt,
+            checked_element=end_pt
+        )
+
         if start_pt.distance(end_pt) == 0.0:
             raise Exception("Source points cannot be coincident")
 
@@ -773,6 +792,27 @@ class GeoSegment4D:
             start_pt=self._start_pt,
             end_pt=self._end_pt
         )
+
+    @property
+    def crs(self) -> Crs:
+        """
+        The points CRS.
+
+        :return: the points CRS
+        :rtype: Crs
+        """
+
+        return Crs(self.epsg_code)
+
+    @property
+    def epsg_code(self) -> numbers.Integral:
+        """
+        Return the EPSG code of the current point.
+
+        :return: EPSG code.
+        """
+
+        return self.start_pt.epsg_code
 
     def increasing_x(self) -> 'GeoSegment4D':
 
@@ -972,43 +1012,41 @@ class GeoSegment4D:
         ans 0 is segment start.
 
         :param scale_factor: the scale factor, where 1 is the segment length.
-        :type scale_factor: numbers.Real
         :return: Point at scale factor
-        :rtype: GeoPoint4D
 
         Examples:
           >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,0,0))
           >>> s.pointAt(0)
-          Point(0.0000, 0.0000, 0.0000)
+          GeoPoint4D(x=0.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
           >>> s.pointAt(0.5)
-          Point(0.5000, 0.0000, 0.0000)
+          GeoPoint4D(x=0.5000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
           >>> s.pointAt(1)
-          Point(1.0000, 0.0000, 0.0000)
+          GeoPoint4D(x=1.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
           >>> s.pointAt(-1)
-          Point(-1.0000, 0.0000, 0.0000)
+          GeoPoint4D(x=-1.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
           >>> s.pointAt(-2)
-          Point(-2.0000, 0.0000, 0.0000)
+          GeoPoint4D(x=-2.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
           >>> s.pointAt(2)
-          Point(2.0000, 0.0000, 0.0000)
-          >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(0,0,1))
+          GeoPoint4D(x=2.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
+          >>> s = GeoSegment4D(GeoPoint4D(0, 0, 0), GeoPoint4D(0, 0, 1))
           >>> s.pointAt(0)
-          Point(0.0000, 0.0000, 0.0000)
+          GeoPoint4D(x=0.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
           >>> s.pointAt(0.5)
-          Point(0.0000, 0.0000, 0.5000)
+          GeoPoint4D(x=0.0000, y=0.0000, z=0.5000, time=None, epsg_code=-1)
           >>> s.pointAt(1)
-          Point(0.0000, 0.0000, 1.0000)
+          GeoPoint4D(x=0.0000, y=0.0000, z=1.0000, time=None, epsg_code=-1)
           >>> s.pointAt(-1)
-          Point(0.0000.0000, 0.0000, -1)
+          GeoPoint4D(x=0.0000, y=0.0000, z=-1.0000, time=None, epsg_code=-1)
           >>> s.pointAt(-2)
-          Point(0.0000, 0.0000, -2.0000)
+          GeoPoint4D(x=0.0000, y=0.0000, z=-2.0000, time=None, epsg_code=-1)
           >>> s.pointAt(2)
-          Point(0.0000, 0.0000, 2.0000)
-          >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,1,1))
+          GeoPoint4D(x=0.0000, y=0.0000, z=2.0000, time=None, epsg_code=-1)
+          >>> s = GeoSegment4D(GeoPoint4D(0, 0, 0), GeoPoint4D(1, 1, 1))
           >>> s.pointAt(0.5)
-          Point(0.5000, 0.5000, 0.5000)
-          >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(4,0,0))
+          GeoPoint4D(x=0.5000, y=0.5000, z=0.5000, time=None, epsg_code=-1)
+          >>> s = GeoSegment4D(GeoPoint4D(0, 0, 0), GeoPoint4D(4, 0, 0))
           >>> s.pointAt(7.5)
-          Point(30.0000, 0.0000, 0.0000)
+          GeoPoint4D(x=30.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
         """
 
         dx = self.delta_x() * scale_factor
@@ -1031,11 +1069,11 @@ class GeoSegment4D:
           >>> s = GeoSegment4D(start_pt=GeoPoint4D(0,0,0), end_pt=GeoPoint4D(1,0,0))
           >>> p = GeoPoint4D(0.5, 1, 4)
           >>> s.pointProjection(p)
-          Point(0.5000, 0.0000, 0.0000)
+          GeoPoint4D(x=0.5000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
           >>> s = GeoSegment4D(start_pt=GeoPoint4D(0,0,0), end_pt=GeoPoint4D(4,0,0))
           >>> p = GeoPoint4D(7.5, 19.2, -14.72)
           >>> s.pointProjection(p)
-          Point(7.5000, 0.0000, 0.0000)
+          GeoPoint4D(x=7.5000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
         """
 
         check_type(point, "Input point", GeoPoint4D)
@@ -1062,10 +1100,10 @@ class GeoSegment4D:
         :rtype: numbers.Real
 
         Examples:
-          >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(0,0,4))
-          >>> s.pointDistance(GeoPoint4D(-17.2, 0.0, -49,3))
+          >>> s = GeoSegment4D(GeoPoint4D(0, 0, 0), GeoPoint4D(0, 0, 4))
+          >>> s.pointDistance(GeoPoint4D(-17.2, 0.0, -49))
           17.2
-          >>> s.pointDistance(GeoPoint4D(-17.2, 1.22, -49,3))
+          >>> s.pointDistance(GeoPoint4D(-17.2, 1.22, -49))
           17.24321315764553
         """
 
