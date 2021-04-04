@@ -637,7 +637,10 @@ class GeoArray():
             inLevels=[flowln_grad])
 
 
-def point_velocity(geoarray: GeoArray, pt: Point2D) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
+def point_velocity(
+        geoarray: GeoArray,
+        pt: Point2D
+) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
     """
     Return the velocity components of a 2D-flow field at a point location, based on bilinear interpolation.
 
@@ -651,7 +654,7 @@ def point_velocity(geoarray: GeoArray, pt: Point2D) -> Tuple[Optional[numbers.Re
     Examples:
     """
 
-    x, y, _ = pt.toXYZ()
+    x, y = pt.toXY()
     vx = geoarray.interpolate_bilinear(
         x=x,
         y=y,

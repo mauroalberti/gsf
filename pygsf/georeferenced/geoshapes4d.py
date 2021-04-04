@@ -18,7 +18,7 @@ class GeoPoint4D:
                  epsg_cd: Optional[numbers.Integral] = -1
                  ):
         """
-        Construct a Point instance.
+        Construct a GeoPoint4D instance.
 
         :param x: point x coordinate
         :param y: point y coordinate
@@ -537,17 +537,17 @@ class GeoPoint4D:
 
         Example:
           >>> GeoPoint4D(1, 1, 1).shift(0.5, 1., 1.5)
-          Point(1.5000, 2.0000, 2.5000)
+          GeoPoint4D(x=1.5000, y=2.0000, z=2.5000, time=None, epsg_code=-1)
           >>> GeoPoint4D(1, 2, -1).shift(0.5, 1., 1.5)
-          Point(1.5000, 3.0000, 0.5000)
+          GeoPoint4D(x=1.5000, y=3.0000, z=0.5000, time=None, epsg_code=-1)
        """
 
         if self.t is None:
-            time = None
+            time = st
         elif st is None:
-            time = self.t + st
+            time = self.t
         else:
-            time =
+            time = self.t + st
         return GeoPoint4D(
             x=self.x + sx,
             y=self.y + sy,
@@ -620,36 +620,36 @@ class GeoPoint4D:
           >>> rot_axis = RotationAxis(0,0,90)
           >>> center_pt = GeoPoint4D(0,0,0.5)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          GeoPoint4D(0.5000, 0.0000, 0.5000)
+          GeoPoint4D(x=0.5000, y=0.0000, z=0.5000, time=None, epsg_code=-1)
           >>> center_pt = GeoPoint4D(0,0,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          GeoPoint4D(0.0000, 0.0000, 1.0000)
+          GeoPoint4D(x=0.0000, y=0.0000, z=1.0000, time=None, epsg_code=-1)
           >>> center_pt = GeoPoint4D(0, 0, 2)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          GeoPoint4D(-1.0000, 0.0000, 2.0000)
+          GeoPoint4D(x=-1.0000, y=0.0000, z=2.0000, time=None, epsg_code=-1)
           >>> rot_axis = RotationAxis(0,0,180)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          GeoPoint4D(-0.0000, 0.0000, 3.0000)
+          GeoPoint4D(x=-0.0000, y=0.0000, z=3.0000, time=None, epsg_code=-1)
           >>> pt.rotate(rotation_axis=rot_axis)
-          GeoPoint4D(0.0000, 0.0000, -1.0000)
+          GeoPoint4D(x=0.0000, y=0.0000, z=-1.0000, time=None, epsg_code=-1)
           >>> pt = GeoPoint4D(1, 1, 1)
           >>> rot_axis = RotationAxis(0,90,90)
           >>> pt.rotate(rotation_axis=rot_axis)
-          GeoPoint4D(1.0000, -1.0000, 1.0000)
+          GeoPoint4D(x=1.0000, y=-1.0000, z=1.0000, time=None, epsg_code=-1)
           >>> rot_axis = RotationAxis(0,90,180)
           >>> pt.rotate(rotation_axis=rot_axis)
-          GeoPoint4D(-1.0000, -1.0000, 1.0000)
+          GeoPoint4D(x=-1.0000, y=-1.0000, z=1.0000, time=None, epsg_code=-1)
           >>> center_pt = GeoPoint4D(1,1,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          GeoPoint4D(1.0000, 1.0000, 1.0000)
+          GeoPoint4D(x=1.0000, y=1.0000, z=1.0000, time=None, epsg_code=-1)
           >>> center_pt = GeoPoint4D(2,2,10)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          GeoPoint4D(3.0000, 3.0000, 1.0000)
+          GeoPoint4D(x=3.0000, y=3.0000, z=1.0000, time=None, epsg_code=-1)
           >>> pt = GeoPoint4D(1, 1, 2)
           >>> rot_axis = RotationAxis(135, 0, 180)
           >>> center_pt = GeoPoint4D(0,0,1)
           >>> pt.rotate(rotation_axis=rot_axis, center_point=center_pt)
-          GeoPoint4D(-1.0000, -1.0000, 0.0000)
+          GeoPoint4D(x=-1.0000, y=-1.0000, z=0.0000, time=None, epsg_code=-1)
         """
 
         if not center_point:
@@ -767,7 +767,7 @@ class GeoSegment4D:
         :rtype: str.
         """
 
-        return f"Segment(start_pt={self.start_pt}, end_pt={self.end_pt})"
+        return f"GeoSegment4D(start_pt={self.start_pt}, end_pt={self.end_pt})"
 
     @property
     def start_pt(self) -> GeoPoint4D:
@@ -1357,23 +1357,23 @@ class GeoSegment4D:
         >>> seg = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(0,0,1))
         >>> rot_ax = RotationAxis(0, 0, 90)
         >>> seg.rotate(rot_ax)
-        Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 0.0000, 0.0000))
+        GeoSegment4D(start_pt=GeoPoint4D(x=0.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1), end_pt=GeoPoint4D(x=1.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1))
         >>> rot_ax = RotationAxis(0, 0, 180)
         >>> seg.rotate(rot_ax)
-        Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(0.0000.0000))
+        GeoSegment4D(start_pt=GeoPoint4D(x=0.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1), end_pt=GeoPoint4D(x=0.0000, y=0.0000, z=-1.0000, time=None, epsg_code=-1))
         >>> centr_pt = GeoPoint4D(0,0,0.5)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
-        Segment(start_pt=Point(-0.0000, 0.0000, 1.0000), end_pt=Point(0.0000, 0.0000, 0.0000))
+        GeoSegment4D(start_pt=GeoPoint4D(x=-0.0000, y=0.0000, z=1.0000, time=None, epsg_code=-1), end_pt=GeoPoint4D(x=0.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1))
         >>> seg = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,1,0))
         >>> centr_pt = GeoPoint4D(1,0,0)
         >>> rot_ax = RotationAxis(0, 90, 90)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
-        Segment(start_pt=Point(1.0000, 1.0000, 0.0000), end_pt=Point(2.0000, 0.0000, -0.0000))
+        GeoSegment4D(start_pt=GeoPoint4D(x=1.0000, y=1.0000, z=0.0000, time=None, epsg_code=-1), end_pt=GeoPoint4D(x=2.0000, y=0.0000, z=-0.0000, time=None, epsg_code=-1))
         >>> seg = GeoSegment4D(GeoPoint4D(1,1,1), GeoPoint4D(0,0,0))
         >>> rot_ax = RotationAxis(135, 0, 180)
         >>> centr_pt = GeoPoint4D(0.5,0.5,0.5)
         >>> seg.rotate(rotation_axis=rot_ax, center_point=centr_pt)
-        Segment(start_pt=Point(0.0000, 0.0000, 0.0000), end_pt=Point(1.0000, 1.0000, 1.0000))
+        GeoSegment4D(start_pt=GeoPoint4D(x=0.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1), end_pt=GeoPoint4D(x=1.0000, y=1.0000, z=1.0000, time=None, epsg_code=-1))
         """
 
         start_pt, end_pt = self

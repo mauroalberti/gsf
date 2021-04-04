@@ -2,14 +2,14 @@
 
 # # Check segment intersections
 from pygsf.orientations.orientations import RotationAxis
-from pygsf.spatial.space3d.vectorial.geometries import *
+from pygsf.geometries.shapes.space3d import *
 
 
 def check_segment_intersections(n=100):
 
     for i in range(n):
 
-        random_segment = Segment.random()
+        random_segment = Segment3D.random()
 
         random_interval_value = random.uniform(0, 1)
 
@@ -44,7 +44,7 @@ def check_segment_intersections(n=100):
             print(connection_segment)
             print(connection_segment.length())
 
-        elif isinstance(intersection, Segment):
+        elif isinstance(intersection, Segment3D):
             print("\nCase Segment: {}".format(i))
             print(random_segment)
             print(random_segment.length())

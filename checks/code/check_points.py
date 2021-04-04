@@ -2,18 +2,18 @@
 
 # # Check point collections
 
-from pygsf.spatial.space3d.vectorial.geometries import *
+from pygsf.geometries.shapes.space3d import *
 
 
 def check_points():
 
     pts = [
-        Point(0,0,0),
-        Point(1,1,1),
-        Point(2,2,2)
+        Point3D(0, 0, 0),
+        Point3D(1, 1, 1),
+        Point3D(2, 2, 2)
     ]
 
-    point_coll = Points(pts)
+    point_coll = Points3D(pts)
     print(point_coll.nanmean_point())
 
 
