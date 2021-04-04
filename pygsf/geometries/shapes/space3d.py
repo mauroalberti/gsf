@@ -1067,7 +1067,7 @@ class Segment3D:
             self.start_pt,
             point
         )
-        
+
         scale_factor = self.vector().scalar_projection(other_segment.vector()) / self.length()
         return self.pointAt(scale_factor)
 
@@ -2203,6 +2203,7 @@ class Line3D:
 
         return intersections
 
+
 class JoinTypes(Enum):
     """
     Enumeration for Line and Segment type.
@@ -2400,7 +2401,7 @@ def shortest_segment_or_point(
     return intersection
 
 
-class CPlane3D(object):
+class CPlane3D:
     """
     Cartesian plane.
     Expressed by equation:
@@ -2699,9 +2700,7 @@ class CPlane3D(object):
         Check whether a point lies in the current plane.
 
         :param pt: the point to check.
-        :type pt: Point.
         :return: whether the point lies in the current plane.
-        :rtype: bool.
         :raise: Exception.
 
         Examples:
@@ -2723,8 +2722,8 @@ class CPlane3D(object):
             return False
 
     def angle_as_degrees(self,
-                         another: 'CPlane3D'
-                         ) -> numbers.Real:
+         another: 'CPlane3D'
+         ) -> numbers.Real:
         """
         Calculate angle (in degrees) between two planes.
 

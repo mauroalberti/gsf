@@ -24,13 +24,6 @@ from pygsf.georeferenced.geoshapes3d import *
 from pygsf.utils.types import *
 
 
-class OGRIOException(Exception):
-    """
-    Exception for OGR IO parameters.
-    """
-    pass
-
-
 ogr_simpleline_types = [
     ogr.wkbLineString,
     ogr.wkbLineString25D,
@@ -472,7 +465,7 @@ def shapefile_create(path, geom_type, fields_dict_list, crs=None):
 
     outShapefile = driver.CreateDataSource(str(path))
     if outShapefile is None:
-        raise OGRIOException('Unable to save shapefile in provided path')
+        raise Exception('Unable to save shapefile in provided path')
 
     if crs is not None:
         spatial_reference = osr.SpatialReference()
@@ -704,7 +697,7 @@ def ogr_get_solution_shapefile(path, fields_dict_list):
     dataSource = driver.Open(str(path), 0)
 
     if dataSource is None:
-        raise OGRIOException("Unable to open shapefile in provided path")
+        raise Exception('Unable to open shapefile in provided path')
 
     point_shapelayer = dataSource.GetLayer()
 

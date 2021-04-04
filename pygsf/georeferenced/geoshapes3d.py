@@ -21,7 +21,7 @@ class GeoPoints3D:
                  epsg_code: numbers.Integral,
                  x_array: array,
                  y_array: array,
-                 z_array: Optional['array'] = None
+                 z_array: Optional[array] = None
                  ):
         """
         Construct a point list from a set of array values and an EPSG code.
@@ -488,9 +488,9 @@ class GeoMultiLine3D(object):
     """
 
     def __init__(self,
-                 lines: Optional[List[Line3D]] = None,
-                 epsg_cd: numbers.Integral = -1
-                 ):
+        lines: Optional[List[Line3D]] = None,
+        epsg_cd: numbers.Integral = -1
+        ):
 
         if lines is None:
             lines = []

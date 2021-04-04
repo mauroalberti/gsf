@@ -236,10 +236,6 @@ class Point4D(object):
     def speed(self, another):
         """
         Calculate the speed required to displace self to another.
-
-        Example:
-          >>> Point4D(1, 1, 1, 4).speed(Point4D(4, 5, 1, 14))
-          0.5
         """
 
         try:

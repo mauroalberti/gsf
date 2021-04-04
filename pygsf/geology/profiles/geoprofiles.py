@@ -29,10 +29,9 @@ class GPXElevationUsage(Enum):
 
 
 class GeoProfile:
-
     """
     Class representing the topographic and geological elements
-    constituting a single geological profile.
+    representing a single geological profile.
     """
 
     def __init__(self,

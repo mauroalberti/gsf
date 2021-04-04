@@ -151,7 +151,7 @@ class Vect(object):
 
     def __iter__(self):
         """
-        Return the elements of a Point.
+        Return the elements of a Vector.
 
         :return:
 

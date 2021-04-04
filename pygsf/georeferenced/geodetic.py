@@ -59,6 +59,46 @@ def geodetic2ecef(lat: numbers.Real, lon: numbers.Real, height: numbers.Real) ->
 latitude_one_degree_45degr_meters = 111131.745  #  source: http://www.csgnetwork.com/degreelenllavcalc.html, consulted on 2018-12-23
 
 
+class TrackPointGPX(object):
+
+    def __init__(self,
+                 lat: numbers.Real,
+                 lon: numbers.Real,
+                 elev: numbers.Real,
+                 time: datetime.datetime):
+
+        self.lat = float(lat)
+        self.lon = float(lon)
+        self.elev = float(elev)
+        self.time = time
+
+    def as_pt3dt(self):
+
+        x, y, _ = geodetic2ecef(self.lat, self.lon, self.elev)
+        t = standard_gpstime_to_seconds(self.time)
+
+        return Point4D(x, y, self.elev, t)
+
+    def project(self,
+                dest_crs: QgsCoordinateReferenceSystem):
+
+        pt = Point4D(
+            x=self.lon,
+            y=self.lat,
+            z=self.elev,
+            t=self.time
+        )
+        crs = QgsCoordinateReferenceSystem("EPSG:4326")
+
+        projected_pt = project_point(
+                pt=pt,
+                srcCrs=crs,
+                destCrs=dest_crs)
+
+        return projected_pt
+
+
+
 def projectionType(id_code):
     """
     NOTE: currently it is a stub code.

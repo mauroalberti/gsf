@@ -457,8 +457,8 @@ class LinearProfiler:
         return topo_profiles
 
     def intersect_line(self,
-                       mline: Union[Line2D, GeoMultiLine3D],
-                       ) -> GeoPointSegmentCollection3D:
+                       mline: Union[Line2D, GeoMultiLine2D],
+                       ) -> GeoPointSegmentCollection2D:
         """
         Calculates the intersection with a line/multiline.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
@@ -466,14 +466,14 @@ class LinearProfiler:
         :param mline: the line/multiline to intersect profile with
         :type mline: Union[Line, GeoMultiLine]
         :return: the possible intersections
-        :rtype: GeoPointSegmentCollection3D
+        :rtype: GeoPointSegmentCollection2D
         """
 
         return mline.intersectSegment(self.segment())
 
     def intersect_lines(self,
-                        mlines: Iterable[Union[Line2D, GeoMultiLine3D]],
-                        ) -> List[List[Optional[Union[Point2D, Segment2D]]]]:
+        mlines: Iterable[Union[Line2D, GeoMultiLine2D]],
+) -> List[List[Optional[Union[Point2D, Segment2D]]]]:
         """
         Calculates the intersection with a set of lines/multilines.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
@@ -485,13 +485,13 @@ class LinearProfiler:
         """
 
         results = [self.intersect_line(mline) for mline in mlines]
-        valid_results = [[ndx, GeoPointSegmentCollection3D(geoms=res, epsg_code=self.epsg_code)] for ndx, res in enumerate(results) if res]
+        valid_results = [[ndx, GeoPointSegmentCollection2D(geoms=res, epsg_code=self.epsg_code)] for ndx, res in enumerate(results) if res]
 
-        return GeoPointSegmentCollections3D(valid_results)
+        return GeoPointSegmentCollections2D(valid_results)
 
     def intersect_polygon(self,
-                          mpolygon: GeoMPolygon2D,
-                          ) -> GeoLines2D:
+        mpolygon: GeoMPolygon2D,
+        ) -> GeoLines2D:
         """
         Calculates the intersection with a shapely polygon/multipolygon.
         Note: the intersections are considered flat, i.e., in a 2D plane, not 3D.
@@ -513,7 +513,7 @@ class LinearProfiler:
 
     def intersect_polygons(self,
        mpolygons: List[GeoMPolygon2D]
-    ) -> List[GeoLines3D]:
+    ) -> List[GeoLines2D]:
         """
         Calculates the intersection with a set of shapely polygon/multipolygon.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
@@ -575,8 +575,8 @@ class LinearProfiler:
         return signed_distance
 
     def segment_along_profile_signed_s_tuple(self,
-                                             segment: Segment3D
-                                             ) -> Tuple[numbers.Real, numbers.Real]:
+        segment: Segment2D
+        ) -> Tuple[numbers.Real, numbers.Real]:
         """
         Calculates the segment signed distances from the profiles start.
         The segment must already lay in the profile vertical plane, otherwise an exception is raised.
@@ -591,8 +591,8 @@ class LinearProfiler:
         return segment_start_distance, segment_end_distance
 
     def pt_segm_along_profile_signed_s(self,
-                                       geom: Union[Point3D, Segment3D]
-                                       ) -> array:
+       geom: Union[Point2D, Segment2D]
+       ) -> array:
         """
         Calculates the point or segment signed distances from the profiles start.
 
@@ -602,15 +602,16 @@ class LinearProfiler:
         :rtype: array of double
         """
 
-        if isinstance(geom, Point3D):
+        if isinstance(geom, Point2D):
             return array('d', [self.point_along_profile_signed_s(geom)])
-        elif isinstance(geom, Segment3D):
+        elif isinstance(geom, Segment2D):
             return array('d', [*self.segment_along_profile_signed_s_tuple(geom)])
         else:
             return NotImplemented
 
     def get_intersection_slope(self,
-                intersection_vector: Vect) -> Tuple[numbers.Real, str]:
+        intersection_vector: Vect
+    ) -> Tuple[numbers.Real, str]:
         """
         Calculates the slope (in radians) and the downward sense ('left', 'right' or 'vertical')
         for a profile-laying vector.
@@ -696,7 +697,8 @@ class LinearProfiler:
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg_code, attitude_pt.epsg_code))
         '''
 
-        putative_inters_versor = self.vertical_plane().intersVersor(CPlane3D.from_geological_plane(attitude_plane, attitude_pt))
+        putative_inters_versor = self.vertical_plane().intersVersor(
+            CPlane3D.from_geological_plane(attitude_plane, attitude_pt))
 
         if not putative_inters_versor.is_valid:
             return None
@@ -727,7 +729,7 @@ class LinearProfiler:
         attitude_cplane = CPlane3D.from_geological_plane(
             geol_plane=georef_attitude.attitude,
             pt=georef_attitude.posit)
-        #attitude_cplane = georef_attitude.attitude.to_cartesian_plane(georef_attitude.posit)
+        # attitude_cplane = georef_attitude.attitude.to_cartesian_plane(georef_attitude.posit)
         intersection_versor = self.vertical_plane().intersVersor(attitude_cplane)
         dummy_inters_pt = self.vertical_plane().intersPoint(attitude_cplane)
         dummy_structural_vect = Segment3D(dummy_inters_pt, georef_attitude.posit).vector()
@@ -820,7 +822,7 @@ class LinearProfiler:
             src_dip_dir=georef_attitude.attitude.dd,
             src_dip_ang=georef_attitude.attitude.da
         )
-        #print("Profile attitude: {}".format(profile_attitude))
+        # print("Profile attitude: {}".format(profile_attitude))
 
         return profile_attitude
 
@@ -861,7 +863,7 @@ class LinearProfiler:
             results = []
             for georef_att, (trend, plunge) in zip(attitudes_3d, mapping_method['individual_axes_values']):
                 try:
-                    map_axis = Axis(Azim(trend), Plunge(plunge))
+                    map_axis = Axis(trend, plunge)
                     results.append(self.map_attitude_to_section(georef_att, map_axis, max_profile_distance=max_profile_distance))
                 except Exception as e:
                     print("Exception while processing individual axes values: {}".format(e))
@@ -871,7 +873,7 @@ class LinearProfiler:
 
         if results is None:
             return None
-        
+
         results = list(filter(lambda res: res is not None, results))
 
         if len(results) == 0:
