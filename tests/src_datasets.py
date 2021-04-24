@@ -1,5 +1,5 @@
 
-from ..geology.ptbaxes import *
+from pygsf.geology.ptbaxes import *
 
 
 """

@@ -1,15 +1,12 @@
-# coding: utf-8
-
 # # Check bilinear interpolation
-
 
 import unittest
 import math
 import numpy as np
 
-from ..mathematics.scalars import areClose
-from ..geometries.grids.interpolations import scalars_bilin_interp as s_bilinear_interp
-from ..geometries.grids.interpolations import array_bilin_interp as a_bilinear_interp
+from pygsf.mathematics.scalars import areClose
+from pygsf.geometries.grids.interpolations import scalars_bilin_interp as s_bilinear_interp
+from pygsf.geometries.grids.interpolations import array_bilin_interp as a_bilinear_interp
 
 
 class TestBilinearInterpolations(unittest.TestCase):

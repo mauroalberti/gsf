@@ -1,8 +1,8 @@
 
 import unittest
 
-from ..geometries.shapes.space3d import *
-from ..orientations.orientations import *
+from pygsf.geometries.shapes.space3d import *
+from pygsf.orientations.orientations import *
 
 
 class TestSegmentIntersections(unittest.TestCase):

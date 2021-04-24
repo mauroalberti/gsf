@@ -1,6 +1,6 @@
 import unittest
 
-from ..mathematics.quaternions import *
+from pygsf.mathematics.quaternions import *
 
 
 q_case_1 = Quaternion(3.2, 17.4, 9.25, -8.47)

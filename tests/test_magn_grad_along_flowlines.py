@@ -4,8 +4,8 @@ from math import sqrt, degrees, atan
 
 import unittest
 
-from ..geometries.grids.fields import *
-from ..geometries.grids.geotransform import *
+from pygsf.geometries.grids.fields import *
+from pygsf.geometries.grids.geotransform import *
 
 
 class TestMagnGradFlwlns(unittest.TestCase):

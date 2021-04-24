@@ -8,8 +8,8 @@
 
 import unittest
 
-from ..geometries.grids.fields import *
-from ..geometries.grids.geotransform import GeoTransform
+from pygsf.geometries.grids.fields import *
+from pygsf.geometries.grids.geotransform import GeoTransform
 
 
 # Z transfer functions

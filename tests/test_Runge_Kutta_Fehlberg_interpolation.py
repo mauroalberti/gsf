@@ -1,8 +1,7 @@
-# coding: utf-8
 
 import unittest
 
-from ..georeferenced.rasters import *
+from pygsf.georeferenced.rasters import *
 
 
 class TestRKFInterpolation(unittest.TestCase):

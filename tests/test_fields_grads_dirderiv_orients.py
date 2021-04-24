@@ -3,9 +3,7 @@ from math import pi
 
 import unittest
 
-import numpy as np
-
-from ..geometries.grids.fields import *
+from pygsf.geometries.grids.fields import *
 
 
 class TestDivergence(unittest.TestCase):
