@@ -1,7 +1,12 @@
 
-from qgis.core import *
+import datetime
 
-from pygsf.geometries.shapes.space2d import *
+from qgis.core import QgsCoordinateReferenceSystem, QgsPointXY, QgsCoordinateTransform, QgsProject
+
+from ...geometries.shapes.space3d import *
+from ...geometries.shapes.space4d import Point4D
+from ...georeferenced.geodetic import geodetic2ecef
+from ..time import standard_gpstime_to_seconds
 
 
 def distance_projected_pts(
@@ -25,20 +30,19 @@ def distance_projected_pts(
 
 
 def project_point(
-        pt: Point3D,
+        pt: Point2D,
         srcCrs: QgsCoordinateReferenceSystem,
         destCrs: QgsCoordinateReferenceSystem
-) -> Point3D:
+) -> Point2D:
 
     qgs_pt = QgsPointXY(pt.x, pt.y)
 
     proj_qgs_pt = project_qgs_point(qgs_pt, srcCrs, destCrs)
     proj_x, proj_y = proj_qgs_pt.x(), proj_qgs_pt.y()
 
-    return Point3D(
+    return Point2D(
         x=proj_x,
-        y=proj_y,
-        z=pt.z
+        y=proj_y
     )
 
 
@@ -95,3 +99,56 @@ def qgs_pt(x, y):
 
     return QgsPointXY(x, y)
 
+
+def calculate_pts_in_projection(pts_in_orig_crs, srcCrs, destCrs):
+
+    pts_in_prj_crs = []
+    for pt in pts_in_orig_crs:
+        qgs_pt = QgsPointXY(pt.x, pt.y)
+        qgs_pt_prj_crs = project_qgs_point(qgs_pt, srcCrs, destCrs)
+        pts_in_prj_crs.append(Point2D(qgs_pt_prj_crs.x(), qgs_pt_prj_crs.y()))
+    return pts_in_prj_crs
+
+
+class TrackPointGPX(object):
+
+    def __init__(self,
+                 lat: numbers.Real,
+                 lon: numbers.Real,
+                 elev: numbers.Real,
+                 time: datetime.datetime):
+
+        self.lat = float(lat)
+        self.lon = float(lon)
+        self.elev = float(elev)
+        self.time = time
+
+    def as_pt4d(self):
+
+        x, y, _ = geodetic2ecef(self.lat, self.lon, self.elev)
+        t = standard_gpstime_to_seconds(self.time)
+
+        return Point4D(x, y, self.elev, t)
+
+    def project(self,
+                dest_crs: QgsCoordinateReferenceSystem
+                ) -> Point4D:
+
+        pt = Point2D(
+            x=self.lon,
+            y=self.lat
+        )
+
+        crs = QgsCoordinateReferenceSystem("EPSG:4326")
+
+        projected_pt = project_point(
+                pt=pt,
+                srcCrs=crs,
+                destCrs=dest_crs)
+
+        return Point4D(
+            x=projected_pt.x,
+            y=projected_pt.y,
+            z=self.elev,
+            t=self.time
+        )

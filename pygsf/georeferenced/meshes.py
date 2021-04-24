@@ -11,15 +11,12 @@ try:
 except ImportError:
     import gdal
 
-from pygsf.geometries.shapes.space4d import Segment4D
-from pygsf.utils.arrays import *
-from pygsf.mathematics.transformations import *
-from pygsf.io.gdal.vector import *
+from ..utils.arrays import *
+from ..geometries.transformations import *
+from ..geometries.shapes.space4d import *
 
+from ..io.gdal.vector import *
 
-from pygsf.geometries.shapes.space3d import *
-from pygsf.io.gdal.vector import *
-#from pygsf.errors import *
 
 
 class TriangBeam(object):
@@ -147,7 +144,7 @@ class AnalyticGeosurface(object):
 
         x = (a_min + a_max) / 2.0
         y = (b_min + b_max) / 2.0
-        z = (min(self.Z) + max(self.Z)) / 2.0
+        z = (np.nanmin(self.Z) + np.nanmax(self.Z)) / 2.0
 
         return self.transform_loc(x, y, z)
 

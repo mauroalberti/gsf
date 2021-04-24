@@ -1,11 +1,9 @@
 
 from geopandas import GeoDataFrame
 
-from pygsf.orientations.orientations import *
-from pygsf.geometries.shapes.space3d import *
-from pygsf.io.geodataframes.geodataframes import *
-
-from .base import GeorefAttitude
+from ..geology.base import GeorefAttitude
+from ..orientations.orientations import Plane
+from ..geometries.shapes.space2d import *
 
 
 def try_extract_flat_georeferenced_attitudes(
@@ -58,5 +56,3 @@ def try_extract_flat_georeferenced_attitudes(
     except Exception as e:
 
         return False, str(e)
-
-

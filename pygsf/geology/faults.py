@@ -1,9 +1,7 @@
 
 import numbers
 
-from pygsf.defaults import *
-from pygsf.geometries.shapes.space3d import *
-from pygsf.orientations.orientations import *
+from ..orientations.orientations import *
 
 
 class Slick(object):
@@ -36,10 +34,6 @@ class Slick(object):
           Slick(az: 90.00°, pl: 10.00°, known_dir: True, time: 0.0)
           >>> Slick(90, 10, known=False)
           Slick(az: 90.00°, pl: 10.00°, known_dir: False, time: 0.0)
-          >>> Slick("90", 10, False)
-          Traceback (most recent call last):
-          ...
-          Exception: Trend must be a number
         """
 
         if not isinstance(trend, numbers.Real):

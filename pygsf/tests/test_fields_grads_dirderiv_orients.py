@@ -3,8 +3,9 @@ from math import pi
 
 import unittest
 
+import numpy as np
 
-from pygsf.geometries.rasters.fields import *
+from ..geometries.grids.fields import *
 
 
 class TestDivergence(unittest.TestCase):
@@ -20,7 +21,7 @@ class TestDivergence(unittest.TestCase):
         :return:
         """
 
-        # Test pygsf gradients and directional derivative
+        # Test gradients and directional derivative
 
         fld1 = np.array([
          [1, 1, 1, 1],

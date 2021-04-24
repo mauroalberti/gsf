@@ -1,9 +1,8 @@
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
+from qgis.core import QgsVectorLayer, QgsCoordinateReferenceSystem,QgsPointXY
 
-from pygsf.geology.profiles.geoprofiles import *
-from pygsf.geometries.shapes.space4d import *
+from ..qgis_utils.points import project_point, project_qgs_point
+from ...geometries.shapes.space2d import *
 
 
 def polyline_to_xytuple_list(
@@ -45,13 +44,23 @@ def try_get_line_traces(
         return False, str(e)
 
 
-def create_line_in_project_crs(
-    profile_processed_line,
-    line_layer_crs,
-    project_crs
-):
+def project_line2d(
+    src_line2d: Line2D,
+    src_crs: QgsCoordinateReferenceSystem,
+    dest_crs: QgsCoordinateReferenceSystem
+) -> Line2D:
 
-    return profile_processed_line.crs_project(line_layer_crs, project_crs)
+    projected_pts = []
+
+    for pt in src_line2d.pts():
+        projected_pt = project_point(
+            pt=pt,
+            srcCrs=src_crs,
+            destCrs=dest_crs
+        )
+        projected_pts.append(projected_pt)
+
+    return Line2D(pts=projected_pts)
 
 
 def try_load_line_layer(
@@ -59,7 +68,7 @@ def try_load_line_layer(
     project_crs,
     line_order_fld_ndx: Optional[numbers.Integral],
     invert_direction: bool
-) -> Tuple[bool, Union[str, List[Line4D]]]:
+) -> Tuple[bool, Union[str, List[Line2D]]]:
 
     try:
 
@@ -81,12 +90,12 @@ def try_load_line_layer(
 
         if areLinesToReorder:
 
-            processed_lines.append(merge_lines(profile_orig_lines, order_values))
+            processed_lines.append(merge_lines2d(profile_orig_lines, order_values))
 
         else:
 
             for orig_line in profile_orig_lines:
-                processed_lines.append(merge_line(orig_line))
+                processed_lines.append(merge_line2d(orig_line))
 
         # process input line layer
 
@@ -94,7 +103,7 @@ def try_load_line_layer(
         for ndx, processed_line in enumerate(processed_lines):
 
             projected_lines.append(
-                create_line_in_project_crs(
+                project_line2d(
                     processed_line,
                     line_layer.crs(),
                     project_crs

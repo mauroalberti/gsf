@@ -1,10 +1,23 @@
 
+from typing import Tuple, List, Union
+
+import numbers
+from copy import deepcopy
+
+from math import ceil, floor
+
 from collections import namedtuple
 
-from math import ceil
+import numpy as np
 
-from .points import *
+from qgis.core import QgsRaster, QgsPointXY, QgsRasterLayer
 
+
+from .points import *  # distance_projected_pts, calculate_pts_in_projection
+from .project import *  # projectCrs
+
+from ...geometries.shapes.space2d import Point2D
+from ...geometries.shapes.space3d import Point3D
 
 raster_parameters_fields = [
     'name',
@@ -24,99 +37,6 @@ RasterParameters = namedtuple(
     'RasterParameters',
     raster_parameters_fields
 )
-
-
-def get_z(
-    dem_layer,
-    point
-):
-
-    identification = dem_layer.dataProvider().identify(QgsPointXY(point.x, point.y), QgsRaster.IdentifyFormatValue)
-    if not identification.isValid():
-        return np.nan
-    else:
-        try:
-            result_map = identification.results()
-            return float(result_map[1])
-        except:
-            return np.nan
-
-
-def get_zs_from_dem(
-    struct_pts_2d,
-    demObj
-):
-
-    z_list = []
-    for point_2d in struct_pts_2d:
-        interp_z = interpolate_z(demObj.layer, demObj.params, point_2d)
-        z_list.append(interp_z)
-
-    return z_list
-
-
-def interpolate_bilinear(
-    dem,
-    qrpDemParams,
-    point
-):
-    """
-    :param dem: qgis._core.QgsRasterLayer
-    :param qrpDemParams: qProf.utils.qgs_tools.QGisRasterParameters
-    :param point: qProf.utils.features.Point
-    :return: float
-    """
-
-    dArrayCoords = qrpDemParams.geogr2raster(point)
-
-    floor_x_raster = floor(dArrayCoords["x"])
-    ceil_x_raster = ceil(dArrayCoords["x"])
-    floor_y_raster = floor(dArrayCoords["y"])
-    ceil_y_raster = ceil(dArrayCoords["y"])
-
-    # bottom-left center
-    p1 = qrpDemParams.raster2geogr(dict(x=floor_x_raster,
-                                        y=floor_y_raster))
-    # bottom-right center
-    p2 = qrpDemParams.raster2geogr(dict(x=ceil_x_raster,
-                                        y=floor_y_raster))
-    # top-left center
-    p3 = qrpDemParams.raster2geogr(dict(x=floor_x_raster,
-                                        y=ceil_y_raster))
-    # top-right center
-    p4 = qrpDemParams.raster2geogr(dict(x=ceil_x_raster,
-                                        y=ceil_y_raster))
-
-    z1 = get_z(dem, p1)
-    z2 = get_z(dem, p2)
-    z3 = get_z(dem, p3)
-    z4 = get_z(dem, p4)
-
-    delta_x = point.x - p1.x
-    delta_y = point.y - p1.y
-
-    z_x_a = z1 + (z2 - z1) * delta_x / qrpDemParams.cellsizeEW
-    z_x_b = z3 + (z4 - z3) * delta_x / qrpDemParams.cellsizeEW
-
-    return z_x_a + (z_x_b - z_x_a) * delta_y / qrpDemParams.cellsizeNS
-
-
-def interpolate_z(
-    dem,
-    dem_params,
-    point
-):
-    """
-        dem_params: type qProf.utils.qgs_tools.QGisRasterParameters
-        point: type qProf.utils.features.Point
-    """
-
-    if dem_params.point_in_interpolation_area(point):
-        return interpolate_bilinear(dem, dem_params, point)
-    elif dem_params.point_in_dem_area(point):
-        return get_z(dem, point)
-    else:
-        return np.nan
 
 
 class QGisRasterParameters(object):
@@ -154,7 +74,6 @@ class QGisRasterParameters(object):
         Check that a point is within or on the boundary of the grid area.
         Assume grid has no rotation.
 
-        :param point: qProf.pygsf.geometry.Point
         :return: bool
         """
 
@@ -172,7 +91,6 @@ class QGisRasterParameters(object):
         the extreme cell center values.
         Assume grid has no rotation.
 
-        :param point: qProf.pygsf.geometry.Point
         :return: bool
         """
 
@@ -189,7 +107,6 @@ class QGisRasterParameters(object):
         Convert from geographic to raster-based coordinates.
         Assume grid has no rotation.
 
-        :param point: qProf.pygsf.geometry.Point
         :return: dict
         """
 
@@ -216,6 +133,93 @@ class QGisRasterParameters(object):
         y = self.yMin + (array_dict['y'] + 0.5) * self.cellsizeNS
 
         return Point2D(x, y)
+
+
+def get_z(
+    dem_layer,
+    point
+):
+
+    identification = dem_layer.dataProvider().identify(QgsPointXY(point.x, point.y), QgsRaster.IdentifyFormatValue)
+    if not identification.isValid():
+        return np.nan
+    else:
+        try:
+            result_map = identification.results()
+            return float(result_map[1])
+        except:
+            return np.nan
+
+
+def get_zs_from_dem(
+    struct_pts_2d,
+    demObj
+):
+
+    z_list = []
+    for point_2d in struct_pts_2d:
+        interp_z = interpolate_z(demObj.layer, demObj.params, point_2d)
+        z_list.append(interp_z)
+
+    return z_list
+
+
+def interpolate_bilinear(
+    dem: QgsRasterLayer,
+    qrpDemParams: QGisRasterParameters,
+    point: Point2D
+) -> numbers.Real:
+    """
+    """
+
+    dArrayCoords = qrpDemParams.geogr2raster(point)
+
+    floor_x_raster = floor(dArrayCoords["x"])
+    ceil_x_raster = ceil(dArrayCoords["x"])
+    floor_y_raster = floor(dArrayCoords["y"])
+    ceil_y_raster = ceil(dArrayCoords["y"])
+
+    # bottom-left center
+    p1 = qrpDemParams.raster2geogr(dict(x=floor_x_raster,
+                                        y=floor_y_raster))
+    # bottom-right center
+    p2 = qrpDemParams.raster2geogr(dict(x=ceil_x_raster,
+                                        y=floor_y_raster))
+    # top-left center
+    p3 = qrpDemParams.raster2geogr(dict(x=floor_x_raster,
+                                        y=ceil_y_raster))
+    # top-right center
+    p4 = qrpDemParams.raster2geogr(dict(x=ceil_x_raster,
+                                        y=ceil_y_raster))
+
+    z1 = get_z(dem, p1)
+    z2 = get_z(dem, p2)
+    z3 = get_z(dem, p3)
+    z4 = get_z(dem, p4)
+
+    delta_x = point.x - p1.x
+    delta_y = point.y - p1.y
+
+    z_x_a = z1 + (z2 - z1) * delta_x / qrpDemParams.cellsizeEW
+    z_x_b = z3 + (z4 - z3) * delta_x / qrpDemParams.cellsizeEW
+
+    return z_x_a + (z_x_b - z_x_a) * delta_y / qrpDemParams.cellsizeNS
+
+
+def interpolate_z(
+    qgs_raster_layer: QgsRasterLayer,
+    qgis_raster_parameters: QGisRasterParameters,
+    point2d: Point2D
+):
+    """
+    """
+
+    if qgis_raster_parameters.point_in_interpolation_area(point2d):
+        return interpolate_bilinear(qgs_raster_layer, qgis_raster_parameters, point2d)
+    elif qgis_raster_parameters.point_in_dem_area(point2d):
+        return get_z(qgs_raster_layer, point2d)
+    else:
+        return np.nan
 
 
 def try_raster_qgis_params(
@@ -326,4 +330,59 @@ def get_dem_resolution_in_prj_crs(
     return 0.5 * (cellsizeEW_prj_crs + cellsizeNS_prj_crs)
 
 
+def get_min_dem_resolution(
+    selected_dems: List,
+    selected_dem_parameters: List
+) -> numbers.Real:
+
+    dem_resolutions_prj_crs_list = []
+
+    for dem, dem_params in zip(selected_dems, selected_dem_parameters):
+        dem_resolutions_prj_crs_list.append(
+            get_dem_resolution_in_prj_crs(
+                dem,
+                dem_params,
+                projectCrs())
+        )
+
+    min_dem_resolution = np.nanmin(dem_resolutions_prj_crs_list)
+
+    if min_dem_resolution > 1:
+        sample_distance = round(min_dem_resolution)
+    else:
+        sample_distance = min_dem_resolution
+
+    return sample_distance
+
+
+def calculate_projected_3d_pts(
+    struct_pts,
+    structural_pts_crs,
+    demObj
+):
+
+    demCrs = demObj.params.crs
+
+    # check if on-the-fly-projection is set on
+    project_crs = projectCrs()
+
+    # set points in the project crs
+    if structural_pts_crs != project_crs:
+        struct_pts_in_prj_crs = calculate_pts_in_projection(struct_pts, structural_pts_crs, project_crs)
+    else:
+        struct_pts_in_prj_crs = deepcopy(struct_pts)
+
+        # project the source points from point layer crs to DEM crs
+    # if the two crs are different
+    if structural_pts_crs != demCrs:
+        struct_pts_in_dem_crs = calculate_pts_in_projection(struct_pts, structural_pts_crs, demCrs)
+    else:
+        struct_pts_in_dem_crs = deepcopy(struct_pts)
+
+        # - 3D structural points, with x, y, and z extracted from the current DEM
+    struct_pts_z = get_zs_from_dem(struct_pts_in_dem_crs, demObj)
+
+    assert len(struct_pts_in_prj_crs) == len(struct_pts_z)
+
+    return [Point3D(pt.x, pt.y, z) for (pt, z) in zip(struct_pts_in_prj_crs, struct_pts_z)]
 

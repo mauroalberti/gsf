@@ -1,8 +1,11 @@
+
 import math
 import numbers
 from typing import Tuple
 
-from pygsf.mathematics.defaults import MIN_VECTOR_MAGNITUDE
+import numpy as np
+
+from .defaults import MIN_VECTOR_MAGNITUDE
 
 
 def normXYZ(
@@ -25,7 +28,7 @@ def normXYZ(
     if not all(map(lambda val: isinstance(val, numbers.Real), vals)):
         raise Exception("Input values must be integer or float")
     elif not all(map(math.isfinite, vals)):
-        raise Exception("Input values must be finite")
+        raise Exception("Input values must be finite (#01)")
 
     mag = math.sqrt(x*x + y*y + z*z)
 

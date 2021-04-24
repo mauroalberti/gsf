@@ -1,11 +1,9 @@
 
-import datetime
 from math import sqrt
-from typing import Optional, List
+import datetime
 
-from pygsf.mathematics.vectors import *
-from pygsf.mathematics.defaults import *
-from pygsf.utils.qgis_utils.points import *
+from ...mathematics.vectors3d import *
+from .space2d import Point2D, Line2D
 
 
 class Point4D(object):
@@ -15,9 +13,9 @@ class Point4D(object):
     """
 
     def __init__(self,
-                 x: Optional[np.ndarray] = np.nan,
-                 y: Optional[np.ndarray] = np.nan,
-                 z: Optional[np.ndarray] = np.nan,
+                 x: numbers.Real,
+                 y: numbers.Real,
+                 z: numbers.Real,
                  t: Optional[datetime.datetime] = None
                  ):
         """
@@ -41,7 +39,12 @@ class Point4D(object):
           Point4D(1.0000, 0.0000, 1.0000, None)
         """
 
-        obj = cls()
+        obj = cls(
+            x=0.0,
+            y=0.0,
+            z=0.0,
+            t=None
+        )
 
         assert 2 <= a.size <= 3
         b = a.astype(np.float64)
@@ -93,10 +96,44 @@ class Point4D(object):
         Return time value
 
         Example:
-          >>> Point4D(1.5, 3.2, 41., 22.).t
-          22.0
+          >>> Point4D(1.5, 3.2, 41.).t
+          None
         """
         return self._t
+
+    def a(self) -> Tuple[numbers.Real, numbers.Real, numbers.Real, datetime.datetime]:
+        """
+        Return the individual values of the point.
+
+        :return: x, y, z and t values
+
+        Examples:
+          >>> Point4D(4, 3, 7, datetime.datetime(2020, 12, 4)).a()
+          (4.0, 3.0, 7.0, datetime.datetime(2020, 12, 4, 0, 0))
+        """
+
+        return self.x, self.y, self.z, self.t
+
+    def __iter__(self):
+        """
+        Return the elements of a Point.
+
+        :return:
+
+        Examples;
+          >>> x, y, z, t = Point4D(4, 3, 7, datetime.datetime(2020, 12, 4))
+          >>> x == 4
+          True
+          >>> y == 3
+          True
+          >>> z == 7
+          True
+          >>> t == datetime.datetime(2020, 12, 4)
+          True
+
+        """
+
+        return (i for i in self.a())
 
     def clone(self):
         """
@@ -143,15 +180,15 @@ class Point4D(object):
 
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
-    def dist_3d(self, another):
+    def distance(self, another):
         """
         Calculate Euclidean spatial distance between two points.
         todo: make sure it works as intended with nan values
 
         Examples:
-          >>> Point4D(1., 1., 1.).dist_3d(Point4D(4., 5., 1,))
+          >>> Point4D(1., 1., 1.).distance(Point4D(4., 5., 1,))
           5.0
-          >>> Point4D(1, 1, 1, 4).dist_3d(Point4D(4, 5, 1, 14))
+          >>> Point4D(1, 1, 1).distance(Point4D(4, 5, 1))
           5.0
         """
 
@@ -183,7 +220,7 @@ class Point4D(object):
 
         if self.dist_2d(another) > tolerance:
             return False
-        elif self.dist_3d(another) > tolerance:
+        elif self.distance(another) > tolerance:
             return False
         else:
             return True
@@ -214,17 +251,16 @@ class Point4D(object):
                        self.z + displ_vect.z,
                        self.t)
 
-    @property
     def vector(self):
         """
         Create a vector based on the point coordinates
 
         Example:
-          >>> Point4D(1, 1, 0, 5).vector
-          Vect(1.0000, 1.0000, 0.0000)
+          >>> Point4D(1, 1, 0).vector()
+          Vect3D(1.0000, 1.0000, 0.0000)
         """
 
-        return Vect(self.x, self.y, self.z)
+        return Vect3D(self.x, self.y, self.z)
 
     def delta_time(self, another):
         """
@@ -240,7 +276,7 @@ class Point4D(object):
 
         try:
 
-            return self.dist_3d(another) / self.delta_time(another)
+            return self.distance(another) / self.delta_time(another)
 
         except:
 
@@ -262,15 +298,13 @@ class Line4D(object):
         self._pts = pts
         self._name = name
 
-    @property
     def pts(self):
 
         return self._pts
 
-    @property
     def num_pts(self):
 
-        return len(self.pts)
+        return len(self.pts())
 
     @property
     def name(self):
@@ -279,7 +313,7 @@ class Line4D(object):
     def clone(self):
 
         return Line4D(
-            pts=[pt.clone() for pt in self.pts],
+            pts=[pt.clone() for pt in self.pts()],
             name=self.name
         )
 
@@ -292,7 +326,7 @@ class Line4D(object):
         :return: self
         """
 
-        self.pts.append(pt)
+        self.pts().append(pt)
 
     def add_pts(self, pt_list):
         """
@@ -305,69 +339,57 @@ class Line4D(object):
 
         self._pts += pt_list
 
-    @property
     def x_array(self):
 
-        return np.asarray([pt.x for pt in self.pts])
+        return np.asarray([pt.x for pt in self.pts()])
 
-    @property
     def y_array(self):
 
-        return np.asarray([pt.y for pt in self.pts])
+        return np.asarray([pt.y for pt in self.pts()])
 
-    @property
     def z_array(self):
 
-        return np.asarray([pt.z for pt in self.pts])
+        return np.asarray([pt.z for pt in self.pts()])
 
     def xy_arrays(self):
 
         return self.x_array, self.y_array
 
-    @property
     def x_min(self):
 
-        return np.nanmin(self.x_array)
+        return np.nanmin(self.x_array())
 
-    @property
     def x_max(self):
 
-        return np.nanmax(self.x_array)
+        return np.nanmax(self.x_array())
 
-    @property
     def y_min(self):
 
-        return np.nanmin(self.y_array)
+        return np.nanmin(self.y_array())
 
-    @property
     def y_max(self):
 
-        return np.nanmax(self.y_array)
+        return np.nanmax(self.y_array())
 
-    @property
     def z_min(self):
 
-        return np.nanmin(self.z_array)
+        return np.nanmin(self.z_array())
 
-    @property
     def z_max(self):
 
-        return np.nanmax(self.z_array)
+        return np.nanmax(self.z_array())
 
-    @property
     def z_mean(self):
 
-        return np.nanmean(self.z_array)
+        return np.nanmean(self.z_array())
 
-    @property
     def z_var(self):
 
-        return np.nanvar(self.z_array)
+        return np.nanvar(self.z_array())
 
-    @property
     def z_std(self):
 
-        return np.nanstd(self.z_array)
+        return np.nanstd(self.z_array())
 
     def remove_coincident_points(self):
         """
@@ -376,12 +398,12 @@ class Line4D(object):
         :return: Line instance
         """
 
-        assert self.num_pts >= 2
+        assert self.num_pts() >= 2
 
-        new_line = Line4D(self.pts[:1])
-        for ndx in range(1, self.num_pts):
-            if not self.pts[ndx].coincident(new_line.pts[-1]):
-                new_line.add_pt(self.pts[ndx])
+        new_line = Line4D(self.pts()[:1])
+        for ndx in range(1, self.num_pts()):
+            if not self.pts()[ndx].coincident(new_line.pts()[-1]):
+                new_line.add_pt(self.pts()[ndx])
 
         return new_line
 
@@ -392,12 +414,27 @@ class Line4D(object):
         :return: list of Segment objects
         """
 
-        pts_pairs = list(zip(self.pts[:-1], self.pts[1:]))
+        pts_pairs = list(zip(self.pts()[:-1], self.pts()[1:]))
 
         segments = [Segment4D(pt_a, pt_b) for (pt_a, pt_b) in pts_pairs]
 
         return segments
 
+    def as_line2d(self) -> Line2D:
+
+        pts2d = []
+        for pt4d in self.pts():
+            x, y, _, _ = pt4d
+            pts2d.append(
+                Point2D(
+                    x=x,
+                    y=y
+                )
+            )
+
+        return Line2D(pts=pts2d)
+
+    '''
     def densify_2d_line(self, sample_distance):
         """
         Densify a line into a new line instance,
@@ -423,6 +460,7 @@ class Line4D(object):
         densifyied_line_wo_coinc_pts = densifyied_line.remove_coincident_points()
 
         return densifyied_line_wo_coinc_pts
+    '''
 
     def join(self, another):
         """
@@ -431,44 +469,40 @@ class Line4D(object):
         and orientation mismatches between the two original lines
         """
 
-        return Line4D(self.pts + another.pts)
+        return Line4D(self.pts() + another.pts())
 
-    @property
     def length_3d(self):
 
         length = 0.0
-        for ndx in range(self.num_pts - 1):
-            length += self.pts[ndx].dist_3d(self.pts[ndx + 1])
+        for ndx in range(self.num_pts() - 1):
+            length += self.pts()[ndx].distance(self.pts()[ndx + 1])
         return length
 
-    @property
     def length_2d(self):
 
         length = 0.0
-        for ndx in range(self.num_pts - 1):
-            length += self.pts[ndx].dist_2d(self.pts[ndx + 1])
+        for ndx in range(self.num_pts() - 1):
+            length += self.pts()[ndx].dist_2d(self.pts()[ndx + 1])
         return length
 
-    @property
-    def incr_len_3d(self):
+    def incremental_length_3d(self):
 
         incremental_length_list = []
         length = 0.0
         incremental_length_list.append(length)
-        for ndx in range(self.num_pts - 1):
-            length += self.pts[ndx].dist_3d(self.pts[ndx + 1])
+        for ndx in range(self.num_pts() - 1):
+            length += self.pts()[ndx].distance(self.pts()[ndx + 1])
             incremental_length_list.append(length)
 
         return np.asarray(incremental_length_list)
 
-    @property
-    def incr_len_2d(self):
+    def incremental_length_2d(self):
 
         lIncrementalLengths = []
         length = 0.0
         lIncrementalLengths.append(length)
-        for ndx in range(self.num_pts - 1):
-            length += self.pts[ndx].dist_2d(self.pts[ndx + 1])
+        for ndx in range(self.num_pts() - 1):
+            length += self.pts()[ndx].dist_2d(self.pts()[ndx + 1])
             lIncrementalLengths.append(length)
 
         return np.asarray(lIncrementalLengths)
@@ -476,34 +510,34 @@ class Line4D(object):
     def invert_direction(self):
 
         new_line = self.clone()
-        new_line.pts.reverse()  # in-place operation on new_line
+        new_line.pts().reverse()  # in-place operation on new_line
 
         return new_line
 
-    @property
     def dir_slopes(self) -> np.ndarray:
 
         lSlopes = []
-        for ndx in range(self.num_pts - 1):
-            vector = Segment4D(self.pts[ndx], self.pts[ndx + 1]).vector()
-            lSlopes.append(-vector.slope)  # minus because vector convetion is positive downward
+        for ndx in range(self.num_pts() - 1):
+            vector = Segment4D(self.pts()[ndx], self.pts()[ndx + 1]).vector()
+            lSlopes.append(-vector.slope_degr())  # minus because vector convention is positive downward
         lSlopes.append(np.nan)  # slope value for last point is unknown
 
         return np.asarray(lSlopes)
 
-    @property
     def absolute_slopes(self) -> np.ndarray:
 
-        return np.asarray(list(map(abs, self.dir_slopes)))
+        return np.asarray(list(map(abs, self.dir_slopes())))
 
+    '''
     def crs_project(self, srcCrs, destCrs):
 
         points = []
-        for point in self.pts:
+        for point in self.pts():
             destCrs_point = project_point(point, srcCrs, destCrs)
             points.append(destCrs_point)
 
         return Line4D(points)
+    '''
 
 
 class Segment4D(object):
@@ -585,14 +619,16 @@ class Segment4D(object):
     @property
     def length_3d(self):
 
-        return self.start_pt.dist_3d(self.end_pt)
+        return self.start_pt.distance(self.end_pt)
 
     def vector(self):
 
-        return Vect(self.delta_x,
-                    self.delta_y,
-                    self.delta_z)
+        return Vect3D(self.delta_x,
+                      self.delta_y,
+                      self.delta_z
+                      )
 
+    """
     def segment_2d_m(self):
 
         return (self.end_pt.y - self.start_pt.y) / (self.end_pt.x - self.start_pt.x)
@@ -641,9 +677,9 @@ class Segment4D(object):
             return True
 
     def fast_2d_contains_pt(self, pt2d):
-        """
+        '''
         to work properly, this function requires that the pt lies on the line defined by the segment
-        """
+        '''
 
         range_x = self.x_range
         range_y = self.y_range
@@ -653,6 +689,7 @@ class Segment4D(object):
             return True
         else:
             return False
+    """
 
     def scale(self, scale_factor):
         """
@@ -674,6 +711,7 @@ class Segment4D(object):
         return Segment4D(self.start_pt,
                          end_pt)
 
+    '''
     def densify_2d_segment(self, densify_distance):
         """
         Densify a segment by adding additional points
@@ -691,7 +729,7 @@ class Segment4D(object):
         assert length2d > 0.0
 
         vect = self.vector()
-        vers_2d = vect.versor_2d
+        vers_2d = vect.versor_2d()
         generator_vector = vers_2d.scale(densify_distance)
 
         assert generator_vector.len_2d > 0.0
@@ -708,11 +746,12 @@ class Segment4D(object):
         interpolated_line.add_pt(self.end_pt)
 
         return interpolated_line
+    '''
 
 
 class MultiLine4D(object):
     """
-    MultiLine is a list of Line objects
+    MultiLine4D is a list of Line4D objects
     """
 
     def __init__(self, lines_list=None):
@@ -744,7 +783,7 @@ class MultiLine4D(object):
 
         num_points = 0
         for line in self.lines:
-            num_points += line.num_pts
+            num_points += line.num_pts()
 
         return num_points
 
@@ -781,8 +820,8 @@ class MultiLine4D(object):
     def is_continuous(self):
 
         for line_ndx in range(len(self._lines) - 1):
-            if not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[0]) or \
-               not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[-1]):
+            if not self.lines[line_ndx].pts()[-1].coincident(self.lines[line_ndx + 1].pts()[0]) or \
+               not self.lines[line_ndx].pts()[-1].coincident(self.lines[line_ndx + 1].pts()[-1]):
                 return False
 
         return True
@@ -790,15 +829,16 @@ class MultiLine4D(object):
     def is_unidirectional(self):
 
         for line_ndx in range(len(self.lines) - 1):
-            if not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[0]):
+            if not self.lines[line_ndx].pts()[-1].coincident(self.lines[line_ndx + 1].pts()[0]):
                 return False
 
         return True
 
     def to_line(self):
 
-        return Line4D([point for line in self.lines for point in line.pts])
+        return Line4D([point for line in self.lines for point in line.pts()])
 
+    '''
     def crs_project(self, srcCrs, destCrs):
 
         lines = []
@@ -814,6 +854,7 @@ class MultiLine4D(object):
             lDensifiedLines.append(line.densify_2d_line(sample_distance))
 
         return MultiLine4D(lDensifiedLines)
+    '''
 
     def remove_coincident_points(self):
 
@@ -824,67 +865,3 @@ class MultiLine4D(object):
         return MultiLine4D(cleaned_lines)
 
 
-def merge_line(line):
-    """
-    line: a list of (x,y,z) tuples for line
-    """
-
-    line_type, line_geometry = line
-
-    if line_type == 'multiline':
-        path_line = xytuple_l2_to_MultiLine(line_geometry).to_line()
-    elif line_type == 'line':
-        path_line = xytuple_list_to_Line(line_geometry)
-    else:
-        raise Exception("unknown line type")
-
-    # transformed into a single Line
-
-    return MultiLine4D([path_line]).to_line().remove_coincident_points()
-
-
-def merge_lines(lines, progress_ids):
-    """
-    lines: a list of list of (x,y,z) tuples for multilines
-    """
-
-    sorted_line_list = [line for (_, line) in sorted(zip(progress_ids, lines))]
-
-    line_list = []
-    for line in sorted_line_list:
-
-        line_type, line_geometry = line
-
-        if line_type == 'multiline':
-            path_line = xytuple_l2_to_MultiLine(line_geometry).to_line()
-        elif line_type == 'line':
-            path_line = xytuple_list_to_Line(line_geometry)
-        else:
-            continue
-        line_list.append(path_line)  # now a list of Lines
-
-    # now the list of Lines is transformed into a single Line with coincident points removed
-
-    line = MultiLine4D(line_list).to_line().remove_coincident_points()
-
-    return line
-
-
-def xytuple_list_to_Line(
-        xy_list: Tuple[numbers.Real, numbers.Real]
-) -> Line4D:
-
-    return Line4D([Point4D(x, y) for (x, y) in xy_list])
-
-
-def xytuple_l2_to_MultiLine(xytuple_list2):
-
-    # input is a list of list of (x,y) values
-
-    assert len(xytuple_list2) > 0
-    lines_list = []
-    for xy_list in xytuple_list2:
-        assert len(xy_list) > 0
-        lines_list.append(xytuple_list_to_Line(xy_list))
-
-    return MultiLine4D(lines_list)

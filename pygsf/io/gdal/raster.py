@@ -6,8 +6,8 @@ try:
 except ImportError:
     import gdal
 
-from pygsf.georeferenced.rasters import *
-from pygsf.geometries.rasters.geotransform import *
+from ...georeferenced.rasters import *
+from ...geometries.grids.geotransform import *
 
 
 GRID_NULL_VALUE = -99999  # should already be imported but it isn't
@@ -54,7 +54,7 @@ def read_band(
         bnd_ndx: int = 1
 ) -> Tuple[dict, 'np.array']:
     """
-    Read data and metadata of a rasters band based on GDAL.
+    Read data and metadata of a grids band based on GDAL.
 
     :param dataset: the source raster dataset
     :type dataset: gdal.Dataset
@@ -102,7 +102,7 @@ def read_band(
 
     grid_values = band.ReadAsArray()
     if grid_values is None:
-        raise Exception("Unable to read data from rasters")
+        raise Exception("Unable to read data from grids")
 
     # transform data into numpy array
 
@@ -183,7 +183,7 @@ def try_write_esrigrid(
 
     arr = geoarray.level(level_ndx)
     if arr is None:
-        return False, "Array with index {} does not exist".format((level_ndx))
+        return False, f"Array with index {level_ndx} does not exist"
 
     num_rows, num_cols = arr.shape
     llc_x, llc_y = geoarray.level_llc(level_ndx)

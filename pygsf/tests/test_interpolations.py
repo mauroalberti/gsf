@@ -7,9 +7,9 @@ import unittest
 import math
 import numpy as np
 
-from pygsf.mathematics.scalars import areClose
-from pygsf.mathematics.interpolations import scalars_bilin_interp as s_bilinear_interp
-from pygsf.mathematics.arrays import array_bilin_interp as a_bilinear_interp
+from ..mathematics.scalars import areClose
+from ..geometries.grids.interpolations import scalars_bilin_interp as s_bilinear_interp
+from ..geometries.grids.interpolations import array_bilin_interp as a_bilinear_interp
 
 
 class TestBilinearInterpolations(unittest.TestCase):

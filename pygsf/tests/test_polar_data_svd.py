@@ -1,8 +1,8 @@
 
 import numpy as np
 
-from pygsf.orientations.orientations import Plane
-from pygsf.mathematics.arrays import svd
+from ..orientations.orientations import Plane
+from ..mathematics.arrays import svd
 
 
 plane1 = Plane(90, 0)

@@ -1,5 +1,3 @@
-# coding: utf-8
-
 # # Divergence result check
 
 # Theoretical example based on:
@@ -10,7 +8,8 @@
 
 import unittest
 
-from pygsf.geometries.rasters.fields import *
+from ..geometries.grids.fields import *
+from ..geometries.grids.geotransform import GeoTransform
 
 
 # Z transfer functions
@@ -59,17 +58,32 @@ class TestDivergence(unittest.TestCase):
 
         # Vector field x-component
 
-        fx = array_from_function(row_num=rows, col_num=cols, geotransform=gt1, z_transfer_func=z_func_fx)
+        fx = array_from_geotransform_function(
+            row_num=rows,
+            col_num=cols,
+            geotransform=gt1,
+            z_transfer_func=z_func_fx
+        )
 
         # Vector field y-component
 
-        fy = array_from_function(row_num=rows, col_num=cols, geotransform=gt1, z_transfer_func=z_func_fy)
+        fy = array_from_geotransform_function(
+            row_num=rows,
+            col_num=cols,
+            geotransform=gt1,
+            z_transfer_func=z_func_fy
+        )
 
         # Theoretical divergence
 
-        div_theor = array_from_function(row_num=rows, col_num=cols, geotransform=gt1, z_transfer_func=z_func_div)
+        div_theor = array_from_geotransform_function(
+            row_num=rows,
+            col_num=cols,
+            geotransform=gt1,
+            z_transfer_func=z_func_div
+        )
 
-        # Divergence as resulting from pygsf calculation:
+        # Divergence as resulting from calculation:
 
         div_pygsf = divergence(fx, fy, 10, 10)
 
@@ -106,13 +120,13 @@ class TestDivergence(unittest.TestCase):
             inPixWidth=size_x,
             inPixHeight=size_y)
 
-        fx = array_from_function(
+        fx = array_from_geotransform_function(
             row_num=rows,
             col_num=cols,
             geotransform=gt1,
             z_transfer_func=z_func_fx)
 
-        fy = array_from_function(
+        fy = array_from_geotransform_function(
             row_num=rows,
             col_num=cols,
             geotransform=gt1,
@@ -120,7 +134,7 @@ class TestDivergence(unittest.TestCase):
 
         # theoretical divergence
 
-        theor_div = array_from_function(
+        theor_div = array_from_geotransform_function(
             row_num=rows,
             col_num=cols,
             geotransform=gt1,
@@ -168,13 +182,13 @@ class TestDivergence(unittest.TestCase):
             inPixWidth=size_x,
             inPixHeight=size_y)
 
-        fx = array_from_function(
+        fx = array_from_geotransform_function(
             row_num=rows,
             col_num=cols,
             geotransform=gt,
             z_transfer_func=z_func_fx)
 
-        fy = array_from_function(
+        fy = array_from_geotransform_function(
             row_num=rows,
             col_num=cols,
             geotransform=gt,

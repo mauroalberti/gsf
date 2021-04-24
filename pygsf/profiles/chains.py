@@ -3,33 +3,19 @@ from typing import Optional
 
 from array import array
 
-from pygsf.geology.profiles.elements import *
-from pygsf.utils.arrays import *
+from .elements import *
+from ..utils.arrays import *
 
-
-'''
-class ProfileSubpartsSet(list):
-    """
-    Describes subelements (point or segment-type) of a profile
-    """
-
-    def __init__(self,
-        subelements: Optional[List] = None):
-        """
-        """
-
-        if subelements is None:
-            subelements = []
-
-        super(ProfileSubpartsSet, self).__init__(subelements)
-'''
 
 class TopographicProfile:
     """
 
     """
 
-    def __init__(self, s_array: array, z_array: array):
+    def __init__(self,
+                 s_array: array,
+                 z_array: array
+                 ):
 
         check_type(s_array, "Distances array", array)
         if s_array.typecode != 'd':
@@ -67,6 +53,16 @@ class TopographicProfile:
 
         return self._z
 
+    def __repr__(self) -> str:
+        """
+        Representation of a topographic profile instance.
+
+        :return: the textual representation of the instance.
+        :rtype: str.
+        """
+
+        return f"TopographicProfile with {len(self.s_arr())} points\ns = {self.s_arr()},\nz = {self.z_arr()}"
+
     def z(self,
         ndx: numbers.Integral
     ) -> numbers.Real:
@@ -103,7 +99,7 @@ class TopographicProfile:
         :rtype: numbers.Real.
         """
 
-        return min(self._s)
+        return np.nanmin(self._s)
 
     def s_max(self) -> numbers.Real:
         """
@@ -113,7 +109,7 @@ class TopographicProfile:
         :rtype: numbers.Real.
         """
 
-        return max(self._s)
+        return np.nanmax(self._s)
 
     def z_min(self) -> numbers.Real:
         """
@@ -123,7 +119,7 @@ class TopographicProfile:
         :rtype: numbers.Real.
         """
 
-        return min(self._z)
+        return np.nanmin(self._z)
 
     def z_max(self) -> numbers.Real:
         """
@@ -133,7 +129,7 @@ class TopographicProfile:
         :rtype: numbers.Real.
         """
 
-        return max(self._z)
+        return np.nanmax(self._z)
 
     def num_steps(self) -> int:
         """
@@ -199,14 +195,12 @@ class TopographicProfile:
 
     def z_for_s(self,
                 s_val: numbers.Real
-                ) -> Optional[numbers.Integral]:
+                ) -> Optional[numbers.Real]:
         """
         Returns the optional interpolated z value in the z array of the provided s value.
 
         :param s_val: the value to search the index for in the s array
-        :type s_val: numbers.Real
-        :return: the optional index in the s array of the provided value
-        :rtype: Optional[numbers.Integral]
+        :return: the optional interpolated z value
 
         Examples:
           >>> p = TopographicProfile(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
@@ -390,7 +384,7 @@ class TopographicProfile:
         return array('d', map(self.z_for_s, s_subset))
 
 
-class ProfileAttitudes(list):
+class AttitudesProfile(list):
 
     def __init__(self, atts: List[ProfileAttitude]):
 
@@ -398,10 +392,14 @@ class ProfileAttitudes(list):
         for el in atts:
             check_type(el, "Attitude projection", ProfileAttitude)
 
-        super(ProfileAttitudes, self).__init__(atts)
+        super(AttitudesProfile, self).__init__(atts)
 
 
-class ProfilesIntersections(list):
+class IntersectionsProfile(list):
+    """
+    A list of intersections (as arrays with ids).
+
+    """
 
     def __init__(self, intersections: List[ArrayList]):
 
@@ -409,6 +407,6 @@ class ProfilesIntersections(list):
         for el in intersections:
             check_type(el, "Profile intersections", ArrayList)
 
-        super(ProfilesIntersections, self).__init__(intersections)
+        super(IntersectionsProfile, self).__init__(intersections)
 
 

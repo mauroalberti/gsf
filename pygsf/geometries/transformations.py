@@ -1,15 +1,9 @@
 
-from math import radians, tan, sin, cos
-
-from typing import Tuple
-
-import numbers
-
-import numpy as np
-
 from affine import Affine
 
-from pygsf.orientations.orientations import Axis
+from ..mathematics.scalars import *
+from ..mathematics.deformations import *
+from ..orientations.orientations import Axis
 
 
 def gdal_to_affine(
@@ -38,25 +32,40 @@ def forward_transformation(
     return trans * (col, row)
 
 
-def backward_transformation(
-    trans: Affine,
-    x: numbers.Real,
-    y: numbers.Real
-) -> Tuple[numbers.Real, numbers.Real]:
-    """
-    Calculate the row, column values give an affine transformation
-    and the x, y values.
+def simple_shear_horiz_matrix(phi_angle_degr, alpha_angle_degr):
 
-    """
+    phi_angle_rad = radians(phi_angle_degr)
+    alpha_angle_rad = radians(alpha_angle_degr)
 
-    rev = ~trans
-    col, row = rev * (x, y)
-    return row, col
+    gamma = tan(phi_angle_rad)
+    sin_a = sin(alpha_angle_rad)
+    cos_a = cos(alpha_angle_rad)
+
+    return np.array([(1.0 - gamma * sin_a * cos_a, gamma * cos_a * cos_a, 0.0),
+                     (-gamma * sin_a * sin_a, 1.0 + gamma * sin_a * cos_a, 0.0),
+                     (0.0, 0.0, 1.0)])
+
+
+def simple_shear_vert_matrix(
+        phi_angle_degr,
+        alpha_angle_degr
+):
+
+    phi_angle_rad = radians(phi_angle_degr)
+    alpha_angle_rad = radians(alpha_angle_degr)
+
+    gamma = tan(phi_angle_rad)
+    sin_a = sin(alpha_angle_rad)
+    cos_a = cos(alpha_angle_rad)
+
+    return np.array([(1.0, 0.0, gamma * cos_a),
+                     (0.0, 1.0, gamma * sin_a),
+                     (0.0, 0.0, 1.0)])
 
 
 def deformation_matrices(deform_params):
 
-    deformation_matrices = []
+    def_matrices = []
 
     for deform_param in deform_params:
         if deform_param['type'] == 'displacement':
@@ -75,7 +84,7 @@ def deformation_matrices(deform_params):
                                                  deform_param['parameters']['center y'],
                                                  deform_param['parameters']['center z']])}
         elif deform_param['type'] == 'scaling':
-            scal_matr = scaling_matrix(deform_param['parameters']['x factor'],
+            scal_matr = matrScaling(deform_param['parameters']['x factor'],
                                        deform_param['parameters']['y factor'],
                                        deform_param['parameters']['z factor'])
             deformation = {'increment': 'multiplicative',
@@ -102,12 +111,16 @@ def deformation_matrices(deform_params):
         else:
             continue
 
-        deformation_matrices.append(deformation)
+        def_matrices.append(deformation)
 
-    return deformation_matrices
+    return def_matrices
 
 
-def rotation_matrix(rot_axis_trend, rot_axis_plunge, rot_angle):
+def rotation_matrix(
+        rot_axis_trend,
+        rot_axis_plunge,
+        rot_angle
+):
 
     phi = radians(rot_angle)
 
@@ -136,37 +149,3 @@ def rotation_matrix(rot_axis_trend, rot_axis_plunge, rot_angle):
                      (a21, a22, a23),
                      (a31, a32, a33)])
 
-
-def scaling_matrix(scale_factor_x, scale_factor_y, scale_factor_z):
-
-    return np.array([(scale_factor_x, 0.0, 0.0),
-                     (0.0, scale_factor_y, 0.0),
-                     (0.0, 0.0, scale_factor_z)])
-
-
-def simple_shear_horiz_matrix(phi_angle_degr, alpha_angle_degr):
-
-    phi_angle_rad = radians(phi_angle_degr)
-    alpha_angle_rad = radians(alpha_angle_degr)
-
-    gamma = tan(phi_angle_rad)
-    sin_a = sin(alpha_angle_rad)
-    cos_a = cos(alpha_angle_rad)
-
-    return np.array([(1.0 - gamma * sin_a * cos_a, gamma * cos_a * cos_a, 0.0),
-                     (-gamma * sin_a * sin_a, 1.0 + gamma * sin_a * cos_a, 0.0),
-                     (0.0, 0.0, 1.0)])
-
-
-def simple_shear_vert_matrix(phi_angle_degr, alpha_angle_degr):
-
-    phi_angle_rad = radians(phi_angle_degr)
-    alpha_angle_rad = radians(alpha_angle_degr)
-
-    gamma = tan(phi_angle_rad)
-    sin_a = sin(alpha_angle_rad)
-    cos_a = cos(alpha_angle_rad)
-
-    return np.array([(1.0, 0.0, gamma * cos_a),
-                     (0.0, 1.0, gamma * sin_a),
-                     (0.0, 0.0, 1.0)])

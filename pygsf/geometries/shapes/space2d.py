@@ -1,9 +1,19 @@
 
 import functools
+import itertools
 
+from typing import Optional, Union
+
+import abc
 import numbers
 
-from pygsf.geometries.shapes.space3d import *
+from math import fabs
+import random
+from array import array
+
+from ...mathematics.vectors3d import *
+from ...mathematics.vectors2d import *
+from ...utils.types import *
 
 
 class Shape2D(object, metaclass=abc.ABCMeta):
@@ -48,7 +58,7 @@ class Point2D(Shape2D):
             raise Exception("Input values must be integer or float type")
 
         if not all(map(math.isfinite, vals)):
-            raise Exception("Input values must be finite")
+            raise Exception("Input values must be finite (#02)")
 
         self._x = float(x)
         self._y = float(y)
@@ -785,13 +795,28 @@ class Segment2D(Shape2D):
         Returns None if the point is not contained in the segment.
 
         :param point: the point to calculate the optional distance in the segment.
-        :type point: Point2D
         :return: the the optional distance of the point along the segment.
         """
 
         check_type(point, "Input point", Point2D)
 
-        # check_crs(self, point)
+        if not self.contains_pt(point):
+            return None
+
+        return self.start_pt.distance(point)
+
+    def point_signed_s(self,
+               point: Point2D
+               ) -> numbers.Real:
+        """
+        Calculates the signed distance of the point along the segment.
+        A zero value is for a point coinciding with the start point.
+
+        :param point: the point to calculate the optional distance in the segment.
+        :return: the the optional distance of the point along the segment.
+        """
+
+        check_type(point, "Input point", Point2D)
 
         if not self.contains_pt(point):
             return None
@@ -817,12 +842,12 @@ class Segment2D(Shape2D):
             self.start_pt,
             end_pt)
 
-    def as_vector(self) -> Vect:
+    def as_vector(self) -> Vect3D:
         """
         Convert a segment to a vector.
         """
 
-        return Vect(
+        return Vect3D(
             x=self.delta_x(),
             y=self.delta_y()
         )
@@ -1165,6 +1190,7 @@ class Segment2D(Shape2D):
             end_pt=Point2D.random(lower_boundary, upper_boundary)
         )
 
+    '''
     def vertical_plane(self) -> Optional[CPlane3D]:
         """
         Returns the vertical Cartesian plane containing the segment.
@@ -1200,10 +1226,424 @@ class Segment2D(Shape2D):
 
     def vector(self) -> Vect:
 
-        return Vect(self.delta_x(),
+        return Vect3D(self.delta_x(),
                     self.delta_y(),
                     0
         )
+    '''
+
+    def vector(self) -> Vect2D:
+
+        return Vect2D(self.delta_x(),
+                      self.delta_y()
+                      )
+
+
+class PointSegmentCollection2D(list):
+    """
+    Collection of point or segment elements.
+
+    """
+
+    def __init__(
+            self,
+            geoms: Optional[List[Union[Point2D, Segment2D]]] = None,
+            # epsg_code: Optional[numbers.Integral] = None
+    ):
+
+        if geoms is not None:
+
+            for geom in geoms:
+                check_type(geom, "Spatial element", (Point2D, Segment2D))
+
+        """
+        if epsg_code is not None:
+            check_type(
+                var=epsg_code,
+                name="EPSG code",
+                expected_types=numbers.Integral
+            )
+
+        if geoms is not None and epsg_code is not None:
+
+            for geom in geoms:
+                check_epsg(
+                    spatial_element=geom,
+                    epsg_code=epsg_code
+                )
+
+        elif geoms is not None and len(geoms) > 0:
+
+            epsg_code = geoms[0].epsg_code()
+        """
+
+        if geoms is not None and len(geoms) > 0:
+
+            super(PointSegmentCollection2D, self).__init__(geoms)
+
+        else:
+
+            super(PointSegmentCollection2D, self).__init__()
+
+        # self.epsg_code = epsg_code
+
+    def append(self,
+               spatial_element: Union[Point2D, Segment2D]
+               ) -> None:
+
+        check_type(
+            var=spatial_element,
+            name="Spatial element",
+            expected_types=(Point2D, Segment2D)
+        )
+
+        """
+        if self.epsg_code is not None:
+
+            check_epsg(
+                spatial_element=spatial_element,
+                epsg_code=self.epsg_code
+            )
+
+        else:
+
+            self.epsg_code = spatial_element.epsg_code()
+        """
+
+        self.append(spatial_element)
+
+
+def point_or_segment2d(
+        point1: Point2D,
+        point2: Point2D,
+        tol: numbers.Real = PRACTICAL_MIN_DIST
+) -> Union[Point2D, Segment2D]:
+    """
+    Creates a point or segment based on the points distance.
+
+    :param point1: first input point.
+    :type point1: Point.
+    :param point2: second input point.
+    :type point2: Point.
+    :param tol: distance tolerance between the two points.
+    :type tol: numbers.Real.
+    :return: point or segment based on their distance.
+    :rtype: PointOrSegment.
+    :raise: Exception.
+    """
+
+    check_type(point1, "First point", Point2D)
+    check_type(point2, "Second point", Point2D)
+
+    if point1.distance(point2) <= tol:
+        return Point2D(
+            x=(point1.x + point2.x) / 2,
+            y=(point1.y + point2.y) / 2
+        )
+    else:
+        return Segment2D(
+            start_pt=point1,
+            end_pt=point2
+        )
+
+
+def shortest_segment_or_point2d(
+    first_segment: Segment2D,
+    second_segment: Segment2D,
+    tol: numbers.Real = PRACTICAL_MIN_DIST
+) -> Optional[Union[Segment2D, Point2D]]:
+    """
+    TODO: check correct implementation for 2D case, since it derives from 3D implementation.
+
+    Calculates the optional shortest segment - or the intersection point - between two lines represented by two segments.
+
+    Adapted from:
+        http://paulbourke.net/geometry/pointlineplane/
+
+    C code from:
+        http://paulbourke.net/geometry/pointlineplane/lineline.c
+[
+    typedef struct {
+    double x,y,z;
+    } XYZ;
+
+    /*
+    Calculate the line segment PaPb that is the shortest route between
+    two lines P1P2 and P3P4. Calculate also the values of mua and mub where
+      Pa = P1 + mua (P2 - P1)
+      Pb = P3 + mub (P4 - P3)
+    Return FALSE if no solution exists.
+    */
+    int LineLineIntersect(
+    XYZ p1,XYZ p2,XYZ p3,XYZ p4,XYZ *pa,XYZ *pb,
+    double *mua, double *mub)
+    {
+    XYZ p13,p43,p21;
+    double d1343,d4321,d1321,d4343,d2121;
+    double numer,denom;
+
+    p13.x = p1.x - p3.x;
+    p13.y = p1.y - p3.y;
+    p13.z = p1.z - p3.z;
+    p43.x = p4.x - p3.x;
+    p43.y = p4.y - p3.y;
+    p43.z = p4.z - p3.z;
+    if (ABS(p43.x) < EPS && ABS(p43.y) < EPS && ABS(p43.z) < EPS)
+      return(FALSE);
+    p21.x = p2.x - p1.x;
+    p21.y = p2.y - p1.y;
+    p21.z = p2.z - p1.z;
+    if (ABS(p21.x) < EPS && ABS(p21.y) < EPS && ABS(p21.z) < EPS)
+      return(FALSE);
+
+    d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
+    d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
+    d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
+    d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
+    d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
+
+    denom = d2121 * d4343 - d4321 * d4321;
+    if (ABS(denom) < EPS)
+      return(FALSE);
+    numer = d1343 * d4321 - d1321 * d4343;
+
+    *mua = numer / denom;
+    *mub = (d1343 + d4321 * (*mua)) / d4343;
+
+    pa->x = p1.x + *mua * p21.x;
+    pa->y = p1.y + *mua * p21.y;
+    pa->z = p1.z + *mua * p21.z;
+    pb->x = p3.x + *mub * p43.x;
+    pb->y = p3.y + *mub * p43.y;
+    pb->z = p3.z + *mub * p43.z;
+
+    return(TRUE);
+    }
+
+    :param first_segment: the first segment
+    :param second_segment: the second segment
+    :param tol: tolerance value for collapsing a segment into the midpoint.
+    :return: the optional shortest segment or an intersection point.
+    """
+
+    check_type(second_segment, "Second Cartesian line", Segment2D)
+
+    p1 = first_segment.start_pt
+    p2 = first_segment.end_pt
+
+    p3 = second_segment.start_pt
+    p4 = second_segment.end_pt
+
+    p13 = Point2D(
+        x=p1.x - p3.x,
+        y=p1.y - p3.y
+    )
+
+    p43 = Point2D(
+        x=p4.x - p3.x,
+        y=p4.y - p3.y
+    )
+
+    if p43.is_coincident(Point2D(0, 0)):
+        return None
+
+    p21 = Point2D(
+        x=p2.x - p1.x,
+        y=p2.y - p1.y
+    )
+
+    if p21.is_coincident(Point2D(0, 0)):
+        return None
+
+    d1343 = p13.x * p43.x + p13.y * p43.y
+    d4321 = p43.x * p21.x + p43.y * p21.y
+    d1321 = p13.x * p21.x + p13.y * p21.y
+    d4343 = p43.x * p43.x + p43.y * p43.y
+    d2121 = p21.x * p21.x + p21.y * p21.y
+
+    denom = d2121 * d4343 - d4321 * d4321
+
+    if fabs(denom) < MIN_SCALAR_VALUE:
+        return None
+
+    numer = d1343 * d4321 - d1321 * d4343
+
+    mua = numer / denom
+    mub = (d1343 + d4321 * mua) / d4343
+
+    pa = Point2D(
+        x=p1.x + mua * p21.x,
+        y=p1.y + mua * p21.y
+    )
+
+    pb = Point2D(
+        x=p3.x + mub * p43.x,
+        y=p3.y + mub * p43.y
+    )
+
+    intersection = point_or_segment2d(
+        point1=pa,
+        point2=pb,
+        tol=tol
+    )
+
+    return intersection
+
+
+def intersect_segments2d(
+    segment1: Segment2D,
+    segment2: Segment2D,
+    tol: numbers.Real = PRACTICAL_MIN_DIST
+) -> Optional[Union[Point2D, Segment2D]]:
+    """
+    Determines the optional point or segment intersection between the segment pair.
+
+    :param segment1: the first segment
+    :param segment2: the second segment
+    :param tol: the distance tolerance for collapsing a intersection segment into a point
+    :return: the optional point or segment intersection between the segment pair.
+
+    Examples:
+      >>> s2 = Segment2D(Point2D(0,0), Point2D(1,0))
+      >>> s1 = Segment2D(Point2D(0,0), Point2D(1,0))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.0000, 0.0000), end_pt=Point2D(1.0000, 0.0000))
+      >>> s1 = Segment2D(Point2D(-2,0), Point2D(-1,0))
+      >>> intersect_segments2d(s1, s2) is None
+      True
+      >>> s1 = Segment2D(Point2D(-2,0), Point2D(0,0))
+      >>> intersect_segments2d(s1, s2)
+      Point2D(0.0000, 0.0000)
+      >>> s1 = Segment2D(Point2D(-2,0), Point2D(0.5,0.0))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.0000, 0.0000), end_pt=Point2D(0.5000, 0.0000))
+      >>> s1 = Segment2D(Point2D(-2,0), Point2D(1,0))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.0000, 0.0000), end_pt=Point2D(1.0000, 0.0000))
+      >>> s1 = Segment2D(Point2D(-2,0), Point2D(2,0))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.0000, 0.0000), end_pt=Point2D(1.0000, 0.0000))
+      >>> s1 = Segment2D(Point2D(0,0), Point2D(0.5,0))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.0000, 0.0000), end_pt=Point2D(0.5000, 0.0000))
+      >>> s1 = Segment2D(Point2D(0.25,0), Point2D(0.75,0))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.2500, 0.0000), end_pt=Point2D(0.7500, 0.0000))
+      >>> s1 = Segment2D(Point2D(0.25,0), Point2D(1,0))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.2500, 0.0000), end_pt=Point2D(1.0000, 0.0000))
+      >>> s1 = Segment2D(Point2D(0.25,0), Point2D(1.25,0))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.2500, 0.0000), end_pt=Point2D(1.0000, 0.0000))
+      >>> s1 = Segment2D(Point2D(0,0), Point2D(1.25,0))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.0000, 0.0000), end_pt=Point2D(1.0000, 0.0000))
+      >>> s1 = Segment2D(Point2D(1,0), Point2D(1.25,0))
+      >>> intersect_segments2d(s1, s2)
+      Point2D(1.0000, 0.0000)
+      >>> s2 = Segment2D(Point2D(0,0), Point2D(1,1))
+      >>> s1 = Segment2D(Point2D(0.25,0.25), Point2D(0.75,0.75))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.2500, 0.2500), end_pt=Point2D(0.7500, 0.7500))
+      >>> s1 = Segment2D(Point2D(0.25,0.25), Point2D(1.75,1.75))
+      >>> intersect_segments2d(s1, s2)
+      Segment2D(start_pt=Point2D(0.2500, 0.2500), end_pt=Point2D(1.0000, 1.0000))
+      >>> s1 = Segment2D(Point2D(0.25,0.25), Point2D(1.75,0))
+      >>> intersect_segments2d(s1, s2)
+      Point2D(0.2500, 0.2500)
+      >>> s1 = Segment2D(Point2D(0.25,1), Point2D(0.75,0.75))
+      >>> intersect_segments2d(s1, s2)
+      Point2D(0.7500, 0.7500)
+      >>> s2 = Segment2D(Point2D(-1,-1), Point2D(1,1))
+      >>> s1 = Segment2D(Point2D(-1,1), Point2D(1,-1))
+      >>> intersect_segments2d(s1, s2)
+      Point2D(0.0000, 0.0000)
+    """
+
+    check_type(segment1, "First segment", Segment2D)
+    check_type(segment2, "Second segment", Segment2D)
+
+    #check_crs(segment1, segment2)
+
+    s1_startpt_inside = segment1.segment_start_in(segment2)
+    s2_startpt_inside = segment2.segment_start_in(segment1)
+
+    s1_endpt_inside = segment1.segment_end_in(segment2)
+    s2_endpt_inside = segment2.segment_end_in(segment1)
+
+    elements = [s1_startpt_inside, s2_startpt_inside, s1_endpt_inside, s2_endpt_inside]
+
+    if all(elements):
+        return segment1.clone()
+
+    if s1_startpt_inside and s1_endpt_inside:
+        return segment1.clone()
+
+    if s2_startpt_inside and s2_endpt_inside:
+        return segment2.clone()
+
+    if s1_startpt_inside and s2_startpt_inside:
+        return point_or_segment2d(
+            segment1.start_pt,
+            segment2.start_pt,
+            tol=tol
+        )
+
+    if s1_startpt_inside and s2_endpt_inside:
+        return point_or_segment2d(
+            segment1.start_pt,
+            segment2.end_pt,
+            tol=tol
+        )
+
+    if s1_endpt_inside and s2_startpt_inside:
+        return point_or_segment2d(
+            segment2.start_pt,
+            segment1.end_pt,
+            tol=tol
+        )
+
+    if s1_endpt_inside and s2_endpt_inside:
+        return point_or_segment2d(
+            segment1.end_pt,
+            segment2.end_pt,
+            tol=tol
+        )
+
+    if s1_startpt_inside:
+        return segment1.start_pt.clone()
+
+    if s1_endpt_inside:
+        return segment1.end_pt.clone()
+
+    if s2_startpt_inside:
+        return segment2.start_pt.clone()
+
+    if s2_endpt_inside:
+        return segment2.end_pt.clone()
+
+    shortest_segm_or_pt = shortest_segment_or_point2d(
+        segment1,
+        segment2,
+        tol=tol
+    )
+
+    if not shortest_segm_or_pt:
+        return None
+
+    if not isinstance(shortest_segm_or_pt, Point2D):
+        return None
+
+    inters_pt = shortest_segm_or_pt
+
+    if not segment1.contains_pt(inters_pt):
+        return None
+
+    if not segment2.contains_pt(inters_pt):
+        return None
+
+    return inters_pt
+
 
 class Line2D(Shape2D):
     """
@@ -1246,9 +1686,9 @@ class Line2D(Shape2D):
 
         Example:
           >>> Line2D.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
-          Line with 3 points: (1.0000, 3.0000) ... (3.0000, 5.0000)
+          Line2D with 3 points: (1.0000, 3.0000) ... (3.0000, 5.0000)
           >>> Line2D.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
-          Line with 3 points: (1.0000, 3.0000) ... (3.0000, 5.0000)
+          Line2D with 3 points: (1.0000, 3.0000) ... (3.0000, 5.0000)
         """
 
         if not isinstance(xs, array):
@@ -1277,7 +1717,7 @@ class Line2D(Shape2D):
 
         Example:
           >>> Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
-          Line with 3 points: (0.0000, 0.0000) ... (0.0000, 1.0000)
+          Line2D with 3 points: (0.0000, 0.0000) ... (0.0000, 1.0000)
         """
 
         pts = []
@@ -1294,7 +1734,9 @@ class Line2D(Shape2D):
 
         return cls(pts)
 
-    def pt(self, pt_ndx: numbers.Integral) -> Point2D:
+    def pt(self,
+           pt_ndx: numbers.Integral
+           ) -> Point2D:
         """
         Extract the point at index pt_ndx.
 
@@ -1354,7 +1796,7 @@ class Line2D(Shape2D):
                 end_pt=self.pt(ndx + 1)
             )
 
-    def num_pts(self):
+    def num_pts(self) -> numbers.Integral:
 
         return len(self._x)
 
@@ -1400,10 +1842,10 @@ class Line2D(Shape2D):
         else:
             x1, y1 = self.start_pt()
             if num_points == 1:
-                txt = "Line with unique point: {.4f}, {.4f}".format(x1, y1)
+                txt = "Line2D with unique point: {.4f}, {.4f}".format(x1, y1)
             else:
                 x2, y2 = self.end_pt()
-                txt = "Line with {} points: ({:.4f}, {:.4f}) ... ({:.4f}, {:.4f})".format(num_points, x1, y1, x2, y2)
+                txt = "Line2D with {} points: ({:.4f}, {:.4f}) ... ({:.4f}, {:.4f})".format(num_points, x1, y1, x2, y2)
 
         return txt
 
@@ -1470,7 +1912,7 @@ class Line2D(Shape2D):
           0.0
         """
 
-        return min(self._x) if self.num_pts() > 0 else None
+        return np.nanmin(self._x) if self.num_pts() > 0 else None
 
     def x_max(self) -> Optional[numbers.Real]:
         """
@@ -1485,7 +1927,7 @@ class Line2D(Shape2D):
           1.0
         """
 
-        return max(self._x) if self.num_pts() > 0 else None
+        return np.nanmax(self._x) if self.num_pts() > 0 else None
 
     def y_min(self) -> Optional[numbers.Real]:
         """
@@ -1500,7 +1942,7 @@ class Line2D(Shape2D):
           0.0
         """
 
-        return min(self._y) if self.num_pts() > 0 else None
+        return np.nanmin(self._y) if self.num_pts() > 0 else None
 
     def y_max(self) -> Optional[numbers.Real]:
         """
@@ -1515,7 +1957,7 @@ class Line2D(Shape2D):
           1.0
         """
 
-        return max(self._y) if self.num_pts() > 0 else None
+        return np.nanmax(self._y) if self.num_pts() > 0 else None
 
     def remove_coincident_points(self) -> Optional['Line2D']:
         """
@@ -1692,6 +2134,134 @@ class Line2D(Shape2D):
             line.add_pt(line.start_pt())
 
         return line
+
+    def intersectSegment(self,
+        segment: Segment2D
+    ) -> Optional[PointSegmentCollection2D]:
+        """
+        Calculates the possible intersection between the line and a provided segment.
+
+        :param segment: the input segment
+        :return: the optional intersections, points or segments
+        :raise: Exception
+        """
+
+        if self.num_pts() <= 1:
+            return
+
+        check_type(segment, "Input segment", Segment2D)
+
+        intersections = [intersect_segments2d(curr_segment, segment) for curr_segment in self if curr_segment is not None]
+        intersections = list(filter(lambda val: val is not None, intersections))
+        intersections = PointSegmentCollection2D(intersections)
+
+        return intersections
+
+
+class MultiLine2D(object):
+    """
+    MultiLine is a list of Line objects
+    """
+
+    def __init__(self, lines_list=None):
+
+        if lines_list is None:
+            lines_list = []
+        self._lines = lines_list
+
+    @property
+    def lines(self):
+
+        return self._lines
+
+    def add(self, line):
+
+        return MultiLine2D(self.lines + [line])
+
+    def clone(self):
+
+        return MultiLine2D(self.lines)
+
+    @property
+    def num_parts(self):
+
+        return len(self.lines)
+
+    @property
+    def num_points(self):
+
+        num_points = 0
+        for line in self.lines:
+            num_points += line.num_pts
+
+        return num_points
+
+    @property
+    def x_min(self):
+
+        return np.nanmin([line.x_min for line in self.lines])
+
+    @property
+    def x_max(self):
+
+        return np.nanmax([line.x_max for line in self.lines])
+
+    @property
+    def y_min(self):
+
+        return np.nanmin([line.y_min for line in self.lines])
+
+    @property
+    def y_max(self):
+
+        return np.nanmax([line.y_max for line in self.lines])
+
+    def is_continuous(self):
+
+        for line_ndx in range(len(self._lines) - 1):
+            if not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[0]) or \
+               not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[-1]):
+                return False
+
+        return True
+
+    def is_unidirectional(self):
+
+        for line_ndx in range(len(self.lines) - 1):
+            if not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[0]):
+                return False
+
+        return True
+
+    def to_line(self):
+
+        return Line2D([point for line in self.lines for point in line.pts()])
+
+    '''
+    def crs_project(self, srcCrs, destCrs):
+
+        lines = []
+        for line in self.lines:
+            lines.append(line.crs_project(srcCrs, destCrs))
+
+        return MultiLine4D(lines)
+    '''
+
+    def densify_2d_multiline(self, sample_distance):
+
+        lDensifiedLines = []
+        for line in self.lines:
+            lDensifiedLines.append(line.densify_2d_line(sample_distance))
+
+        return MultiLine2D(lDensifiedLines)
+
+    def remove_coincident_points(self):
+
+        cleaned_lines = []
+        for line in self.lines:
+            cleaned_lines.append(line.remove_coincident_points())
+
+        return MultiLine2D(cleaned_lines)
 
 
 class Ellipse2D(Shape2D):
@@ -1886,7 +2456,88 @@ def _(
     )
 
 
+def xytuple_list_to_line2d(
+        xy_list: Tuple[numbers.Real, numbers.Real]
+) -> Line2D:
+
+    #print(f"xy_list -> {type(xy_list)} -> {xy_list}")
+    result = Line2D([Point2D(x, y) for (x, y) in xy_list])
+    #print(f"result -> {type(result)} -> {result}")
+    #print(f"DEBUG: returning from 'xytuple_list_to_Line' {result}")
+    return result
+
+
+def xytuple_l2_to_multiline2d(
+        xytuple_list2
+) -> MultiLine2D:
+
+    # input is a list of list of (x,y) values
+
+    #assert len(xytuple_list2) > 0
+    lines_list = []
+    for xy_list in xytuple_list2:
+        #assert len(xy_list) > 0
+        lines_list.append(xytuple_list_to_line2d(xy_list))
+
+    return MultiLine2D(lines_list)
+
+
+def merge_line2d(
+        line
+) -> Line2D:
+    """
+    line: a list of (x,y) tuples for line
+    """
+
+    line_type, line_geometry = line
+
+    if line_type == 'multiline':
+        path_line = xytuple_l2_to_multiline2d(line_geometry).to_line()
+    elif line_type == 'line':
+        path_line = xytuple_list_to_line2d(line_geometry)
+    else:
+        raise Exception("unknown line type")
+
+    # transformed into a single Line
+
+    result = path_line.remove_coincident_points()
+
+    return result
+
+
+def merge_lines2d(
+        lines: List[Line2D],
+        progress_ids
+):
+    """
+    lines: a list of list of (x,y,z) tuples for multilines
+    """
+
+    sorted_line_list = [line for (_, line) in sorted(zip(progress_ids, lines))]
+
+    line_list = []
+    for line in sorted_line_list:
+
+        line_type, line_geometry = line
+
+        if line_type == 'multiline':
+            path_line = xytuple_l2_to_multiline2d(line_geometry).to_line()
+        elif line_type == 'line':
+            path_line = xytuple_list_to_line2d(line_geometry)
+        else:
+            continue
+        line_list.append(path_line)  # now a list of Lines
+
+    # now the list of Lines is transformed into a single Line with coincident points removed
+
+    line = MultiLine2D(line_list).to_line().remove_coincident_points()
+
+    return line
+
+
+
 if __name__ == "__main__":
 
     import doctest
     doctest.testmod()
+
