@@ -473,7 +473,7 @@ class GeoLines3D(list):
 
         intersections = []
         for line in self:
-            intersections.extend(line.intersectSegment(segment))
+            intersections.extend(line.intersect_segment(segment))
 
         return intersections
 
@@ -704,7 +704,7 @@ class GeoMultiLine3D(object):
 
         intersections = []
         for line in self:
-            intersections.extend(line.intersectSegment(segment))
+            intersections.extend(line.intersect_segment(segment))
 
         return intersections
 

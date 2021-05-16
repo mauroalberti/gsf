@@ -388,7 +388,7 @@ class GeoLines2D(list):
 
         intersections = []
         for line in self:
-            intersections.extend(line.intersectSegment(segment))
+            intersections.extend(line.intersect_segment(segment))
 
         return intersections
 
@@ -399,9 +399,9 @@ class GeoMultiLine2D(object):
     """
 
     def __init__(self,
-        lines: Optional[List[Line2D]] = None,
-        epsg_cd: numbers.Integral = -1
-        ):
+                 lines: Optional[List[Line2D]] = None,
+                 epsg_cd: numbers.Integral = -1
+                 ):
 
         if lines is None:
             lines = []
@@ -601,7 +601,7 @@ class GeoMultiLine2D(object):
 
         intersections = []
         for line in self:
-            intersections.extend(line.intersectSegment(segment))
+            intersections.extend(line.intersect_segment(segment))
 
         return intersections
 

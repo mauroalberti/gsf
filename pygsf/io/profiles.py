@@ -10,7 +10,7 @@ from qgis.core import QgsRasterLayer
 
 import numpy as np
 
-from ..profiles.geoprofiles import GeoProfile_
+from ..geometries.shapes.collections import *
 from ..profiles.sets import ProfileElevations
 
 from ..geometries.shapes.space2d import Line2D
@@ -250,14 +250,14 @@ class GPXElevationUsage(Enum):
     ONLY_TO_USE = auto()
 
 
-def try_prepare_single_topo_profiles(
+def try_prepare_grids_profile(
     profile_line: Union[Line2D, Line3D],
     track_source: TrackSource,
     gpx_elevation_usage: GPXElevationUsage,
-    selected_dems: List,
-    selected_dem_parameters: List,
+    selected_grids: List,
+    selected_grids_parameters: List,
     gpx_track_name: str
-    ) -> Tuple[bool, Union[str, GeoProfile_]]:
+    ) -> Tuple[bool, Union[str, NamedLines]]:
 
     pt_num_threshold = 1e4
 
@@ -269,8 +269,8 @@ def try_prepare_single_topo_profiles(
            gpx_elevation_usage != GPXElevationUsage.ONLY_TO_USE:
 
             sample_distance = get_min_dem_resolution(
-                selected_dems,
-                selected_dem_parameters
+                selected_grids,
+                selected_grids_parameters
             )
 
             # check total number of points in line(s) to create
@@ -286,11 +286,11 @@ def try_prepare_single_topo_profiles(
             if estimated_total_num_pts > pt_num_threshold:
                 return False, f"There are {estimated_total_num_pts} estimated points (limit is {pt_num_threshold}) in profile(s) to create.\nTry increasing sample distance value"
 
-            dem_named_3dlines = topo_lines_from_dems(
+            dem_named_3dlines = lines3dnamed_from_dems(
                 source_profile_line=profile_line,
                 sample_distance=sample_distance,
-                selected_dems=selected_dems,
-                selected_dem_parameters=selected_dem_parameters
+                selected_dems=selected_grids,
+                selected_dem_parameters=selected_grids_parameters
             )
 
             if dem_named_3dlines is None:
@@ -311,9 +311,6 @@ def try_prepare_single_topo_profiles(
 
             gpx_named_3dlines = None
 
-        #print(f"DEBUG: profile line: {profile_line}")
-        #print(f"DEBUG: profile line num points: {profile_line.num_pts}")
-
         if dem_named_3dlines is None and gpx_named_3dlines is None:
             named_3dlines = None
         elif dem_named_3dlines is None:
@@ -326,18 +323,16 @@ def try_prepare_single_topo_profiles(
         if named_3dlines is None:
             return False, "Unable to create profiles"
 
-        geoprofile = GeoProfile_()
-        geoprofile.original_line = profile_line
-        geoprofile.set_topo_profiles(named_3dlines)
+        grids_profile = named_3dlines
 
-        return True, geoprofile
+        return True, grids_profile
 
     except Exception as e:
 
         return False, str(e)
 
 
-def topo_lines_from_dems(
+def lines3dnamed_from_dems(
         source_profile_line: Line2D,
         sample_distance: numbers.Real,
         selected_dems: List,
@@ -366,21 +361,5 @@ def topo_lines_from_dems(
         )
 
         lines3d.append((dem.name(), line3d))
-
-    """
-    # setup topoprofiles properties
-
-    topo_profiles = ProfileElevations()
-
-    topo_profiles.x_array = np.asarray(resampled_line.x_array)
-    topo_profiles.y_array = np.asarray(resampled_line.y_array)
-    topo_profiles.surface_names = [dem.name() for dem in selected_dems]
-    topo_profiles.incremental_length_2d = np.asarray(resampled_line.incr_len_2d)
-    topo_profiles.incremental_length_3d = [np.asarray(cl3dt.incr_len_3d) for cl3dt in lines3d]
-    topo_profiles.z_array = [cl3dt.z_array for cl3dt in lines3d]
-    topo_profiles.dir_slopes = [np.asarray(cl3dt.dir_slopes) for cl3dt in lines3d]
-    topo_profiles.dem_params = [DEMParams(dem, params) for (dem, params) in
-                                zip(selected_dems, selected_dem_parameters)]
-    """
 
     return lines3d

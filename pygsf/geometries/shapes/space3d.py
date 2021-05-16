@@ -12,6 +12,7 @@ from copy import copy
 import numbers
 from array import array
 
+from .abstract import Point, Segment, Line
 from .space2d import Point2D, Segment2D
 from ...orientations.orientations import *
 from ...mathematics.statistics import *
@@ -19,25 +20,7 @@ from ...mathematics.quaternions import *
 from ...utils.types import check_type
 
 
-
-class Shape3D(object, metaclass=abc.ABCMeta):
-
-    @abc.abstractmethod
-    def area(self):
-        """Calculate shape area"""
-
-    @abc.abstractmethod
-    def length(self):
-        """Calculate shape area"""
-
-    '''
-    @abc.abstractmethod
-    def clone(self):
-        """Create a clone of the shape"""
-    '''
-
-
-class Point3D:
+class Point3D(Point):
     """
     Cartesian point.
     Dimensions: 3D
@@ -737,7 +720,7 @@ def pack_to_points(
     return pts
 
 
-class Segment3D:
+class Segment3D(Segment):
     """
     Segment is a geometric object defined by the straight line between
     two vertices.
@@ -785,7 +768,7 @@ class Segment3D:
 
     @classmethod
     def from2D(cls,
-        segment: Segment2D):
+               segment: Segment2D):
 
         check_type(segment, "Input segment", Segment2D)
 
@@ -1717,27 +1700,6 @@ class PointSegmentCollection3D(list):
             for geom in geoms:
                 check_type(geom, "Spatial element", (Point3D, Segment3D))
 
-        """
-        if epsg_code is not None:
-            check_type(
-                var=epsg_code,
-                name="EPSG code",
-                expected_types=numbers.Integral
-            )
-
-        if geoms is not None and epsg_code is not None:
-
-            for geom in geoms:
-                check_epsg(
-                    spatial_element=geom,
-                    epsg_code=epsg_code
-                )
-
-        elif geoms is not None and len(geoms) > 0:
-
-            epsg_code = geoms[0].epsg_code()
-        """
-
         if geoms is not None and len(geoms) > 0:
 
             super(PointSegmentCollection3D, self).__init__(geoms)
@@ -1745,8 +1707,6 @@ class PointSegmentCollection3D(list):
         else:
 
             super(PointSegmentCollection3D, self).__init__()
-
-        # self.epsg_code = epsg_code
 
     def append(self,
                spatial_element: Union[Point3D, Segment3D]
@@ -1774,16 +1734,14 @@ class PointSegmentCollection3D(list):
         self.append(spatial_element)
 
 
-class Line3D:
+class Line3D(Line):
     """
     A line.
     """
 
     def __init__(self,
-                 pts: Optional[List[Point3D]] = None):
-        """
-
-        """
+                 pts: Optional[List[Point3D]] = None,
+                 name: str = ''):
 
         if pts is not None:
 
@@ -1791,11 +1749,13 @@ class Line3D:
             for el in pts:
                 check_type(el, "Point3D", Point3D)
 
-            self._pts = pts
-
         else:
 
-            self._pts = []
+            pts = []
+
+        super(Line3D, self).__init__(pts)
+
+        self.name = name
 
     def __repr__(self) -> str:
         """
@@ -1819,42 +1779,59 @@ class Line3D:
 
         return txt
 
-    def pts(self):
-        return self._pts
-
-    def pt(self,
-           ndx: numbers.Integral):
-        """
-
-        """
-
-        return self._pts[ndx]
-
-    def start_pt(self) -> Optional[Point3D]:
-        """
-        Return the first point of a Line or None when no points.
-
-        :return: the first point or None.
-        """
-
-        return self.pt(0) if self.num_pts() > 0 else None
-
-    def end_pt(self) -> Optional[Point3D]:
-        """
-        Return the last point of a Line or None when no points.
-
-        :return: the last point or None.
-        """
-
-        return self.pt(-1) if self.num_pts() > 0 else None
-
     def add_pt(self,
                pt: Point3D):
+        """
+        In-place transformation of the original Line2D instance
+        by adding a new point at the end.
 
-        self._pts.append(pt)
+        :param pt: the point to add
+        """
 
-    def num_pts(self):
-        return len(self._pts)
+        check_type(pt, "Point", Point3D)
+        self.append(pt)
+
+    def add_pts(self, pt_list: List[Point3D]):
+        """
+        In-place transformation of the original Line instance
+        by adding a new set of points at the end.
+
+        :param pt_list: list of Points.
+        """
+
+        for pt in pt_list:
+            self.add_pt(pt)
+
+    def z_list(self) -> List[numbers.Real]:
+
+        return list(map(lambda pt: pt.z, self))
+
+    def z_array(self):
+
+        return np.asarray(self.z_list())
+
+    def z_min(self):
+        return np.nanmin(self.z_array())
+
+    def z_max(self):
+        return np.nanmax(self.z_array())
+
+    def z_mean(self):
+
+        return np.nanmean(self.z_array())
+
+    def z_var(self):
+
+        return np.nanvar(self.z_array())
+
+    def z_std(self):
+
+        return np.nanstd(self.z_array())
+
+    def as_segment(self) -> Segment3D:
+        """Return the segment defined by line start and end points"""
+
+        return Segment3D(self.start_pt(), self.end_pt())
 
     def segment(self,
         ndx: numbers.Integral
@@ -1865,7 +1842,7 @@ class Line3D:
         :param ndx: the segment index.
         :type ndx: numbers.Integral
         :return: the optional segment
-        :rtype: Optional[Segment]
+        :rtype: Optional[Segment2D]
         """
 
         start_pt = self.pt(ndx)
@@ -1879,55 +1856,6 @@ class Line3D:
                 end_pt=self.pt(ndx + 1)
             )
 
-    def __iter__(self):
-        """
-        Return each element of a Line, i.e., its segments.
-        """
-
-        return (self.segment(i) for i in range(self.num_pts()-1))
-
-    def x_list(self) -> List[numbers.Real]:
-
-        return list(map(lambda pt: pt.x, self._pts))
-
-    def y_list(self) -> List[numbers.Real]:
-
-        return list(map(lambda pt: pt.y, self._pts))
-
-    def x_array(self):
-
-        return np.asarray([pt.x for pt in self.pts()])
-
-    def y_array(self):
-
-        return np.asarray([pt.y for pt in self.pts()])
-
-    def z_array(self):
-
-        return np.asarray([pt.z for pt in self.pts()])
-
-    def xy_arrays(self):
-
-        return self.x_array, self.y_array
-
-    def x_min(self):
-        return np.nanmin(list(map(lambda pt: pt.x, self._pts)))
-
-    def x_max(self):
-        return np.nanmax(list(map(lambda pt: pt.x, self._pts)))
-
-    def y_min(self):
-        return np.nanmin(list(map(lambda pt: pt.y, self._pts)))
-
-    def y_max(self):
-        return np.nanmax(list(map(lambda pt: pt.y, self._pts)))
-
-    def z_min(self):
-        return np.nanmin(list(map(lambda pt: pt.z, self._pts)))
-
-    def z_max(self):
-        return np.nanmax(list(map(lambda pt: pt.z, self._pts)))
-
     def as_segments(self):
         """
         Convert to a list of segments.
@@ -1935,38 +1863,11 @@ class Line3D:
         :return: list of Segment objects
         """
 
-        pts_pairs = zip(self.pts()[:-1], self.pts()[1:])
+        pts_pairs = zip(self[:-1], self[1:])
 
         segments = [Segment3D(pt_a, pt_b) for (pt_a, pt_b) in pts_pairs]
 
         return segments
-
-    '''
-    def densify_2d_line(self, sample_distance) -> 'Points':
-        """
-        Densify a line into a new line instance,
-        using the provided sample distance.
-        Returned Line instance has coincident successive points removed.
-
-        :param sample_distance: numbers.Real
-        :return: Line instance
-        """
-
-        if sample_distance <= 0.0:
-            raise Exception(f"Sample distance must be positive. {sample_distance} received")
-
-        segments = self.as_segments()
-
-        densified_line_list = [segment.densify2d_asLine(sample_distance) for segment in segments]
-
-        densifyied_multiline = MultiLine(densified_line_list)
-
-        densifyied_line = densifyied_multiline.to_line()
-
-        densifyied_line_wo_coinc_pts = densifyied_line.remove_coincident_points()
-
-        return densifyied_line_wo_coinc_pts
-    '''
 
     def join(self, another) -> 'Line3D':
         """
@@ -1975,7 +1876,7 @@ class Line3D:
         and orientation mismatches between the two original lines
         """
 
-        return Line3D(self.pts() + another.pts())
+        return Line3D(self + another)
 
     def length(self) -> numbers.Real:
 
@@ -2026,37 +1927,16 @@ class Line3D:
 
         return step_length_list
 
-    '''
-    def step_lengths_2d(self) -> List[numbers.Real]:
-        """
-        Returns the point-to-point 2D distances.
-        It is the distance between a point and its previous one.
-        The list has the same length as the source point list.
+    def incremental_length_2d(self) -> np.ndarray:
 
-        :return: the individual 2D segment lengths.
-        :rtype: list of floats.
-
-        Examples:
-        """
-
-        step_length_list = [0.0]
-        for ndx in range(1, self.num_pts()):
-            length = self.pt(ndx).dist2DWith(self.pt(ndx - 1))
-            step_length_list.append(length)
-
-        return step_length_list
-    '''
-
-    def incremental_length_2d(self):
-
-        lIncrementalLengths = []
+        incremental_lengths = []
         length = 0.0
-        lIncrementalLengths.append(length)
+        incremental_lengths.append(length)
         for ndx in range(self.num_pts() - 1):
-            length += self.pts()[ndx].dist_2d(self.pts()[ndx + 1])
-            lIncrementalLengths.append(length)
+            length += self[ndx].dist_2d(self[ndx + 1])
+            incremental_lengths.append(length)
 
-        return np.asarray(lIncrementalLengths)
+        return np.asarray(incremental_lengths)
 
     def incremental_length_3d(self) -> List[numbers.Real]:
         """
@@ -2068,18 +1948,6 @@ class Line3D:
 
         return list(itertools.accumulate(self.step_lengths_3d()))
 
-    '''
-    def incremental_length_2d(self) -> List[numbers.Real]:
-        """
-        Returns the accumulated 2D segment lengths.
-
-        :return: accumulated 2D segment lenghts
-        :rtype: list of floats.
-        """
-
-        return list(itertools.accumulate(self.step_lengths_2d()))
-    '''
-
     def reversed(self) -> 'Line3D':
         """
         Return a Line instance with reversed point list.
@@ -2088,7 +1956,7 @@ class Line3D:
         :rtype: Line.
         """
 
-        pts = [pt.clone() for pt in self.pts()]
+        pts = [pt.clone() for pt in self]
         pts.reverse()
 
         return Line3D(
@@ -2106,16 +1974,16 @@ class Line3D:
         :rtype: List[Optional[numbers.Real]].
         """
 
-        lSlopes = []
+        slopes = []
 
         segments = self.as_segments()
         for segment in segments:
             vector = segment.vector()
-            lSlopes.append(-vector.slope_degr())  # minus because vector convention is positive downward
+            slopes.append(-vector.slope_degr())  # minus because vector convention is positive downward
 
-        lSlopes.append(None)  # None refers to the slope of the Segment starting with the last point
+        slopes.append(None)  # None refers to the slope of the Segment starting with the last point
 
-        return lSlopes
+        return slopes
 
     def slopes_stats(self) -> Dict:
         """
@@ -2132,18 +2000,18 @@ class Line3D:
 
     def dir_slopes(self) -> np.ndarray:
 
-        lSlopes = []
+        slopes = []
         for ndx in range(self.num_pts() - 1):
-            segment_start_pt = self.pts()[ndx]
-            segment_end_pt = self.pts()[ndx + 1]
+            segment_start_pt = self[ndx]
+            segment_end_pt = self[ndx + 1]
             if np.isnan(segment_start_pt.z) or np.isnan(segment_end_pt.z):
-                lSlopes.append(np.nan)
+                slopes.append(np.nan)
             else:
-                vector = Segment3D(self.pts()[ndx], self.pts()[ndx + 1]).vector()
-                lSlopes.append(-vector.slope_degr())  # minus because vector convention is positive downward
-        lSlopes.append(np.nan)  # slope value for last point is unknown
+                vector = Segment3D(self[ndx], self[ndx + 1]).vector()
+                slopes.append(-vector.slope_degr())  # minus because vector convention is positive downward
+        slopes.append(np.nan)  # slope value for last point is unknown
 
-        return np.asarray(lSlopes)
+        return np.asarray(slopes)
 
     def absolute_slopes(self) -> np.ndarray:
 
@@ -2169,17 +2037,6 @@ class Line3D:
 
         return self.pt(-1).distance(self.pt(0))
 
-    '''
-    def extremes_distance_2d(self) -> numbers.Real:
-        """
-        Calculate the 2D distance between start and end points.
-
-        :return: the 2D distance between start and end points
-        """
-
-        return self.end_pt().dist2DWith(self.start_pt())
-    '''
-
     def is_closed(self,
                   tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
                   ) -> bool:
@@ -2194,20 +2051,6 @@ class Line3D:
 
         return self.pt(-1).is_coincident(self.pt(0), tolerance=tolerance)
 
-    '''
-    def isClosed_2d(self,
-        tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
-    ) -> bool:
-        """
-        Determine if the line is 2D-closed.
-
-        :param tolerance: the tolerance for considering the line closed
-        :return: whether the line is to be considered 2D-closed
-        """
-
-        return self.end_pt().isCoinc2D(self.start_pt(), tolerance=tolerance)
-    '''
-
     def walk_backward(self) -> 'Line3D':
         """
         Create a new line by walking the line backward from the last point up to the first and thus closing it.
@@ -2216,7 +2059,7 @@ class Line3D:
         :rtype: 'Line'
         """
 
-        return Line3D(self.pts() + self.reversed()[1:])
+        return Line3D(self + self.reversed()[1:])
 
     def clone(self) -> 'Line3D':
         """
@@ -2226,25 +2069,10 @@ class Line3D:
         :rtype: Line3D
         """
 
-        return Line3D(self.pts())
-
-    '''
-    def close_2d(self) -> 'Points':
-        """
-        Return a line that is 2D-closed.
-
-        :return: a 2D-closed line
-        :rtype: Points
-        """
-
-        line = self.clone()
-
-        if not line.isClosed_2d():
-
-            line.add_pt(line.start_pt())
-
-        return line
-    '''
+        return Line3D(
+            pts=[pt.clone() for pt in self],
+            name=self.name
+        )
 
     def close_3d(self) -> 'Line3D':
         """
@@ -2283,9 +2111,9 @@ class Line3D:
 
         return new_line
 
-    def intersectSegment(self,
-        segment: Segment3D
-    ) -> Optional[PointSegmentCollection3D]:
+    def intersect_segment(self,
+                          segment: Segment3D
+                          ) -> Optional[PointSegmentCollection3D]:
         """
         Calculates the possible intersection between the line and a provided segment.
 
@@ -2881,7 +2709,7 @@ class CPlane3D:
         :param another: the second cartesian plane
         :type another: CPlane3D
         :return: the optional instersection point
-        :rtype: Optional[Point]
+        :rtype: Optional[Point2D]
         :raise: Exception
 
         Examples:

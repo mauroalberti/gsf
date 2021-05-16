@@ -2,11 +2,14 @@
 from math import sqrt
 import datetime
 
+
+from .abstract import Point, Segment, Line
 from ...mathematics.vectors3d import *
 from .space2d import Point2D, Line2D
+from .space3d import Line3D
 
 
-class Point4D(object):
+class Point4D(Point):
     """
     Cartesian point.
     Dimensions: 3D + time
@@ -283,264 +286,7 @@ class Point4D(object):
             return np.nan
 
 
-class Line4D(object):
-    """
-    A list of Point objects.
-    """
-
-    def __init__(self,
-                 pts: Optional[List[Point4D]] = None,
-                 name: str = ''
-                 ):
-
-        if pts is None:
-            pts = []
-        self._pts = pts
-        self._name = name
-
-    def pts(self):
-
-        return self._pts
-
-    def num_pts(self):
-
-        return len(self.pts())
-
-    @property
-    def name(self):
-        return self._name
-
-    def clone(self):
-
-        return Line4D(
-            pts=[pt.clone() for pt in self.pts()],
-            name=self.name
-        )
-
-    def add_pt(self, pt):
-        """
-        In-place transformation of the original Line instance
-        by adding a new point at the end.
-
-        :param pt: Point
-        :return: self
-        """
-
-        self.pts().append(pt)
-
-    def add_pts(self, pt_list):
-        """
-        In-place transformation of the original Line instance
-        by adding a new set of points at the end.
-
-        :param pt_list: list
-        :return: self
-        """
-
-        self._pts += pt_list
-
-    def x_array(self):
-
-        return np.asarray([pt.x for pt in self.pts()])
-
-    def y_array(self):
-
-        return np.asarray([pt.y for pt in self.pts()])
-
-    def z_array(self):
-
-        return np.asarray([pt.z for pt in self.pts()])
-
-    def xy_arrays(self):
-
-        return self.x_array, self.y_array
-
-    def x_min(self):
-
-        return np.nanmin(self.x_array())
-
-    def x_max(self):
-
-        return np.nanmax(self.x_array())
-
-    def y_min(self):
-
-        return np.nanmin(self.y_array())
-
-    def y_max(self):
-
-        return np.nanmax(self.y_array())
-
-    def z_min(self):
-
-        return np.nanmin(self.z_array())
-
-    def z_max(self):
-
-        return np.nanmax(self.z_array())
-
-    def z_mean(self):
-
-        return np.nanmean(self.z_array())
-
-    def z_var(self):
-
-        return np.nanvar(self.z_array())
-
-    def z_std(self):
-
-        return np.nanstd(self.z_array())
-
-    def remove_coincident_points(self):
-        """
-        Remove coincident successive points
-
-        :return: Line instance
-        """
-
-        assert self.num_pts() >= 2
-
-        new_line = Line4D(self.pts()[:1])
-        for ndx in range(1, self.num_pts()):
-            if not self.pts()[ndx].coincident(new_line.pts()[-1]):
-                new_line.add_pt(self.pts()[ndx])
-
-        return new_line
-
-    def as_segments(self):
-        """
-        Convert to a list of segments.
-
-        :return: list of Segment objects
-        """
-
-        pts_pairs = list(zip(self.pts()[:-1], self.pts()[1:]))
-
-        segments = [Segment4D(pt_a, pt_b) for (pt_a, pt_b) in pts_pairs]
-
-        return segments
-
-    def as_line2d(self) -> Line2D:
-
-        pts2d = []
-        for pt4d in self.pts():
-            x, y, _, _ = pt4d
-            pts2d.append(
-                Point2D(
-                    x=x,
-                    y=y
-                )
-            )
-
-        return Line2D(pts=pts2d)
-
-    '''
-    def densify_2d_line(self, sample_distance):
-        """
-        Densify a line into a new line instance,
-        using the provided sample distance.
-        Returned Line instance has coincident successive points removed.
-
-        :param sample_distance: float
-        :return: Line instance
-        """
-
-        assert sample_distance > 0.0
-
-        segments = self.as_segments()
-
-        densified_line_list = [segment.densify_2d_segment(sample_distance) for segment in segments]
-
-        assert len(densified_line_list) > 0
-
-        densifyied_multiline = MultiLine4D(densified_line_list)
-
-        densifyied_line = densifyied_multiline.to_line()
-
-        densifyied_line_wo_coinc_pts = densifyied_line.remove_coincident_points()
-
-        return densifyied_line_wo_coinc_pts
-    '''
-
-    def join(self, another):
-        """
-        Joins together two lines and returns the join as a new line without point changes,
-        with possible overlapping points
-        and orientation mismatches between the two original lines
-        """
-
-        return Line4D(self.pts() + another.pts())
-
-    def length_3d(self):
-
-        length = 0.0
-        for ndx in range(self.num_pts() - 1):
-            length += self.pts()[ndx].distance(self.pts()[ndx + 1])
-        return length
-
-    def length_2d(self):
-
-        length = 0.0
-        for ndx in range(self.num_pts() - 1):
-            length += self.pts()[ndx].dist_2d(self.pts()[ndx + 1])
-        return length
-
-    def incremental_length_3d(self):
-
-        incremental_length_list = []
-        length = 0.0
-        incremental_length_list.append(length)
-        for ndx in range(self.num_pts() - 1):
-            length += self.pts()[ndx].distance(self.pts()[ndx + 1])
-            incremental_length_list.append(length)
-
-        return np.asarray(incremental_length_list)
-
-    def incremental_length_2d(self):
-
-        lIncrementalLengths = []
-        length = 0.0
-        lIncrementalLengths.append(length)
-        for ndx in range(self.num_pts() - 1):
-            length += self.pts()[ndx].dist_2d(self.pts()[ndx + 1])
-            lIncrementalLengths.append(length)
-
-        return np.asarray(lIncrementalLengths)
-
-    def invert_direction(self):
-
-        new_line = self.clone()
-        new_line.pts().reverse()  # in-place operation on new_line
-
-        return new_line
-
-    def dir_slopes(self) -> np.ndarray:
-
-        lSlopes = []
-        for ndx in range(self.num_pts() - 1):
-            vector = Segment4D(self.pts()[ndx], self.pts()[ndx + 1]).vector()
-            lSlopes.append(-vector.slope_degr())  # minus because vector convention is positive downward
-        lSlopes.append(np.nan)  # slope value for last point is unknown
-
-        return np.asarray(lSlopes)
-
-    def absolute_slopes(self) -> np.ndarray:
-
-        return np.asarray(list(map(abs, self.dir_slopes())))
-
-    '''
-    def crs_project(self, srcCrs, destCrs):
-
-        points = []
-        for point in self.pts():
-            destCrs_point = project_point(point, srcCrs, destCrs)
-            points.append(destCrs_point)
-
-        return Line4D(points)
-    '''
-
-
-class Segment4D(object):
+class Segment4D(Segment):
     """
     Segment is a geometric object defined by a straight line between
     two points.
@@ -747,6 +493,154 @@ class Segment4D(object):
 
         return interpolated_line
     '''
+
+
+class Line4D(Line3D):
+    """
+    A list of Point objects.
+    """
+
+    def __init__(self,
+                 pts: Optional[List[Point4D]] = None,
+                 name: str = ''
+                 ):
+
+        if pts is not None:
+
+            check_type(pts, "List", list)
+            for el in pts:
+                check_type(el, "Point4D", Point4D)
+
+        else:
+
+            pts = []
+
+        super(Line4D, self).__init__(pts)
+
+        self.name = name
+
+    def clone(self):
+
+        return Line4D(
+            pts=[pt.clone() for pt in self],
+            name=self.name
+        )
+
+    def add_pt(self, pt: Point4D):
+        """
+        In-place transformation of the original Line2D instance
+        by adding a new point at the end.
+
+        :param pt: the point to add
+        """
+
+        check_type(pt, "Point", Point4D)
+        self.append(pt)
+
+    def add_pts(self, pt_list: List[Point4D]):
+        """
+        In-place transformation of the original Line instance
+        by adding a new set of points at the end.
+
+        :param pt_list: list of Points.
+        """
+
+        for pt in pt_list:
+            self.add_pt(pt)
+
+    def as_segment(self) -> Segment4D:
+        """Return the segment defined by line start and end points"""
+
+        return Segment4D(self.start_pt(), self.end_pt())
+
+    def as_segments(self):
+        """
+        Convert to a list of segments.
+
+        :return: list of Segment objects
+        """
+
+        pts_pairs = list(zip(self[:-1], self[1:]))
+
+        segments = [Segment4D(pt_a, pt_b) for (pt_a, pt_b) in pts_pairs]
+
+        return segments
+
+    def as_line2d(self) -> Line2D:
+
+        pts2d = []
+        for pt4d in self:
+            x, y, _, _ = pt4d
+            pts2d.append(
+                Point2D(
+                    x=x,
+                    y=y
+                )
+            )
+
+        return Line2D(pts=pts2d)
+
+    def join(self, another):
+        """
+        Joins together two lines and returns the join as a new line without point changes,
+        with possible overlapping points
+        and orientation mismatches between the two original lines
+        """
+
+        return Line4D(self + another)
+
+    def length_2d(self):
+
+        length = 0.0
+        for ndx in range(self.num_pts() - 1):
+            length += self[ndx].dist_2d(self[ndx + 1])
+        return length
+
+    def invert_direction(self):
+
+        new_line = self.clone()
+        new_line.reverse()  # in-place operation on new_line
+
+        return new_line
+
+    def absolute_slopes(self) -> np.ndarray:
+
+        return np.asarray(list(map(abs, self.dir_slopes())))
+
+    def segment(self,
+        ndx: numbers.Integral
+    ) -> Optional[Segment4D]:
+        """
+        Returns the optional segment at index ndx.
+
+        :param ndx: the segment index.
+        :return: the optional segment
+        """
+
+        start_pt = self.pt(ndx)
+        end_pt = self.pt(ndx + 1)
+
+        if start_pt.is_coincident(end_pt):
+            return None
+        else:
+            return Segment4D(
+                start_pt=self.pt(ndx),
+                end_pt=self.pt(ndx + 1)
+            )
+
+    def reversed(self) -> 'Line4D':
+        """
+        Return a Line instance with reversed point list.
+
+        :return: a new Line instance.
+        """
+
+        pts = [pt.clone() for pt in self]
+        pts.reverse()
+
+        return Line4D(
+            pts=pts
+        )
 
 
 class MultiLine4D(object):

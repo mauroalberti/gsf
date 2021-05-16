@@ -11,29 +11,12 @@ from math import fabs
 import random
 from array import array
 
-from ...mathematics.vectors3d import *
+from .abstract import Shape, Point, Line, Segment, Polygon
 from ...mathematics.vectors2d import *
 from ...utils.types import *
 
 
-class Shape2D(object, metaclass=abc.ABCMeta):
-
-    @abc.abstractmethod
-    def area(self):
-        """Calculate shape area"""
-        
-    @abc.abstractmethod
-    def length(self):
-        """Calculate shape area"""
-
-    '''
-    @abc.abstractmethod
-    def clone(self):
-        """Create a clone of the shape"""
-    '''
-
-
-class Point2D(Shape2D):
+class Point2D(Point):
     """
     Cartesian point.
     Dimensions: 2D
@@ -62,12 +45,6 @@ class Point2D(Shape2D):
 
         self._x = float(x)
         self._y = float(y)
-
-    def area(self):
-        return 0.0
-
-    def length(self):
-        return 0.0
 
     @property
     def x(self) -> numbers.Real:
@@ -434,13 +411,16 @@ class Point2D(Shape2D):
         return cls(*vals)
 
 
-class Segment2D(Shape2D):
+class Segment2D(Segment):
     """
     Segment2D is a geometric object defined by the straight line between
     two vertices.
     """
 
-    def __init__(self, start_pt: Point2D, end_pt: Point2D):
+    def __init__(self,
+                 start_pt: Point2D,
+                 end_pt: Point2D
+                 ):
         """
         Creates a segment instance provided the two points have the same CRS code.
 
@@ -498,9 +478,6 @@ class Segment2D(Shape2D):
         """
 
         return self.start_pt.distance(self.end_pt)
-
-    def area(self):
-        return 0.0
 
     def __iter__(self):
         """
@@ -560,6 +537,19 @@ class Segment2D(Shape2D):
 
         return self.start_pt.y - s2d_m * self.start_pt.x
 
+    def shift(self,
+              dx: numbers.Real,
+              dy: numbers.Real
+    ) -> 'Segment2D':
+        """
+        Shift a segment by dx and dy
+        """
+
+        return Segment2D(
+            self.start_pt.shift(dx, dy),
+            self.end_pt.shift(dx, dy)
+        )
+
     def intersection_2d_pt(self,
                            another: 'Segment2D'
                            ) -> Optional[Point2D]:
@@ -570,8 +560,6 @@ class Segment2D(Shape2D):
         """
 
         check_type(another, "Second segment", Segment2D)
-
-        #check_crs(self, another)
 
         s_len2d = self.length()
         a_len2d = another.length()
@@ -842,15 +830,22 @@ class Segment2D(Shape2D):
             self.start_pt,
             end_pt)
 
-    def as_vector(self) -> Vect3D:
+    def as_vector(self) -> Vect2D:
         """
         Convert a segment to a vector.
         """
 
-        return Vect3D(
+        return Vect2D(
             x=self.delta_x(),
             y=self.delta_y()
         )
+
+    def as_versor(self) -> Vect2D:
+        """
+        Convert a segment to a versor.
+        """
+
+        return self.as_vector().versor()
 
     def densify2d_asLine(self, densify_distance) -> 'Line2D':
         """
@@ -863,8 +858,8 @@ class Segment2D(Shape2D):
 
         length2d = self.length()
 
-        vect = self.as_vector()
-        vers_2d = vect.versor_2d()
+        vers_2d = self.as_versor()
+
         generator_vector = vers_2d.scale(densify_distance)
 
         interpolated_line = Line2D(
@@ -1645,20 +1640,14 @@ def intersect_segments2d(
     return inters_pt
 
 
-class Line2D(Shape2D):
+class Line2D(Line):
     """
     A list of Point objects.
     """
 
-    def area(self):
-        pass
-
-    def length(self):
-        pass
-
     def __init__(self,
-        pts: Optional[List[Point2D]] = None
-    ):
+        pts: Optional[List[Point2D]] = None,
+        name: str = ''):
         """
         Creates the Line2D instance.
 
@@ -1666,15 +1655,19 @@ class Line2D(Shape2D):
         :return: a Line2D instance.
         """
 
-        if pts is None:
+        if pts is not None:
+
+            check_type(pts, "List", list)
+            for el in pts:
+                check_type(el, "Point2D", Point2D)
+
+        else:
+
             pts = []
 
-        for pt in pts:
-            if not isinstance(pt, Point2D):
-                raise Exception("All input data must be point")
+        super(Line2D, self).__init__(pts)
 
-        self._x = array('d', [pt.x for pt in pts])
-        self._y = array('d', [pt.y for pt in pts])
+        self.name = name
 
     @classmethod
     def fromArrays(cls,
@@ -1701,12 +1694,12 @@ class Line2D(Shape2D):
         if len(ys) != num_vals:
             raise Exception("Y array has length {} while x array has length {}".format(len(ys), num_vals))
 
-        self = cls()
+        pts = []
 
-        self._x = xs
-        self._y = ys
+        for ndx in range(num_vals):
+            pts.append(Point2D(xs[ndx], ys[ndx]))
 
-        return self
+        return cls(pts)
 
     @classmethod
     def fromPointList(cls,
@@ -1734,25 +1727,6 @@ class Line2D(Shape2D):
 
         return cls(pts)
 
-    def pt(self,
-           pt_ndx: numbers.Integral
-           ) -> Point2D:
-        """
-        Extract the point at index pt_ndx.
-
-        :param pt_ndx: point index.
-        :type pt_ndx: numbers.Integral.
-        :return: the extracted Point instance.
-        :rtype: Point.
-
-        Examples:
-        """
-
-        return Point2D(
-            x=self._x[pt_ndx],
-            y=self._y[pt_ndx]
-        )
-
     def values_at(self,
         ndx: numbers.Integral
     ) -> Tuple[float, float]:
@@ -1765,13 +1739,17 @@ class Line2D(Shape2D):
         """
 
         return (
-            self._x[ndx],
-            self._y[ndx]
+            self[ndx].x,
+            self[ndx].y
         )
 
     def pts(self):
 
         return [Point2D(*self.values_at(ndx)) for ndx in range(self.num_pts())]
+
+    def length(self):
+
+        return self.length_2d()
 
     def segment(self,
         ndx: numbers.Integral
@@ -1782,7 +1760,7 @@ class Line2D(Shape2D):
         :param ndx: the segment index.
         :type ndx: numbers.Integral
         :return: the optional segment
-        :rtype: Optional[Segment]
+        :rtype: Optional[Segment2D]
         """
 
         start_pt = self.pt(ndx)
@@ -1795,37 +1773,6 @@ class Line2D(Shape2D):
                 start_pt=self.pt(ndx),
                 end_pt=self.pt(ndx + 1)
             )
-
-    def num_pts(self) -> numbers.Integral:
-
-        return len(self._x)
-
-    def start_pt(self) -> Optional[Point2D]:
-        """
-        Return the first point of a Line or None when no points.
-
-        :return: the first point or None.
-        :rtype: optional Point instance.
-        """
-
-        return self.pt(0) if self.num_pts() > 0 else None
-
-    def end_pt(self) -> Optional[Point2D]:
-        """
-        Return the last point of a Line or None when no points.
-
-        :return: the last point or None.
-        :rtype: optional Point instance.
-        """
-
-        return self.pt(-1) if self.num_pts() > 0 else None
-
-    def __iter__(self):
-        """
-        Return each element of a Line, i.e., its segments.
-        """
-
-        return (self.segment(i) for i in range(self.num_pts()-1))
 
     def __repr__(self) -> str:
         """
@@ -1849,121 +1796,31 @@ class Line2D(Shape2D):
 
         return txt
 
-    def add_pt(self, pt) -> bool:
+    def add_pt(self, pt: Point2D):
         """
         In-place transformation of the original Line2D instance
         by adding a new point at the end.
 
         :param pt: the point to add
-        :type pt: Point.
-        :return: status of addition. True when added, False otherwise.
-        :rtype: bool.
         """
 
-        self._x.append(pt.x)
-        self._y.append(pt.y)
-        return True
+        check_type(pt, "Point", Point2D)
+        self.append(pt)
 
-    def add_pts(self, pt_list) -> numbers.Integral:
+    def add_pts(self, pt_list: List[Point2D]):
         """
         In-place transformation of the original Line instance
         by adding a new set of points at the end.
 
         :param pt_list: list of Points.
-        :type pt_list: List of Point instances.
-        :return: number of added points
-        :rtype: numbers.Integral.
         """
 
-        num_added = 0
         for pt in pt_list:
-            success = self.add_pt(pt)
-            if success:
-                num_added += 1
-
-        return num_added
-
-    def x_list(self) -> List[numbers.Real]:
-
-        return list(self._x)
-
-    def y_list(self) -> List[numbers.Real]:
-
-        return list(self._y)
-
-    def xy_lists(self) -> Tuple[List[numbers.Real], List[numbers.Real]]:
-
-        return self.x_list(), self.y_list()
-
-    def xy_zipped(self) -> List[Tuple[numbers.Real, numbers.Real]]:
-
-        return [(x, y) for x, y in zip(self.x_list(), self.y_list())]
-
-    def x_min(self) -> Optional[numbers.Real]:
-        """
-        Optional minimum of x values.
-
-        :return: the optional minimum of x values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
-          >>> l.x_min()
-          0.0
-        """
-
-        return np.nanmin(self._x) if self.num_pts() > 0 else None
-
-    def x_max(self) -> Optional[numbers.Real]:
-        """
-        Optional maximum of x values.
-
-        :return: the optional maximum of x values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
-          >>> l.x_max()
-          1.0
-        """
-
-        return np.nanmax(self._x) if self.num_pts() > 0 else None
-
-    def y_min(self) -> Optional[numbers.Real]:
-        """
-        Optional minimum of y values.
-
-        :return: the optional minimum of y values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
-          >>> l.y_min()
-          0.0
-        """
-
-        return np.nanmin(self._y) if self.num_pts() > 0 else None
-
-    def y_max(self) -> Optional[numbers.Real]:
-        """
-        Optional maximum of y values.
-
-        :return: the optional maximum of y values.
-        :rtype: Optional[numbers.Real]
-
-        Examples:
-          >>> l = Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
-          >>> l.y_max()
-          1.0
-        """
-
-        return np.nanmax(self._y) if self.num_pts() > 0 else None
+            self.add_pt(pt)
 
     def remove_coincident_points(self) -> Optional['Line2D']:
         """
-        Remove coincident successive points
-
-        :return: Line2D instance
+        Remove coincident successive points.
         """
 
         if self.num_pts() == 0:
@@ -1979,7 +1836,12 @@ class Line2D(Shape2D):
 
         return new_line
 
-    def as_segments(self):
+    def as_segment(self) -> Segment2D:
+        """Return the segment defined by line start and end points"""
+
+        return Segment2D(self.start_pt(), self.end_pt())
+
+    def as_segments(self) -> List[Segment2D]:
         """
         Convert to a list of segments 2d.
 
@@ -2013,10 +1875,10 @@ class Line2D(Shape2D):
         for line in densified_line_list:
             densifyied_points += line.pts()
 
-        densifyied_line = Line2D(densifyied_points)
-        densifyied_line_wo_coinc_pts = densifyied_line.remove_coincident_points()
+        densified_line = Line2D(densifyied_points)
+        densified_line_wo_coinc_pts = densified_line.remove_coincident_points()
 
-        return densifyied_line_wo_coinc_pts
+        return densified_line_wo_coinc_pts
 
     def join(self, another) -> 'Line2D':
         """
@@ -2087,9 +1949,9 @@ class Line2D(Shape2D):
 
         return self.end_pt().distance(self.start_pt())
 
-    def isClosed_2d(self,
-        tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
-    ) -> bool:
+    def is_closed_2d(self,
+                     tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                     ) -> bool:
         """
         Determine if the line is 2D-closed.
 
@@ -2117,7 +1979,10 @@ class Line2D(Shape2D):
         :rtype: Line2D
         """
 
-        return Line2D(self.pts())
+        return Line2D(
+            pts=[pt.clone() for pt in self],
+            name=self.name
+        )
 
     def close_2d(self) -> 'Line2D':
         """
@@ -2129,15 +1994,15 @@ class Line2D(Shape2D):
 
         line = self.clone()
 
-        if not line.isClosed_2d():
+        if not line.is_closed_2d():
 
             line.add_pt(line.start_pt())
 
         return line
 
-    def intersectSegment(self,
-        segment: Segment2D
-    ) -> Optional[PointSegmentCollection2D]:
+    def intersect_segment(self,
+                          segment: Segment2D
+                          ) -> Optional[PointSegmentCollection2D]:
         """
         Calculates the possible intersection between the line and a provided segment.
 
@@ -2146,7 +2011,7 @@ class Line2D(Shape2D):
         :raise: Exception
         """
 
-        if self.num_pts() <= 1:
+        if len(self) <= 1:
             return
 
         check_type(segment, "Input segment", Segment2D)
@@ -2264,16 +2129,7 @@ class MultiLine2D(object):
         return MultiLine2D(cleaned_lines)
 
 
-class Ellipse2D(Shape2D):
-
-    def area(self):
-        pass
-
-    def length(self):
-        pass
-
-
-class Circle2D(Ellipse2D):
+class Circle2D(Shape):
 
     def __init__(self,
                  x: numbers.Real,
@@ -2331,20 +2187,7 @@ class Circle2D(Ellipse2D):
         return Circle2D(self._x, self._y, self._r)
 
 
-class Polygon2D(Shape2D, metaclass=abc.ABCMeta):
-
-    @abc.abstractmethod
-    def num_side(self):
-        """Return numer of sides"""
-
-    def area(self):
-        pass
-
-    def length(self):
-        pass
-
-
-class Triangle2D(Polygon2D):
+class Triangle2D(Polygon):
 
     def area(self):
         pass
@@ -2359,7 +2202,7 @@ class Triangle2D(Polygon2D):
         return 3
 
 
-class Quadrilateral2D(Polygon2D, metaclass=abc.ABCMeta):
+class Quadrilateral2D(Polygon, metaclass=abc.ABCMeta):
 
     def area(self):
         pass
@@ -2404,7 +2247,7 @@ class Square2D(Quadrilateral2D):
 
 @functools.singledispatch
 def center(
-        shape: Shape2D
+        shape: Shape
 ) -> Point2D:
     """
     The 2D shape center as a point (2D)
@@ -2505,6 +2348,36 @@ def merge_line2d(
     return result
 
 
+def merge_lines(
+        lines: List[Line2D],
+        progress_ids
+):
+    """
+    lines: a list of list of (x,y,z) tuples for multilines
+    """
+
+    sorted_line_list = [line for (_, line) in sorted(zip(progress_ids, lines))]
+
+    line_list = []
+    for line in sorted_line_list:
+
+        line_type, line_geometry = line
+
+        if line_type == 'multiline':
+            path_line = xytuple_l2_to_multiline2d(line_geometry).to_line()
+        elif line_type == 'line':
+            path_line = xytuple_list_to_line2d(line_geometry)
+        else:
+            continue
+        line_list.append(path_line)  # now a list of Lines
+
+    # now the list of Lines is transformed into a single Line with coincident points removed
+
+    line = MultiLine2D(line_list).to_line().remove_coincident_points()
+
+    return line
+
+
 def merge_lines2d(
         lines: List[Line2D],
         progress_ids
@@ -2534,6 +2407,374 @@ def merge_lines2d(
 
     return line
 
+
+class XYArrayPair:
+    """
+    Represent an x-y array pair (i.e., a single y value for each x value).
+    """
+
+    def __init__(self,
+                 x_array: Union[array, np.ndarray],
+                 y_array: Union[array, np.ndarray],
+                 id: Optional[Union[str, numbers.Integral]] = None
+                 ):
+
+        '''
+        check_type(x_array, "Distances array", array)
+        if x_array.typecode != 'd':
+            raise Exception("X array must be of type double")
+        '''
+
+        if id is not None:
+            check_type(id, "Pair code", (str, numbers.Integral))
+
+        num_steps = len(x_array)
+
+        '''
+        check_type(y_array, "Scalar values array", array)
+        if y_array.typecode != 'd':
+            raise Exception("Y array must be of type double")
+        '''
+
+        if len(y_array) != num_steps:
+            raise Exception("Y array must have the same length as x array")
+
+        self._num_steps = num_steps
+        self._x = array('d', x_array)
+        self._y = array('d', y_array)
+
+    def x_arr(self) -> array:
+        """
+        Return the x array.
+
+        :return: the x array.
+        :rtype: array.
+        """
+
+        return self._x
+
+    def y_arr(self) -> array:
+        """
+        Return the y array.
+
+        :return: the y array.
+        """
+
+        return self._y
+
+    def __repr__(self) -> str:
+        """
+        Representation of a topographic profile instance.
+
+        :return: the textual representation of the instance.
+        :rtype: str.
+        """
+
+        return f"XYArrayPair with {len(self.x_arr())} nodes\nx = {self.x_arr()},\ny = {self.y_arr()}"
+
+    def y(self,
+          ndx: numbers.Integral
+          ) -> numbers.Real:
+        """
+        Returns the y value with the index ndx.
+
+        :param ndx: the index in the y array
+        :return: the y value corresponding to the ndx index
+        """
+
+        return self.y_arr()[ndx]
+
+    def x(self,
+          ndx: numbers.Integral
+          ) -> numbers.Real:
+        """
+        Returns the x value with the index ndx.
+
+        :param ndx: the index in the x array
+        :return: the s value corresponding to the ndx index
+        """
+
+        return self.x_arr()[ndx]
+
+    def x_min(self) -> numbers.Real:
+        """
+        Returns the minimum x value.
+
+        :return: the minimum x value.
+        """
+
+        return np.nanmin(self._x)
+
+    def x_max(self) -> numbers.Real:
+        """
+        Returns the maximum x value.
+
+        :return: the maximum x value.
+        """
+
+        return np.nanmax(self._x)
+
+    def y_min(self) -> numbers.Real:
+        """
+        Returns the minimum y value.
+
+        :return: the minimum y value.
+        """
+
+        return np.nanmin(self._y)
+
+    def y_max(self) -> numbers.Real:
+        """
+        Returns the maximum y value.
+
+        :return: the maximum y value.
+        :rtype: numbers.Real.
+        """
+
+        return np.nanmax(self._y)
+
+    def num_steps(self) -> numbers.Integral:
+        """
+        Return the number of steps in the array pair.
+
+        :return: number of steps in the array pair.
+        """
+
+        return self._num_steps
+
+    def x_length(self) -> numbers.Real:
+        """
+        Returns the geographic length of the profile.
+
+        :return: length of profile.
+        :rtype: numbers.Real.
+        """
+
+        return self.x_arr()[-1]
+
+    def x_upper_ndx(self,
+                    x_val: numbers.Real
+                    ) -> Optional[numbers.Integral]:
+        """
+        Returns the optional index in the x array of the provided value.
+
+        :param x_val: the value to search the index for in the x array
+        :return: the optional index in the s array of the provided value
+
+        Examples:
+          >>> p = XYArrayPair(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
+          >>> p.x_upper_ndx(-1) is None
+          True
+          >>> p.x_upper_ndx(5) is None
+          True
+          >>> p.x_upper_ndx(0.5)
+          1
+          >>> p.x_upper_ndx(0.75)
+          1
+          >>> p.x_upper_ndx(1.0)
+          1
+          >>> p.x_upper_ndx(2.0)
+          2
+          >>> p.x_upper_ndx(2.5)
+          3
+          >>> p.x_upper_ndx(3.11)
+          4
+          >>> p.x_upper_ndx(3.14)
+          4
+          >>> p.x_upper_ndx(0.0)
+          0
+        """
+
+        check_type(x_val, "Input value", numbers.Real)
+
+        if x_val < self.x_min() or x_val > self.x_max():
+            return None
+
+        return np.searchsorted(self.x_arr(), x_val)
+
+    def y_linear_interpol(self,
+                          x_val: numbers.Real
+                          ) -> Optional[numbers.Real]:
+        """
+        Returns the optional interpolated z value in the z array of the provided s value.
+
+        :param x_val: the value to search the index for in the s array
+        :return: the optional interpolated z value
+
+        Examples:
+          >>> p = XYArrayPair(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
+          >>> p.y_linear_interpol(-1) is None
+          True
+          >>> p.y_linear_interpol(5) is None
+          True
+          >>> p.y_linear_interpol(0.5)
+          15.0
+          >>> p.y_linear_interpol(0.75)
+          17.5
+          >>> p.y_linear_interpol(2.5)
+          7.25
+          >>> p.y_linear_interpol(3.14)
+          17.9
+          >>> p.y_linear_interpol(0.0)
+          10.0
+          >>> p.y_linear_interpol(1.0)
+          20.0
+        """
+
+        check_type(x_val, "Input value", numbers.Real)
+
+        ndx = self.x_upper_ndx(x_val)
+
+        if ndx is not None:
+
+            if ndx == 0:
+                return self.y(0)
+
+            val_y_i = self.y(ndx - 1)
+            val_y_i_next = self.y(ndx)
+            delta_val_y = val_y_i_next - val_y_i
+
+            if delta_val_y == 0.0:
+                return val_y_i
+
+            val_x_i = self.x(ndx - 1)
+            val_x_i_next = self.x(ndx)
+            delta_val_x = val_x_i_next - val_x_i
+
+            if delta_val_x == 0.0:
+                return val_y_i
+
+            d_x = x_val - val_x_i
+
+            return val_y_i + d_x * delta_val_y / delta_val_x
+
+        else:
+
+            return None
+
+    def x_subset(self,
+                 x_start: numbers.Real,
+                 x_end: Optional[numbers.Real] = None
+                 ) -> array:
+        """
+        Return the x array values defined by the provided x range (extremes included).
+        When the end value is not provided, a single-valued array is returned.
+
+        :param x_start: the start x value (distance along the profile)
+        :param x_end: the optional end x value (distance along the profile)
+        :return: the s array subset, possibly with just a value
+
+        Examples:
+          >>> p = XYArrayPair(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
+          >>> p.x_subset(1.0)
+          array('d', [1.0])
+          >>> p.x_subset(0.0)
+          array('d', [0.0])
+          >>> p.x_subset(0.75)
+          array('d', [0.75])
+          >>> p.x_subset(3.14)
+          array('d', [3.14])
+          >>> p.x_subset(1.0, 2.0)
+          array('d', [1.0, 2.0])
+          >>> p.x_subset(0.75, 2.0)
+          array('d', [0.75, 1.0, 2.0])
+          >>> p.x_subset(0.75, 2.5)
+          array('d', [0.75, 1.0, 2.0, 2.5])
+          >>> p.x_subset(0.75, 3.0)
+          array('d', [0.75, 1.0, 2.0, 3.0])
+          >>> p.x_subset(0.75, 0.5)
+          NotImplemented
+          >>> p.x_subset(-1, 1)
+          NotImplemented
+          >>> p.x_subset(-1)
+          NotImplemented
+          >>> p.x_subset(0.0, 10)
+          NotImplemented
+          >>> p.x_subset(0.0, 10)
+          NotImplemented
+          >>> p.x_subset(0.0, 3.14)
+          array('d', [0.0,  1.0,  2.0,  3.0, 3.14])
+        """
+
+        if not x_end and not self.x_min() <= x_start <= self.x_max():
+
+            return NotImplemented
+
+        if x_end and not self.x_min() <= x_start <= x_end <= self.x_max():
+
+            return NotImplemented
+
+        if x_end is None or x_end == x_start:
+
+            return array('d', [x_start])
+
+        result = array('d', [])
+
+        s_start_upper_index_value = self.x_upper_ndx(x_start)
+
+        if x_start < self.x(s_start_upper_index_value):
+            result.append(x_start)
+
+        s_end_upper_index_value = self.x_upper_ndx(x_end)
+
+        for ndx in range(s_start_upper_index_value, s_end_upper_index_value):
+            result.append(self.x(ndx))
+
+        if x_end > self.x(s_end_upper_index_value - 1):
+            result.append(x_end)
+
+        return result
+
+    def ys_from_x_range(self,
+                        x_start: numbers.Real,
+                        x_end: Optional[numbers.Real] = None
+                        ) -> array:
+        """
+        Return the y array values defined by the provided x range (extremes included).
+        When the end value is not provided, a single-valued array is returned.
+
+        :param x_start: the start x value (distance along the profile)
+        :param x_end: the optional end x value (distance along the profile)
+        :return: the y array, possibly with just a value
+
+        Examples:
+          >>> p = XYArrayPair(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
+          >>> p.ys_from_x_range(1.0)
+          array('d', [20.0])
+          >>> p.ys_from_x_range(0.0)
+          array('d', [10.0])
+          >>> p.ys_from_x_range(0.75)
+          array('d', [17.5])
+          >>> p.ys_from_x_range(3.14)
+          array('d', [17.9])
+          >>> p.ys_from_x_range(1.0, 2.0)
+          array('d', [20.0, 0.0])
+          >>> p.ys_from_x_range(0.75, 2.0)
+          array('d', [17.5, 20.0, 0.0])
+          >>> p.ys_from_x_range(0.75, 2.5)
+          array('d', [17.5, 20.0, 0.0, 7.25])
+          >>> p.ys_from_x_range(0.75, 3.0)
+          array('d', [17.5, 20.0, 0.0, 14.5])
+          >>> p.ys_from_x_range(0.75, 0.5)
+          NotImplemented
+          >>> p.ys_from_x_range(-1, 1)
+          NotImplemented
+          >>> p.ys_from_x_range(-1)
+          NotImplemented
+          >>> p.ys_from_x_range(0.0, 10)
+          NotImplemented
+          >>> p.ys_from_x_range(0.0, 10)
+          NotImplemented
+          >>> p.ys_from_x_range(0.0, 3.14)
+          array('d', [10.0, 20.0, 0.0, 14.5, 17.9])
+        """
+
+        s_subset = self.x_subset(x_start, x_end)
+
+        if s_subset is NotImplemented:
+            return NotImplemented
+
+        return array('d', map(self.y_linear_interpol, s_subset))
 
 
 if __name__ == "__main__":

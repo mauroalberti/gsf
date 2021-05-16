@@ -1,7 +1,11 @@
 
-from qgis.core import QgsVectorLayer, QgsCoordinateReferenceSystem,QgsPointXY
+from operator import itemgetter
 
-from ..qgis_utils.points import project_point, project_qgs_point
+from qgis.core import *
+
+from .points import *
+from .vectors import *
+from ...geometries.shapes.collections import *
 from ...geometries.shapes.space2d import *
 
 
@@ -26,7 +30,7 @@ def try_get_line_traces(
 
     try:
 
-        success, result = try_line_geoms_with_order_infos(
+        success, result = try_line_geoms_with_field_infos(
             line_shape,
             order_field_ndx
         )
@@ -67,8 +71,9 @@ def try_load_line_layer(
     line_layer: QgsVectorLayer,
     project_crs,
     line_order_fld_ndx: Optional[numbers.Integral],
+    line_name_fld_ndx: Optional[numbers.Integral],
     invert_direction: bool
-) -> Tuple[bool, Union[str, List[Line2D]]]:
+) -> Tuple[bool, Union[str, NamedLines]]:
 
     try:
 
@@ -76,35 +81,42 @@ def try_load_line_layer(
 
         # get profile path from input line layer
 
-        success, result = try_get_line_traces(
-            line_layer,
-            line_order_fld_ndx
+        if line_order_fld_ndx is None:
+            if line_name_fld_ndx is None:
+                field_indices = None
+            else:
+                field_indices = [line_name_fld_ndx]
+        else:
+            if line_name_fld_ndx is None:
+                field_indices = [line_order_fld_ndx]
+            else:
+                field_indices = [line_order_fld_ndx, line_name_fld_ndx]
+
+        success, result = try_extract_lines_infos(
+            layer=line_layer,
+            field_indices=field_indices
         )
 
         if not success:
-            raise Exception(result)
+            msg = result
+            return False, msg
 
-        profile_orig_lines, order_values = result
+        lines_infos = result
 
-        processed_lines = []
+        print(f"DEBUG: lines_infos: {lines_infos}")
 
         if areLinesToReorder:
 
-            processed_lines.append(merge_lines2d(profile_orig_lines, order_values))
-
-        else:
-
-            for orig_line in profile_orig_lines:
-                processed_lines.append(merge_line2d(orig_line))
+            lines_infos.sort(key=itemgetter(1))
 
         # process input line layer
 
         projected_lines = []
-        for ndx, processed_line in enumerate(processed_lines):
+        for ndx, (line, *other) in enumerate(lines_infos):
 
             projected_lines.append(
                 project_line2d(
-                    processed_line,
+                    line,
                     line_layer.crs(),
                     project_crs
                 )
@@ -113,16 +125,38 @@ def try_load_line_layer(
         profiles = [line.remove_coincident_points() for line in projected_lines]
 
         if invert_direction:
-            profiles = [line.invert_direction() for line in profiles]
+            profiles = [line.reversed() for line in profiles]
 
-        return True, profiles
+        """
+        if line_order_fld_ndx is None:
+            if line_name_fld_ndx is None:
+                field_indices = None
+            else:
+                field_indices = [line_name_fld_ndx]
+        else:
+            if line_name_fld_ndx is None:
+                field_indices = [line_order_fld_ndx]
+            else:
+                field_indices = [line_order_fld_ndx, line_name_fld_ndx]
+                """
+
+        print(f"DEBUG: calculating names")
+
+        if line_name_fld_ndx is None:
+            names = [""]*len(lines_infos)
+        elif line_order_fld_ndx is None:
+            names = [name for _, name in lines_infos]
+        else:
+            names = [name for _, _, name in lines_infos]
+
+        return True, NamedLines(list(zip(names, profiles)))
 
     except Exception as e:
 
         return False, str(e)
 
 
-def try_line_geoms_with_order_infos(
+def try_line_geoms_with_field_infos(
     line_layer,
     order_field_ndx: Optional[numbers.Integral] = None
 ) -> Tuple[bool, Union[str, Tuple[List, List]]]:
@@ -179,6 +213,9 @@ def line_geoms_attrs(
     line_layer,
     field_list=None
 ):
+    """
+    Deprecated: use 'try_line_geoms_attrs'
+    """
 
     if field_list is None:
         field_list = []
@@ -221,4 +258,114 @@ def project_xy_list(
         pt_list_dest_crs = pt_list_dest_crs.append([destPt.x(), destPt.y()])
 
     return pt_list_dest_crs
+
+
+def try_extract_line(
+        line: QgsLineString
+) -> Tuple[bool, Union[str, Line]]:
+
+    try:
+
+        pts = []
+        dim = set()
+
+        print(f"DEBUG: pre-for point in line:")
+        print(f"DEBUG: type(line): {type(line)}")
+        for point in line.points():
+            print(f"DEBUG: type(point): {type(point)}")
+            x = point.x()
+            y = point.y()
+            z = point.z()
+
+            print(f"DEBUG: x, y, z: {x} ,{y}, {z}")
+
+            if np.isfinite(z):
+                pt = Point3D(x, y, z)
+                dim.add(3)
+            else:
+                pt = Point2D(x, y)
+                dim.add(2)
+
+            pts.append(pt)
+
+        if len(dim) != 1:
+            return False, f"Dim is {len(dim)}"
+
+        dim = list(dim)[0]
+
+        print(f"DEBUG: dim: {dim}")
+        if dim == 2:
+            return True, Line2D(pts)
+        elif dim == 3:
+            return True, Line3D(pts)
+        else:
+            return False, f"Got a dim of {dim}"
+
+    except Exception as e:
+
+        return False, str(e)
+
+
+def try_extract_lines_infos(
+        layer: QgsVectorLayer,
+        field_indices: Optional[List[numbers.Integral]] = None
+) -> Tuple[bool, Union[str, List[Tuple]]]:
+    """
+    Extract geometry as line and attributes from line layer.
+    """
+
+    try:
+
+        success, result = try_geoms_attrs(
+            layer=layer,
+            field_indices=field_indices
+        )
+
+        if not success:
+            msg = result
+            return False, msg
+
+        records = result
+
+        lines_infos = []
+
+        for line, *res in records:
+
+            print(f"DEBUG: *res: {res}")
+
+            if not line.isMultipart():
+
+                success, result = try_extract_line(line)
+
+                if not success:
+                    msg = result
+                    return False, msg
+
+                ln = result
+
+                new_rec = (ln, *res)
+                print(f"DEBUG: new_rec: {new_rec}")
+
+                lines_infos.append((ln, *res))
+
+            else:
+
+                print(f"DEBUG: pre-for subline in line:")
+                for subline in line.parts():
+                    print(f"DEBUG: inside line loop")
+                    success, result = try_extract_line(subline)
+
+                    if not success:
+                        msg = result
+                        return False, msg
+
+                    ln = result
+
+                    lines_infos.append((ln, *res))
+
+        return True, lines_infos
+
+    except Exception as e:
+
+        return False, str(e)
 
