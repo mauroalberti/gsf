@@ -158,7 +158,7 @@ def extract_line_points(
         ndx=ndx
     )
 
-    xs, ys = geometry.xy
+    xs, ys = geometry.cell_centers_xy_arrays
 
     pts = []
 

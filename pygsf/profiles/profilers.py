@@ -1,8 +1,7 @@
-import numbers
 from typing import Iterable
 from operator import attrgetter
 
-from ..georeferenced.geoshapes2d import *
+from pygsf.georeferenced.shapes.space2d import *
 from ..georeferenced.rasters import *
 from ..geology.base import *
 from .sets import *
@@ -60,7 +59,7 @@ class SegmentProfiler:
     """
 
     def __init__(self,
-                 segment: Segment,
+                 segment2d: Segment2D,
                  densify_distance: numbers.Real,
                  epsg_cd: numbers.Integral
                  ):
@@ -68,14 +67,14 @@ class SegmentProfiler:
         Instantiates a 2D segment profile object.
         It is represented by two points and by a densify distance.
 
-        :param segment: the profile segment.
+        :param segment2d: the profile segment.
         :param densify_distance: the distance with which to densify the segment profile.
         :param epsg_cd: the EPSG code of the segment.
         """
 
-        check_type(segment, "Input segment", Segment)
+        check_type(segment2d, "Input segment", Segment2D)
 
-        if segment.length == 0.0:
+        if segment2d.length == 0.0:
             raise Exception("Input segment length cannot be zero")
 
         check_type(densify_distance, "Input densify distance", numbers.Real)
@@ -88,7 +87,7 @@ class SegmentProfiler:
 
         self._densify_dist = float(densify_distance)
         self._crs = Crs(epsg_cd)
-        self._segment = segment
+        self._segment = segment2d
 
     @classmethod
     def from_points(cls,
@@ -215,7 +214,7 @@ class SegmentProfiler:
         """
 
         return SegmentProfiler(
-            segment=self.segment(),
+            segment2d=self.segment(),
             densify_distance=self.densify_dist(),
             epsg_cd=self.epsg_code
         )
@@ -334,7 +333,7 @@ class SegmentProfiler:
         """
 
         return SegmentProfiler(
-            segment=self.segment().shift(dx, dy),
+            segment2d=self.segment().shift(dx, dy),
             densify_distance=self.densify_dist(),
             epsg_cd=self.epsg_code
         )
@@ -348,7 +347,7 @@ class SegmentProfiler:
         """
 
         return SegmentProfiler(
-            segment=self.segment().shift(vect.x, vect.y),
+            segment2d=self.segment().shift(vect.x, vect.y),
             densify_distance=self.densify_dist(),
             epsg_cd=self.epsg_code
         )
@@ -1040,7 +1039,7 @@ class LineProfiler(list):
     """
 
     def __init__(self,
-                 src_line: Union[Line2D, Line3D, Line4D],
+                 src_line: Line,
                  densify_distance: numbers.Real,
                  epsg_code: Optional[numbers.Integral] = -1
                  ):
@@ -1054,9 +1053,10 @@ class LineProfiler(list):
 
         profilers = []
 
-        for segment in src_line:
+        for segment in src_line.as_segments():
             profilers.append(
                 SegmentProfiler(
+
                     start_pt=segment.start_pt,
                     end_pt=segment.end_pt,
                     densify_distance=densify_distance,

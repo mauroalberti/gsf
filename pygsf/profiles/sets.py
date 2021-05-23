@@ -1,6 +1,6 @@
 from .chains import *
 from ..geometries.shapes.space2d import XYArrayPair
-from ..georeferenced.geoshapes3d import GeoPointSegmentCollections3D
+from pygsf.georeferenced.shapes.space3d import GeoPointSegmentCollections3D
 
 
 class TopographicProfileSet(list):

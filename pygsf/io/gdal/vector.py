@@ -20,9 +20,16 @@ except ImportError:
 
 import geopandas as gpd
 
-from ...georeferenced.geoshapes3d import *
+from pygsf.georeferenced.shapes.space2d import GeoLine2D
+from pygsf.georeferenced.shapes.space3d import *
 from ...utils.types import *
 
+ogr_3d_line_types = [
+    ogr.wkbLineString25D,
+    ogr.wkbLineStringZM,
+    ogr.wkbMultiLineString25D,
+    ogr.wkbMultiLineStringZM
+]
 
 ogr_simpleline_types = [
     ogr.wkbLineString,
@@ -80,6 +87,7 @@ def reading_line_shapefile(
         read_z: bool = False
     ) -> Tuple[bool, Union[str, List[Tuple[list, tuple]]]]:
     """
+    Deprecated: use `try_read_line_shp_with_attr`
     Read results geometries from a line shapefile using ogr.
     TODO: it could read also other formats, but it has to be checked.
 
@@ -169,6 +177,7 @@ def reading_line_shapefile(
                     coords = [x, y]
                     if read_z:
                         z = curr_geom.GetZ(i)
+                        print(f"source z is {z} (type {type(z)})")
                         coords.append(z)
 
                     line.add_pt(Point(*coords))
@@ -190,6 +199,158 @@ def reading_line_shapefile(
                         line.add_pt(Point(*coords))
 
                     feat_geometries.append(line)
+
+            results.append((feat_geometries, feat_attributes))
+
+        del ds
+
+        return True, results
+
+    except Exception as e:
+
+        return False, str(e)
+
+
+def extract_ogr_simple_line(
+    simple_line_geom: ogr.Geometry,
+    has_z: bool
+) -> Union[Line2D, Line3D]:
+    """
+    Read a simple line feature.
+    """
+
+    if has_z:
+        line = Line3D()
+    else:
+        line = Line2D()
+
+    for i in range(simple_line_geom.GetPointCount()):
+
+        x, y = simple_line_geom.GetX(i), simple_line_geom.GetY(i)
+
+        if has_z:
+            z = simple_line_geom.GetZ(i)
+            pt = Point3D(x, y, z)
+        else:
+            pt = Point2D(x, y)
+
+        line.add_pt(pt)
+
+    return line
+
+
+def try_read_line_shp_with_attr(
+        shp_path: str,
+        flds: Optional[List[str]] = None
+    ) -> Tuple[bool, Union[str, List[Tuple[list, tuple]]]]:
+    """
+    Read results geometries from a line shapefile using ogr.
+    TODO: it could read also other formats, but it has to be checked.
+
+    :param shp_path: line shapefile path.
+    :param flds: the fields to extract values from.
+    :return: success status and (error message or results).
+    """
+
+    try:
+
+        # check input path
+
+        check_type(shp_path, "Shapefile path", str)
+        if shp_path == '':
+            return False, "Input shapefile path should not be empty"
+        if not os.path.exists(shp_path):
+            return False, "Input shapefile path does not exist"
+
+        # open input vector layer
+
+        ds = ogr.Open(shp_path, 0)
+
+        if ds is None:
+            return False, "Input shapefile path not read"
+
+        # get internal layer
+
+        layer = ds.GetLayer()
+
+        # get projection
+
+        srs = layer.GetSpatialRef()
+        srs.AutoIdentifyEPSG()
+        authority = srs.GetAuthorityName(None)
+        if authority.upper() == "EPSG":
+            epsg_cd = int(srs.GetAuthorityCode(None))
+        else:
+            epsg_cd = -1
+
+        # initialize list storing results
+
+        results = []
+
+        # loop in layer features
+
+        for feat in layer:
+
+            # get attributes
+
+            if flds:
+
+                feat_attributes = tuple(map(lambda fld_nm: feat.GetField(fld_nm), flds))
+
+            else:
+
+                feat_attributes = ()
+
+            # get geometries
+
+            feat_geometries = []
+
+            curr_geom = feat.GetGeometryRef()
+
+            if curr_geom is None:
+                del ds
+                return False, "Input shapefile path not read"
+
+            geometry_type = curr_geom.GetGeometryType()
+            if geometry_type in ogr_3d_line_types:
+                is_3d = True
+                geoline = GeoLine3D
+            else:
+                is_3d = False
+                geoline = GeoLine2D
+
+            if geometry_type in ogr_simpleline_types:
+
+                geom_type = "simpleline"
+
+            elif geometry_type in ogr_multiline_types:
+
+                geom_type = "multiline"
+
+            else:
+
+                del ds
+                return False, "Geometry type is {}, line expected".format(geometry_type)
+
+            if geom_type == "simpleline":
+
+                line = extract_ogr_simple_line(
+                    simple_line_geom=curr_geom,
+                    has_z=is_3d
+                )
+
+                feat_geometries.append(geoline(line, epsg_cd))
+
+            else:  # multiline case
+
+                for simple_line_geom in curr_geom:
+
+                    line = extract_ogr_simple_line(
+                        simple_line_geom=simple_line_geom,
+                        has_z=is_3d
+                    )
+
+                    feat_geometries.append(geoline(line, epsg_cd))
 
             results.append((feat_geometries, feat_attributes))
 
@@ -445,296 +606,10 @@ def parse_ogr_type(ogr_type_str: str) -> 'ogr.OGRFieldType':
         raise Exception("Debug: not recognized ogr type")
 
 
-class GDALParameters(object):
-    """
-    Manage GDAL parameters from grids.
-
-    """
-
-    # class constructor
-    def __init__(self):
-        """
-        Class constructor.
-
-        @return:  generic-case GDAL parameters.
-        """
-        self._nodatavalue = None
-        self._topleftX = None
-        self._topleftY = None
-        self._pixsizeEW = None
-        self._pixsizeNS = None
-        self._rows = None
-        self._cols = None
-        self._rotation_GT_2 = 0.0
-        self._rotation_GT_4 = 0.0
-
-    def s_noDataValue(self, nodataval):
-        """
-        Set raster no data value.
-
-        @param  nodataval:  the raster no-data value.
-        @type  nodataval:  None, otherwise number or string convertible to float.
-
-        @return:  self.
-        """
-
-        try:
-            self._nodatavalue = float(nodataval)
-        except:
-            self._nodatavalue = None
-
-    def g_noDataValue(self):
-        """
-        Get raster no-data value.
-
-        @return:  no-data value - float.
-        """
-        return self._nodatavalue
-
-    # set property for no-data value
-    noDataValue = property(g_noDataValue, s_noDataValue)
-
-    def s_topLeftX(self, topleftX):
-        """
-        Set top-left corner x value of the raster.
-
-        @param  topleftX:  the top-left corner x value, according to GDAL convention.
-        @type  topleftX:  number or string convertible to float.
-
-        @return:  self.
-        """
-        self._topleftX = float(topleftX)
-
-    def g_topLeftX(self):
-        """
-        Get top-left corner x value of the raster.
-
-        @return:  the top-left corner x value, according to GDAL convention - float.
-        """
-        return self._topleftX
-
-    # set property for topleftX
-    topLeftX = property(g_topLeftX, s_topLeftX)
-
-    def s_topLeftY(self, topleftY):
-        """
-        Set top-left corner y value of the raster.
-
-        @param  topleftY:  the top-left corner y value, according to GDAL convention.
-        @type  topleftY:  number or string convertible to float.
-
-        @return:  self.
-        """
-        self._topleftY = float(topleftY)
-
-    def g_topLeftY(self):
-        """
-        Get top-left corner y value of the raster.
-
-        @return:  the top-left corner y value, according to GDAL convention - float.
-        """
-        return self._topleftY
-
-    # set property for topleftY
-    topLeftY = property(g_topLeftY, s_topLeftY)
-
-    def s_pixSizeEW(self, pixsizeEW):
-        """
-        Set East-West size of the raster cell.
-
-        @param  pixsizeEW:  the top-left y value, according to GDAL convention.
-        @type  pixsizeEW:  number or string convertible to float.
-
-        @return:  self.
-        """
-        self._pixsizeEW = float(pixsizeEW)
-
-    def g_pixSizeEW(self):
-        """
-        Get East-West size of the raster cell.
-
-        @return:  the East-West size of the raster cell - float.
-        """
-        return self._pixsizeEW
-
-    # set property for topleftY
-    pixSizeEW = property(g_pixSizeEW, s_pixSizeEW)
-
-    # pixsizeNS
-
-    def s_pixSizeNS(self, pixsizeNS):
-        """
-        Set North-South size of the raster cell.
-
-        @param  pixsizeNS:  the North-South size of the raster cell.
-        @type  pixsizeNS:  number or string convertible to float.
-
-        @return:  self.
-        """
-        self._pixsizeNS = float(pixsizeNS)
-
-    def g_pixSizeNS(self):
-        """
-        Get North-South size of the raster cell.
-
-        @return:  the North-South size of the raster cell - float.
-        """
-        return self._pixsizeNS
-
-    # set property for topleftY
-    pixSizeNS = property(g_pixSizeNS, s_pixSizeNS)
-
-    def s_rows(self, rows):
-        """
-        Set row number.
-
-        @param  rows:  the raster row number.
-        @type  rows:  number or string convertible to int.
-
-        @return:  self.
-        """
-        self._rows = int(rows)
-
-    def g_rows(self):
-        """
-        Get row number.
-
-        @return:  the raster row number - int.
-        """
-        return self._rows
-
-    # set property for rows
-    rows = property(g_rows, s_rows)
-
-    def s_cols(self, cols):
-        """
-        Set column number.
-
-        @param  cols:  the raster column number.
-        @type  cols:  number or string convertible to int.
-
-        @return:  self.
-        """
-        self._cols = int(cols)
-
-    def g_cols(self):
-        """
-        Get column number.
-
-        @return:  the raster column number - int.
-        """
-        return self._cols
-
-    # set property for cols
-    cols = property(g_cols, s_cols)
-
-    def s_rotation_GT_2(self, rotation_GT_2):
-        """
-        Set rotation GT(2) (see GDAL documentation).
-
-        @param  rotation_GT_2:  the raster rotation value GT(2).
-        @type  rotation_GT_2:  number or string convertible to float.
-
-        @return:  self.
-        """
-        self._rotation_GT_2 = float(rotation_GT_2)
-
-    def g_rotation_GT_2(self):
-        """
-        Get rotation GT(2) (see GDAL documentation).
-
-        @return:  the raster rotation value GT(2). - float.
-        """
-        return self._rotation_GT_2
-
-    # set property for rotation_GT_2
-    rotGT2 = property(g_rotation_GT_2, s_rotation_GT_2)
-
-    def s_rotation_GT_4(self, rotation_GT_4):
-        """
-        Set rotation GT(4) (see GDAL documentation)
-
-        @param  rotation_GT_4:  the raster rotation value GT(4).
-        @type  rotation_GT_4:  number or string convertible to float.
-
-        @return:  self.
-        """
-        self._rotation_GT_4 = float(rotation_GT_4)
-
-    def g_rotation_GT_4(self):
-        """
-        Get rotation GT(4) (see GDAL documentation).
-
-        @return:  the raster rotation value GT(4) - float.
-        """
-        return self._rotation_GT_4
-
-    # set property for rotation_GT_4
-    rotGT4 = property(g_rotation_GT_4, s_rotation_GT_4)
-
-    def check_params(self, tolerance=1e-06):
-        """
-        Check absence of axis rotations or pixel size differences in the raster band.
-
-        @param  tolerance:  the maximum threshold for both pixel N-S and E-W difference, or axis rotations.
-        @type  tolerance:  float.
-
-        @return:  None when successful, RasterParametersException when pixel differences or axis rotations.
-
-        @raise: RasterParametersException - raster geometry incompatible with this module (i.e. different cell sizes or axis rotations).
-        """
-        # check if pixel size can be considered the same in the two axis directions
-        if abs(abs(self._pixsizeEW) - abs(self._pixsizeNS)) / abs(self._pixsizeNS) > tolerance:
-            raise Exception('Pixel sizes in x and y directions are different in raster')
-
-            # check for the absence of axis rotations
-        if abs(self._rotation_GT_2) > tolerance or abs(self._rotation_GT_4) > tolerance:
-            raise Exception('There should be no axis rotation in raster')
-
-        return
-
-    def llcorner(self):
-        """
-        Creates a point at the lower-left corner of the raster.
-
-        @return:  new Point instance.
-        """
-        return Point2D(self.topLeftX, self.topLeftY - abs(self.pixSizeNS) * self.rows)
-
-    def trcorner(self):
-        """
-        Create a point at the top-right corner of the raster.
-
-        @return:  new Point instance.
-        """
-        return Point2D(self.topLeftX + abs(self.pixSizeEW) * self.cols, self.topLeftY)
-
-    def geo_equiv(self, other, tolerance=1.0e-6):
-        """
-        Checks if two grids are geographically equivalent.
-
-        @param  other:  a grid to be compared with self.
-        @type  other:  Grid instance.
-        @param  tolerance:  the maximum threshold for pixel sizes, topLeftX or topLeftY differences.
-        @type  tolerance:  float.
-
-        @return:  Boolean.
-        """
-        if 2 * (self.topLeftX - other.topLeftX) / (self.topLeftX + other.topLeftX) > tolerance or \
-                                        2 * (self.topLeftY - other.topLeftY) / (
-                                    self.topLeftY + other.topLeftY) > tolerance or \
-                                        2 * (abs(self.pixSizeEW) - abs(other.pixSizeEW)) / (
-                                    abs(self.pixSizeEW) + abs(other.pixSizeEW)) > tolerance or \
-                                        2 * (abs(self.pixSizeNS) - abs(other.pixSizeNS)) / (
-                                    abs(self.pixSizeNS) + abs(other.pixSizeNS)) > tolerance or \
-                        self.rows != other.rows or self.cols != other.cols:
-            return False
-        else:
-            return True
-
-
 def read_line_shapefile_via_ogr(line_shp_path):
     """
+    TO CHECK: could be substituted by other read functions?
+
     Read line shapefile using OGR.
 
     @param  line_shp_path:  parameter to check.

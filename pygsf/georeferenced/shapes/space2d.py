@@ -1,5 +1,6 @@
 
 import copy
+from abc import ABC
 
 from typing import Optional
 
@@ -9,8 +10,48 @@ from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.linestring import LineString
 
-from .crs import *
-from ..geometries.shapes.joins import *
+from .abstract import GeoLine
+from ..crs import *
+from ...geometries.shapes.joins import *
+
+
+class GeoLine2D(GeoLine):
+
+    def __init__(self,
+                 shape: Line2D,
+                 epsg_cd: numbers.Integral = -1):
+
+        check_type(shape, "Line", Line2D)
+
+        super(GeoLine2D, self).__init__()
+
+        self._shape = shape
+        self._epsg_code = epsg_cd
+
+    @property
+    def shape(self) -> Line2D:
+
+        return self._shape
+
+    @shape.setter
+    def shape(self,
+              shape: Line2D):
+
+        check_type(shape, "Line", Line2D)
+
+        self._shape = shape
+
+    @property
+    def epsg_code(self) -> numbers.Integral:
+        return self._epsg_code
+
+    @epsg_code.setter
+    def epsg_code(self,
+              epsg_cd: numbers.Integral):
+
+        check_type(epsg_cd, "EPSG code", numbers.Integral)
+
+        self._epsg_code = epsg_cd
 
 
 class GeoPoints2D:

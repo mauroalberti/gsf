@@ -1,11 +1,47 @@
-
+from abc import ABC
 from typing import Optional
 
 import numbers
 
-from ..geometries.shapes.joins import *
-from .crs import *
-from ..utils.types import *
+from .abstract import GeoLine
+from ..crs import *
+from ...geometries.shapes.joins import *
+
+
+class GeoLine3D(GeoLine, ABC):
+
+    def __init__(self,
+                 shape: Line3D,
+                 epsg_cd: numbers.Integral = -1):
+
+        check_type(shape, "Line", Line3D)
+
+        super(GeoLine3D, self).__init__()
+
+        self.shape = shape
+        self.epsg_code = epsg_cd
+
+    @property
+    def shape(self) -> Line3D:
+        return self._shape
+
+    @shape.setter
+    def shape(self,
+              shape: Line3D):
+        check_type(shape, "Line", Line3D)
+
+        self._shape = shape
+
+    @property
+    def epsg_code(self) -> numbers.Integral:
+        return self._epsg_code
+
+    @epsg_code.setter
+    def epsg_code(self,
+                  epsg_cd: numbers.Integral):
+        check_type(epsg_cd, "EPSG code", numbers.Integral)
+
+        self._epsg_code = epsg_cd
 
 
 class GeoPoints3D:

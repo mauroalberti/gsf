@@ -581,6 +581,16 @@ class Point3D(Point):
 
         return Point3D(x + sx, y + sy, z + sz)
 
+    def as_point2d(self) -> Point2D:
+        """
+        Convert a 3D point to a 2D point.
+        """
+
+        return Point2D(
+            x=self.x,
+            y=self.y
+        )
+
     def asVect(self) -> 'Vect3D':
         """
         Create a vector based on the point coordinates
@@ -2205,8 +2215,8 @@ class MultiLine3D:
     def is_continuous(self):
 
         for line_ndx in range(len(self._lines) - 1):
-            if not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[0]) or \
-               not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[-1]):
+            if not self.lines[line_ndx].pts[-1].is_coincident(self.lines[line_ndx + 1].pts[0]) or \
+               not self.lines[line_ndx].pts[-1].is_coincident(self.lines[line_ndx + 1].pts[-1]):
                 return False
 
         return True
@@ -2214,7 +2224,7 @@ class MultiLine3D:
     def is_unidirectional(self):
 
         for line_ndx in range(len(self.lines) - 1):
-            if not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[0]):
+            if not self.lines[line_ndx].pts[-1].is_coincident(self.lines[line_ndx + 1].pts[0]):
                 return False
 
         return True

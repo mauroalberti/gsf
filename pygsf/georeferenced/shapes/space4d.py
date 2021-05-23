@@ -2,9 +2,12 @@
 import datetime
 
 import numbers
+from abc import ABC
 
-from .crs import *
-from ..geometries.shapes.space3d import *
+from ...geometries.shapes.space4d import Line4D
+from ...geometries.shapes.joins import *
+from .abstract import GeoLine
+from ..crs import *
 
 
 class GeoPoint4D:
@@ -1492,3 +1495,40 @@ class GeoSegment4D:
 
         return array('d', s_list)
     '''
+
+
+class GeoLine4D(GeoLine, ABC):
+
+    def __init__(self,
+                 shape: Line4D,
+                 epsg_cd: numbers.Integral = -1):
+
+        check_type(shape, "Line", Line4D)
+
+        super(GeoLine4D, self).__init__()
+
+        self.shape = shape
+        self.epsg_code = epsg_cd
+
+    @property
+    def shape(self) -> Line4D:
+        return self._shape
+
+    @shape.setter
+    def shape(self,
+              shape: Line4D):
+        check_type(shape, "Line", Line4D)
+
+        self._shape = shape
+
+    @property
+    def epsg_code(self) -> numbers.Integral:
+        return self._epsg_code
+
+    @epsg_code.setter
+    def epsg_code(self,
+                  epsg_cd: numbers.Integral):
+        check_type(epsg_cd, "EPSG code", numbers.Integral)
+
+        self._epsg_code = epsg_cd
+

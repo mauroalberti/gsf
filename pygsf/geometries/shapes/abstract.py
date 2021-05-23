@@ -37,8 +37,16 @@ class Point(Shape, metaclass=abc.ABCMeta):
     def distance(self, other: 'Point') -> bool:
         """Calculate distaance between two points"""
 
+    @abc.abstractmethod
+    def as_point2d(self):
+        """Converts a generic point to a point 2D"""
+
 
 class Segment(Shape, metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def length(self):
+        """Calculate shape length"""
 
     def area(self):
         """Calculate shape area"""

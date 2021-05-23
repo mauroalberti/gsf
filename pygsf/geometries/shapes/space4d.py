@@ -6,7 +6,7 @@ import datetime
 from .abstract import Point, Segment, Line
 from ...mathematics.vectors3d import *
 from .space2d import Point2D, Line2D
-from .space3d import Line3D
+from .space3d import Point3D, Line3D
 
 
 class Point4D(Point):
@@ -154,6 +154,27 @@ class Point4D(Point):
             t=self.t
         )
 
+    def as_point2d(self) -> Point2D:
+        """
+        Convert a 4D point to a 2D point.
+        """
+
+        return Point2D(
+            x=self.x,
+            y=self.y
+        )
+
+    def as_point3d(self) -> Point3D:
+        """
+        Convert a 4D point to a 3D point.
+        """
+
+        return Point3D(
+            x=self.x,
+            y=self.y,
+            z=self.z
+        )
+
     def __sub__(self, another):
         """Return point difference
 
@@ -209,15 +230,18 @@ class Point4D(Point):
 
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
-    def coincident(self, another, tolerance=MIN_SEPARATION_THRESHOLD):
+    def is_coincident(self,
+                      another,
+                      tolerance=MIN_SEPARATION_THRESHOLD
+                      ) -> bool:
         """
         Check spatial coincidence of two points
         todo: make sure it works as intended with Points with nan values
 
         Example:
-          >>> Point4D(1., 0., -1.).coincident(Point4D(1., 1.5, -1.))
+          >>> Point4D(1., 0., -1.).is_coincident(Point4D(1., 1.5, -1.))
           False
-          >>> Point4D(1., 0., 0.).coincident(Point4D(1., 0., 0.))
+          >>> Point4D(1., 0., 0.).is_coincident(Point4D(1., 0., 0.))
           True
         """
 
@@ -714,8 +738,8 @@ class MultiLine4D(object):
     def is_continuous(self):
 
         for line_ndx in range(len(self._lines) - 1):
-            if not self.lines[line_ndx].pts()[-1].coincident(self.lines[line_ndx + 1].pts()[0]) or \
-               not self.lines[line_ndx].pts()[-1].coincident(self.lines[line_ndx + 1].pts()[-1]):
+            if not self.lines[line_ndx].pts()[-1].is_coincident(self.lines[line_ndx + 1].pts()[0]) or \
+               not self.lines[line_ndx].pts()[-1].is_coincident(self.lines[line_ndx + 1].pts()[-1]):
                 return False
 
         return True
@@ -723,7 +747,7 @@ class MultiLine4D(object):
     def is_unidirectional(self):
 
         for line_ndx in range(len(self.lines) - 1):
-            if not self.lines[line_ndx].pts()[-1].coincident(self.lines[line_ndx + 1].pts()[0]):
+            if not self.lines[line_ndx].pts()[-1].is_coincident(self.lines[line_ndx + 1].pts()[0]):
                 return False
 
         return True

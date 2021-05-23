@@ -222,6 +222,16 @@ class Point2D(Point):
 
         return Point2D(*self.a())
 
+    def as_point2d(self) -> 'Point2D':
+        """
+        Convert a point to a 2D point.
+        """
+
+        return Point2D(
+            x=self.x,
+            y=self.y
+        )
+
     def toXY(self) -> Tuple[numbers.Real, numbers.Real]:
         """
         Returns the spatial components as a tuple of two values.
@@ -418,8 +428,8 @@ class Segment2D(Segment):
     """
 
     def __init__(self,
-                 start_pt: Point2D,
-                 end_pt: Point2D
+                 start_pt: Point,
+                 end_pt: Point
                  ):
         """
         Creates a segment instance provided the two points have the same CRS code.
@@ -430,14 +440,14 @@ class Segment2D(Segment):
         :raises: CRSCodeException.
         """
 
-        check_type(start_pt, "Start point", Point2D)
-        check_type(end_pt, "End point", Point2D)
+        check_type(start_pt, "Start point", Point)
+        check_type(end_pt, "End point", Point)
 
         if start_pt.distance(end_pt) == 0.0:
             raise Exception("Source points cannot be coincident")
 
-        self._start_pt = start_pt.clone()
-        self._end_pt = end_pt.clone()
+        self._start_pt = start_pt.as_point2d()
+        self._end_pt = end_pt.as_point2d()
 
     def __repr__(self) -> str:
         """
@@ -2084,8 +2094,8 @@ class MultiLine2D(object):
     def is_continuous(self):
 
         for line_ndx in range(len(self._lines) - 1):
-            if not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[0]) or \
-               not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[-1]):
+            if not self.lines[line_ndx].pts[-1].is_coincident(self.lines[line_ndx + 1].pts[0]) or \
+               not self.lines[line_ndx].pts[-1].is_coincident(self.lines[line_ndx + 1].pts[-1]):
                 return False
 
         return True
@@ -2093,7 +2103,7 @@ class MultiLine2D(object):
     def is_unidirectional(self):
 
         for line_ndx in range(len(self.lines) - 1):
-            if not self.lines[line_ndx].pts[-1].coincident(self.lines[line_ndx + 1].pts[0]):
+            if not self.lines[line_ndx].pts[-1].is_coincident(self.lines[line_ndx + 1].pts[0]):
                 return False
 
         return True

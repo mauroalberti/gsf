@@ -6,6 +6,7 @@ import numpy as np
 
 from ..geometries.grids.fields import *
 from ..geometries.grids.geotransform import *
+from ..geometries.grids.utils import ij_array_to_ij_pixel, ij_pixel_to_ij_array
 
 from ..geometries.shapes.space2d import *
 from ..geometries.shapes.space3d import *
@@ -322,7 +323,7 @@ class GeoArray:
         Examples:
         """
 
-        return ijPixToijArray(*xyGeogrToijPix(self._gt, x, y))
+        return ij_pixel_to_ij_array(*self._gt.xy_geogr_to_ij_pixel(x, y))
 
     def xyToijPix(self, x: numbers.Real, y: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
         """
@@ -338,7 +339,7 @@ class GeoArray:
         Examples:
         """
 
-        return xyGeogrToijPix(self._gt, x, y)
+        return self._gt.xy_geogr_to_ij_pixel(x, y)
 
     def ijArrToxy(self, i: numbers.Real, j: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
         """
@@ -354,9 +355,9 @@ class GeoArray:
         Examples:
         """
 
-        i_pix, j_pix = ijArrToijPix(i, j)
+        i_pix, j_pix = ij_array_to_ij_pixel(i, j)
 
-        return ijPixToxyGeogr(self._gt, i_pix, j_pix)
+        return self._gt.ij_pixels_to_xy_geogr(i_pix, j_pix)
 
     def ijPixToxy(self, i: numbers.Real, j: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
         """
@@ -372,7 +373,7 @@ class GeoArray:
         Examples:
         """
 
-        return ijPixToxyGeogr(self._gt, i, j)
+        return self._gt.ij_pixels_to_xy_geogr(i, j)
 
     @property
     def has_rotation(self) -> bool:
@@ -402,7 +403,9 @@ class GeoArray:
 
         return end_pt_j.distance(start_pt) / factor, end_pt_i.distance(start_pt) / factor
 
-    def xy(self, level_ndx: numbers.Integral=0) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+    def cell_centers_xy_arrays(self,
+                               level_ndx: numbers.Integral = 0
+                               ) -> Optional[Tuple[np.ndarray, np.ndarray]]:
         """
         Returns the two arrays storing respectively the x and the y coordinates
         of the grid cell centers for the chosen level (default is first level).
@@ -417,10 +420,21 @@ class GeoArray:
         res = self.level_shape(level_ndx)
 
         if not res:
+
             return None
+
         else:
+
             num_rows, num_cols = res
-            return gtToxyCellCenters(self._gt, num_rows, num_cols)
+            X = np.zeros((num_rows, num_cols), dtype=np.float64)
+            Y = np.zeros((num_rows, num_cols), dtype=np.float64)
+            for i in range(num_rows):
+                for j in range(num_cols):
+                    x, y = self._gt.ij_pixels_to_xy_geogr(i + 0.5, j + 0.5)
+                    X[i, j] = x
+                    Y[i, j] = y
+
+            return X, Y
 
     def interpolate_bilinear(self,
          x: numbers.Real,

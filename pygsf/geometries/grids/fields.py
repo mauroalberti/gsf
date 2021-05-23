@@ -40,7 +40,7 @@ def ij_transfer_func(
     Examples:
     """
 
-    return z_transfer_func(*ijPixToxyGeogr(geotransform, i + i_shift, j + j_shift))
+    return z_transfer_func(*geotransform.ij_pixels_to_xy_geogr(i + i_shift, j + j_shift))
 
 
 def array_from_geotransform_function(

@@ -5,7 +5,7 @@ from qgis.core import QgsCoordinateReferenceSystem, QgsPointXY, QgsCoordinateTra
 
 from ...geometries.shapes.space3d import *
 from ...geometries.shapes.space4d import Point4D
-from ...georeferenced.geodetic import geodetic2ecef
+from pygsf.georeferenced.geodetic import geodetic2ecef
 from ..time import standard_gpstime_to_seconds
 
 
