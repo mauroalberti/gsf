@@ -2440,12 +2440,6 @@ class XYArrayPair:
 
         num_steps = len(x_array)
 
-        '''
-        check_type(y_array, "Scalar values array", array)
-        if y_array.typecode != 'd':
-            raise Exception("Y array must be of type double")
-        '''
-
         if len(y_array) != num_steps:
             raise Exception("Y array must have the same length as x array")
 

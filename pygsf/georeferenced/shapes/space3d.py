@@ -11,21 +11,21 @@ from ...geometries.shapes.joins import *
 class GeoLine3D(GeoLine, ABC):
 
     def __init__(self,
-                 shape: Line3D,
+                 line: Line3D,
                  epsg_cd: numbers.Integral = -1):
 
-        check_type(shape, "Line", Line3D)
+        check_type(line, "Line", Line3D)
 
         super(GeoLine3D, self).__init__()
 
-        self.shape = shape
+        self.shape = line
         self.epsg_code = epsg_cd
 
     @property
-    def shape(self) -> Line3D:
+    def geometry(self) -> Line3D:
         return self._shape
 
-    @shape.setter
+    @geometry.setter
     def shape(self,
               shape: Line3D):
         check_type(shape, "Line", Line3D)
@@ -42,6 +42,28 @@ class GeoLine3D(GeoLine, ABC):
         check_type(epsg_cd, "EPSG code", numbers.Integral)
 
         self._epsg_code = epsg_cd
+
+    def __repr__(self) -> str:
+        """
+        Represents a GeoLine instance as a shortened text.
+
+        :return: a textual shortened representation of a Line instance.
+        :rtype: str.
+        """
+
+        num_points = self.shape.num_pts()
+
+        if num_points == 0:
+            txt = "Empty GeoLine3D"
+        else:
+            x1, y1, z1 = self.shape.start_pt()
+            if num_points == 1:
+                txt = f"GeoLine3D with unique point: {x1:.4f}, {y1:.4f}, {z1:.4f}"
+            else:
+                x2, y2, z2 = self.shape.end_pt()
+                txt = f"GeoLine3D with {num_points} points: ({x1:.4f}, {y1:.4f}, {z1:.4f}) ... ({x2:.4f}, {y2:.4f}, {z2:.4f})"
+
+        return txt + f" with EPSG code {self.epsg_code}"
 
 
 class GeoPoints3D:

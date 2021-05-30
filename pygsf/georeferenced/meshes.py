@@ -15,7 +15,7 @@ from ..utils.arrays import *
 from ..geometries.transformations import *
 from ..geometries.shapes.space4d import *
 
-from ..io.gdal.vector import *
+from pygsf.io.vectors.gdal import *
 
 
 

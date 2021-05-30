@@ -22,31 +22,31 @@ class GeoArray:
     """
 
     def __init__(self,
-                 inGeotransform: GeoTransform,
+                 geotransform: GeoTransform,
                  epsg_code: numbers.Integral = -1,
-                 inLevels: Optional[List[np.ndarray]] = None
+                 arrays: Optional[List[np.ndarray]] = None
                  ):
         """
         GeoArray class constructor.
 
-        :param  inGeotransform:  the geotransform
-        :type  inGeotransform:  GeoTransform.
+        :param  geotransform:  the geotransform
+        :type  geotransform:  GeoTransform.
         :param epsg_code: the projection EPSG code.
         :type epsg_code: numbers.Integral
-        :param  inLevels:  the nd-array storing the data.
-        :type  inLevels:  np.ndarray.
+        :param  arrays:  the nd-array storing the data.
+        :type  arrays:  np.ndarray.
 
         :return:  None.
 
         Examples:
         """
 
-        self._gt = inGeotransform
+        self._gt = geotransform
         self._crs = Crs(epsg_code)
-        if inLevels is None:
+        if arrays is None:
             self._levels = []
         else:
-            self._levels = inLevels
+            self._levels = arrays
 
     def geotransform(self):
         """
@@ -78,9 +78,9 @@ class GeoArray:
         gt = GeoTransform.fromAffine(affine_transform)
 
         return GeoArray(
-            inGeotransform=gt,
+            geotransform=gt,
             epsg_code=epsg_code,
-            inLevels=[array]
+            arrays=[array]
         )
 
     @property
@@ -511,9 +511,9 @@ class GeoArray:
             fld_y=self._levels[ndx_fy])
 
         return GeoArray(
-            inGeotransform=self._gt,
+            geotransform=self._gt,
             epsg_code=self.epsg_code,
-            inLevels=[magn]
+            arrays=[magn]
         )
 
     def orientations(self, ndx_fx=0, ndx_fy=1) -> 'GeoArray':
@@ -535,9 +535,9 @@ class GeoArray:
             fld_y=self._levels[ndx_fy])
 
         return GeoArray(
-            inGeotransform=self._gt,
+            geotransform=self._gt,
             epsg_code=self.epsg_code,
-            inLevels=[orient]
+            arrays=[orient]
         )
 
     def divergence_2D(self, ndx_fx=0, ndx_fy=1) -> 'GeoArray':
@@ -561,9 +561,9 @@ class GeoArray:
             cell_size_y=self.src_cellsize_i)
 
         return GeoArray(
-            inGeotransform=self._gt,
+            geotransform=self._gt,
             epsg_code=self.epsg_code,
-            inLevels=[div]
+            arrays=[div]
         )
 
     def curl_module(self, ndx_fx=0, ndx_fy=1) -> 'GeoArray':
@@ -587,9 +587,9 @@ class GeoArray:
             cell_size_y=self.src_cellsize_i)
 
         return GeoArray(
-            inGeotransform=self._gt,
+            geotransform=self._gt,
             epsg_code=self.epsg_code,
-            inLevels=[curl_m])
+            arrays=[curl_m])
 
     def magnitude_grads(self, axis: str= '', ndx_fx: numbers.Integral=0, ndx_fy: numbers.Integral=1) -> 'GeoArray':
         """
@@ -624,9 +624,9 @@ class GeoArray:
             axis=axis)
 
         return GeoArray(
-            inGeotransform=self._gt,
+            geotransform=self._gt,
             epsg_code=self.epsg_code,
-            inLevels=magnitude_gradients)
+            arrays=magnitude_gradients)
 
     def grad_flowlines(self, ndx_fx: numbers.Integral=0, ndx_fy: numbers.Integral=1) -> 'GeoArray':
         """
@@ -647,9 +647,9 @@ class GeoArray:
             cell_size_y=self.src_cellsize_i)
 
         return GeoArray(
-            inGeotransform=self._gt,
+            geotransform=self._gt,
             epsg_code=self.epsg_code,
-            inLevels=[flowln_grad])
+            arrays=[flowln_grad])
 
 
 def point_velocity(
@@ -961,16 +961,16 @@ def arrayTo3DPts(
 
 
 def plane_dem_intersection(
-        srcPlaneAttitude: Plane,
-        srcPt: Point3D,
-        geo_array: GeoArray,
+        plane_attitude: Plane,
+        source_point: Point3D,
+        geoarray: GeoArray,
         level_ndx: numbers.Integral = 0) -> List[Point3D]:
     """
     Calculates the intersections (as points) between the grid and a planar analytical surface.
 
-    :param srcPlaneAttitude: orientation of the surface (currently only planes).
-    :param srcPt: point that the plane must contain.
-    :param geo_array: the input GeoArray storing the used grid.
+    :param plane_attitude: orientation of the surface (currently only planes).
+    :param source_point: point that the plane must contain.
+    :param geoarray: the input GeoArray storing the used grid.
     :param level_ndx: the grid level to use from the provided geoarray. Default is first (index equal to zero).
     :return: list of unique intersecting points.
 
@@ -979,7 +979,7 @@ def plane_dem_intersection(
 
     # dem values as a Numpy array
 
-    q_d = geo_array.level(
+    q_d = geoarray.level(
         level_ndx=level_ndx)
 
     # row and column numbers of the dem
@@ -989,8 +989,8 @@ def plane_dem_intersection(
     # plane closure that, given (x, y), derive z
 
     plane_z_closure = closure_plane_from_geo(
-        srcPlaneAttitude,
-        srcPt
+        plane_attitude,
+        source_point
     )
 
     # plane elevations at grid cell centers
@@ -998,26 +998,26 @@ def plane_dem_intersection(
     q_p = array_from_geotransform_function(
         row_num=row_num,
         col_num=col_num,
-        geotransform=geo_array.geotransform(),
+        geotransform=geoarray.geotransform(),
         z_transfer_func=plane_z_closure)
 
     index_multiplier = 100  # sufficiently large value to ensure a precise slope values
 
     mi_p = xyarr2segmentslope(
         xy2z_func=plane_z_closure,
-        arrij2xy_func=geo_array.ijArrToxy,
+        arrij2xy_func=geoarray.ijArrToxy,
         i=index_multiplier,
         j=0) * np.ones((row_num, col_num))
 
     mj_p = xyarr2segmentslope(
         xy2z_func=plane_z_closure,
-        arrij2xy_func=geo_array.ijArrToxy,
+        arrij2xy_func=geoarray.ijArrToxy,
         i=0,
         j=index_multiplier) * np.ones((row_num, col_num))
 
     # 2D array of DEM segment parameters
 
-    cell_size_j, cell_size_i = geo_array.geotransf_cell_sizes()
+    cell_size_j, cell_size_i = geoarray.geotransf_cell_sizes()
 
     mj_d = grad_j(
         fld=q_d,
@@ -1039,7 +1039,7 @@ def plane_dem_intersection(
     intersection_pts_j = arrayTo3DPts(
         direction='j',
         arr=intersection_pts_j,
-        ij2xy_func=geo_array.ijArrToxy,
+        ij2xy_func=geoarray.ijArrToxy,
         xy2z_func=plane_z_closure)
 
     intersection_pts_i = segment_intersections_array(
@@ -1052,7 +1052,7 @@ def plane_dem_intersection(
     intersection_pts_i = arrayTo3DPts(
         direction='i',
         arr=intersection_pts_i,
-        ij2xy_func=geo_array.ijArrToxy,
+        ij2xy_func=geoarray.ijArrToxy,
         xy2z_func=plane_z_closure)
 
     unique_pts = intersection_pts_j + intersection_pts_i

@@ -421,8 +421,8 @@ class SegmentProfiler:
 
     def profile_grid(
             self,
-            geoarray: GeoArray)\
-            -> XYArrayPair:
+            geoarray: GeoArray
+    ) -> XYArrayPair:
         """
         Create profile from one geoarray.
 
@@ -437,8 +437,9 @@ class SegmentProfiler:
             x_array=self.densified_2d_steps(),
             y_array=self.sample_grid(geoarray))
 
-    def profile_grids(self,
-        *grids: Iterable[GeoArray]
+    def profile_grids(
+            self,
+            *grids: Iterable[GeoArray]
     ) -> List[XYArrayPair]:
         """
         Create profiles of one or more grids.

@@ -1,9 +1,6 @@
 
-from typing import List, Optional, Tuple
 import numbers
 import abc
-
-import numpy as np
 
 from ...geometries.shapes.abstract import Shape, Line
 
@@ -18,7 +15,7 @@ class GeoShape(object, metaclass=abc.ABCMeta):
     @shape.setter
     @abc.abstractmethod
     def shape(self,
-                  shp: Shape):
+              shp: Shape):
         """Set shape"""
 
     @property
@@ -37,11 +34,11 @@ class GeoLine(GeoShape, metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def shape(self) -> Line:
+    def geometry(self) -> Line:
         """Return shape"""
 
-    @shape.setter
+    @geometry.setter
     @abc.abstractmethod
     def shape(self,
-                  shp: Line):
+              shp: Line):
         """Set shape"""

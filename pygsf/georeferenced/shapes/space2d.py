@@ -29,11 +29,11 @@ class GeoLine2D(GeoLine):
         self._epsg_code = epsg_cd
 
     @property
-    def shape(self) -> Line2D:
+    def geometry(self) -> Line2D:
 
         return self._shape
 
-    @shape.setter
+    @geometry.setter
     def shape(self,
               shape: Line2D):
 
@@ -52,6 +52,28 @@ class GeoLine2D(GeoLine):
         check_type(epsg_cd, "EPSG code", numbers.Integral)
 
         self._epsg_code = epsg_cd
+
+    def __repr__(self) -> str:
+        """
+        Represents a GeoLine instance as a shortened text.
+
+        :return: a textual shortened representation of a Line instance.
+        :rtype: str.
+        """
+
+        num_points = self.shape.num_pts()
+
+        if num_points == 0:
+            txt = "Empty GeoLine2D"
+        else:
+            x1, y1 = self.shape.start_pt()
+            if num_points == 1:
+                txt = "GeoLine2D with unique point: {.4f}, {.4f}".format(x1, y1)
+            else:
+                x2, y2 = self.shape.end_pt()
+                txt = "GeoLine2D with {} points: ({:.4f}, {:.4f}) ... ({:.4f}, {:.4f})".format(num_points, x1, y1, x2, y2)
+
+        return txt + f" with EPSG code {self.epsg_code}"
 
 
 class GeoPoints2D:

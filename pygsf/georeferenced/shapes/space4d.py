@@ -1511,10 +1511,10 @@ class GeoLine4D(GeoLine, ABC):
         self.epsg_code = epsg_cd
 
     @property
-    def shape(self) -> Line4D:
+    def geometry(self) -> Line4D:
         return self._shape
 
-    @shape.setter
+    @geometry.setter
     def shape(self,
               shape: Line4D):
         check_type(shape, "Line", Line4D)
@@ -1532,3 +1532,24 @@ class GeoLine4D(GeoLine, ABC):
 
         self._epsg_code = epsg_cd
 
+    def __repr__(self) -> str:
+        """
+        Represents a GeoLine instance as a shortened text.
+
+        :return: a textual shortened representation of a Line instance.
+        :rtype: str.
+        """
+
+        num_points = self.shape.num_pts()
+
+        if num_points == 0:
+            txt = "Empty GeoLine4D"
+        else:
+            x1, y1, z1, t1 = self.shape.start_pt()
+            if num_points == 1:
+                txt = f"GeoLine4D with unique point: {x1:.4f}, {y1:.4f}, {z1:.4f}, {t1:.4f}"
+            else:
+                x2, y2, z2, t2 = self.shape.end_pt()
+                txt = f"GeoLine4D with {num_points} points: ({x1:.4f}, {y1:.4f}, {z1:.4f}, {t1:.4f}) ... ({x2:.4f}, {y2:.4f}, {z2:.4f}, {t2:.4f})"
+
+        return txt + f" with EPSG code {self.epsg_code}"
