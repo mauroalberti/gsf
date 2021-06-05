@@ -470,7 +470,7 @@ class SegmentProfiler:
         return topo_profiles
 
     def intersect_line(self,
-                       mline: Union[Line2D, GeoMultiLine2D],
+                       mline: Union[Line2D, MultiLine2D],
                        ) -> PointSegmentCollection2D:
         """
         Calculates the intersection with a line/multiline.
@@ -480,10 +480,11 @@ class SegmentProfiler:
         :return: the possible intersections
         """
 
+        check_type(mline, 'mline', (Line2D, MultiLine2D))
         return mline.intersect_segment(self.segment())
 
     def intersect_lines(self,
-                        mlines: Iterable[Union[Line2D, GeoMultiLine2D]],
+                        mlines: Iterable[Union[Line2D, MultiLine2D]],
                         ) -> List[List[Optional[Union[Point2D, Segment2D]]]]:
         """
         Calculates the intersection with a set of lines/multilines.
@@ -492,6 +493,10 @@ class SegmentProfiler:
         :param mlines: an iterable of Lines or MultiLines to intersect profile with
         :return: the possible intersections
         """
+
+        check_type(mlines, 'mlines', Iterable)
+        for mline in mlines:
+            check_type(mline, 'mline', (Line2D, MultiLine2D))
 
         results = [self.intersect_line(mline) for mline in mlines]
         valid_results = [[ndx, GeoPointSegmentCollection2D(geoms=res, epsg_code=self.epsg_code)] for ndx, res in enumerate(results) if res]

@@ -2021,12 +2021,9 @@ class Line2D(Line):
         :raise: Exception
         """
 
-        if len(self) <= 1:
-            return
-
         check_type(segment, "Input segment", Segment2D)
 
-        intersections = [intersect_segments2d(curr_segment, segment) for curr_segment in self if curr_segment is not None]
+        intersections = [intersect_segments2d(curr_segment, segment) for curr_segment in self.as_segments() if curr_segment is not None]
         intersections = list(filter(lambda val: val is not None, intersections))
         intersections = PointSegmentCollection2D(intersections)
 
