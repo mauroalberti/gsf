@@ -11,7 +11,7 @@ from math import fabs
 import random
 from array import array
 
-from .abstract import Shape, Point, Line, Segment, Polygon
+from .abstract import *
 from ...mathematics.vectors2d import *
 from ...utils.types import *
 
@@ -30,55 +30,10 @@ class Point2D(Point):
         Construct a Point instance.
 
         :param x: point x coordinate.
-        :type x: numbers.Real.
         :param y: point y coordinate.
-        :type y: numbers.Real.
         """
 
-        vals = [x, y]
-
-        if any(map(lambda val: not isinstance(val, numbers.Real), vals)):
-            raise Exception("Input values must be integer or float type")
-
-        if not all(map(math.isfinite, vals)):
-            raise Exception("Input values must be finite (#02)")
-
-        self._x = float(x)
-        self._y = float(y)
-
-    @property
-    def x(self) -> numbers.Real:
-        """
-        Return the x coordinate of the current point.
-
-        :return: x coordinate.
-        :rtype: numbers.Real
-
-        Examples:
-          >>> Point2D(4, 3).x
-          4.0
-          >>> Point2D(-0.39, 3).x
-          -0.39
-        """
-
-        return self._x
-
-    @property
-    def y(self) -> numbers.Real:
-        """
-        Return the y coordinate of the current point.
-
-        :return: y coordinate.
-        :rtype: numbers.Real
-
-        Examples:
-          >>> Point2D(4, 3).y
-          3.0
-          >>> Point2D(-0.39, 17.42).y
-          17.42
-        """
-
-        return self._y
+        super(Point2D, self).__init__(x, y)
 
     def __iter__(self):
         """
@@ -232,6 +187,10 @@ class Point2D(Point):
             y=self.y
         )
 
+    def bounding_box(self) -> Optional[Tuple['Point2D', 'Point2D']]:
+
+        return self.clone(), self.clone()
+
     def toXY(self) -> Tuple[numbers.Real, numbers.Real]:
         """
         Returns the spatial components as a tuple of two values.
@@ -347,14 +306,14 @@ class Point2D(Point):
         return self.scale(-1)
 
     def is_coincident(self,
-                      another: 'Point2D',
+                      other: 'Point2D',
                       tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
                       ) -> bool:
         """
         Check spatial coincidence of two points, limiting to the horizontal (XY) plane.
 
-        :param another: the point to compare.
-        :type another: Point.
+        :param other: the point to compare.
+        :type other: Point.
         :param tolerance: the maximum allowed distance between the two points.
         :type tolerance: numbers.Real.
         :return: whether the two points are coincident.
@@ -365,9 +324,9 @@ class Point2D(Point):
 
         """
 
-        check_type(another, "Second point", Point2D)
+        check_type(other, "Second point", Point2D)
 
-        return self.distance(another) <= tolerance
+        return self.distance(other) <= tolerance
 
     def already_present(self,
                         pt_list: List['Point2D'],
@@ -1040,7 +999,7 @@ class Segment2D(Segment):
         """
 
         return self.start_pt.is_coincident(
-            another=another.start_pt,
+            other=another.start_pt,
             tolerance=tol
         )
 
@@ -1066,7 +1025,7 @@ class Segment2D(Segment):
         """
 
         return self.end_pt.is_coincident(
-            another=another.end_pt,
+            other=another.end_pt,
             tolerance=tol)
 
     def conn_to_other(self,
@@ -1091,7 +1050,7 @@ class Segment2D(Segment):
         """
 
         return self.end_pt.is_coincident(
-            another=another.start_pt,
+            other=another.start_pt,
             tolerance=tol)
 
     def other_connected(self,
@@ -1116,7 +1075,7 @@ class Segment2D(Segment):
         """
 
         return another.end_pt.is_coincident(
-            another=self.start_pt,
+            other=self.start_pt,
             tolerance=tol)
 
     def segment_start_in(self,
@@ -1656,8 +1615,47 @@ class Line2D(Line):
     """
 
     def __init__(self,
-        pts: Optional[List[Point2D]] = None,
-        name: str = ''):
+        x_seq: Optional[Union[Sequence[float], np.ndarray]] = None,
+        y_seq: Optional[Union[Sequence[float], np.ndarray]] = None
+    ):
+        """
+        Creates the Line2D instance.
+        """
+
+        if x_seq is None and y_seq is not None:
+            raise Exception(f"x_seq is None while y_seq is {type(y_seq)}")
+
+        if x_seq is not None and y_seq is None:
+            raise Exception(f"x_seq is {type(x_seq)} while y_seq is None")
+
+        if x_seq is None:
+            x_array = None
+            y_array = None
+        else:
+            x_array = np.asarray(x_seq)
+            y_array = np.asarray(y_seq)
+            if x_array.ndim != 1:
+                raise Exception(f"X input must have a dimension of 1, not {x_array.ndim}")
+            if y_array.ndim != 1:
+                raise Exception(f"Y input must have a dimension of 1, not {y_array.ndim}")
+
+        super(Line2D, self).__init__()
+
+        self._x_array = x_array
+        self._y_array = y_array
+
+    def x_array(self):
+
+        return self._x_array
+
+    def y_array(self):
+
+        return self._y_array
+
+    @classmethod
+    def fromPoints(cls,
+        pts: Optional[List[Point]] = None
+    ):
         """
         Creates the Line2D instance.
 
@@ -1665,77 +1663,50 @@ class Line2D(Line):
         :return: a Line2D instance.
         """
 
-        if pts is not None:
+        if pts is None:
 
-            check_type(pts, "List", list)
-            for el in pts:
-                check_type(el, "Point2D", Point2D)
+            x_list = None
+            y_list = None
 
         else:
 
-            pts = []
+            x_list = []
+            y_list = []
 
-        super(Line2D, self).__init__(pts)
+            check_type(pts, "List", list)
+            for pt in pts:
+                check_type(pt, "Point", Point)
+                x_list.append(pt.x)
+                y_list.append(pt.y)
 
-        self.name = name
+        return cls(
+            x_list,
+            y_list
+        )
 
     @classmethod
-    def fromArrays(cls,
-        xs: array,
-        ys: array
-    ) -> 'Line2D':
+    def fromCoordinates(cls,
+                        coordinates: List[List[numbers.Real]]
+                        ) -> 'Line2D':
         """
         Create a Line2D instance from a list of x and y values.
 
         Example:
-          >>> Line2D.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
-          Line2D with 3 points: (1.0000, 3.0000) ... (3.0000, 5.0000)
-          >>> Line2D.fromArrays(xs=array('d',[1,2,3]), ys=array('d', [3,4,5]))
-          Line2D with 3 points: (1.0000, 3.0000) ... (3.0000, 5.0000)
-        """
-
-        if not isinstance(xs, array):
-            raise Exception("X values have type {} instead of array".format(type(xs)))
-
-        if not isinstance(ys, array):
-            raise Exception("Y values have type {} instead of array".format(type(ys)))
-
-        num_vals = len(xs)
-        if len(ys) != num_vals:
-            raise Exception("Y array has length {} while x array has length {}".format(len(ys), num_vals))
-
-        pts = []
-
-        for ndx in range(num_vals):
-            pts.append(Point2D(xs[ndx], ys[ndx]))
-
-        return cls(pts)
-
-    @classmethod
-    def fromPointList(cls,
-        pt_list: List[List[numbers.Real]]
-    ) -> 'Line2D':
-        """
-        Create a Line2D instance from a list of x and y values.
-
-        Example:
-          >>> Line2D.fromPointList([[0, 0], [1, 0], [0, 1]])
+          >>> Line2D.fromCoordinates([[0, 0], [1, 0], [0, 1]])
           Line2D with 3 points: (0.0000, 0.0000) ... (0.0000, 1.0000)
         """
 
-        pts = []
-        for vals in pt_list:
-            if len(vals) == 2:
-                pt = Point2D(
-                    x=vals[0],
-                    y=vals[1]
-                )
-            else:
-                raise Exception(f"Point input values should be 2 lists, got {len(vals)} lists")
+        x_vals = []
+        y_vals = []
 
-            pts.append(pt)
+        for x, y in coordinates:
+            x_vals.append(x)
+            y_vals.append(y)
 
-        return cls(pts)
+        return cls(
+            x_vals,
+            y_vals
+        )
 
     def values_at(self,
         ndx: numbers.Integral
@@ -1749,11 +1720,18 @@ class Line2D(Line):
         """
 
         return (
-            self[ndx].x,
-            self[ndx].y
+            self.x_array()[ndx],
+            self.y_array()[ndx]
         )
 
-    def pts(self):
+    def num_pts(self) -> numbers.Integral:
+        """
+        Returns the number of line points.
+        """
+
+        return len(self.x_array())
+
+    def pts(self) -> List[Point2D]:
 
         return [Point2D(*self.values_at(ndx)) for ndx in range(self.num_pts())]
 
@@ -1993,6 +1971,72 @@ class Line2D(Line):
             pts=[pt.clone() for pt in self],
             name=self.name
         )
+
+    def x_list(self) -> List[numbers.Real]:
+
+        return list(map(lambda pt: pt.x, self))
+
+
+
+    def x_min(self):
+        return np.nanmin(self.x_array())
+
+    def x_max(self):
+        return np.nanmax(self.x_array())
+
+    def x_mean(self):
+
+        return np.nanmean(self.x_array())
+
+    def x_var(self):
+
+        return np.nanvar(self.x_array())
+
+    def x_std(self):
+
+        return np.nanstd(self.x_array())
+
+    def y_list(self) -> List[numbers.Real]:
+
+        return list(map(lambda pt: pt.x, self))
+
+
+
+    def y_min(self):
+        return np.nanmin(self.y_array())
+
+    def y_max(self):
+        return np.nanmax(self.y_array())
+
+    def y_mean(self):
+
+        return np.nanmean(self.y_array())
+
+    def y_var(self):
+
+        return np.nanvar(self.y_array())
+
+    def y_std(self):
+
+        return np.nanstd(self.y_array())
+
+    def bounding_box(self) -> Optional[Tuple[Point2D, Point2D]]:
+        """ The shape bounding box"""
+
+        if len(self) == 0:
+            return None
+
+        lower_left_point = Point2D(
+            x=self.x_min(),
+            y=self.y_min()
+        )
+
+        upper_right_point = Point2D(
+            x=self.x_max(),
+            y=self.y_max()
+        )
+
+        return lower_left_point, upper_right_point
 
     def close_2d(self) -> 'Line2D':
         """

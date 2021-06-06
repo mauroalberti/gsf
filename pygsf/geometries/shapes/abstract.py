@@ -3,7 +3,9 @@ from typing import List, Optional, Tuple
 import numbers
 import abc
 
-import numpy as np
+import math
+
+from ...utils.types import *
 
 
 class Shape(object, metaclass=abc.ABCMeta):
@@ -16,8 +18,43 @@ class Shape(object, metaclass=abc.ABCMeta):
     def length(self):
         """Calculate shape length"""
 
+    @abc.abstractmethod
+    def clone(self) -> 'Shape':
+        """
+        Clone a shape."""
+
+    @abc.abstractmethod
+    def bounding_box(self) -> Optional[Tuple['Point', 'Point']]:
+        """ The shape bounding box"""
+
 
 class Point(Shape, metaclass=abc.ABCMeta):
+
+    def __init__(self,
+        x: numbers.Real,
+        y: numbers.Real
+    ):
+
+        check_type(x, "Input x value", numbers.Real)
+        check_type(y, "Input y value", numbers.Real)
+
+        if not all(map(math.isfinite, [x, y])):
+            raise Exception("Both x and y input values must be finite")
+
+        self._x = float(x)
+        self._y = float(y)
+
+    @property
+    def x(self):
+        """X coordinate"""
+
+        return self._x
+
+    @property
+    def y(self):
+        """Y coordinate"""
+
+        return self._y
 
     def area(self):
         """Calculate shape area"""
@@ -35,7 +72,7 @@ class Point(Shape, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def distance(self, other: 'Point') -> bool:
-        """Calculate distaance between two points"""
+        """Calculate distance with another point"""
 
     @abc.abstractmethod
     def as_point2d(self):
@@ -44,9 +81,11 @@ class Point(Shape, metaclass=abc.ABCMeta):
 
 class Segment(Shape, metaclass=abc.ABCMeta):
 
+    '''
     @abc.abstractmethod
     def length(self):
         """Calculate shape length"""
+    '''
 
     def area(self):
         """Calculate shape area"""
@@ -54,21 +93,18 @@ class Segment(Shape, metaclass=abc.ABCMeta):
         return 0.0
 
 
-class Line(list, Shape, metaclass=abc.ABCMeta):
+class Line(Shape, metaclass=abc.ABCMeta):
 
     def area(self):
         """Calculate shape area"""
 
         return 0.0
 
+    @abc.abstractmethod
     def pt(self,
            ndx: numbers.Integral) -> Point:
 
-        return self[ndx]
-
-    def num_pts(self) -> numbers.Integral:
-        return len(self)
-
+    """
     def x_list(self) -> List[numbers.Real]:
         return list(map(lambda pt: pt.x, self))
 
@@ -95,6 +131,7 @@ class Line(list, Shape, metaclass=abc.ABCMeta):
 
     def y_max(self):
         return np.nanmax(self.y_array())
+    """
 
     def start_pt(self) -> Optional[Point]:
         """
@@ -148,14 +185,12 @@ class Line(list, Shape, metaclass=abc.ABCMeta):
     def reversed(self) -> 'Line':
         """Reverse line"""
 
-    @abc.abstractmethod
-    def clone(self) -> 'Line':
-        """
-        Clone a line."""
-
+    '''
     @abc.abstractmethod
     def length(self) -> numbers.Real:
         """ The line length"""
+    '''
+
 
 
 class Polygon(Shape, metaclass=abc.ABCMeta):

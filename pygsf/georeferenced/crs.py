@@ -2,6 +2,8 @@
 from typing import Any
 import numbers
 
+from pyproj import Proj, transform
+
 
 min_epsg_crs_code = 2000  # checked 2019-06-14 in EPSG database
 
@@ -100,3 +102,14 @@ def check_epsg(
             epsg_code
         )
     )
+
+
+def project_xy(
+        source_epsg_code: numbers.Integral,
+        dest_epsg_code: numbers.Integral,
+)
+
+inProj = Proj('epsg:3857')
+outProj = Proj('epsg:4326')
+x1,y1 = -11705274.6374,4826473.6922
+x2,y2 = transform(inProj,outProj,x1,y1)

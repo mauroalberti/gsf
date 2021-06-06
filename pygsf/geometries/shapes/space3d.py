@@ -12,12 +12,12 @@ from copy import copy
 import numbers
 from array import array
 
-from .abstract import Point, Segment, Line
-from .space2d import Point2D, Segment2D
+from .abstract import *
+from .space2d import *
 from ...orientations.orientations import *
 from ...mathematics.statistics import *
 from ...mathematics.quaternions import *
-from ...utils.types import check_type
+from ...utils.types import *
 
 
 class Point3D(Point):
@@ -494,14 +494,14 @@ class Point3D(Point):
         )
 
     def is_coincident(self,
-                      another: 'Point3D',
+                      other: 'Point3D',
                       tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
                       ) -> bool:
         """
         Check spatial coincidence of two points
 
-        :param another: the point to compare.
-        :type another: Point.
+        :param other: the point to compare.
+        :type other: Point.
         :param tolerance: the maximum allowed distance between the two points.
         :type tolerance: numbers.Real.
         :return: whether the two points are coincident.
@@ -515,9 +515,9 @@ class Point3D(Point):
           True
         """
 
-        check_type(another, "Second point", Point3D)
+        check_type(other, "Second point", Point3D)
 
-        return self.distance(another) <= tolerance
+        return self.distance(other) <= tolerance
 
     def already_present(self,
                         pt_list: List['Point3D'],
@@ -1219,7 +1219,7 @@ class Segment3D(Segment):
         """
 
         return self.start_pt.is_coincident(
-            another=another.start_pt,
+            other=another.start_pt,
             tolerance=tol
         )
 
@@ -1245,7 +1245,7 @@ class Segment3D(Segment):
         """
 
         return self.end_pt.is_coincident(
-            another=another.end_pt,
+            other=another.end_pt,
             tolerance=tol)
 
     def conn_to_other(self,
@@ -1270,7 +1270,7 @@ class Segment3D(Segment):
         """
 
         return self.end_pt.is_coincident(
-            another=another.start_pt,
+            other=another.start_pt,
             tolerance=tol)
 
     def other_connected(self,
@@ -1295,7 +1295,7 @@ class Segment3D(Segment):
         """
 
         return another.end_pt.is_coincident(
-            another=self.start_pt,
+            other=self.start_pt,
             tolerance=tol)
 
     def segment_start_in(self,
@@ -1744,7 +1744,7 @@ class PointSegmentCollection3D(list):
         self.append(spatial_element)
 
 
-class Line3D(Line):
+class Line3D(Line2D):
     """
     A line.
     """

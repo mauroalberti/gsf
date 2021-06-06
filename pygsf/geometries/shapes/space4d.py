@@ -231,7 +231,7 @@ class Point4D(Point):
         return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
     def is_coincident(self,
-                      another,
+                      other,
                       tolerance=MIN_SEPARATION_THRESHOLD
                       ) -> bool:
         """
@@ -245,9 +245,9 @@ class Point4D(Point):
           True
         """
 
-        if self.dist_2d(another) > tolerance:
+        if self.dist_2d(other) > tolerance:
             return False
-        elif self.distance(another) > tolerance:
+        elif self.distance(other) > tolerance:
             return False
         else:
             return True
@@ -525,8 +525,7 @@ class Line4D(Line3D):
     """
 
     def __init__(self,
-                 pts: Optional[List[Point4D]] = None,
-                 name: str = ''
+                 pts: Optional[List[Point4D]] = None
                  ):
 
         if pts is not None:
@@ -540,8 +539,6 @@ class Line4D(Line3D):
             pts = []
 
         super(Line4D, self).__init__(pts)
-
-        self.name = name
 
     def clone(self):
 
