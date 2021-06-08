@@ -218,9 +218,9 @@ class Point2D(Point):
 
         return np.asarray(self.toXY())
 
-    def deltaX(self,
-        another: 'Point2D'
-    ) -> Optional[numbers.Real]:
+    def delta_x(self,
+                another: 'Point2D'
+                ) -> Optional[numbers.Real]:
         """
         Delta between x components of two Point Instances.
 
@@ -229,15 +229,15 @@ class Point2D(Point):
         :raise: Exception
 
         Examples:
-          >>> Point2D(1, 2).deltaX(Point2D(4, 7))
+          >>> Point2D(1, 2).delta_x(Point2D(4, 7))
           3.0
         """
 
         return another.x - self.x
 
-    def deltaY(self,
-        another: 'Point2D'
-    ) -> Optional[numbers.Real]:
+    def delta_y(self,
+                another: 'Point2D'
+                ) -> Optional[numbers.Real]:
         """
         Delta between y components of two Point Instances.
 
@@ -245,7 +245,7 @@ class Point2D(Point):
         :rtype: optional numbers.Real.
 
         Examples:
-          >>> Point2D(1, 2).deltaY(Point2D(4, 7))
+          >>> Point2D(1, 2).delta_y(Point2D(4, 7))
           5.0
         """
 
@@ -344,7 +344,9 @@ class Point2D(Point):
         """
 
         for pt in pt_list:
-            if self.is_coincident(pt, tolerance=tolerance):
+            if self.is_coincident(
+                    pt,
+                    tolerance=tolerance):
                 return True
         return False
 
@@ -1638,6 +1640,8 @@ class Line2D(Line):
                 raise Exception(f"X input must have a dimension of 1, not {x_array.ndim}")
             if y_array.ndim != 1:
                 raise Exception(f"Y input must have a dimension of 1, not {y_array.ndim}")
+            if len(x_array) != len(y_array):
+                raise Exception(f"X input has length {len(x_array)}, while y input has length {len(y_array)}")
 
         super(Line2D, self).__init__()
 
@@ -1729,7 +1733,26 @@ class Line2D(Line):
         Returns the number of line points.
         """
 
-        return len(self.x_array())
+        if self.x_array() is None:
+            return 0
+        else:
+            return len(self.x_array())
+
+    def pt(self,
+           ndx: numbers.Integral) -> Optional[Point2D]:
+        """
+        Returns the point at given index.
+        """
+
+        if self.num_pts() == 0:
+            return None
+        elif ndx < self.num_pts():
+            return Point2D(
+                x=self.x_array()[ndx],
+                y=self.y_array()[ndx]
+            )
+        else:
+            return None
 
     def pts(self) -> List[Point2D]:
 
@@ -1793,7 +1816,8 @@ class Line2D(Line):
         """
 
         check_type(pt, "Point", Point2D)
-        self.append(pt)
+        np.append(self._x_array, pt.x)
+        np.append(self._y_array, pt.y)
 
     def add_pts(self, pt_list: List[Point2D]):
         """
@@ -1829,7 +1853,7 @@ class Line2D(Line):
 
         return Segment2D(self.start_pt(), self.end_pt())
 
-    def as_segments(self) -> List[Segment2D]:
+    def segments(self) -> List[Segment2D]:
         """
         Convert to a list of segments 2d.
 
@@ -1855,7 +1879,7 @@ class Line2D(Line):
         if sample_distance <= 0.0:
             raise Exception(f"Sample distance must be positive. {sample_distance} received")
 
-        segments = self.as_segments()
+        segments = self.segments()
 
         densified_line_list = [segment.densify2d_asLine(sample_distance) for segment in segments]
 
@@ -2067,7 +2091,7 @@ class Line2D(Line):
 
         check_type(segment, "Input segment", Segment2D)
 
-        intersections = [intersect_segments2d(curr_segment, segment) for curr_segment in self.as_segments() if curr_segment is not None]
+        intersections = [intersect_segments2d(curr_segment, segment) for curr_segment in self.segments() if curr_segment is not None]
         intersections = list(filter(lambda val: val is not None, intersections))
         intersections = PointSegmentCollection2D(intersections)
 

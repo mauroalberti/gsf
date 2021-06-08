@@ -1750,22 +1750,29 @@ class Line3D(Line2D):
     """
 
     def __init__(self,
-                 pts: Optional[List[Point3D]] = None,
-                 name: str = ''):
+         x_seq: Optional[Union[Sequence[float], np.ndarray]] = None,
+         y_seq: Optional[Union[Sequence[float], np.ndarray]] = None,
+         z_seq: Optional[Union[Sequence[float], np.ndarray]] = None
+    ):
+        """
+        Creates the Line3D instance.
+        """
 
-        if pts is not None:
+        super(Line3D, self).__init__(x_seq, y_seq)
 
-            check_type(pts, "List", list)
-            for el in pts:
-                check_type(el, "Point3D", Point3D)
+        if z_seq is None and self.num_pts() != 0:
+            raise Exception(f"Z input is None while x and y inputs have lengths {self.num_pts()}")
 
+        if z_seq is None:
+            z_array = None
         else:
+            z_array = np.asarray(z_seq)
+            if z_array.ndim != 1:
+                raise Exception(f"Z input must have a dimension of 1, not {z_array.ndim}")
+            if len(z_array) != self.num_pts():
+                raise Exception(f"Z input has length {len(z_array)}, while x and y inputs have length {self.num_pts()}")
 
-            pts = []
-
-        super(Line3D, self).__init__(pts)
-
-        self.name = name
+        self._z_array = z_array
 
     def __repr__(self) -> str:
         """
@@ -1788,6 +1795,23 @@ class Line3D(Line2D):
                 txt = f"Line3D with {self.num_pts()} points: ({x1:.4f}, {y1:.4f}, {z1:.4f}) ... ({x2:.4f}, {y2:.4f}, {z2:.4f})"
 
         return txt
+
+    def pt(self,
+           ndx: numbers.Integral) -> Optional[Point3D]:
+        """
+        Returns the point at given index.
+        """
+
+        if self.num_pts() == 0:
+            return None
+        elif ndx < self.num_pts():
+            return Point3D(
+                x=self.x_array()[ndx],
+                y=self.y_array()[ndx],
+                z=self.z_array()[ndx]
+            )
+        else:
+            return None
 
     def add_pt(self,
                pt: Point3D):
@@ -1866,7 +1890,7 @@ class Line3D(Line2D):
                 end_pt=self.pt(ndx + 1)
             )
 
-    def as_segments(self):
+    def segments(self):
         """
         Convert to a list of segments.
 
@@ -1986,7 +2010,7 @@ class Line3D(Line2D):
 
         slopes = []
 
-        segments = self.as_segments()
+        segments = self.segments()
         for segment in segments:
             vector = segment.vector()
             slopes.append(-vector.slope_degr())  # minus because vector convention is positive downward

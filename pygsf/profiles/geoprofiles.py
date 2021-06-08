@@ -643,7 +643,7 @@ def calculate_profile_lines_intersection(
         profile_line2d
 ):
 
-    profile_segment2d_list = profile_line2d.as_segments()
+    profile_segment2d_list = profile_line2d.segments()
 
     profile_segment2d = profile_segment2d_list[0]
 
@@ -654,7 +654,7 @@ def calculate_profile_lines_intersection(
         else:
             multiline_id = id_list[ndx]
         for line2d in multiline2d.lines:
-            for line_segment2d in line2d.as_segments():
+            for line_segment2d in line2d.segments():
                 try:
                     intersection_point2d = profile_segment2d.intersection_2d_pt(line_segment2d)
                 except ZeroDivisionError:
@@ -675,7 +675,7 @@ def intersection_distances_by_profile_start_list(
 
     # convert the profile line
     # from a CartesianLine2DT to a CartesianSegment2DT
-    profile_segment2d_list = profile_line.as_segments()
+    profile_segment2d_list = profile_line.segments()
     # debug
     assert len(profile_segment2d_list) == 1
     profile_segment2d = profile_segment2d_list[0]

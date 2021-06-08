@@ -574,7 +574,7 @@ class Line4D(Line3D):
 
         return Segment4D(self.start_pt(), self.end_pt())
 
-    def as_segments(self):
+    def segments(self):
         """
         Convert to a list of segments.
 

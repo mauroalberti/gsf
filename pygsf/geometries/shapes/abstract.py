@@ -102,37 +102,16 @@ class Line(Shape, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def pt(self,
-           ndx: numbers.Integral) -> Point:
+           ndx: numbers.Integral) -> Optional[Point]:
 
-    """
-    def x_list(self) -> List[numbers.Real]:
-        return list(map(lambda pt: pt.x, self))
+    @property
+    @abc.abstractmethod
+    def points(self) -> List[Point]:
+        """
+        Returns the list of points (could be empty).
+        """
 
-    def y_list(self) -> List[numbers.Real]:
-        return list(map(lambda pt: pt.y, self))
-
-    def x_array(self):
-        return np.asarray(self.x_list())
-
-    def y_array(self):
-        return np.asarray(self.y_list())
-
-    def xy_arrays(self):
-        return self.x_array, self.y_array
-
-    def x_min(self):
-        return np.nanmin(self.x_array())
-
-    def x_max(self):
-        return np.nanmax(self.x_array())
-
-    def y_min(self):
-        return np.nanmin(self.y_array())
-
-    def y_max(self):
-        return np.nanmax(self.y_array())
-    """
-
+    @abc.abstractmethod
     def start_pt(self) -> Optional[Point]:
         """
         Return the first point of a Line or None when no points.
@@ -140,8 +119,9 @@ class Line(Shape, metaclass=abc.ABCMeta):
         :return: the first point or None.
         """
 
-        return self.pt(0) if len(self) > 0 else None
+        return self.pt(0) if len(self.x_array()) > 0 else None
 
+    @abc.abstractmethod
     def end_pt(self) -> Optional[Point]:
         """
         Return the last point of a Line or None when no points.
@@ -155,8 +135,9 @@ class Line(Shape, metaclass=abc.ABCMeta):
     def as_segment(self) -> Segment:
         """Return the segment defined by line start and end points"""
 
+    @property
     @abc.abstractmethod
-    def as_segments(self) -> List[Segment]:
+    def segments(self) -> List[Segment]:
         """Convert to a list of segments"""
 
     def xy_zipped(self) -> List[Tuple[numbers.Real, numbers.Real]]:
@@ -191,6 +172,34 @@ class Line(Shape, metaclass=abc.ABCMeta):
         """ The line length"""
     '''
 
+    """
+    def x_list(self) -> List[numbers.Real]:
+        return list(map(lambda pt: pt.x, self))
+
+    def y_list(self) -> List[numbers.Real]:
+        return list(map(lambda pt: pt.y, self))
+
+    def x_array(self):
+        return np.asarray(self.x_list())
+
+    def y_array(self):
+        return np.asarray(self.y_list())
+
+    def xy_arrays(self):
+        return self.x_array, self.y_array
+
+    def x_min(self):
+        return np.nanmin(self.x_array())
+
+    def x_max(self):
+        return np.nanmax(self.x_array())
+
+    def y_min(self):
+        return np.nanmin(self.y_array())
+
+    def y_max(self):
+        return np.nanmax(self.y_array())
+    """
 
 
 class Polygon(Shape, metaclass=abc.ABCMeta):

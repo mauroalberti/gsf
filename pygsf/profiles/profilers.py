@@ -1059,7 +1059,7 @@ class LineProfiler(list):
 
         profilers = []
 
-        for segment in src_line.as_segments():
+        for segment in src_line.segments():
             profilers.append(
                 SegmentProfiler(
 
