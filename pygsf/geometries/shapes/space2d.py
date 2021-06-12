@@ -251,6 +251,25 @@ class Point2D(Point):
 
         return another.y - self.y
 
+    def distance_2d(self,
+                 another: Point
+                 ) -> numbers.Real:
+        """
+        Calculate horizontal (2D) distance between two points.
+        TODO: consider case of polar CRS
+
+        :param another: another Point instance.
+        :return: the 2D distance (when the two points have the same CRS).
+
+        Examples:
+          >>> Point2D(1., 1.).distance_2d(Point2D(4., 5.))
+          5.0
+        """
+
+        #check_type(another, "Second point", Point2D)
+
+        return math.sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
+
     def distance(self,
                  another: 'Point2D'
                  ) -> numbers.Real:
@@ -271,7 +290,7 @@ class Point2D(Point):
 
         check_type(another, "Second point", Point2D)
 
-        return math.sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
+        return self.distance_2d(another)
 
     def scale(self,
         scale_factor: numbers.Real
@@ -1816,8 +1835,8 @@ class Line2D(Line):
         """
 
         check_type(pt, "Point", Point2D)
-        np.append(self._x_array, pt.x)
-        np.append(self._y_array, pt.y)
+        self._x_array = np.append(self._x_array, pt.x)
+        self._y_array = np.append(self._y_array, pt.y)
 
     def add_pts(self, pt_list: List[Point2D]):
         """
@@ -1828,7 +1847,13 @@ class Line2D(Line):
         """
 
         for pt in pt_list:
-            self.add_pt(pt)
+            check_type(pt, "Point", Point2D)
+
+        x_vals = [pt.x for pt in pt_list]
+        y_vals = [pt.y for pt in pt_list]
+
+        self._x_array = np.append(self._x_array, x_vals)
+        self._y_array = np.append(self._y_array, y_vals)
 
     def remove_coincident_points(self) -> Optional['Line2D']:
         """

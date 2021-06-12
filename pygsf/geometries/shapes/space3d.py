@@ -1,5 +1,6 @@
 
 import abc
+import math
 
 from typing import Optional, Callable
 
@@ -20,7 +21,7 @@ from ...mathematics.quaternions import *
 from ...utils.types import *
 
 
-class Point3D(Point):
+class Point3D(Point2D):
     """
     Cartesian point.
     Dimensions: 3D
@@ -30,27 +31,23 @@ class Point3D(Point):
         self,
         x: numbers.Real,
         y: numbers.Real,
-        z: numbers.Real = 0.0
+        z: numbers.Real
     ):
         """
         Construct a Point instance.
 
         :param x: point x coordinate.
-        :type x: numbers.Real.
         :param y: point y coordinate.
-        :type y: numbers.Real.
         :param z: point z coordinate.
-        :type z: numbers.Real.
         """
 
-        vals = [x, y]
-        if any(map(lambda val: not isinstance(val, numbers.Real), vals)):
-            raise Exception("X and y input values must be integer or float type")
-        if not all(map(math.isfinite, vals)):
-            raise Exception("X and y input values must be finite (#03)")
+        super(Point2D, self).__init__(x, y)
 
-        self._x = float(x)
-        self._y = float(y)
+        check_type(z, "Input z value", numbers.Real)
+
+        if not math.isfinite(z):
+            raise Exception("Z input value must be finite")
+
         self._z = float(z)
 
     @classmethod
@@ -68,6 +65,7 @@ class Point3D(Point):
             z=vect.z
         )
 
+    '''
     @property
     def x(self) -> numbers.Real:
         """
@@ -84,7 +82,9 @@ class Point3D(Point):
         """
 
         return self._x
+    '''
 
+    '''
     @property
     def y(self) -> numbers.Real:
         """
@@ -101,6 +101,7 @@ class Point3D(Point):
         """
 
         return self._y
+    '''
 
     @property
     def z(self) -> numbers.Real:
@@ -126,10 +127,12 @@ class Point3D(Point):
         :return:
 
         Examples;
-          >>> x, y, z = Point3D(1,1)
-          >>> x == 1
+          >>> x, y, z = Point3D(1,2,3)
+          >>> x == 1.0
           True
-          >>> y == 1
+          >>> y == 2.0
+          True
+          >>> z == 3.0
           True
 
         """
@@ -393,6 +396,27 @@ class Point3D(Point):
 
         return another.z - self.z
 
+    def distance_3d(self,
+                 another: 'Point3D'
+                 ) -> numbers.Real:
+        """
+        Calculate Euclidean spatial distance between two points.
+        TODO: consider case of polar CRS
+
+        :param another: another Point instance.
+        :return: the distance (when the two points have the same CRS).
+
+        Examples:
+          >>> Point3D(1., 1., 1.).distance(Point3D(4., 5., 1))
+          5.0
+          >>> Point3D(1, 1, 1).distance(Point3D(4, 5, 1))
+          5.0
+          >>> Point3D(1, 1, 1).distance(Point3D(4, 5, 1))
+          5.0
+        """
+
+        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
+
     def distance(self,
                  another: 'Point3D'
                  ) -> numbers.Real:
@@ -401,9 +425,7 @@ class Point3D(Point):
         TODO: consider case of polar CRS
 
         :param another: another Point instance.
-        :type another: Point.
         :return: the distance (when the two points have the same CRS).
-        :rtype: numbers.Real.
         :raise: Exception.
 
         Examples:
@@ -417,29 +439,7 @@ class Point3D(Point):
 
         check_type(another, "Point", Point3D)
 
-        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2 + (self.z - another.z) ** 2)
-
-    def dist_2d(self,
-                another: 'Point3D'
-                ) -> numbers.Real:
-        """
-        Calculate horizontal (2D) distance between two points.
-        TODO: consider case of polar CRS
-
-        :param another: another Point instance.
-        :type another: Point.
-        :return: the 2D distance (when the two points have the same CRS).
-        :rtype: numbers.Real.
-        :raise: Exception.
-
-        Examples:
-          >>> Point3D(1., 1., 1.).dist_2d(Point3D(4., 5., 7.))
-          5.0
-        """
-
-        check_type(another, "Second point", Point3D)
-
-        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
+        return self.distance_3d(another)
 
     def scale(self,
         scale_factor: numbers.Real
@@ -901,7 +901,7 @@ class Segment3D(Segment):
 
     def length_horizontal(self) -> numbers.Real:
 
-        return self.start_pt.dist_2d(self.end_pt)
+        return self.start_pt.distance_2d(self.end_pt)
 
     def length(self) -> numbers.Real:
 
@@ -1823,7 +1823,9 @@ class Line3D(Line2D):
         """
 
         check_type(pt, "Point", Point3D)
-        self.append(pt)
+        self._x_array = np.append(self._x_array, pt.x)
+        self._y_array = np.append(self._y_array, pt.y)
+        self._z_array = np.append(self._z_array, pt.z)
 
     def add_pts(self, pt_list: List[Point3D]):
         """
@@ -1834,7 +1836,15 @@ class Line3D(Line2D):
         """
 
         for pt in pt_list:
-            self.add_pt(pt)
+            check_type(pt, "Point", Point3D)
+
+        x_vals = [pt.x for pt in pt_list]
+        y_vals = [pt.y for pt in pt_list]
+        z_vals = [pt.z for pt in pt_list]
+
+        self._x_array = np.append(self._x_array, x_vals)
+        self._y_array = np.append(self._y_array, y_vals)
+        self._z_array = np.append(self._z_array, z_vals)
 
     def z_list(self) -> List[numbers.Real]:
 
@@ -1967,7 +1977,7 @@ class Line3D(Line2D):
         length = 0.0
         incremental_lengths.append(length)
         for ndx in range(self.num_pts() - 1):
-            length += self[ndx].dist_2d(self[ndx + 1])
+            length += self[ndx].distance_2d(self[ndx + 1])
             incremental_lengths.append(length)
 
         return np.asarray(incremental_lengths)

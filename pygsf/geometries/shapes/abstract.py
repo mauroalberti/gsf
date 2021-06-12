@@ -23,10 +23,11 @@ class Shape(object, metaclass=abc.ABCMeta):
         """
         Clone a shape."""
 
+    '''
     @abc.abstractmethod
     def bounding_box(self) -> Optional[Tuple['Point', 'Point']]:
         """ The shape bounding box"""
-
+    '''
 
 class Point(Shape, metaclass=abc.ABCMeta):
 
@@ -66,6 +67,12 @@ class Point(Shape, metaclass=abc.ABCMeta):
 
         return 0.0
 
+    '''
+    def bounding_box(self) -> Optional[Tuple['Point', 'Point']]:
+        
+        return self, self
+    '''
+
     @abc.abstractmethod
     def is_coincident(self, other: 'Point') -> bool:
         """Check whether two points are coincident"""
@@ -103,15 +110,17 @@ class Line(Shape, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def pt(self,
            ndx: numbers.Integral) -> Optional[Point]:
+        """Extract point at given index"""
 
+    '''
     @property
     @abc.abstractmethod
     def points(self) -> List[Point]:
         """
         Returns the list of points (could be empty).
         """
+    '''
 
-    @abc.abstractmethod
     def start_pt(self) -> Optional[Point]:
         """
         Return the first point of a Line or None when no points.
@@ -121,7 +130,6 @@ class Line(Shape, metaclass=abc.ABCMeta):
 
         return self.pt(0) if len(self.x_array()) > 0 else None
 
-    @abc.abstractmethod
     def end_pt(self) -> Optional[Point]:
         """
         Return the last point of a Line or None when no points.
@@ -129,7 +137,7 @@ class Line(Shape, metaclass=abc.ABCMeta):
         :return: the last point or None.
         """
 
-        return self.pt(-1) if len(self) > 0 else None
+        return self.pt(-1) if len(self.x_array()) > 0 else None
 
     @abc.abstractmethod
     def as_segment(self) -> Segment:
@@ -208,4 +216,15 @@ class Polygon(Shape, metaclass=abc.ABCMeta):
     def num_side(self):
         """Return number of sides"""
 
+    def area(self):
+
+        return NotImplemented
+
+    def length(self):
+
+        return NotImplemented
+
+    def clone(self):
+
+        return NotImplemented
 

@@ -684,7 +684,7 @@ def intersection_distances_by_profile_start_list(
     # creating a list of float values
     distance_from_profile_start_list = []
     for intersection in intersections:
-        distance_from_profile_start_list.append(profile_segment2d.start_pt.dist_2d(intersection[0]))
+        distance_from_profile_start_list.append(profile_segment2d.start_pt.distance_2d(intersection[0]))
 
     return distance_from_profile_start_list
 

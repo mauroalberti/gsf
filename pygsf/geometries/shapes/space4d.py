@@ -1,7 +1,8 @@
 
+from typing import Union
 from math import sqrt
 import datetime
-
+from copy import deepcopy
 
 from .abstract import Point, Segment, Line
 from ...mathematics.vectors3d import *
@@ -9,7 +10,7 @@ from .space2d import Point2D, Line2D
 from .space3d import Point3D, Line3D
 
 
-class Point4D(Point):
+class Point4D(Point3D):
     """
     Cartesian point.
     Dimensions: 3D + time
@@ -25,13 +26,18 @@ class Point4D(Point):
         Construct a Point instance given 3 float values and an optional time value (seconds from ....).
         """
 
-        self._p = np.array([x, y, z], dtype=np.float64)
+        super(Point4D, self).__init__(x, y, z)
+
+        if t is not None:
+            check_type(t, "Input t value", datetime.datetime)
+
         self._t = t
 
     def __repr__(self):
 
         return f"Point4D({self.x:.4f}, {self.y:.4f}, {self.z:.4f}, {self.t})"
 
+    '''
     @classmethod
     def from_array(cls, a):
         """
@@ -58,7 +64,9 @@ class Point4D(Point):
         obj._p = c
         obj._t = None
         return obj
+    '''
 
+    '''
     @property
     def x(self):
         """
@@ -70,7 +78,9 @@ class Point4D(Point):
         """
 
         return self._p[0]
+    '''
 
+    '''
     @property
     def y(self):
         """
@@ -81,7 +91,9 @@ class Point4D(Point):
           3.0
         """
         return self._p[1]
+    '''
 
+    '''
     @property
     def z(self):
         """
@@ -92,6 +104,7 @@ class Point4D(Point):
           41.0
         """
         return self._p[2]
+    '''
 
     @property
     def t(self):
@@ -216,19 +229,7 @@ class Point4D(Point):
           5.0
         """
 
-        return abs(self - another)
-
-    def dist_2d(self, another):
-        """
-        Calculate horizontal (2D) distance between two points.
-        todo: make sure it works as intended with nan values
-
-        Examples:
-          >>> Point4D(1.,1.,1.).dist_2d(Point4D(4.,5.,7.))
-          5.0
-        """
-
-        return sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
+        return self.distance_3d(another)
 
     def is_coincident(self,
                       other,
@@ -245,7 +246,7 @@ class Point4D(Point):
           True
         """
 
-        if self.dist_2d(other) > tolerance:
+        if self.distance_2d(other) > tolerance:
             return False
         elif self.distance(other) > tolerance:
             return False
@@ -384,7 +385,7 @@ class Segment4D(Segment):
     @property
     def length_2d(self):
 
-        return self.start_pt.dist_2d(self.end_pt)
+        return self.start_pt.distance_2d(self.end_pt)
 
     @property
     def length_3d(self):
@@ -525,38 +526,48 @@ class Line4D(Line3D):
     """
 
     def __init__(self,
-                 pts: Optional[List[Point4D]] = None
+                 x_seq: Optional[Union[Sequence[float], np.ndarray]] = None,
+                 y_seq: Optional[Union[Sequence[float], np.ndarray]] = None,
+                 z_seq: Optional[Union[Sequence[float], np.ndarray]] = None,
+                 t_seq: Optional[Sequence[datetime.datetime]] = None
                  ):
+        """
+        Creates the Line4D instance.
+        """
 
-        if pts is not None:
+        super(Line4D, self).__init__(x_seq, y_seq, z_seq)
 
-            check_type(pts, "List", list)
-            for el in pts:
-                check_type(el, "Point4D", Point4D)
+        if t_seq is None and self.num_pts() != 0:
+            raise Exception(f"T input is None while points are {self.num_pts()}")
 
-        else:
+        if t_seq is not None and self.num_pts() == 0:
+            raise Exception(f"T input is not None while points are {self.num_pts()}")
 
-            pts = []
-
-        super(Line4D, self).__init__(pts)
+        self._times = t_seq
 
     def clone(self):
 
         return Line4D(
-            pts=[pt.clone() for pt in self],
-            name=self.name
+            x_seq=self.x_array().copy(),
+            y_seq=self.y_array().copy(),
+            z_seq=self.z_array().copy(),
+            t_seq=deepcopy(self._times)
         )
 
     def add_pt(self, pt: Point4D):
         """
-        In-place transformation of the original Line2D instance
+        In-place transformation of the original Line4D instance
         by adding a new point at the end.
 
         :param pt: the point to add
         """
 
         check_type(pt, "Point", Point4D)
-        self.append(pt)
+
+        self._x_array = np.append(self._x_array, pt.x)
+        self._y_array = np.append(self._y_array, pt.y)
+        self._z_array = np.append(self._z_array, pt.z)
+        self._times.append(pt.t)
 
     def add_pts(self, pt_list: List[Point4D]):
         """
@@ -567,7 +578,17 @@ class Line4D(Line3D):
         """
 
         for pt in pt_list:
-            self.add_pt(pt)
+            check_type(pt, "Point", Point4D)
+
+        x_vals = [pt.x for pt in pt_list]
+        y_vals = [pt.y for pt in pt_list]
+        z_vals = [pt.z for pt in pt_list]
+        t_vals = [pt.t for pt in pt_list]
+
+        self._x_array = np.append(self._x_array, x_vals)
+        self._y_array = np.append(self._y_array, y_vals)
+        self._z_array = np.append(self._z_array, z_vals)
+        self._times.extend(t_vals)
 
     def as_segment(self) -> Segment4D:
         """Return the segment defined by line start and end points"""
@@ -614,7 +635,7 @@ class Line4D(Line3D):
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
-            length += self[ndx].dist_2d(self[ndx + 1])
+            length += self[ndx].distance_2d(self[ndx + 1])
         return length
 
     def invert_direction(self):
