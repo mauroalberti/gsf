@@ -1,9 +1,6 @@
-import numbers
-from typing import Optional, List, Tuple
 
 import numpy as np
 
-from ...utils.types import *
 from .abstract import *
 from .space2d import XYArrayPair
 

@@ -20,9 +20,8 @@ except ImportError:
 
 import geopandas as gpd
 
-from pygsf.georeferenced.shapes.space2d import GeoLine2D
-from pygsf.georeferenced.shapes.space3d import *
-from pygsf.utils.types import *
+from ...georeferenced.shapes.space3d import *
+from ...utils.types import *
 
 ogr_3d_line_types = [
     ogr.wkbLineString25D,
@@ -93,6 +92,7 @@ def reading_line_shapefile(
 
     :param shp_path: line shapefile path.
     :param flds: the fields to extract values from.
+    :param read_z:
     :return: success status and (error message or results).
     """
 

@@ -730,7 +730,7 @@ def pack_to_points(
     return pts
 
 
-class Segment3D(Segment):
+class Segment3D(Segment2D):
     """
     Segment is a geometric object defined by the straight line between
     two vertices.
@@ -743,22 +743,14 @@ class Segment3D(Segment):
         Creates a segment instance provided the two points have the same CRS code.
 
         :param start_pt: the start point.
-        :type: Point.
         :param end_pt: the end point.
-        :type end_pt: Point.
         :return: the new segment instance if both points have the same georeferenced.
-        :raises: CRSCodeException.
         """
 
         check_type(start_pt, "Start point", Point3D)
-
         check_type(end_pt, "End point", Point3D)
 
-        if start_pt.distance(end_pt) == 0.0:
-            raise Exception("Source points cannot be coincident")
-
-        self._start_pt = start_pt.clone()
-        self._end_pt = end_pt.clone()
+        super(Segment3D, self).__init__(start_pt, end_pt)
 
     @classmethod
     def fromVector(cls,
@@ -811,16 +803,6 @@ class Segment3D(Segment):
             self.start_pt,
             self.end_pt
         )
-
-    @property
-    def start_pt(self) -> Point3D:
-
-        return self._start_pt
-
-    @property
-    def end_pt(self) -> Point3D:
-
-        return self._end_pt
 
     def __iter__(self):
         """
@@ -899,13 +881,13 @@ class Segment3D(Segment):
             z=self.delta_z()
         )
 
-    def length_horizontal(self) -> numbers.Real:
+    def length_3d(self) -> numbers.Real:
 
-        return self.start_pt.distance_2d(self.end_pt)
+        return self.start_pt.distance_3d(self.end_pt)
 
     def length(self) -> numbers.Real:
 
-        return self.start_pt.distance(self.end_pt)
+        return self.length_3d()
 
     def ratio_delta_zs(self) -> Optional[numbers.Real]:
         """
@@ -914,7 +896,7 @@ class Segment3D(Segment):
         :return: optional numbers.Real.
         """
 
-        len2d = self.length_horizontal()
+        len2d = self.length_2d()
 
         if len2d == 0.0:
             return None
@@ -1180,9 +1162,9 @@ class Segment3D(Segment):
         :rtype: Optional[CPlane3D].
         """
 
-        if self.length_horizontal() == 0.0:  # collapsed segment
+        if self.length_2d() == 0.0:  # collapsed segment
             return None
-        elif self.length_horizontal() == 0.0:  # vertical segment
+        elif self.length_2d() == 0.0:  # vertical segment
             return None
 
         # arbitrary point on the same vertical as end point
@@ -1813,6 +1795,10 @@ class Line3D(Line2D):
         else:
             return None
 
+    def pts(self) -> List[Point3D]:
+
+        return [Point3D(*self.values_at(ndx)) for ndx in range(self.num_pts())]
+
     def add_pt(self,
                pt: Point3D):
         """
@@ -1922,19 +1908,16 @@ class Line3D(Line2D):
 
         return Line3D(self + another)
 
+    def length_3d(self) -> numbers.Real:
+
+        length = 0.0
+        for ndx in range(self.num_pts() - 1):
+            length += self.pt(ndx).distance_3d(self.pt(ndx + 1))
+        return length
+
     def length(self) -> numbers.Real:
 
-        length = 0.0
-        for ndx in range(self.num_pts() - 1):
-            length += self.pt(ndx).distance(self.pt(ndx + 1))
-        return length
-
-    def length_2d(self) -> numbers.Real:
-
-        length = 0.0
-        for ndx in range(self.num_pts() - 1):
-            length += self.pt(ndx).to2d().distance(self.pt(ndx + 1).to2d())
-        return length
+        return self.length_3d()
 
     def step_delta_z(self) -> List[numbers.Real]:
         """
@@ -2114,8 +2097,7 @@ class Line3D(Line2D):
         """
 
         return Line3D(
-            pts=[pt.clone() for pt in self],
-            name=self.name
+            pts=[pt.clone() for pt in self]
         )
 
     def close_3d(self) -> 'Line3D':

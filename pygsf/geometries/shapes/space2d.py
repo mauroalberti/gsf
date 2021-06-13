@@ -4,7 +4,6 @@ import itertools
 
 from typing import Optional, Union
 
-import abc
 import numbers
 
 from math import fabs
@@ -252,7 +251,7 @@ class Point2D(Point):
         return another.y - self.y
 
     def distance_2d(self,
-                 another: Point
+                 another: 'Point2D'
                  ) -> numbers.Real:
         """
         Calculate horizontal (2D) distance between two points.
@@ -265,8 +264,6 @@ class Point2D(Point):
           >>> Point2D(1., 1.).distance_2d(Point2D(4., 5.))
           5.0
         """
-
-        #check_type(another, "Second point", Point2D)
 
         return math.sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
@@ -408,8 +405,8 @@ class Segment2D(Segment):
     """
 
     def __init__(self,
-                 start_pt: Point,
-                 end_pt: Point
+                 start_pt: Point2D,
+                 end_pt: Point2D
                  ):
         """
         Creates a segment instance provided the two points have the same CRS code.
@@ -420,14 +417,10 @@ class Segment2D(Segment):
         :raises: CRSCodeException.
         """
 
-        check_type(start_pt, "Start point", Point)
-        check_type(end_pt, "End point", Point)
+        check_type(start_pt, "Start point", Point2D)
+        check_type(end_pt, "End point", Point2D)
 
-        if start_pt.distance(end_pt) == 0.0:
-            raise Exception("Source points cannot be coincident")
-
-        self._start_pt = start_pt.as_point2d()
-        self._end_pt = end_pt.as_point2d()
+        super(Segment2D, self).__init__(start_pt, end_pt)
 
     def __repr__(self) -> str:
         """
@@ -442,22 +435,22 @@ class Segment2D(Segment):
             self.end_pt
         )
 
-    @property
-    def start_pt(self) -> Point2D:
-
-        return self._start_pt
-
-    @property
-    def end_pt(self) -> Point2D:
-
-        return self._end_pt
-
     def asPoints(self) -> List[Point2D]:
         """
         Return the segments as points.
         """
 
         return [self.start_pt, self.end_pt]
+
+    def length_2d(self) -> numbers.Real:
+        """
+        Returns the horizontal length of the segment.
+
+        :return: the horizontal length of the segment.
+        :rtype: numbers.Real.
+        """
+
+        return self.start_pt.distance_2d(self.end_pt)
 
     def length(self) -> numbers.Real:
         """
@@ -467,7 +460,7 @@ class Segment2D(Segment):
         :rtype: numbers.Real.
         """
 
-        return self.start_pt.distance(self.end_pt)
+        return self.length_2d()
 
     def __iter__(self):
         """
@@ -1930,7 +1923,7 @@ class Line2D(Line):
 
         length = 0.0
         for ndx in range(self.num_pts() - 1):
-            length += self.pt(ndx).distance(self.pt(ndx + 1))
+            length += self.pt(ndx).distance_2d(self.pt(ndx + 1))
         return length
 
     def step_lengths_2d(self) -> List[numbers.Real]:
@@ -2025,16 +2018,17 @@ class Line2D(Line):
 
         return list(map(lambda pt: pt.x, self))
 
-
-
     def x_min(self):
         return np.nanmin(self.x_array())
 
     def x_max(self):
         return np.nanmax(self.x_array())
 
-    def x_mean(self):
+    def x_minmax(self):
 
+        return self.x_min(), self.x_max()
+
+    def x_mean(self):
         return np.nanmean(self.x_array())
 
     def x_var(self):
@@ -2049,13 +2043,15 @@ class Line2D(Line):
 
         return list(map(lambda pt: pt.x, self))
 
-
-
     def y_min(self):
         return np.nanmin(self.y_array())
 
     def y_max(self):
         return np.nanmax(self.y_array())
+
+    def y_minmax(self):
+
+        return self.y_min(), self.y_max()
 
     def y_mean(self):
 
@@ -2353,7 +2349,7 @@ def center(
     The 2D shape center as a point (2D)
     """
 
-    raise NotImplementedError("Center method is not implemented for {type(shape)}")
+    raise NotImplementedError(f"Center method is not implemented for {type(shape)}")
 
 
 @center.register(Point2D)

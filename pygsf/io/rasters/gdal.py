@@ -1,15 +1,13 @@
 
 import os
 
-from pygsf.geometries.shapes.space2d import Point2D
-
 try:
     from osgeo import gdal
 except ImportError:
     import gdal
 
-from pygsf.georeferenced.rasters import *
-from pygsf.geometries.grids.geotransform import *
+from ...georeferenced.rasters import *
+from ...geometries.grids.geotransform import *
 
 
 GRID_NULL_VALUE = -99999  # should already be imported but it isn't

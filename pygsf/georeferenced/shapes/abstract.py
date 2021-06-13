@@ -2,10 +2,21 @@
 import numbers
 import abc
 
-from ...geometries.shapes.abstract import Shape, Line
+from ...geometries.shapes.abstract import Shape
+from ...utils.types import *
 
 
 class GeoShape(object, metaclass=abc.ABCMeta):
+
+    def __init__(self,
+                 shape: Shape,
+                 epsg_cd: numbers.Integral):
+
+        check_type(shape, "Shape", Shape)
+        check_type(epsg_cd, "EPSG code", numbers.Integral)
+
+        self._shape = shape
+        self._epsg_code = epsg_cd
 
     @property
     @abc.abstractmethod
@@ -29,7 +40,7 @@ class GeoShape(object, metaclass=abc.ABCMeta):
                   epsg_cd: numbers.Integral):
         """Set EPSG code"""
 
-
+'''
 class GeoLine(GeoShape, metaclass=abc.ABCMeta):
 
     @property
@@ -42,3 +53,4 @@ class GeoLine(GeoShape, metaclass=abc.ABCMeta):
     def shape(self,
               shp: Line):
         """Set shape"""
+'''

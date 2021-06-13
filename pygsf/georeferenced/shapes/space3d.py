@@ -1,31 +1,28 @@
-from abc import ABC
+
 from typing import Optional
 
 import numbers
 
-from .abstract import GeoLine
+from .space2d import GeoLine2D
 from ..crs import *
 from ...geometries.shapes.joins import *
 
 
-class GeoLine3D(GeoLine, ABC):
+class GeoLine3D(GeoLine2D):
 
     def __init__(self,
-                 line: Line3D,
-                 epsg_cd: numbers.Integral = -1):
+                 shape: Line3D,
+                 epsg_cd: numbers.Integral):
 
-        check_type(line, "Line", Line3D)
+        check_type(shape, "Line", Line3D)
 
-        super(GeoLine3D, self).__init__()
-
-        self.shape = line
-        self.epsg_code = epsg_cd
+        super(GeoLine3D, self).__init__(shape, epsg_cd)
 
     @property
-    def geometry(self) -> Line3D:
+    def shape(self) -> Line3D:
         return self._shape
 
-    @geometry.setter
+    @shape.setter
     def shape(self,
               shape: Line3D):
         check_type(shape, "Line", Line3D)

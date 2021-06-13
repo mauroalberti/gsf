@@ -6,7 +6,7 @@ from abc import ABC
 
 from ...geometries.shapes.space4d import *
 from ...geometries.shapes.joins import *
-from .abstract import GeoLine
+from .space3d import GeoLine3D
 from ..crs import *
 
 
@@ -1497,24 +1497,21 @@ class GeoSegment4D:
     '''
 
 
-class GeoLine4D(GeoLine, ABC):
+class GeoLine4D(GeoLine3D):
 
     def __init__(self,
                  shape: Line4D,
-                 epsg_cd: numbers.Integral = -1):
+                 epsg_cd: numbers.Integral):
 
         check_type(shape, "Line", Line4D)
 
-        super(GeoLine4D, self).__init__()
-
-        self.shape = shape
-        self.epsg_code = epsg_cd
+        super(GeoLine4D, self).__init__(shape, epsg_cd)
 
     @property
-    def geometry(self) -> Line4D:
+    def shape(self) -> Line4D:
         return self._shape
 
-    @geometry.setter
+    @shape.setter
     def shape(self,
               shape: Line4D):
         check_type(shape, "Line", Line4D)

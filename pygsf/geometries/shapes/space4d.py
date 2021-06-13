@@ -4,10 +4,9 @@ from math import sqrt
 import datetime
 from copy import deepcopy
 
-from .abstract import Point, Segment, Line
 from ...mathematics.vectors3d import *
 from .space2d import Point2D, Line2D
-from .space3d import Point3D, Line3D
+from .space3d import Point3D, Line3D, Segment3D
 
 
 class Point4D(Point3D):
@@ -311,26 +310,20 @@ class Point4D(Point3D):
             return np.nan
 
 
-class Segment4D(Segment):
+class Segment4D(Segment3D):
     """
     Segment is a geometric object defined by a straight line between
     two points.
     """
 
-    def __init__(self, start_pt, end_pt):
+    def __init__(self,
+                 start_pt: Point4D,
+                 end_pt: Point4D):
 
-        self._start_pt = start_pt
-        self._end_pt = end_pt
+        check_type(start_pt, "Start point", Point4D)
+        check_type(end_pt, "End point", Point4D)
 
-    @property
-    def start_pt(self):
-
-        return self._start_pt
-
-    @property
-    def end_pt(self):
-
-        return self._end_pt
+        super(Segment4D, self).__init__(start_pt, end_pt)
 
     def clone(self):
 
@@ -383,14 +376,9 @@ class Segment4D(Segment):
         return self.end_pt.z - self.start_pt.z
 
     @property
-    def length_2d(self):
+    def length(self):
 
-        return self.start_pt.distance_2d(self.end_pt)
-
-    @property
-    def length_3d(self):
-
-        return self.start_pt.distance(self.end_pt)
+        return self.length_3d()
 
     def vector(self):
 
@@ -631,12 +619,9 @@ class Line4D(Line3D):
 
         return Line4D(self + another)
 
-    def length_2d(self):
+    def length(self) -> numbers.Real:
 
-        length = 0.0
-        for ndx in range(self.num_pts() - 1):
-            length += self[ndx].distance_2d(self[ndx + 1])
-        return length
+        return self.length_3d()
 
     def invert_direction(self):
 

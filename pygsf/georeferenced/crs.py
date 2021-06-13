@@ -1,8 +1,10 @@
 
-from typing import Any
+from typing import Any, Optional, Tuple, Union
 import numbers
 
-from pyproj import Proj, transform
+import numpy as np
+
+from pyproj.transformer import Transformer, TransformerGroup, AreaOfInterest
 
 
 min_epsg_crs_code = 2000  # checked 2019-06-14 in EPSG database
@@ -103,14 +105,89 @@ def check_epsg(
         )
     )
 
-"""
-def project_xy(
-        source_epsg_code: numbers.Integral,
-        dest_epsg_code: numbers.Integral,
-)
 
-inProj = Proj('epsg:3857')
-outProj = Proj('epsg:4326')
-x1,y1 = -11705274.6374,4826473.6922
-x2,y2 = transform(inProj,outProj,x1,y1)
-"""
+def project_xy(
+    x: numbers.Real,
+    y: numbers.Real,
+    source_epsg_code: numbers.Integral,
+    dest_epsg_code: numbers.Integral = 4326,
+) -> Optional[Tuple[numbers.Real, numbers.Real]]:
+
+    if source_epsg_code == -1:
+        return None
+
+    if dest_epsg_code == -1:
+        return None
+
+    transformer = Transformer.from_crs(
+        f"epsg:{source_epsg_code}",
+        f"epsg:{dest_epsg_code}"
+    )
+
+    x_prj, y_prj = transformer.transform(x, y)
+
+    return x_prj, y_prj
+
+
+def project_extent(
+    x_min: numbers.Real,
+    x_max: numbers.Real,
+    y_min: numbers.Real,
+    y_max: numbers.Real,
+    source_epsg_code: numbers.Integral
+) -> Optional[Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real]]:
+
+    result = project_xy(
+        x=x_min,
+        y=y_min,
+        source_epsg_code=source_epsg_code
+    )
+
+    if result is None:
+        return None
+
+    lon_min, lat_min = result
+
+    result = project_xy(
+        x=x_max,
+        y=y_max,
+        source_epsg_code=source_epsg_code
+    )
+
+    if result is None:
+        return None
+
+    lon_max, lat_max = result
+
+    return lon_min, lat_min, lon_max, lat_max
+
+
+def project_xy_arrays(
+    x_array: np.ndarray,
+    y_array: np.ndarray,
+    source_epsg_code: numbers.Integral,
+    dest_epsg_code: numbers.Integral,
+    area_of_interest: Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real]
+) -> Tuple[bool, Union[str, Tuple[np.ndarray, np.ndarray]]]:
+
+    try:
+
+        transformer_group = TransformerGroup(
+            crs_from=f"epsg:{source_epsg_code}",
+            crs_to=f"epsg:{dest_epsg_code}",
+            area_of_interest=AreaOfInterest(*area_of_interest),
+        )
+
+        if not transformer_group.best_available:
+            return False, "Best transformation is not available"
+
+        proj_x_coords, proj_y_coords = transformer_group.transformers[0].transform(
+            x_array,
+            y_array
+        )
+
+        return True, (proj_x_coords, proj_y_coords)
+
+    except Exception as e:
+
+        return False, str(e)

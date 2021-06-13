@@ -253,14 +253,9 @@ class GeoTransform(np.ndarray):
         The pixel/line location of the center of the top left pixel would
         therefore be (0.5,0.5)."
 
-        :param geotransform: the used geotransform.
-        :type geotransform: GeoTransform.
         :param i: the pixel i coordinate.
-        :type i: numbers.Real.
         :param j: the pixel i coordinate.
-        :type i:j numbers.Real.
         :return: tuple storing geographic x-y pair
-        :rtype: tuple of two floats.
 
         Examples:
           >>> gt1 = GeoTransform(1500, 3000, 10, 10)
@@ -310,15 +305,9 @@ class GeoTransform(np.ndarray):
 
         g2 * (g1g3 - g0g4 + g4x - g1y) / (g2g4 - g1g5) = x - g0 - g1p
 
-
-        :param geotransform: the input geotransform.
-        :type geotransform: GeoTransform.
         :param x: the  geographic x coordinate.
-        :type x: numbers.Real.
         :param y: the geographic y coordinate.
-        :type y: numbers.Real
         :return: tuple storing pixel x-y pair
-        :rtype: tuple of two floats.
 
         Examples:
           >>> gt1 = GeoTransform(1500, 3000, 10, 10)

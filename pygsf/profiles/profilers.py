@@ -103,6 +103,7 @@ class SegmentProfiler:
         :param start_pt: the profile start point.
         :param end_pt: the profile end point.
         :param densify_distance: the distance with which to densify the segment profile.
+        :param epsg_cd: the EPSG code of the points
         """
 
         check_type(start_pt, "Input start point", (Point2D, Point3D, Point4D))
@@ -1062,7 +1063,6 @@ class LineProfiler(list):
         for segment in src_line.segments():
             profilers.append(
                 SegmentProfiler(
-
                     start_pt=segment.start_pt,
                     end_pt=segment.end_pt,
                     densify_distance=densify_distance,

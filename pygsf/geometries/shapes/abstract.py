@@ -5,6 +5,7 @@ import abc
 
 import math
 
+from ...mathematics.defaults import *
 from ...utils.types import *
 
 
@@ -23,11 +24,6 @@ class Shape(object, metaclass=abc.ABCMeta):
         """
         Clone a shape."""
 
-    '''
-    @abc.abstractmethod
-    def bounding_box(self) -> Optional[Tuple['Point', 'Point']]:
-        """ The shape bounding box"""
-    '''
 
 class Point(Shape, metaclass=abc.ABCMeta):
 
@@ -67,32 +63,47 @@ class Point(Shape, metaclass=abc.ABCMeta):
 
         return 0.0
 
-    '''
-    def bounding_box(self) -> Optional[Tuple['Point', 'Point']]:
-        
-        return self, self
-    '''
+    @abc.abstractmethod
+    def distance(self, other: 'Point') -> numbers.Real:
+        """Calculate distance between two points"""
 
     @abc.abstractmethod
-    def is_coincident(self, other: 'Point') -> bool:
+    def is_coincident(self,
+                      other: 'Point',
+                      tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
+                      ) -> bool:
         """Check whether two points are coincident"""
 
     @abc.abstractmethod
     def distance(self, other: 'Point') -> bool:
         """Calculate distance with another point"""
 
-    @abc.abstractmethod
-    def as_point2d(self):
-        """Converts a generic point to a point 2D"""
-
 
 class Segment(Shape, metaclass=abc.ABCMeta):
 
-    '''
-    @abc.abstractmethod
-    def length(self):
-        """Calculate shape length"""
-    '''
+    def __init__(self,
+        start_pt: Point,
+        end_pt: Point
+    ):
+
+        check_type(start_pt, "Start point", Point)
+        check_type(end_pt, "End point", Point)
+
+        if start_pt.distance(end_pt) == 0.0:
+            raise Exception("Source points cannot be coincident")
+
+        self._start_pt = start_pt
+        self._end_pt = end_pt
+
+    @property
+    def start_pt(self) -> Point:
+
+        return self._start_pt
+
+    @property
+    def end_pt(self) -> Point:
+
+        return self._end_pt
 
     def area(self):
         """Calculate shape area"""
@@ -111,15 +122,6 @@ class Line(Shape, metaclass=abc.ABCMeta):
     def pt(self,
            ndx: numbers.Integral) -> Optional[Point]:
         """Extract point at given index"""
-
-    '''
-    @property
-    @abc.abstractmethod
-    def points(self) -> List[Point]:
-        """
-        Returns the list of points (could be empty).
-        """
-    '''
 
     def start_pt(self) -> Optional[Point]:
         """

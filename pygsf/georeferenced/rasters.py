@@ -7,8 +7,6 @@ import numpy as np
 from ..geometries.grids.fields import *
 from ..geometries.grids.geotransform import *
 from ..geometries.grids.utils import ij_array_to_ij_pixel, ij_pixel_to_ij_array
-
-from ..geometries.shapes.space2d import *
 from ..geometries.shapes.space3d import *
 from ..geometries.grids.interpolations import *
 

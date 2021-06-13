@@ -10,30 +10,69 @@ from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.linestring import LineString
 
-from .abstract import GeoLine
+from .abstract import *
 from ..crs import *
 from ...geometries.shapes.joins import *
 
 
-class GeoLine2D(GeoLine):
+class GeoPoint2d(GeoShape):
 
     def __init__(self,
-                 shape: Line2D,
-                 epsg_cd: numbers.Integral = -1):
+                 pt: Point2D,
+                 epsg_cd: numbers.Integral):
 
-        check_type(shape, "Line", Line2D)
+        check_type(pt, "Point", Point2D)
+        check_type(epsg_cd, "Epsg code", numbers.Integral)
 
-        super(GeoLine2D, self).__init__()
+        super(GeoPoint2d, self).__init__()
 
-        self._shape = shape
+        self._shape = pt
         self._epsg_code = epsg_cd
 
     @property
-    def geometry(self) -> Line2D:
+    def shape(self) -> Shape:
+        """Return shape"""
 
         return self._shape
 
-    @geometry.setter
+    @shape.setter
+    def shape(self,
+              shp: Point2D):
+        """Set shape"""
+
+        check_type(shp, "Shape", Point2D)
+        self._shape = shp
+
+    @property
+    def epsg_code(self):
+        """Return EPSG code"""
+
+        return self._epsg_code
+
+    @epsg_code.setter
+    def epsg_code(self,
+                  epsg_cd: numbers.Integral):
+        """Set EPSG code"""
+
+        check_type(epsg_cd, "EPSG code", numbers.Integral)
+
+
+class GeoLine2D(GeoShape):
+
+    def __init__(self,
+                 shape: Line2D,
+                 epsg_cd: numbers.Integral):
+
+        check_type(shape, "Line", Line2D)
+
+        super(GeoLine2D, self).__init__(shape, epsg_cd)
+
+    @property
+    def shape(self) -> Line2D:
+
+        return self._shape
+
+    @shape.setter
     def shape(self,
               shape: Line2D):
 
@@ -74,6 +113,23 @@ class GeoLine2D(GeoLine):
                 txt = "GeoLine2D with {} points: ({:.4f}, {:.4f}) ... ({:.4f}, {:.4f})".format(num_points, x1, y1, x2, y2)
 
         return txt + f" with EPSG code {self.epsg_code}"
+
+    def extent(self) -> Optional[Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real]]:
+        """
+        Return the optional geoline extent as a tuple of
+        long-min, lat-min, long-max, lat-max.
+        """
+
+        if self.epsg_code == -1:
+            return None
+
+        return project_extent(
+                x_min=self.shape.x_min(),
+                x_max=self.shape.x_max(),
+                y_min=self.shape.y_min(),
+                y_max=self.shape.y_max(),
+                source_epsg_code=self.epsg_code
+        )
 
 
 class GeoPoints2D:
@@ -755,7 +811,7 @@ def line2d_from_shapely(
 
     x_array, y_array = shapely_geom.xy
 
-    return Line2D.fromArrays(
+    return Line2D(
         x_array,
         y_array
     )

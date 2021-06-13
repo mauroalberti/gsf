@@ -1,7 +1,5 @@
 from enum import Enum
-from typing import Union, List, Optional
 
-from .space2d import *
 from .space3d import *
 
 
