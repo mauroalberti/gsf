@@ -533,6 +533,46 @@ class Line4D(Line3D):
 
         self._times = t_seq
 
+    @classmethod
+    def fromPoints(cls,
+        pts: Optional[List[Point4D]] = None
+    ):
+        """
+        Creates the Line4D instance.
+
+        :param pts: a list of points
+        :return: a Line4D instance.
+        """
+
+        if pts is None:
+
+            x_list = None
+            y_list = None
+            z_list = None
+            t_list = None
+
+        else:
+
+            x_list = []
+            y_list = []
+            z_list = []
+            t_list = []
+
+            check_type(pts, "List", list)
+            for pt in pts:
+                check_type(pt, "Point", Point4D)
+                x_list.append(pt.x)
+                y_list.append(pt.y)
+                z_list.append(pt.z)
+                t_list.append(pt.t)
+
+        return cls(
+            x_list,
+            y_list,
+            z_list,
+            t_list
+        )
+
     def clone(self):
 
         return Line4D(
@@ -608,7 +648,7 @@ class Line4D(Line3D):
                 )
             )
 
-        return Line2D(pts=pts2d)
+        return Line2D.fromPoints(pts=pts2d)
 
     def join(self, another):
         """
@@ -665,7 +705,7 @@ class Line4D(Line3D):
         pts = [pt.clone() for pt in self]
         pts.reverse()
 
-        return Line4D(
+        return Line4D.fromPoints(
             pts=pts
         )
 

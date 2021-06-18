@@ -53,6 +53,10 @@ class Point(Shape, metaclass=abc.ABCMeta):
 
         return self._y
 
+    @abc.abstractmethod
+    def as_point2d(self):
+        """Converts a point to a point 2D"""
+
     def area(self):
         """Calculate shape area"""
 
@@ -73,10 +77,6 @@ class Point(Shape, metaclass=abc.ABCMeta):
                       tolerance: numbers.Real = MIN_SEPARATION_THRESHOLD
                       ) -> bool:
         """Check whether two points are coincident"""
-
-    @abc.abstractmethod
-    def distance(self, other: 'Point') -> bool:
-        """Calculate distance with another point"""
 
 
 class Segment(Shape, metaclass=abc.ABCMeta):
@@ -145,7 +145,6 @@ class Line(Shape, metaclass=abc.ABCMeta):
     def as_segment(self) -> Segment:
         """Return the segment defined by line start and end points"""
 
-    @property
     @abc.abstractmethod
     def segments(self) -> List[Segment]:
         """Convert to a list of segments"""

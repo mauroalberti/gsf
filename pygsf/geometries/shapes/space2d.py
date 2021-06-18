@@ -367,8 +367,7 @@ class Point2D(Point):
         return False
 
     def shift(self,
-        sx: numbers.Real,
-        sy: numbers.Real
+        *s
     ) -> Optional['Point2D']:
         """
         Create a new object shifted by given amount from the self instance.
@@ -380,7 +379,7 @@ class Point2D(Point):
           Point2D(1.5000, 3.0000)
        """
 
-        return Point2D(self.x + sx, self.y + sy)
+        return Point2D(self.x + s[0], self.y + s[1])
 
     @classmethod
     def random(cls,
@@ -845,7 +844,7 @@ class Segment2D(Segment):
 
         generator_vector = vers_2d.scale(densify_distance)
 
-        interpolated_line = Line2D(
+        interpolated_line = Line2D.fromPoints(
             pts=[self.start_pt])
 
         n = 0
@@ -1670,7 +1669,7 @@ class Line2D(Line):
 
     @classmethod
     def fromPoints(cls,
-        pts: Optional[List[Point]] = None
+        pts: Optional[List[Point2D]] = None
     ):
         """
         Creates the Line2D instance.
@@ -1691,7 +1690,7 @@ class Line2D(Line):
 
             check_type(pts, "List", list)
             for pt in pts:
-                check_type(pt, "Point", Point)
+                check_type(pt, "Point", Point2D)
                 x_list.append(pt.x)
                 y_list.append(pt.y)
 
@@ -1856,7 +1855,7 @@ class Line2D(Line):
         if self.num_pts() == 0:
             return
 
-        new_line = Line2D(
+        new_line = Line2D.fromPoints(
             pts=[self.pt(0)]
         )
 
@@ -1966,7 +1965,7 @@ class Line2D(Line):
         pts = [pt.clone() for pt in self.pts()]
         pts.reverse()
 
-        return Line2D(
+        return Line2D.fromPoints(
             pts=pts
         )
 
@@ -2009,9 +2008,8 @@ class Line2D(Line):
         :rtype: Line2D
         """
 
-        return Line2D(
-            pts=[pt.clone() for pt in self],
-            name=self.name
+        return Line2D.fromPoints(
+            pts=[pt.clone() for pt in self]
         )
 
     def x_list(self) -> List[numbers.Real]:
@@ -2511,15 +2509,8 @@ class XYArrayPair:
 
     def __init__(self,
                  x_array: Union[array, np.ndarray],
-                 y_array: Union[array, np.ndarray],
-                 id: Optional[Union[str, numbers.Integral]] = None
+                 y_array: Union[array, np.ndarray]
                  ):
-
-        '''
-        check_type(x_array, "Distances array", array)
-        if x_array.typecode != 'd':
-            raise Exception("X array must be of type double")
-        '''
 
         if id is not None:
             check_type(id, "Pair code", (str, numbers.Integral))

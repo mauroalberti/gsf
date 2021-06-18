@@ -540,9 +540,7 @@ class Point3D(Point2D):
         return False
 
     def shift(self,
-        sx: numbers.Real,
-        sy: numbers.Real,
-        sz: numbers.Real
+        *s
     ) -> Optional['Point3D']:
         """
         Create a new object shifted by given amount from the self instance.
@@ -554,7 +552,7 @@ class Point3D(Point2D):
           Point3D(1.5000, 3.0000, 0.5000)
        """
 
-        return Point3D(self.x + sx, self.y + sy, self.z + sz)
+        return Point3D(self.x + s[0], self.y + s[1], self.z + s[2])
 
     def shiftByVect(self,
         v: Vect3D
@@ -879,6 +877,16 @@ class Segment3D(Segment2D):
             x=self.delta_x(),
             y=self.delta_y(),
             z=self.delta_z()
+        )
+
+    def as_segment2d(self) -> Segment2D:
+        """
+        Convert a segment to a segment 2D.
+        """
+
+        return Segment2D(
+            start_pt=self.start_pt.as_point2d(),
+            end_pt=self.end_pt.as_point2d(),
         )
 
     def length_3d(self) -> numbers.Real:
@@ -1422,7 +1430,7 @@ class Segment3D(Segment2D):
         segment_versor = self.as_vector().versor()
         generator_vector = segment_versor.scale(densify_distance)
 
-        interpolated_line = Line3D(
+        interpolated_line = Line3D.fromPoints(
             pts=[self.start_pt])
 
         n = 0
@@ -1756,6 +1764,42 @@ class Line3D(Line2D):
 
         self._z_array = z_array
 
+    @classmethod
+    def fromPoints(cls,
+        pts: Optional[List[Point3D]] = None
+    ):
+        """
+        Creates the Line3D instance.
+
+        :param pts: a list of points
+        :return: a Line3D instance.
+        """
+
+        if pts is None:
+
+            x_list = None
+            y_list = None
+            z_list = None
+
+        else:
+
+            x_list = []
+            y_list = []
+            z_list = []
+
+            check_type(pts, "List", list)
+            for pt in pts:
+                check_type(pt, "Point", Point3D)
+                x_list.append(pt.x)
+                y_list.append(pt.y)
+                z_list.append(pt.z)
+
+        return cls(
+            x_list,
+            y_list,
+            z_list
+        )
+
     def __repr__(self) -> str:
         """
         Represents a Line instance as a shortened text.
@@ -1986,7 +2030,7 @@ class Line3D(Line2D):
         pts = [pt.clone() for pt in self]
         pts.reverse()
 
-        return Line3D(
+        return Line3D.fromPoints(
             pts=pts
         )
 
@@ -2096,7 +2140,7 @@ class Line3D(Line2D):
         :rtype: Line3D
         """
 
-        return Line3D(
+        return Line3D.fromPoints(
             pts=[pt.clone() for pt in self]
         )
 
@@ -2127,7 +2171,7 @@ class Line3D(Line2D):
         if self.num_pts() == 0:
             return
 
-        new_line = Line3D(
+        new_line = Line3D.fromPoints(
             pts=[self.pt(0)]
         )
 

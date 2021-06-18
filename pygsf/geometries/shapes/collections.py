@@ -84,7 +84,6 @@ class NamedLines(list):
 
         return XYArrayPair(
             x_array=s_array,
-            y_array=z_array,
-            id=name
+            y_array=z_array
         )
 

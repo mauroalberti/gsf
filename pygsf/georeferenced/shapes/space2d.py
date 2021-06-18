@@ -1,6 +1,5 @@
 
 import copy
-from abc import ABC
 
 from typing import Optional
 
@@ -24,10 +23,7 @@ class GeoPoint2d(GeoShape):
         check_type(pt, "Point", Point2D)
         check_type(epsg_cd, "Epsg code", numbers.Integral)
 
-        super(GeoPoint2d, self).__init__()
-
-        self._shape = pt
-        self._epsg_code = epsg_cd
+        super(GeoPoint2d, self).__init__(shape=pt, epsg_cd=epsg_cd)
 
     @property
     def shape(self) -> Shape:

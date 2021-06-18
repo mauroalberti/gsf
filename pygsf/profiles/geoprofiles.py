@@ -522,9 +522,7 @@ class GeoProfileSet:
         Returns a geoprofile referencing slices of stored data.
 
         :param ndx: the index of the geoprofile.
-        :type ndx: numbers.Integral.
         :return: the extracted Geoprofile or None.
-        :rtype: GeoProfile.
         :raise: Exception.
         """
 

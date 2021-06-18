@@ -87,7 +87,7 @@ class SegmentProfiler:
 
         self._densify_dist = float(densify_distance)
         self._crs = Crs(epsg_cd)
-        self._segment = segment2d
+        self._segment = segment2d.clone()
 
     @classmethod
     def from_points(cls,
@@ -160,7 +160,7 @@ class SegmentProfiler:
 
         """
 
-        return Line2D(
+        return Line2D.fromPoints(
             pts=[
                 self.start_pt(),
                 self.end_pt()
@@ -1063,8 +1063,7 @@ class LineProfiler(list):
         for segment in src_line.segments():
             profilers.append(
                 SegmentProfiler(
-                    start_pt=segment.start_pt,
-                    end_pt=segment.end_pt,
+                    segment2d=segment,
                     densify_distance=densify_distance,
                     epsg_cd=epsg_code)
             )

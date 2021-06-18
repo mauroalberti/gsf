@@ -131,7 +131,7 @@ def line_4326_ecef(line: Line3D) -> Optional[Line3D]:
 
     pts = [pt_4326_ecef(pt) for pt in line.pts()]
 
-    return Line3D(
+    return Line3D.fromPoints(
         pts=pts
     )
 
