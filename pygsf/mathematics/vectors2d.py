@@ -1,9 +1,6 @@
 
-import numbers
-
 from ..utils.types import *
 from .arrays import *
-from .defaults import *
 
 
 class Vect2D(object):

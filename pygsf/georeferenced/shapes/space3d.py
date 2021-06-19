@@ -715,14 +715,14 @@ class GeoMultiLine3D(object):
     def is_unidirectional(self):
 
         for line_ndx in range(len(self.lines()) - 1):
-            if not self.lines()[line_ndx].pt(-1).isCoinc3D(self.lines()[line_ndx + 1].pt(0)):
+            if not self.lines()[line_ndx].pt(-1).is_coincident(self.lines()[line_ndx + 1].pt(0)):
                 return False
 
         return True
 
     def to_line(self):
 
-        return Line3D([point for line in self._lines for point in line.pts()])
+        return Line3D.fromPoints([point for line in self._lines for point in line.pts()])
 
     '''
     def densify_2d_multiline(self, sample_distance):

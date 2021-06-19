@@ -1,5 +1,4 @@
 from .sets import *
-from ..geometries.shapes.collections import NamedLines
 from ..geometries.shapes.space2d import XYArrayPair
 
 z_padding = 0.2
@@ -517,7 +516,7 @@ class GeoProfileSet:
     def extract_geoprofile(
             self,
             ndx: numbers.Integral
-    ) -> NamedLines:
+    ) -> GeoProfile:
         """
         Returns a geoprofile referencing slices of stored data.
 

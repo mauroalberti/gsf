@@ -27,8 +27,6 @@ def try_extract_flat_georeferenced_attitudes(
 
     try:
 
-        #epsg = get_epsg(geodataframe)
-
         attitudes = []
 
         for ndx, row in geodataframe.iterrows():

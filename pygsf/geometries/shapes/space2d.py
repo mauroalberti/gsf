@@ -418,8 +418,13 @@ class Segment2D(Segment):
 
         check_type(start_pt, "Start point", Point2D)
         check_type(end_pt, "End point", Point2D)
+        if start_pt.distance(end_pt) == 0.0:
+            raise Exception("Source points cannot be coincident")
 
-        super(Segment2D, self).__init__(start_pt, end_pt)
+        super(Segment2D, self).__init__()
+
+        self._start_pt = start_pt
+        self._end_pt = end_pt
 
     def __repr__(self) -> str:
         """
@@ -441,6 +446,16 @@ class Segment2D(Segment):
 
         return [self.start_pt, self.end_pt]
 
+    def as_segment2d(self) -> 'Segment2D':
+        """
+        Convert a segment to a segment 2D.
+        """
+
+        return Segment2D(
+            start_pt=self.start_pt.as_point2d(),
+            end_pt=self.end_pt.as_point2d(),
+        )
+
     def length_2d(self) -> numbers.Real:
         """
         Returns the horizontal length of the segment.
@@ -451,6 +466,7 @@ class Segment2D(Segment):
 
         return self.start_pt.distance_2d(self.end_pt)
 
+    @property
     def length(self) -> numbers.Real:
         """
         Returns the horizontal length of the segment.
@@ -696,6 +712,16 @@ class Segment2D(Segment):
             y=self.start_pt.y + dy
         )
 
+    @property
+    def start_pt(self) -> Point2D:
+
+        return self._start_pt
+
+    @property
+    def end_pt(self) -> Point2D:
+
+        return self._end_pt
+
     '''
     def pointProjection(self,
                         point: Point
@@ -777,7 +803,7 @@ class Segment2D(Segment):
 
     def point_signed_s(self,
                point: Point2D
-               ) -> numbers.Real:
+               ) -> Optional[numbers.Real]:
         """
         Calculates the signed distance of the point along the segment.
         A zero value is for a point coinciding with the start point.
@@ -1667,6 +1693,11 @@ class Line2D(Line):
 
         return self._y_array
 
+    def xy_zipped(self) -> List[Tuple[numbers.Real, numbers.Real]]:
+
+        return [(x, y) for x, y in zip(self.x_list(), self.y_list())]
+
+
     @classmethod
     def fromPoints(cls,
         pts: Optional[List[Point2D]] = None
@@ -1722,6 +1753,24 @@ class Line2D(Line):
             x_vals,
             y_vals
         )
+
+    def start_pt(self) -> Optional[Point2D]:
+        """
+        Return the first point of a Line or None when no points.
+
+        :return: the first point or None.
+        """
+
+        return self.pt(0) if len(self.x_array()) > 0 else None
+
+    def end_pt(self) -> Optional[Point2D]:
+        """
+        Return the last point of a Line or None when no points.
+
+        :return: the last point or None.
+        """
+
+        return self.pt(-1) if len(self.x_array()) > 0 else None
 
     def values_at(self,
         ndx: numbers.Integral
@@ -1998,7 +2047,10 @@ class Line2D(Line):
         :rtype: 'Line'
         """
 
-        return Line2D(self.pts() + self.reversed().pts()[1:])
+        return Line2D(
+            np.concatenate(self.x_array(), np.flip(self.x_array())[1:]),
+            np.concatenate(self.y_array(), np.flip(self.y_array())[1:])
+        )
 
     def clone(self) -> 'Line2D':
         """
@@ -2008,13 +2060,14 @@ class Line2D(Line):
         :rtype: Line2D
         """
 
-        return Line2D.fromPoints(
-            pts=[pt.clone() for pt in self]
+        return Line2D(
+            np.copy(self.x_array()),
+            np.copy(self.y_array())
         )
 
     def x_list(self) -> List[numbers.Real]:
 
-        return list(map(lambda pt: pt.x, self))
+        return list(self.x_array())
 
     def x_min(self):
         return np.nanmin(self.x_array())
@@ -2039,7 +2092,7 @@ class Line2D(Line):
 
     def y_list(self) -> List[numbers.Real]:
 
-        return list(map(lambda pt: pt.x, self))
+        return list(self.y_array())
 
     def y_min(self):
         return np.nanmin(self.y_array())
@@ -2066,7 +2119,7 @@ class Line2D(Line):
     def bounding_box(self) -> Optional[Tuple[Point2D, Point2D]]:
         """ The shape bounding box"""
 
-        if len(self) == 0:
+        if self.length == 0:
             return None
 
         lower_left_point = Point2D(
@@ -2397,11 +2450,10 @@ def xytuple_list_to_line2d(
         xy_list: Tuple[numbers.Real, numbers.Real]
 ) -> Line2D:
 
-    #print(f"xy_list -> {type(xy_list)} -> {xy_list}")
-    result = Line2D([Point2D(x, y) for (x, y) in xy_list])
-    #print(f"result -> {type(result)} -> {result}")
-    #print(f"DEBUG: returning from 'xytuple_list_to_Line' {result}")
-    return result
+    return Line2D(
+        np.array([x for (x, _) in xy_list]),
+        np.array([y for (_, y) in xy_list])
+    )
 
 
 def xytuple_l2_to_multiline2d(

@@ -48,34 +48,26 @@ def array_from_geotransform_function(
         col_num: numbers.Integral,
         geotransform: GeoTransform,
         z_transfer_func: Callable
-) -> np.ndarray:
+) -> object:
     """
     Creates an array of z values based on functions that map (i,j) indices (to be created)
     into (x, y) values and then z values.
 
     :param  row_num:  row number of the array to be created.
-    :type  row_num:  numbers.Integral.
     :param  col_num:  column number of the array to be created.
-    :type  col_num:  numbers.Integral.
     :param  geotransform:  the used geotransform.
-    :type  geotransform:  GeoTransform.
     :param  z_transfer_func:  function that derives z given a (x, y) point.
-    :type  z_transfer_func:  Callable.
-
     :return:  array of z values
-    :rtype: np.ndarray of numbers.Real numbers.
 
     Examples:
     """
 
-    array = np.fromfunction(
+    return np.fromfunction(
         function=ij_transfer_func,
         shape=(row_num, col_num),
         dtype=np.float64,
         geotransform=geotransform,
         z_transfer_func=z_transfer_func)
-
-    return np.asarray(array)
 
 
 def grad_j(

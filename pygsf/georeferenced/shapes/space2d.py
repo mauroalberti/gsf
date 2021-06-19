@@ -683,7 +683,7 @@ class GeoMultiLine2D(object):
 
     def to_line(self):
 
-        return Line2D([point for line in self._lines for point in line.pts()])
+        return Line2D.fromPoints([point for line in self._lines for point in line.pts()])
 
     def densify_2d_multiline(self, sample_distance):
 

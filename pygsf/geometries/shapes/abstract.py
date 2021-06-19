@@ -1,5 +1,5 @@
 
-from typing import List, Optional, Tuple
+from typing import List, Optional
 import numbers
 import abc
 
@@ -81,29 +81,24 @@ class Point(Shape, metaclass=abc.ABCMeta):
 
 class Segment(Shape, metaclass=abc.ABCMeta):
 
-    def __init__(self,
-        start_pt: Point,
-        end_pt: Point
-    ):
-
-        check_type(start_pt, "Start point", Point)
-        check_type(end_pt, "End point", Point)
-
-        if start_pt.distance(end_pt) == 0.0:
-            raise Exception("Source points cannot be coincident")
-
-        self._start_pt = start_pt
-        self._end_pt = end_pt
-
     @property
+    @abc.abstractmethod
     def start_pt(self) -> Point:
-
-        return self._start_pt
+        """Return start point"""
 
     @property
+    @abc.abstractmethod
     def end_pt(self) -> Point:
+        """Return end point"""
 
-        return self._end_pt
+    @property
+    @abc.abstractmethod
+    def length(self) -> numbers.Real:
+        """Returns horizontal length of the segment."""
+
+    @abc.abstractmethod
+    def as_segment2d(self):
+        """Return a Segment2D instance"""
 
     def area(self):
         """Calculate shape area"""
@@ -123,23 +118,11 @@ class Line(Shape, metaclass=abc.ABCMeta):
            ndx: numbers.Integral) -> Optional[Point]:
         """Extract point at given index"""
 
-    def start_pt(self) -> Optional[Point]:
+    @abc.abstractmethod
+    def num_pts(self) -> numbers.Integral:
         """
-        Return the first point of a Line or None when no points.
-
-        :return: the first point or None.
+        Returns the number of line points.
         """
-
-        return self.pt(0) if len(self.x_array()) > 0 else None
-
-    def end_pt(self) -> Optional[Point]:
-        """
-        Return the last point of a Line or None when no points.
-
-        :return: the last point or None.
-        """
-
-        return self.pt(-1) if len(self.x_array()) > 0 else None
 
     @abc.abstractmethod
     def as_segment(self) -> Segment:
@@ -148,10 +131,6 @@ class Line(Shape, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def segments(self) -> List[Segment]:
         """Convert to a list of segments"""
-
-    def xy_zipped(self) -> List[Tuple[numbers.Real, numbers.Real]]:
-
-        return [(x, y) for x, y in zip(self.x_list(), self.y_list())]
 
     @abc.abstractmethod
     def add_pt(self, pt: Point):

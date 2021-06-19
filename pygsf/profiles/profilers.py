@@ -87,7 +87,10 @@ class SegmentProfiler:
 
         self._densify_dist = float(densify_distance)
         self._crs = Crs(epsg_cd)
-        self._segment = segment2d.clone()
+        self._segment = Segment2D(
+            start_pt=segment2d.start_pt.as_point2d(),
+            end_pt=segment2d.end_pt.as_point2d()
+        )
 
     @classmethod
     def from_points(cls,
@@ -106,9 +109,9 @@ class SegmentProfiler:
         :param epsg_cd: the EPSG code of the points
         """
 
-        check_type(start_pt, "Input start point", (Point2D, Point3D, Point4D))
+        check_type(start_pt, "Input start point", Point)
 
-        check_type(end_pt, "Input end point", (Point2D, Point3D, Point4D))
+        check_type(end_pt, "Input end point", Point)
 
         _start_pt = Point2D(
             x=start_pt.x,
@@ -143,7 +146,10 @@ class SegmentProfiler:
         :return: start point copy.
         """
 
-        return self.segment()._start_pt.clone()
+        return Point2D(
+            self.segment().start_pt.x,
+            self.segment().start_pt.y
+        )
 
     def end_pt(self) -> Point2D:
         """
@@ -152,7 +158,10 @@ class SegmentProfiler:
         :return: end point copy.
         """
 
-        return self.segment()._end_pt.clone()
+        return Point2D(
+            self.segment().end_pt.x,
+            self.segment().end_pt.y
+        )
 
     def to_line(self) -> Line2D:
         """
@@ -230,20 +239,20 @@ class SegmentProfiler:
 
         return self.segment().length()
 
-    def vector(self) -> Vect2D:
+    def vector(self) -> Vect3D:
         """
         Returns the horizontal vector representing the profile.
 
         :return: vector representing the profile.
-        :rtype: Vect.
         """
 
-        return Vect2D(
+        return Vect3D(
             x=self.segment().delta_x(),
-            y=self.segment().delta_y()
+            y=self.segment().delta_y(),
+            z=0.0
         )
 
-    def versor(self) -> Vect2D:
+    def versor(self) -> Vect3D:
         """
         Returns the horizontal versor (unit vector) representing the profile.
 
@@ -377,7 +386,9 @@ class SegmentProfiler:
 
         return self.vector_offset(vect=self.left_norm_vers().scale(offset))
 
-    def point_in_profile(self, pt: Point2D) -> bool:
+    def point_in_profile(self,
+        pt: Point
+    ) -> bool:
         """
         Checks whether a point lies in the profiler plane.
 
@@ -386,10 +397,21 @@ class SegmentProfiler:
         :raise: Exception.
         """
 
-        check_type(pt, 'Point2D', Point2D)
-        return self.vertical_plane().isPointInPlane(pt)
+        check_type(pt, 'Point2D', Point)
 
-    def point_distance(self, pt: Point3D) -> numbers.Real:
+        if isinstance(pt, (Point3D, Point4D)):
+            pt_use = pt
+        elif isinstance(pt, Point2D):
+            pt_use = Point3D(
+                pt.x,
+                pt.y,
+                0.0
+            )
+        return self.vertical_plane().isPointInPlane(pt_use)
+
+    def point_distance(self,
+                       pt: Point
+                       ) -> numbers.Real:
         """
         Calculates the point distance from the profiler plane.
 
@@ -398,7 +420,18 @@ class SegmentProfiler:
         :raise: Exception.
         """
 
-        return self.vertical_plane().pointDistance(pt)
+        if isinstance(pt, (Point3D, Point4D)):
+            pt_use = pt
+        elif isinstance(pt, Point2D):
+            pt_use = Point3D(
+                x=pt.x,
+                y=pt.y,
+                z=0.0
+            )
+        else:
+            raise Exception(f"Point expected but {type(pt)} got")
+
+        return self.vertical_plane().pointDistance(pt_use)
 
     def sample_grid(
             self,
@@ -549,7 +582,8 @@ class SegmentProfiler:
 
     def point_along_profile_signed_s(
             self,
-            pt: Point2D) -> Optional[numbers.Real]:
+            pt: Point
+    ) -> Optional[numbers.Real]:
         """
         Calculates the point along-profile signed distance (positive in the segment direction, negative otherwise)
         from the profile start.
@@ -566,12 +600,29 @@ class SegmentProfiler:
         if not self.point_in_profile(pt):
             raise Exception(f"Projected point should lie in the profile plane but there is a distance of {self.point_distance(pt)} units")
 
-        if pt.is_coincident(self.start_pt()):
+        if pt.as_point2d().is_coincident(self.start_pt()):
             return 0.0
 
         # the vector starting at the profile start and ending at the given point
 
-        projected_vector = Segment2D(self.start_pt(), pt).vector()
+        if isinstance(pt, (Point3D, Point4D)):
+            use_pt = pt
+        elif isinstance(pt, Point2D):
+            use_pt = Point3D(
+                pt.x,
+                pt.y,
+                0.0
+            )
+        else:
+            raise Exception(f"Point expected but {type(pt)} got")
+
+        projected_vector = Segment3D(
+            Point3D(
+                self.start_pt().x,
+                self.start_pt().y,
+                0.0),
+            use_pt
+        ).vector()
 
         # the angle between the profile vector and the previous vector
         cos_alpha = self.vector().cosine_of_angle(projected_vector)
@@ -581,8 +632,8 @@ class SegmentProfiler:
         return signed_distance
 
     def segment_along_profile_signed_s_tuple(self,
-                                             segment: Segment2D
-                                             ) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
+        segment: Segment
+    ) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
         """
         Calculates the segment distances from the profiles start.
         The segment must already lay in the profile vertical plane, otherwise None is returned.
@@ -590,6 +641,8 @@ class SegmentProfiler:
         :param segment: the analysed segment
         :return: the segment vertices distances from the profile start
         """
+
+        check_type(segment, "Segment", Segment)
 
         segment_start_distance = self.point_along_profile_signed_s(segment.start_pt)
         segment_end_distance = self.point_along_profile_signed_s(segment.end_pt)
@@ -625,8 +678,7 @@ class SegmentProfiler:
         :raise: Exception.
         """
 
-        if not isinstance(intersection_vector, Vect3D):
-            raise Exception("Input argument should be Vect but is {}".format(type(intersection_vector)))
+        check_type(intersection_vector, "Vector", Vect3D)
 
         angle = degrees(acos(self.normal_versor().cosine_of_angle(intersection_vector)))
         if abs(90.0 - angle) > 1.0e-4:
@@ -1063,7 +1115,7 @@ class LineProfiler(list):
         for segment in src_line.segments():
             profilers.append(
                 SegmentProfiler(
-                    segment2d=segment,
+                    segment2d=segment.as_segment2d(),
                     densify_distance=densify_distance,
                     epsg_cd=epsg_code)
             )

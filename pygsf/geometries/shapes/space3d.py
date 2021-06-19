@@ -1,20 +1,12 @@
 
-import abc
-import math
-
 from typing import Optional, Callable
-
-from math import fabs
-
-import itertools
 
 from copy import copy
 
 import numbers
-from array import array
 
-from .abstract import *
 from .space2d import *
+from .space4d import Point4D
 from ...orientations.orientations import *
 from ...mathematics.statistics import *
 from ...mathematics.quaternions import *
@@ -728,7 +720,7 @@ def pack_to_points(
     return pts
 
 
-class Segment3D(Segment2D):
+class Segment3D(Segment):
     """
     Segment is a geometric object defined by the straight line between
     two vertices.
@@ -747,8 +739,13 @@ class Segment3D(Segment2D):
 
         check_type(start_pt, "Start point", Point3D)
         check_type(end_pt, "End point", Point3D)
+        if start_pt.distance(end_pt) == 0.0:
+            raise Exception("Source points cannot be coincident")
 
-        super(Segment3D, self).__init__(start_pt, end_pt)
+        super(Segment3D, self).__init__()
+
+        self._start_pt = start_pt
+        self._end_pt = end_pt
 
     @classmethod
     def fromVector(cls,
@@ -889,10 +886,21 @@ class Segment3D(Segment2D):
             end_pt=self.end_pt.as_point2d(),
         )
 
+    def length_2d(self) -> numbers.Real:
+        """
+        Returns the horizontal length of the segment.
+
+        :return: the horizontal length of the segment.
+        :rtype: numbers.Real.
+        """
+
+        return self.start_pt.distance_2d(self.end_pt)
+
     def length_3d(self) -> numbers.Real:
 
         return self.start_pt.distance_3d(self.end_pt)
 
+    @property
     def length(self) -> numbers.Real:
 
         return self.length_3d()
@@ -1008,6 +1016,16 @@ class Segment3D(Segment2D):
             a=segment_length,
             b=length_startpt_pt + length_endpt_pt
         )
+
+    @property
+    def start_pt(self) -> Point3D:
+
+        return self._start_pt
+
+    @property
+    def end_pt(self) -> Point3D:
+
+        return self._end_pt
 
     def pointAt(self,
         scale_factor: numbers.Real
@@ -1178,9 +1196,9 @@ class Segment3D(Segment2D):
         # arbitrary point on the same vertical as end point
 
         section_final_pt_up = self.end_pt.shift(
-            sx=0.0,
-            sy=0.0,
-            sz=1000.0)
+            0.0,
+            0.0,
+            1000.0)
 
         return CPlane3D.fromPoints(
             pt1=self.start_pt,
@@ -1843,6 +1861,34 @@ class Line3D(Line2D):
 
         return [Point3D(*self.values_at(ndx)) for ndx in range(self.num_pts())]
 
+    def num_pts(self) -> numbers.Integral:
+        """
+        Returns the number of line points.
+        """
+
+        if self.x_array() is None:
+            return 0
+        else:
+            return len(self.x_array())
+
+    def start_pt(self) -> Optional[Point3D]:
+        """
+        Return the first point of a Line or None when no points.
+
+        :return: the first point or None.
+        """
+
+        return self.pt(0) if len(self.x_array()) > 0 else None
+
+    def end_pt(self) -> Optional[Point3D]:
+        """
+        Return the last point of a Line or None when no points.
+
+        :return: the last point or None.
+        """
+
+        return self.pt(-1) if len(self.x_array()) > 0 else None
+
     def add_pt(self,
                pt: Point3D):
         """
@@ -1878,7 +1924,7 @@ class Line3D(Line2D):
 
     def z_list(self) -> List[numbers.Real]:
 
-        return list(map(lambda pt: pt.z, self))
+        return list(self.z_array())
 
     def z_array(self):
 
@@ -1930,7 +1976,7 @@ class Line3D(Line2D):
                 end_pt=self.pt(ndx + 1)
             )
 
-    def segments(self):
+    def segments(self) -> List[Segment3D]:
         """
         Convert to a list of segments.
 
@@ -1950,7 +1996,11 @@ class Line3D(Line2D):
         and orientation mismatches between the two original lines
         """
 
-        return Line3D(self + another)
+        return Line3D(
+            x_seq=np.concatenate((self.x_array(), another.x_array())),
+            y_seq=np.concatenate((self.y_array(), another.y_array())),
+            z_seq=np.concatenate((self.z_array(), another.z_array())),
+        )
 
     def length_3d(self) -> numbers.Real:
 
@@ -2004,7 +2054,7 @@ class Line3D(Line2D):
         length = 0.0
         incremental_lengths.append(length)
         for ndx in range(self.num_pts() - 1):
-            length += self[ndx].distance_2d(self[ndx + 1])
+            length += self.pt(ndx).distance_2d(self.pt(ndx + 1))
             incremental_lengths.append(length)
 
         return np.asarray(incremental_lengths)
@@ -2024,14 +2074,12 @@ class Line3D(Line2D):
         Return a Line instance with reversed point list.
 
         :return: a new Line instance.
-        :rtype: Line.
         """
 
-        pts = [pt.clone() for pt in self]
-        pts.reverse()
-
-        return Line3D.fromPoints(
-            pts=pts
+        return Line3D(
+            np.flip(self.x_array()),
+            np.flip(self.y_array()),
+            np.flip(self.z_array())
         )
 
     def slopes_degr(self) -> List[Optional[numbers.Real]]:
@@ -2073,12 +2121,12 @@ class Line3D(Line2D):
 
         slopes = []
         for ndx in range(self.num_pts() - 1):
-            segment_start_pt = self[ndx]
-            segment_end_pt = self[ndx + 1]
+            segment_start_pt = self.pt(ndx)
+            segment_end_pt = self.pt(ndx + 1)
             if np.isnan(segment_start_pt.z) or np.isnan(segment_end_pt.z):
                 slopes.append(np.nan)
             else:
-                vector = Segment3D(self[ndx], self[ndx + 1]).vector()
+                vector = Segment3D(self.pt(ndx), self.pt(ndx + 1)).vector()
                 slopes.append(-vector.slope_degr())  # minus because vector convention is positive downward
         slopes.append(np.nan)  # slope value for last point is unknown
 
@@ -2130,7 +2178,11 @@ class Line3D(Line2D):
         :rtype: 'Line'
         """
 
-        return Line3D(self + self.reversed()[1:])
+        return Line3D(
+            np.concatenate(self.x_array(), np.flip(self.x_array())[1:]),
+            np.concatenate(self.y_array(), np.flip(self.y_array())[1:]),
+            np.concatenate(self.z_array(), np.flip(self.z_array())[1:])
+        )
 
     def clone(self) -> 'Line3D':
         """
@@ -2140,8 +2192,10 @@ class Line3D(Line2D):
         :rtype: Line3D
         """
 
-        return Line3D.fromPoints(
-            pts=[pt.clone() for pt in self]
+        return Line3D(
+            np.copy(self.x_array()),
+            np.copy(self.y_array()),
+            np.copy(self.z_array()),
         )
 
     def close_3d(self) -> 'Line3D':
@@ -2197,7 +2251,7 @@ class Line3D(Line2D):
 
         check_type(segment, "Input segment", Segment3D)
 
-        intersections = [intersect_segments3d(curr_segment, segment) for curr_segment in self if curr_segment is not None]
+        intersections = [intersect_segments3d(curr_segment, segment) for curr_segment in self.segments()]
         intersections = list(filter(lambda val: val is not None, intersections))
         intersections = PointSegmentCollection3D(intersections)
 
@@ -2805,10 +2859,10 @@ class CPlane3D:
             return None
 
     def pointDistance(self,
-        pt: Point3D
+        pt: Union[Point3D, Point4D]
     ) -> numbers.Real:
         """
-        Calculate the distance between a point and the cartesian plane.
+        Calculate the distance between a 3D point and the cartesian plane.
         Distance expression:
         distance = a * x1 + b * y1 + c * z1 + d
         where a, b, c and d are plane parameters of the plane equation:
@@ -2816,9 +2870,7 @@ class CPlane3D:
         and x1, y1, and z1 are the point coordinates.
 
         :param pt: the point to calculate distance with.
-        :type pt: Point.
         :return: the distance value.
-        :rtype: numbers.Real.
         :raise: Exception.
 
         Examples:
@@ -2837,15 +2889,15 @@ class CPlane3D:
           0.0
         """
 
-        check_type(pt, "Input point", Point3D)
+        check_type(pt, "Input point", (Point3D, Point4D))
 
         return self.a() * pt.x + self.b() * pt.y + self.c() * pt.z + self.d()
 
     def isPointInPlane(self,
-        pt: Union[Point3D, Point2D]
+        pt: Union[Point3D, Point4D]
     ) -> bool:
         """
-        Check whether a point lies in the current plane.
+        Check whether a point lies in the current 3D plane.
 
         :param pt: the point to check.
         :return: whether the point lies in the current plane.
@@ -2862,14 +2914,8 @@ class CPlane3D:
           True
         """
 
-        check_type(pt, "Input point", (Point2D, Point3D))
+        check_type(pt, "Input point", (Point3D, Point4D))
 
-        if isinstance(pt, Point2D):
-            pt = Point3D(
-                pt.x,
-                pt.y,
-                0.0
-            )
         if abs(self.pointDistance(pt)) < MIN_SEPARATION_THRESHOLD:
             return True
         else:

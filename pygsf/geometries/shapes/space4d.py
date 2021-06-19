@@ -5,8 +5,9 @@ import datetime
 from copy import deepcopy
 
 from ...mathematics.vectors3d import *
-from .space2d import Point2D, Line2D
-from .space3d import Point3D, Line3D, Segment3D
+from .abstract import Segment
+from .space2d import Point2D, Line2D, Segment2D
+from .space3d import Point3D, Line3D
 
 
 class Point4D(Point3D):
@@ -187,7 +188,9 @@ class Point4D(Point3D):
             z=self.z
         )
 
-    def __sub__(self, another):
+    def __sub__(self,
+                another: 'Point4D'
+                ):
         """Return point difference
 
         Example:
@@ -310,7 +313,7 @@ class Point4D(Point3D):
             return np.nan
 
 
-class Segment4D(Segment3D):
+class Segment4D(Segment):
     """
     Segment is a geometric object defined by a straight line between
     two points.
@@ -322,8 +325,23 @@ class Segment4D(Segment3D):
 
         check_type(start_pt, "Start point", Point4D)
         check_type(end_pt, "End point", Point4D)
+        if start_pt.distance(end_pt) == 0.0:
+            raise Exception("Source points cannot be coincident")
 
-        super(Segment4D, self).__init__(start_pt, end_pt)
+        super(Segment4D, self).__init__()
+
+        self._start_pt = start_pt
+        self._end_pt = end_pt
+
+    def as_segment2d(self) -> Segment2D:
+        """
+        Convert a segment to a segment 2D.
+        """
+
+        return Segment2D(
+            start_pt=self.start_pt.as_point2d(),
+            end_pt=self.end_pt.as_point2d(),
+        )
 
     def clone(self):
 
@@ -378,7 +396,17 @@ class Segment4D(Segment3D):
     @property
     def length(self):
 
-        return self.length_3d()
+        return self.start_pt.distance_3d(self.end_pt)
+
+    @property
+    def start_pt(self) -> Point4D:
+
+        return self._start_pt
+
+    @property
+    def end_pt(self) -> Point4D:
+
+        return self._end_pt
 
     def vector(self):
 
@@ -573,6 +601,11 @@ class Line4D(Line3D):
             t_list
         )
 
+    def times(self) -> Optional[List[datetime.datetime]]:
+        """Return the times"""
+
+        return self._times
+
     def clone(self):
 
         return Line4D(
@@ -581,6 +614,56 @@ class Line4D(Line3D):
             z_seq=self.z_array().copy(),
             t_seq=deepcopy(self._times)
         )
+
+    def pt(self,
+           ndx: numbers.Integral) -> Optional[Point4D]:
+        """
+        Returns the point at given index.
+        """
+
+        if self.num_pts() == 0:
+            return None
+        elif ndx < self.num_pts():
+            return Point4D(
+                x=self.x_array()[ndx],
+                y=self.y_array()[ndx],
+                z=self.z_array()[ndx],
+                t=self._times[ndx]
+            )
+        else:
+            return None
+
+    def pts(self) -> List[Point4D]:
+
+        return [Point4D(*self.values_at(ndx)) for ndx in range(self.num_pts())]
+
+    def num_pts(self) -> numbers.Integral:
+        """
+        Returns the number of line points.
+        """
+
+        if self.x_array() is None:
+            return 0
+        else:
+            return len(self.x_array())
+
+    def start_pt(self) -> Optional[Point4D]:
+        """
+        Return the first point of a Line or None when no points.
+
+        :return: the first point or None.
+        """
+
+        return self.pt(0) if len(self.x_array()) > 0 else None
+
+    def end_pt(self) -> Optional[Point4D]:
+        """
+        Return the last point of a Line or None when no points.
+
+        :return: the last point or None.
+        """
+
+        return self.pt(-1) if len(self.x_array()) > 0 else None
 
     def add_pt(self, pt: Point4D):
         """
@@ -638,17 +721,10 @@ class Line4D(Line3D):
 
     def as_line2d(self) -> Line2D:
 
-        pts2d = []
-        for pt4d in self:
-            x, y, _, _ = pt4d
-            pts2d.append(
-                Point2D(
-                    x=x,
-                    y=y
-                )
-            )
-
-        return Line2D.fromPoints(pts=pts2d)
+        return Line2D(
+            np.copy(self.x_array()),
+            np.copy(self.y_array())
+        )
 
     def join(self, another):
         """
@@ -657,18 +733,16 @@ class Line4D(Line3D):
         and orientation mismatches between the two original lines
         """
 
-        return Line4D(self + another)
+        return Line4D(
+            np.concatenate(self.x_array(), another.x_array()),
+            np.concatenate(self.y_array(), another.y_array()),
+            np.concatenate(self.z_array(), another.z_array()),
+            self.times() + another.times()
+        )
 
     def length(self) -> numbers.Real:
 
         return self.length_3d()
-
-    def invert_direction(self):
-
-        new_line = self.clone()
-        new_line.reverse()  # in-place operation on new_line
-
-        return new_line
 
     def absolute_slopes(self) -> np.ndarray:
 
@@ -702,11 +776,11 @@ class Line4D(Line3D):
         :return: a new Line instance.
         """
 
-        pts = [pt.clone() for pt in self]
-        pts.reverse()
-
-        return Line4D.fromPoints(
-            pts=pts
+        return Line4D(
+            np.flip(self.x_array()),
+            np.flip(self.y_array()),
+            np.flip(self.z_array()),
+            self._times[::-1]
         )
 
 

@@ -1,7 +1,6 @@
 
-
 from ..ptbaxes import *
-from ...utils.dicts import *
+
 
 def isDirect(obj) -> bool:
 
@@ -33,14 +32,6 @@ def isPTBAxes(obj) -> bool:
     return isinstance(obj, PTBAxes)
 
 
-def isUpward(obj: Direct) -> bool:
-
-    return obj.isUpward
-
-
-def isNotUpward(obj: Direct) -> bool:
-
-    return not obj.isUpward
 
 
 
