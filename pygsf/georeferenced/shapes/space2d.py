@@ -127,6 +127,57 @@ class GeoLine2D(GeoShape):
                 source_epsg_code=self.epsg_code
         )
 
+    def project(self,
+        dest_epsg_cd: numbers.Integral
+    ) -> Optional['GeoLine2D']:
+        """
+        Projects the line to a given EPSG CRS.
+        """
+
+        bounding_box = self.shape.bounding_box()
+        if bounding_box is None:
+            return None
+
+        lower_left_point, upper_right_point = bounding_box
+
+        result = project_extent(
+            x_min=lower_left_point.x,
+            x_max=upper_right_point.x,
+            y_min=lower_left_point.y,
+            y_max=upper_right_point.y,
+            source_epsg_code=self.epsg_code
+        )
+
+        if result is None:
+            return None
+
+        extent = result
+
+        print(f"DEBUG: extent is {extent}")
+
+        success, result = try_project_xy_arrays(
+            x_array=self.shape.x_array(),
+            y_array=self.shape.y_array(),
+            source_epsg_code=self.epsg_code,
+            dest_epsg_code=dest_epsg_cd,
+            area_of_interest=extent
+        )
+
+        if not success:
+            return None
+
+        x_array_projected, y_array_projected = result
+
+        projected_line = Line2D(
+            x_seq=x_array_projected,
+            y_seq=y_array_projected
+        )
+
+        return GeoLine2D(
+            shape=projected_line,
+            epsg_cd=dest_epsg_cd
+        )
+
 
 class GeoPoints2D:
     """

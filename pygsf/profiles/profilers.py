@@ -1097,6 +1097,7 @@ class ParallelProfilers(list):
 class LineProfiler(list):
     """
     Line profiler.
+    #TODO: add geological methods (project points and attitudes, intersect lines and polygons, others) based on those of SegmentProfiler
     """
 
     def __init__(self,

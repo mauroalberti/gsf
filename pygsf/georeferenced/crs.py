@@ -162,13 +162,17 @@ def project_extent(
     return lon_min, lat_min, lon_max, lat_max
 
 
-def project_xy_arrays(
+def try_project_xy_arrays(
     x_array: np.ndarray,
     y_array: np.ndarray,
     source_epsg_code: numbers.Integral,
     dest_epsg_code: numbers.Integral,
     area_of_interest: Tuple[numbers.Real, numbers.Real, numbers.Real, numbers.Real]
 ) -> Tuple[bool, Union[str, Tuple[np.ndarray, np.ndarray]]]:
+    """
+    WARNING: currently this method is experimental.
+    To understand why axis swap is need to obtain a correct result (4325 -> 32633)
+    """
 
     try:
 
@@ -178,12 +182,20 @@ def project_xy_arrays(
             area_of_interest=AreaOfInterest(*area_of_interest),
         )
 
+        print(f"DEBUG: transformer_group is {transformer_group}")
+
         if not transformer_group.best_available:
             return False, "Best transformation is not available"
 
+        print(f"DEBUG: transformer_group.transformers[0] is {transformer_group.transformers[0]}")
+
+        print(f"DEBUG: x_array is {x_array}")
+        print(f"DEBUG: y_array is {y_array}")
+
+        #TODO: understand why you have to swap axis to obtain a correct result....
         proj_x_coords, proj_y_coords = transformer_group.transformers[0].transform(
-            x_array,
-            y_array
+            y_array,
+            x_array
         )
 
         return True, (proj_x_coords, proj_y_coords)
