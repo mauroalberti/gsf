@@ -874,10 +874,11 @@ class GeoPointSegmentCollection2D(list):
 
 class GeoPointSegmentCollections2D(list):
 
-    def __init__(self, atts: List[Tuple[Union[str, numbers.Integral], GeoPointSegmentCollection2D]]):
+    def __init__(self,
+        atts: List[GeoPointSegmentCollection2D]
+    ):
         check_type(atts, "Point-segment collections", List)
-        for label, spat_element in atts:
-            check_type(label, "Label", (str, numbers.Integral))
+        for spat_element in atts:
             check_type(spat_element, "Point-segment collection", GeoPointSegmentCollection2D)
 
         super(GeoPointSegmentCollections2D, self).__init__(atts)

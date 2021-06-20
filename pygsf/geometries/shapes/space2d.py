@@ -559,8 +559,8 @@ class Segment2D(Segment):
 
         check_type(another, "Second segment", Segment2D)
 
-        s_len2d = self.length()
-        a_len2d = another.length()
+        s_len2d = self.length
+        a_len2d = another.length
 
         if s_len2d == 0.0 or a_len2d == 0.0:
             return None
@@ -642,7 +642,7 @@ class Segment2D(Segment):
 
         check_type(pt, "Point", Point2D)
 
-        segment_length = self.length()
+        segment_length = self.length
         length_startpt_pt = self.start_pt.distance(pt)
         length_endpt_pt = self.end_pt.distance(pt)
 
@@ -864,7 +864,7 @@ class Segment2D(Segment):
         :return: Line
         """
 
-        length2d = self.length()
+        length2d = self.length
 
         vers_2d = self.as_versor()
 
@@ -911,7 +911,7 @@ class Segment2D(Segment):
         if densify_distance <= 0.0:
             raise Exception("Densify distance must be positive")
 
-        segment_length = self.length()
+        segment_length = self.length
 
         s_list = []
         n = 0
@@ -1697,7 +1697,6 @@ class Line2D(Line):
 
         return [(x, y) for x, y in zip(self.x_list(), self.y_list())]
 
-
     @classmethod
     def fromPoints(cls,
         pts: Optional[List[Point2D]] = None
@@ -1876,8 +1875,13 @@ class Line2D(Line):
         """
 
         check_type(pt, "Point", Point2D)
-        self._x_array = np.append(self._x_array, pt.x)
-        self._y_array = np.append(self._y_array, pt.y)
+
+        if self._x_array is None:
+            self._x_array = np.array([pt.x])
+            self._y_array = np.array([pt.y])
+        else:
+            self._x_array = np.append(self._x_array, pt.x)
+            self._y_array = np.append(self._y_array, pt.y)
 
     def add_pts(self, pt_list: List[Point2D]):
         """
@@ -1893,8 +1897,12 @@ class Line2D(Line):
         x_vals = [pt.x for pt in pt_list]
         y_vals = [pt.y for pt in pt_list]
 
-        self._x_array = np.append(self._x_array, x_vals)
-        self._y_array = np.append(self._y_array, y_vals)
+        if self._x_array is None:
+            self._x_array = np.array(x_vals)
+            self._y_array = np.array(y_vals)
+        else:
+            self._x_array = np.append(self._x_array, x_vals)
+            self._y_array = np.append(self._y_array, y_vals)
 
     def remove_coincident_points(self) -> Optional['Line2D']:
         """
@@ -2563,9 +2571,6 @@ class XYArrayPair:
                  x_array: Union[array, np.ndarray],
                  y_array: Union[array, np.ndarray]
                  ):
-
-        if id is not None:
-            check_type(id, "Pair code", (str, numbers.Integral))
 
         num_steps = len(x_array)
 

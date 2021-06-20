@@ -19,13 +19,11 @@ class NamedLines(list):
         if named_lines is None:
             named_lines = []  # list of name and Line
         else:
-            print(f"DEBUG: type(named_lines) -> {type(named_lines)}")
             check_type(named_lines, "Named lines", List)
             for name, line in named_lines:
                 check_type(name, "Name", (str, numbers.Integral))
                 check_type(line, "Line", Line)
 
-        print(f"DEBUG: initializing NamedLines with {named_lines}")
         super(NamedLines, self).__init__(named_lines)
 
     def __repr__(self):

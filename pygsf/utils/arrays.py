@@ -76,12 +76,12 @@ def formula_to_grid(array_range, array_size, formula):
     b_array = linspace(b_max, b_min, num=array_rows)  # note: reversed for conventional j order in arrays
 
     try:
-        a_list, b_list = [a for a in a_array for b in b_array], [b for a in a_array for b in b_array]
+        a_list, b_list = [a for a in a_array for _ in b_array], [b for _ in a_array for b in b_array]
     except:
         raise Exception("Error in a-b values")
 
     try:
-        z_list = [eval(formula) for a in a_array for b in b_array]
+        z_list = [eval(formula) for _ in a_array for _ in b_array]
     except:
         raise Exception("Error in applying formula to a and b array values")
 

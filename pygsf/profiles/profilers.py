@@ -234,10 +234,9 @@ class SegmentProfiler:
         Returns the length of the profiler section.
 
         :return: length of the profiler section.
-        :rtype: numbers.Real.
         """
 
-        return self.segment().length()
+        return self.segment().length
 
     def vector(self) -> Vect3D:
         """
@@ -407,6 +406,9 @@ class SegmentProfiler:
                 pt.y,
                 0.0
             )
+        else:
+            raise Exception(f"Point was expected to be 2-4D type but {type(pt)} got")
+
         return self.vertical_plane().isPointInPlane(pt_use)
 
     def point_distance(self,
@@ -533,7 +535,7 @@ class SegmentProfiler:
             check_type(mline, 'mline', (Line2D, MultiLine2D))
 
         results = [self.intersect_line(mline) for mline in mlines]
-        valid_results = [[ndx, GeoPointSegmentCollection2D(geoms=res, epsg_code=self.epsg_code)] for ndx, res in enumerate(results) if res]
+        valid_results = [GeoPointSegmentCollection2D(geoms=res, epsg_code=self.epsg_code) for res in results if res]
 
         return GeoPointSegmentCollections2D(valid_results)
 

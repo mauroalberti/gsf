@@ -6,7 +6,6 @@ from copy import copy
 import numbers
 
 from .space2d import *
-from .space4d import Point4D
 from ...orientations.orientations import *
 from ...mathematics.statistics import *
 from ...mathematics.quaternions import *
@@ -1008,7 +1007,7 @@ class Segment3D(Segment):
 
         check_type(pt, "Point", Point3D)
 
-        segment_length = self.length()
+        segment_length = self.length
         length_startpt_pt = self.start_pt.distance(pt)
         length_endpt_pt = self.end_pt.distance(pt)
 
@@ -1109,7 +1108,7 @@ class Segment3D(Segment):
             point
         )
 
-        scale_factor = self.vector().scalar_projection(other_segment.vector()) / self.length()
+        scale_factor = self.vector().scalar_projection(other_segment.vector()) / self.length
         return self.pointAt(scale_factor)
 
     def pointDistance(self,
@@ -1443,7 +1442,7 @@ class Segment3D(Segment):
         :return: a Line3D
         """
 
-        length3d = self.length()
+        length3d = self.length
 
         segment_versor = self.as_vector().versor()
         generator_vector = segment_versor.scale(densify_distance)
@@ -1495,7 +1494,7 @@ class Segment3D(Segment):
         if densify_distance <= 0.0:
             raise Exception("Densify distance must be positive")
 
-        segment_length = self.length()
+        segment_length = self.length
 
         s_list = []
         n = 0
@@ -1899,9 +1898,15 @@ class Line3D(Line2D):
         """
 
         check_type(pt, "Point", Point3D)
-        self._x_array = np.append(self._x_array, pt.x)
-        self._y_array = np.append(self._y_array, pt.y)
-        self._z_array = np.append(self._z_array, pt.z)
+
+        if self._x_array is None:
+            self._x_array = np.array([pt.x])
+            self._y_array = np.array([pt.y])
+            self._z_array = np.array([pt.z])
+        else:
+            self._x_array = np.append(self._x_array, pt.x)
+            self._y_array = np.append(self._y_array, pt.y)
+            self._z_array = np.append(self._z_array, pt.z)
 
     def add_pts(self, pt_list: List[Point3D]):
         """
@@ -1918,9 +1923,14 @@ class Line3D(Line2D):
         y_vals = [pt.y for pt in pt_list]
         z_vals = [pt.z for pt in pt_list]
 
-        self._x_array = np.append(self._x_array, x_vals)
-        self._y_array = np.append(self._y_array, y_vals)
-        self._z_array = np.append(self._z_array, z_vals)
+        if self._x_array is None:
+            self._x_array = np.array(x_vals)
+            self._y_array = np.array(y_vals)
+            self._z_array = np.array(z_vals)
+        else:
+            self._x_array = np.append(self._x_array, x_vals)
+            self._y_array = np.append(self._y_array, y_vals)
+            self._z_array = np.append(self._z_array, z_vals)
 
     def z_list(self) -> List[numbers.Real]:
 
@@ -2779,26 +2789,6 @@ class CPlane3D:
 
         return point
 
-    """
-    def gplane_point(self):
-        '''
-        Converts a cartesian plane into a geological plane
-        and a point lying in the plane (non-unique solution).
-
-        Examples:
-          >>> gpl, pt = CPlane3D(0, 0, 1, -1).gplane_point()
-          >>> gpl
-          GPlane(000.00, +00.00)
-          >>> pt
-          Point(0.0000, 0.0000, 1.0000, nan)
-        '''
-
-        geol_plane = self.normVersor().gvect.normal_gplane
-        point = Point4D(*point_solution(np.array([[self.a, self.b, self.c]]),
-                                        np.array([-self.d])))
-        return geol_plane, point
-    """
-
     def intersVersor(self, another) -> Optional[Vect3D]:
         """
         Return intersection versor for two intersecting planes.
@@ -2859,7 +2849,7 @@ class CPlane3D:
             return None
 
     def pointDistance(self,
-        pt: Union[Point3D, Point4D]
+        pt: Point3D
     ) -> numbers.Real:
         """
         Calculate the distance between a 3D point and the cartesian plane.
@@ -2889,12 +2879,12 @@ class CPlane3D:
           0.0
         """
 
-        check_type(pt, "Input point", (Point3D, Point4D))
+        check_type(pt, "Input point", Point3D)
 
         return self.a() * pt.x + self.b() * pt.y + self.c() * pt.z + self.d()
 
     def isPointInPlane(self,
-        pt: Union[Point3D, Point4D]
+        pt: Point3D
     ) -> bool:
         """
         Check whether a point lies in the current 3D plane.
@@ -2914,7 +2904,7 @@ class CPlane3D:
           True
         """
 
-        check_type(pt, "Input point", (Point3D, Point4D))
+        check_type(pt, "Input point", Point3D)
 
         if abs(self.pointDistance(pt)) < MIN_SEPARATION_THRESHOLD:
             return True
@@ -2923,14 +2913,12 @@ class CPlane3D:
 
     def angle_as_degrees(self,
          another: 'CPlane3D'
-         ) -> numbers.Real:
+         ) -> Optional[numbers.Real]:
         """
         Calculate angle (in degrees) between two planes.
 
         :param another: the CPlane3D instance to calculate angle with.
-        :type another: CPlane3D.
         :return: the angle (in degrees) between the two planes.
-        :rtype: numbers.Real.
         :raise: Exception.
 
         Examples:
@@ -2948,7 +2936,9 @@ class CPlane3D:
 
         angle_degr = self.normVersor().angle_as_degrees(another.normVersor())
 
-        if angle_degr > 90.0:
+        if angle_degr is None:
+            return None
+        elif angle_degr > 90.0:
             angle_degr = 180.0 - angle_degr
 
         return angle_degr

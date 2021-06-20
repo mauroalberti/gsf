@@ -232,16 +232,16 @@ class GeoArray:
         else:
             return None
 
-    def level_llc(self, level_ndx: numbers.Integral = 0) -> Optional[Tuple[numbers.Integral, numbers.Integral]]:
+    def level_llc(self,
+        level_ndx: numbers.Integral = 0
+    ) -> Optional[Tuple[numbers.Real, numbers.Real]]:
         """
         Deprecated. Use "band_corners_pixcoords" instead.
 
         Returns the coordinates of the lower-left corner.
 
         :param level_ndx: index of the level (grid) to consider.
-        :type level_ndx: numbers.Integral.
         :return: x and y values of the lower-left corner of the specific grid.
-        :rtype: optional tuple of two numbers.Integral values.
 
         Examples:
         """
@@ -357,16 +357,16 @@ class GeoArray:
 
         return self._gt.ij_pixels_to_xy_geogr(i_pix, j_pix)
 
-    def ijPixToxy(self, i: numbers.Real, j: numbers.Real) -> Tuple[numbers.Real, numbers.Real]:
+    def ijPixToxy(self,
+      i: numbers.Real,
+      j: numbers.Real
+    ) -> Tuple[numbers.Real, numbers.Real]:
         """
         Converts from grid indices to geographic coordinates.
 
         :param i: i pixel component.
-        :type i: numbers.Real.
         :param j: j pixel component.
-        :type j: numbers.Real.
         :return: x and y geographic coordinates.
-        :type: tuple of two numbers.Real values.
 
         Examples:
         """
@@ -993,11 +993,12 @@ def plane_dem_intersection(
 
     # plane elevations at grid cell centers
 
-    q_p = array_from_geotransform_function(
+    q_p = np.asarray(array_from_geotransform_function(
         row_num=row_num,
         col_num=col_num,
         geotransform=geoarray.geotransform(),
         z_transfer_func=plane_z_closure)
+    )
 
     index_multiplier = 100  # sufficiently large value to ensure a precise slope values
 

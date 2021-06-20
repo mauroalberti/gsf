@@ -48,7 +48,7 @@ def array_from_geotransform_function(
         col_num: numbers.Integral,
         geotransform: GeoTransform,
         z_transfer_func: Callable
-) -> object:
+) -> np.ndarray:
     """
     Creates an array of z values based on functions that map (i,j) indices (to be created)
     into (x, y) values and then z values.
@@ -62,12 +62,13 @@ def array_from_geotransform_function(
     Examples:
     """
 
-    return np.fromfunction(
+    return np.array(np.fromfunction(
         function=ij_transfer_func,
         shape=(row_num, col_num),
         dtype=np.float64,
         geotransform=geotransform,
         z_transfer_func=z_transfer_func)
+    )
 
 
 def grad_j(

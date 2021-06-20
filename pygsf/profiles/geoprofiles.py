@@ -673,8 +673,10 @@ def intersection_distances_by_profile_start_list(
     # convert the profile line
     # from a CartesianLine2DT to a CartesianSegment2DT
     profile_segment2d_list = profile_line.segments()
-    # debug
-    assert len(profile_segment2d_list) == 1
+
+    if len(profile_segment2d_list) != 1:
+        raise Exception(f"Profile 2D segments list should have just one element but {len(profile_segment2d_list)} got")
+
     profile_segment2d = profile_segment2d_list[0]
 
     # determine distances for each point in intersection list

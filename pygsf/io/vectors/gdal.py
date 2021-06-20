@@ -79,7 +79,7 @@ def try_open_shapefile(
 
     return True, shapelayer
 
-
+'''
 def reading_line_shapefile(
         shp_path: str,
         flds: Optional[List[str]] = None,
@@ -209,7 +209,7 @@ def reading_line_shapefile(
     except Exception as e:
 
         return False, str(e)
-
+'''
 
 def extract_ogr_simple_line(
     simple_line_geom: ogr.Geometry,
@@ -257,10 +257,11 @@ def try_read_line_shp_with_attr(
         # check input path
 
         check_type(shp_path, "Shapefile path", str)
+
         if shp_path == '':
-            return False, "Input shapefile path should not be empty"
+            return False, "Provided input shapefile path is empty"
         if not os.path.exists(shp_path):
-            return False, "Input shapefile path does not exist"
+            return False, "Input shapefile does not exist"
 
         # open input vector layer
 
@@ -312,6 +313,7 @@ def try_read_line_shp_with_attr(
                 return False, "Input shapefile path not read"
 
             geometry_type = curr_geom.GetGeometryType()
+
             if geometry_type in ogr_3d_line_types:
                 is_3d = True
                 geoline = GeoLine3D
@@ -339,7 +341,8 @@ def try_read_line_shp_with_attr(
                     has_z=is_3d
                 )
 
-                feat_geometries.append(geoline(line, epsg_cd))
+                gline = geoline(line, epsg_cd)
+                feat_geometries.append(gline)
 
             else:  # multiline case
 
@@ -350,7 +353,8 @@ def try_read_line_shp_with_attr(
                         has_z=is_3d
                     )
 
-                    feat_geometries.append(geoline(line, epsg_cd))
+                    gline = geoline(line, epsg_cd)
+                    feat_geometries.append(gline)
 
             results.append((feat_geometries, feat_attributes))
 
@@ -362,7 +366,7 @@ def try_read_line_shp_with_attr(
 
         return False, str(e)
 
-
+'''
 def try_read_line_shapefile(
         shp_path: str,
         flds: Optional[List[str]] = None
@@ -472,7 +476,7 @@ def try_read_line_shapefile(
     del ds
 
     return True, results
-
+'''
 
 def read_linestring_geometries(
         line_shp_path: str
@@ -603,7 +607,7 @@ def parse_ogr_type(ogr_type_str: str) -> 'ogr.OGRFieldType':
     elif ogr_type_str.endswith("OFTInteger64List"):
         return ogr.OFTInteger64List
     else:
-        raise Exception("Debug: not recognized ogr type")
+        raise Exception(f"Unrecognized OGR type: {ogr_type_str}")
 
 
 def read_line_shapefile_via_ogr(line_shp_path):

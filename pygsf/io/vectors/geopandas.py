@@ -136,21 +136,15 @@ def get_epsg(
 
 def extract_line_points(
     geodataframe: gpd.GeoDataFrame,
-    ndx: numbers.Integral,
-    epsg_code: numbers.Integral
+    ndx: numbers.Integral
 ) -> List[Point2D]:
     """
     Extract a geometry from a GeoDataFrame instance,
     given the geometry index.
 
     :param geodataframe: the input geodataframe
-    :type geodataframe: gpd.GeoDataFrame
     :param ndx: the geometry index
-    :type ndx: numbers.Integral
-    :param epsg_code: the EPSG code
-    :type epsg_code: numbers.Integral
     :return: the geometry stored in the GeoDataFrame instance
-    :rtype: Shapely geometry
     """
 
     geometry = extract_geometry(

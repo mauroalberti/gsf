@@ -1,7 +1,6 @@
 
 import numbers
 
-from pygsf.geometries.shapes.space3d import *
 from pygsf.geometries.shapes.space4d import *
 
 # Earth WGS84 parameters

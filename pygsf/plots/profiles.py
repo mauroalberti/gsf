@@ -85,6 +85,8 @@ def _(
         xyarrays.y_arr()
     )
 
+    return fig
+
 
 @plot.register(GeoProfile)
 def _(
@@ -224,6 +226,8 @@ def _(
                     label = "%s" % rec_id
                 elif labels_add_orientdip:
                     label = "%03d/%02d" % (src_dip_dir, src_dip_ang)
+                else:
+                    raise Exception(f"UNhamdled case with {labels_add_orientdip} and {labels_add_id}")
 
                 axes.annotate(label, (s + 15, z + 15))
 
@@ -354,7 +358,10 @@ def _(
 
     if not superposed:
         fig = plt.figure(constrained_layout=True)
-        spec = gridspec.GridSpec(ncols=1, nrows=num_profiles, figure=fig)
+        spec = gridspec.GridSpec(
+            ncols=1,
+            nrows=num_profiles,
+            figure=fig)
     else:
         fig = plt.figure()
         spec = None

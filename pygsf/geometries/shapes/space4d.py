@@ -1,13 +1,8 @@
 
-from typing import Union
-from math import sqrt
 import datetime
 from copy import deepcopy
 
-from ...mathematics.vectors3d import *
-from .abstract import Segment
-from .space2d import Point2D, Line2D, Segment2D
-from .space3d import Point3D, Line3D
+from .space3d import *
 
 
 class Point4D(Point3D):
@@ -675,10 +670,16 @@ class Line4D(Line3D):
 
         check_type(pt, "Point", Point4D)
 
-        self._x_array = np.append(self._x_array, pt.x)
-        self._y_array = np.append(self._y_array, pt.y)
-        self._z_array = np.append(self._z_array, pt.z)
-        self._times.append(pt.t)
+        if self._x_array is None:
+            self._x_array = np.array([pt.x])
+            self._y_array = np.array([pt.y])
+            self._z_array = np.array([pt.z])
+            self._times = [pt.t]
+        else:
+            self._x_array = np.append(self._x_array, pt.x)
+            self._y_array = np.append(self._y_array, pt.y)
+            self._z_array = np.append(self._z_array, pt.z)
+            self._times.append(pt.t)
 
     def add_pts(self, pt_list: List[Point4D]):
         """
@@ -696,10 +697,16 @@ class Line4D(Line3D):
         z_vals = [pt.z for pt in pt_list]
         t_vals = [pt.t for pt in pt_list]
 
-        self._x_array = np.append(self._x_array, x_vals)
-        self._y_array = np.append(self._y_array, y_vals)
-        self._z_array = np.append(self._z_array, z_vals)
-        self._times.extend(t_vals)
+        if self._x_array is None:
+            self._x_array = np.array(x_vals)
+            self._y_array = np.array(y_vals)
+            self._z_array = np.array(z_vals)
+            self._times = t_vals
+        else:
+            self._x_array = np.append(self._x_array, x_vals)
+            self._y_array = np.append(self._y_array, y_vals)
+            self._z_array = np.append(self._z_array, z_vals)
+            self._times.extend(t_vals)
 
     def as_segment(self) -> Segment4D:
         """Return the segment defined by line start and end points"""
