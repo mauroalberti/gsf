@@ -521,7 +521,7 @@ class SegmentProfiler:
 
     def intersect_lines(self,
                         mlines: Iterable[Union[Line2D, MultiLine2D]],
-                        ) -> List[List[Optional[Union[Point2D, Segment2D]]]]:
+                        ) -> GeoPointSegmentCollections2D:
         """
         Calculates the intersection with a set of lines/multilines.
         Note: the intersections are intended flat (in a 2D plane, not 3D).
@@ -1126,3 +1126,143 @@ class LineProfiler(list):
         super(LineProfiler, self).__init__(profilers)
 
         self._crs = Crs(epsg_code)
+
+    @property
+    def epsg_code(self) -> numbers.Integral:
+        """
+        Returns the EPSG code of the profile.
+
+        :return: the EPSG code of the profile.
+        """
+
+        return self.crs.epsg_code
+
+    @property
+    def crs(self) -> Crs:
+        """
+        Returns the CRS of the profile.
+
+        :return: the CRS of the profile.
+        :rtype: Crs.
+        """
+
+        return self._crs
+
+    def length(self) -> numbers.Real:
+        """
+        Returns the length of the profiler section.
+
+        :return: length of the profiler section.
+        """
+
+        return sum([segment_profiler.length() for segment_profiler in self])
+
+    def num_densified_pts(self) -> numbers.Integral:
+        """
+        Returns the number of points making up the profile.
+        Apart from last segment, each segment end coincides with next segment start,
+        so the '-len(self) + 1' term.
+
+        :return: number of steps making up the profile.
+        """
+
+        return sum([len(segment_profiler.densified_2d_points()) for segment_profiler in self]) - len(self) + 1
+
+    def densified_points(self) -> List[Point2D]:
+        """
+        Returns the list of densified 2D points.
+        """
+
+        pts = []
+        for ndx, segment_profiler in enumerate(self):
+            if ndx == len(self) - 1:
+                pts.extend(segment_profiler.densified_2d_points())
+            else:
+                pts.extend(segment_profiler.densified_2d_points()[:-1])
+
+        return pts
+
+    def profile_grid(
+            self,
+            geoarray: GeoArray
+    ) -> List[XYArrayPair]:
+        """
+        Create profile from one geoarray.
+
+        :param geoarray: the source geoarray.
+        :return: the profile of the scalar variable stored in the geoarray.
+        :raise: Exception.
+        """
+
+        return [segment_profiler.profile_grid(geoarray) for segment_profiler in self]
+
+    def intersect_line(self,
+                       mline: Union[Line2D, MultiLine2D],
+                       ) -> List[PointSegmentCollection2D]:
+        """
+        Calculates the intersection with a line/multiline.
+        Note: the intersections are intended flat (in a 2D plane, not 3D).
+
+        :param mline: the line/multiline to intersect profile with
+        :return: the possible intersections
+        """
+
+        return [segment_profiler.intersect_line(mline) for segment_profiler in self]
+
+    def intersect_lines(self,
+                        mlines: Iterable[Union[Line2D, MultiLine2D]],
+                        ) -> List[GeoPointSegmentCollections2D]:
+        """
+        Calculates the intersection with a set of lines/multilines.
+        Note: the intersections are intended flat (in a 2D plane, not 3D).
+
+        :param mlines: an iterable of Lines or MultiLines to intersect profile with
+        :return: the possible intersections
+        """
+
+        return [segment_profiler.intersect_lines(mlines) for segment_profiler in self]
+
+    def intersect_polygon(self,
+        mpolygon: GeoMPolygon2D,
+        ) -> List[GeoLines2D]:
+        """
+        Calculates the intersection with a shapely polygon/multipolygon.
+        Note: the intersections are considered flat, i.e., in a 2D plane, not 3D.
+
+        :param mpolygon: the shapely polygon/multipolygon to intersect profile with
+        :return: the possible intersections
+        """
+
+        return [segment_profiler.intersect_polygon(mpolygon) for segment_profiler in self]
+
+    def intersect_polygons(self,
+       mpolygons: List[GeoMPolygon2D]
+    ) -> List[List[GeoLines2D]]:
+        """
+        Calculates the intersection with a set of shapely polygon/multipolygon.
+        Note: the intersections are intended flat (in a 2D plane, not 3D).
+
+        :param mpolygons: the shapely set of polygon/multipolygon to intersect profile with
+        :return: the possible intersections
+        """
+
+        return [segment_profiler.intersect_polygons(mpolygons) for segment_profiler in self]
+
+    def map_georef_attitudes_to_section(
+        self,
+        attitudes_3d: List[GeorefAttitude],
+        mapping_method: dict,
+        max_profile_distance: Optional[numbers.Real] = None
+    ) -> List[Optional[List[ProfileAttitude]]]:
+        """
+        Projects a set of georeferenced space3d attitudes onto the section profile.
+
+        :param attitudes_3d: the set of georeferenced space3d attitudes to plot on the section.
+        :param mapping_method: the method to map the attitudes to the section.
+        :param max_profile_distance: the maximum projection distance between the attitude and the profile
+        :return: sorted list of ProfileAttitude values.
+        :raise: Exception.
+        """
+
+        return [segment_profiler.map_georef_attitudes_to_section(attitudes_3d, mapping_method, max_profile_distance) for segment_profiler in self]
+
