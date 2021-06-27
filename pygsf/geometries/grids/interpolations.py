@@ -89,13 +89,9 @@ def array_bilin_interp(
     1, 0,  1, 1
 
     :param arr: array with values for which the interpolation will be made.
-    :type arr: Numpy array.
     :param i: i array index of the point (may be fractional).
-    :type i: numbers.Real.
     :param j: j array index of the point (may be fractional).
-    :type j: numbers.Real.
     :return: interpolated z value (may be math.nan).
-    :rtype: numbers.Real.
     """
 
     i_max, j_max = arr.shape

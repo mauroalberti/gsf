@@ -80,13 +80,9 @@ def grad_j(
     Calculates the array gradient along the j axis.
 
     :param fld: array.
-    :type fld: np.ndarray.
     :param cell_size_j: the cell spacing in the x direction.
-    :type cell_size_j: numbers.Real.
     :param edge_order: the type of edge order used in the Numpy gradient method.
-    :type edge_order: numbers.Integral.
     :return: gradient field.
-    :rtype: np.ndarray.
 
     Examples:
     """
@@ -107,13 +103,9 @@ def grad_i(
     Calculates the array gradient along the i axis.
 
     :param fld: array.
-    :type fld: np.ndarray.
     :param cell_size_i: the cell spacing in the y direction.
-    :type cell_size_i: numbers.Real.
     :param edge_order: the type of edge order used in the Numpy gradient method.
-    :type edge_order: numbers.Integral.
     :return: gradient field.
-    :rtype: np.ndarray.
 
     Examples:
     """
@@ -130,13 +122,9 @@ def grad_iminus(
     Calculates the array gradient along the -i axis.
 
     :param fld: array.
-    :type fld: np.ndarray.
     :param cell_size_i: the cell spacing in the y direction.
-    :type cell_size_i: numbers.Real.
     :param edge_order: the type of edge order used in the Numpy gradient method.
-    :type edge_order: numbers.Integral.
     :return: gradient field.
-    :rtype: np.ndarray.
 
     Examples:
     """
