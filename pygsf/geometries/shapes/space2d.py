@@ -10,6 +10,8 @@ from math import fabs
 import random
 from array import array
 
+import numpy as np
+
 from .abstract import *
 from ...mathematics.vectors2d import *
 from ...utils.types import *
@@ -2565,23 +2567,66 @@ def merge_lines2d(
 class XYArrayPair:
     """
     Represent an x-y array pair (i.e., a single y value for each x value).
+    X values should be sorted and should start from zero.
     """
 
     def __init__(self,
                  x_array: Union[array, np.ndarray],
-                 y_array: Union[array, np.ndarray]
+                 y_array: Union[array, np.ndarray],
+                 breaks: Optional[Union[array, np.ndarray]] = None
                  ):
+        """
+        Constructor.
 
-        num_steps = len(x_array)
+        :param x_array: the x values array.
+        :param y_array: the y values array.
+        :param breaks: the internal x breaks.
+        """
 
-        if len(y_array) != num_steps:
+        check_type(x_array, "X array", (array, np.ndarray))
+
+        if not np.all(np.isfinite(x_array)):
+            raise Exception("X array values must all be finite")
+
+        check_type(y_array, "Y array", (array, np.ndarray))
+        if breaks is not None:
+            check_type(breaks, "X breaks", (array, np.ndarray))
+
+        if len(y_array) != len(x_array):
             raise Exception("Y array must have the same length as x array")
 
-        self._num_steps = num_steps
-        self._x = array('d', x_array)
-        self._y = array('d', y_array)
+        if x_array[0] != 0.0:
+            raise Exception("First value of X array should be zero")
 
-    def x_arr(self) -> array:
+        # from: https://stackoverflow.com/questions/47004506/check-if-a-numpy-array-is-sorted
+        # answer by: luca
+        is_sorted = lambda a: np.all(a[:-1] <= a[1:])
+
+        if not is_sorted(x_array):
+            raise Exception("X array must be already sorted")
+
+        if breaks is not None:
+            if breaks[0] != 0.0:
+                raise Exception("First element of X breaks must always be zero")
+            if not areClose(breaks[-1], x_array[-1]):
+                raise Exception("Last element of X breaks must always be (almost) equal to last element of X array")
+
+        self._x = np.array(x_array, dtype=np.float64)
+        self._y = np.array(y_array, dtype=np.float64)
+        self._x_breaks = np.array(breaks, dtype=np.float64) if breaks is not None else np.array([x_array[0], x_array[-1]])
+
+    def clone(self) -> 'XYArrayPair':
+        """
+        Clone the XYArrayPair instance.
+        """
+
+        return XYArrayPair(
+            x_array=np.copy(self._x),
+            y_array=np.copy(self._y),
+            breaks=None if self._x_breaks is None else np.copy(self._x_breaks)
+        )
+
+    def x_arr(self) -> np.ndarray:
         """
         Return the x array.
 
@@ -2591,7 +2636,7 @@ class XYArrayPair:
 
         return self._x
 
-    def y_arr(self) -> array:
+    def y_arr(self) -> np.ndarray:
         """
         Return the y array.
 
@@ -2599,6 +2644,10 @@ class XYArrayPair:
         """
 
         return self._y
+
+    def x_breaks(self) -> Optional[np.ndarray]:
+
+        return self._x_breaks
 
     def __repr__(self) -> str:
         """
@@ -2608,19 +2657,16 @@ class XYArrayPair:
         :rtype: str.
         """
 
-        return f"XYArrayPair with {len(self.x_arr())} nodes\nx = {self.x_arr()},\ny = {self.y_arr()}"
+        return f"XYArrayPair with {len(self.x_arr())} nodes\nx = {self._x},\ny = {self._y}"
 
-    def y(self,
-          ndx: numbers.Integral
-          ) -> numbers.Real:
+    def num_steps(self) -> numbers.Integral:
         """
-        Returns the y value with the index ndx.
+        Return the number of steps in the array pair.
 
-        :param ndx: the index in the y array
-        :return: the y value corresponding to the ndx index
+        :return: number of steps in the array pair.
         """
 
-        return self.y_arr()[ndx]
+        return len(self._x)
 
     def x(self,
           ndx: numbers.Integral
@@ -2632,7 +2678,19 @@ class XYArrayPair:
         :return: the s value corresponding to the ndx index
         """
 
-        return self.x_arr()[ndx]
+        return self._x[ndx]
+
+    def y(self,
+          ndx: numbers.Integral
+          ) -> numbers.Real:
+        """
+        Returns the y value with the index ndx.
+
+        :param ndx: the index in the y array
+        :return: the y value corresponding to the ndx index
+        """
+
+        return self._y[ndx]
 
     def x_min(self) -> numbers.Real:
         """
@@ -2671,15 +2729,6 @@ class XYArrayPair:
 
         return np.nanmax(self._y)
 
-    def num_steps(self) -> numbers.Integral:
-        """
-        Return the number of steps in the array pair.
-
-        :return: number of steps in the array pair.
-        """
-
-        return self._num_steps
-
     def x_length(self) -> numbers.Real:
         """
         Returns the geographic length of the profile.
@@ -2688,7 +2737,7 @@ class XYArrayPair:
         :rtype: numbers.Real.
         """
 
-        return self.x_arr()[-1]
+        return self._x[-1]
 
     def x_upper_ndx(self,
                     x_val: numbers.Real
@@ -2728,7 +2777,7 @@ class XYArrayPair:
         if x_val < self.x_min() or x_val > self.x_max():
             return None
 
-        return np.searchsorted(self.x_arr(), x_val)
+        return np.searchsorted(self._x, x_val)
 
     def y_linear_interpol(self,
                           x_val: numbers.Real
@@ -2793,7 +2842,7 @@ class XYArrayPair:
     def x_subset(self,
                  x_start: numbers.Real,
                  x_end: Optional[numbers.Real] = None
-                 ) -> array:
+                 ) -> np.ndarray:
         """
         Return the x array values defined by the provided x range (extremes included).
         When the end value is not provided, a single-valued array is returned.
@@ -2805,21 +2854,21 @@ class XYArrayPair:
         Examples:
           >>> p = XYArrayPair(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
           >>> p.x_subset(1.0)
-          array('d', [1.0])
+          array([1.])
           >>> p.x_subset(0.0)
-          array('d', [0.0])
+          array([0.])
           >>> p.x_subset(0.75)
-          array('d', [0.75])
+          array([0.75])
           >>> p.x_subset(3.14)
-          array('d', [3.14])
+          array([3.14])
           >>> p.x_subset(1.0, 2.0)
-          array('d', [1.0, 2.0])
+          array([1., 2.])
           >>> p.x_subset(0.75, 2.0)
-          array('d', [0.75, 1.0, 2.0])
+          array([0.75, 1.  , 2.  ])
           >>> p.x_subset(0.75, 2.5)
-          array('d', [0.75, 1.0, 2.0, 2.5])
+          array([0.75, 1.  , 2.  , 2.5 ])
           >>> p.x_subset(0.75, 3.0)
-          array('d', [0.75, 1.0, 2.0, 3.0])
+          array([0.75, 1.  , 2.  , 3.  ])
           >>> p.x_subset(0.75, 0.5)
           NotImplemented
           >>> p.x_subset(-1, 1)
@@ -2831,7 +2880,7 @@ class XYArrayPair:
           >>> p.x_subset(0.0, 10)
           NotImplemented
           >>> p.x_subset(0.0, 3.14)
-          array('d', [0.0,  1.0,  2.0,  3.0, 3.14])
+          array([0.  ,  1.  ,  2.  ,  3.  , 3.14])
         """
 
         if not x_end and not self.x_min() <= x_start <= self.x_max():
@@ -2844,29 +2893,29 @@ class XYArrayPair:
 
         if x_end is None or x_end == x_start:
 
-            return array('d', [x_start])
+            return np.array([x_start], dtype=np.float64)
 
-        result = array('d', [])
+        values = []
 
         s_start_upper_index_value = self.x_upper_ndx(x_start)
 
         if x_start < self.x(s_start_upper_index_value):
-            result.append(x_start)
+            values.append(x_start)
 
         s_end_upper_index_value = self.x_upper_ndx(x_end)
 
         for ndx in range(s_start_upper_index_value, s_end_upper_index_value):
-            result.append(self.x(ndx))
+            values.append(self.x(ndx))
 
         if x_end > self.x(s_end_upper_index_value - 1):
-            result.append(x_end)
+            values.append(x_end)
 
-        return result
+        return np.array(values, dtype=np.float64)
 
     def ys_from_x_range(self,
                         x_start: numbers.Real,
                         x_end: Optional[numbers.Real] = None
-                        ) -> array:
+                        ) -> np.ndarray:
         """
         Return the y array values defined by the provided x range (extremes included).
         When the end value is not provided, a single-valued array is returned.
@@ -2878,21 +2927,21 @@ class XYArrayPair:
         Examples:
           >>> p = XYArrayPair(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
           >>> p.ys_from_x_range(1.0)
-          array('d', [20.0])
+          array([20.])
           >>> p.ys_from_x_range(0.0)
-          array('d', [10.0])
+          array([10.])
           >>> p.ys_from_x_range(0.75)
-          array('d', [17.5])
+          array([17.5])
           >>> p.ys_from_x_range(3.14)
-          array('d', [17.9])
+          array([17.9])
           >>> p.ys_from_x_range(1.0, 2.0)
-          array('d', [20.0, 0.0])
+          array([20., 0.])
           >>> p.ys_from_x_range(0.75, 2.0)
-          array('d', [17.5, 20.0, 0.0])
+          array([17.5, 20. , 0. ])
           >>> p.ys_from_x_range(0.75, 2.5)
-          array('d', [17.5, 20.0, 0.0, 7.25])
+          array([17.5 , 20.  , 0.  , 7.25])
           >>> p.ys_from_x_range(0.75, 3.0)
-          array('d', [17.5, 20.0, 0.0, 14.5])
+          array([17.5, 20. , 0. , 14.5])
           >>> p.ys_from_x_range(0.75, 0.5)
           NotImplemented
           >>> p.ys_from_x_range(-1, 1)
@@ -2904,7 +2953,7 @@ class XYArrayPair:
           >>> p.ys_from_x_range(0.0, 10)
           NotImplemented
           >>> p.ys_from_x_range(0.0, 3.14)
-          array('d', [10.0, 20.0, 0.0, 14.5, 17.9])
+          array([10. , 20. , 0. , 14.5, 17.9])
         """
 
         s_subset = self.x_subset(x_start, x_end)
@@ -2912,7 +2961,77 @@ class XYArrayPair:
         if s_subset is NotImplemented:
             return NotImplemented
 
-        return array('d', map(self.y_linear_interpol, s_subset))
+        return np.array(list(map(self.y_linear_interpol, s_subset)), dtype=np.float64)
+
+    def extend_in_place(self,
+               another: 'XYArrayPair'
+               ) -> 'XYArrayPair':
+        """
+        Extend an XYArrayPair instance in-place.
+        Note that the last element of the first x-y array pair will be dropped
+        and substituted by the first element of the second x-y array pair
+        (no attempt to check values equality or to calculate a mean).
+        Moverover, all the x values of the second x-y array pair will be incremented
+        by the last x value of the first element.
+
+        Examples:
+          >>> f = XYArrayPair(np.array([ 0.0,  14.2,  20.0]), np.array([149.17, 132.4, 159.2]))
+          >>> f.x_breaks()
+          array([ 0., 20.])
+          >>> f.x_max()
+          20.0
+          >>> s = XYArrayPair(np.array([ 0.0,  7.0,  11.0]), np.array([159.17, 180.1, 199.5]))
+          >>> s.x_breaks()
+          array([ 0., 11.])
+          >>> s._x_breaks
+          array([ 0., 11.])
+          >>> s._x_breaks + f.x_max()
+          array([20., 31.])
+          >>> f.extend_in_place(s)
+          >>> f.x_arr()
+          array([ 0. ,  14.2,  20. , 27. , 31. ])
+          >>> f.y_arr()
+          array([149.17, 132.4 , 159.17, 180.1 , 199.5 ])
+          >>> f.x_breaks()
+          array([ 0., 20., 31.])
+        """
+
+        check_type(another, "Second XYArrayPair instance", XYArrayPair)
+
+        offset = self.x_max()
+        self._x = np.append(self._x[:-1], another._x + offset)
+        self._y = np.append(self._y[:-1], another._y)
+        self._x_breaks = np.append(self._x_breaks[:-1], another._x_breaks + offset)
+
+
+def combine_xy_arrays(
+        *arrays: Tuple[XYArrayPair]
+) -> Optional[XYArrayPair]:
+    """
+    Combines a tuple of XYArrayPair instances into a single XYArrayPair instance.
+
+    Examples:
+      >>> f = XYArrayPair(np.array([ 0.0,  14.2,  20.0]), np.array([149.17, 132.4, 159.2]))
+      >>> s = XYArrayPair(np.array([ 0.0,  7.0,  11.0]), np.array([159.17, 180.1, 199.5]))
+      >>> t = XYArrayPair(np.array([ 0.0,  22.0,  30.0]), np.array([199.5, 200.1, 179.1]))
+      >>> combined = combine_xy_arrays(f, s, t)
+      >>> combined.x_arr()
+      array([ 0. ,  14.2, 20. , 27. , 31. , 53. , 61. ])
+      >>> combined.y_arr()
+      array([149.17, 132.4 , 159.17, 180.1 , 199.5 , 200.1 , 179.1 ])
+      >>> combined.x_breaks()
+      array([ 0., 20., 31., 61.])
+    """
+
+    if len(arrays) == 0:
+        return None
+
+    combined_xy_arrays = arrays[0].clone()
+
+    for xy_array_pair in arrays[1:]:
+        combined_xy_arrays.extend_in_place(xy_array_pair)
+
+    return combined_xy_arrays
 
 
 if __name__ == "__main__":
