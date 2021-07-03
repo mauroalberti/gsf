@@ -1185,7 +1185,7 @@ class LineProfiler(list):
     def profile_grid(
             self,
             geoarray: GeoArray
-    ) -> List[XYArrayPair]:
+    ) -> Optional[XYArrayPair]:
         """
         Create profile from one geoarray.
 
@@ -1194,7 +1194,7 @@ class LineProfiler(list):
         :raise: Exception.
         """
 
-        return [segment_profiler.profile_grid(geoarray) for segment_profiler in self]
+        return combine_xy_arrays(*[segment_profiler.profile_grid(geoarray) for segment_profiler in self])
 
     def intersect_line(self,
                        mline: Union[Line2D, MultiLine2D],
