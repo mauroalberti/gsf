@@ -47,10 +47,10 @@ def plot(
     :return:
     """
 
-    fig = kargs.get("fig", None)
-    aspect = kargs.get("aspect", 1)
-    width = kargs.get("width", default_width)
-    height = kargs.get("height", default_height)
+    fig = kargs.pop("fig", None)
+    aspect = kargs.pop("aspect", 1)
+    width = kargs.pop("width", default_width)
+    height = kargs.pop("height", default_height)
 
     if fig is None:
 
@@ -72,17 +72,39 @@ def _(
     **kargs
 ) -> Optional[Figure]:
 
-    fig = kargs.get("fig", None)
+    fig = kargs.pop("fig", None)
+    z_min = kargs.pop("z_min", None)
+    z_max = kargs.pop("z_max", None)
+    aspect = kargs.pop("aspect", 1)
+    width = kargs.pop("width", default_width)
+    height = kargs.pop("height", default_height)
+
+    if z_min is None or z_max is None:
+        z_range = xyarrays.y_max() - xyarrays.y_min()
+        z_min = xyarrays.y_min() - z_padding * z_range
+        z_max = xyarrays.y_max() + z_padding * z_range
+
+    if np.isnan(z_min) or np.isnan(z_max):
+        return
 
     if fig is None:
 
         fig = plt.figure()
+        fig.set_size_inches(width, height)
 
     ax = fig.add_subplot()
 
+    ax.set_aspect(aspect)
+
+    if z_min is not None or z_max is not None:
+        ax.set_ylim([z_min, z_max])
+
+    ax.grid(True, linestyle='-', color='0.90')
+
     ax.plot(
         xyarrays.x_arr(),
-        xyarrays.y_arr()
+        xyarrays.y_arr(),
+        **kargs
     )
 
     return fig
@@ -102,29 +124,28 @@ def _(
     :rtype: Figure
     """
 
-    fig = kargs.get("fig", None)
-    plot_z_min = kargs.get("plot_z_min", None)
-    plot_z_max = kargs.get("plot_z_max", None)
-    ndx = kargs.get("ndx", 0)
-    aspect = kargs.get("aspect", 1)
-    width = kargs.get("width", default_width)
-    height = kargs.get("height", default_height)
-    superposed = kargs.get("superposed", False)
-    num_subplots = kargs.get("num_subplots", 1)
-    spec = kargs.get("spec", None)
-    labels_add_orientdip = kargs.get("labels_add_orientdip", None)
-    labels_add_id = kargs.get("labels_add_id", None)
-    inters_color = kargs.get("inters_color", None)
-    inters_label = kargs.get("inters_label", None)
+    fig = kargs.pop("fig", None)
+    z_min = kargs.pop("z_min", None)
+    z_max = kargs.pop("z_max", None)
+    ndx = kargs.pop("ndx", 0)
+    aspect = kargs.pop("aspect", 1)
+    width = kargs.pop("width", default_width)
+    height = kargs.pop("height", default_height)
+    superposed = kargs.pop("superposed", False)
+    num_subplots = kargs.pop("num_subplots", 1)
+    spec = kargs.pop("spec", None)
+    labels_add_orientdip = kargs.pop("labels_add_orientdip", None)
+    labels_add_id = kargs.pop("labels_add_id", None)
+    inters_color = kargs.pop("inters_color", None)
+    inters_label = kargs.pop("inters_label", None)
+    attitude_color = kargs.pop("attitude_color", "red")
 
-    if plot_z_min is None or plot_z_max is None:
-
-        #print(f"geoprofile.z_max() {geoprofile.z_max()} geoprofile.z_min() {geoprofile.z_min()}")
+    if z_min is None or z_max is None:
         z_range = geoprofile.z_max() - geoprofile.z_min()
-        plot_z_min = geoprofile.z_min() - z_padding * z_range
-        plot_z_max = geoprofile.z_max() + z_padding * z_range
+        z_min = geoprofile.z_min() - z_padding * z_range
+        z_max = geoprofile.z_max() + z_padding * z_range
 
-    if np.isnan(plot_z_min) or np.isnan(plot_z_max):
+    if np.isnan(z_min) or np.isnan(z_max):
         return
 
     if fig is None:
@@ -144,31 +165,24 @@ def _(
         ax = fig.add_subplot()
 
     ax.set_aspect(aspect)
-    ax.set_ylim([plot_z_min, plot_z_max])
+
+    if z_min is not None or z_max is not None:
+        ax.set_ylim([z_min, z_max])
 
     if geoprofile.topo_profile:
 
-        #print("Creating topography profile")
-
-        if superposed:
-            topo_color = colors_addit[ndx % len(colors_addit)]
-        else:
-            topo_color = colors_addit[-1]
+        kargs['color'] = colors_addit[ndx % len(colors_addit)] if superposed else colors_addit[-1]
 
         ax.plot(
             geoprofile.topo_profile.x_arr(),
             geoprofile.topo_profile.y_arr(),
-            color=topo_color
+            **kargs
         )
 
-    #print(f"Profile attitudes: {geoprofile.profile_attitudes}")
     if geoprofile.profile_attitudes:
-
-        #print("Making attitudes")
 
         attits = geoprofile.profile_attitudes
 
-        attitude_color = kargs.get("attitude_color", "red")
         section_length = geoprofile.length_2d()
 
         projected_z = [structural_attitude.z for structural_attitude in attits if
@@ -227,7 +241,7 @@ def _(
                 elif labels_add_orientdip:
                     label = "%03d/%02d" % (src_dip_dir, src_dip_ang)
                 else:
-                    raise Exception(f"UNhamdled case with {labels_add_orientdip} and {labels_add_id}")
+                    raise Exception(f"Unhandled case with {labels_add_orientdip} and {labels_add_id}")
 
                 axes.annotate(label, (s + 15, z + 15))
 
