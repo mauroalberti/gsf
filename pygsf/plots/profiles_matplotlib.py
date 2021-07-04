@@ -78,6 +78,11 @@ def _(
     aspect = kargs.pop("aspect", 1)
     width = kargs.pop("width", default_width)
     height = kargs.pop("height", default_height)
+    grid = kargs.pop("grid", True)
+    breaklines = kargs.pop("breaklines", True)
+    breaklines_color = kargs.pop("breaklines_color", 'tan')
+    breaklines_width = kargs.pop("breaklines_width", 0.9)
+    breaklines_style = kargs.pop("breaklines_style", 'dotted')
 
     if z_min is None or z_max is None:
         z_range = xyarrays.y_max() - xyarrays.y_min()
@@ -99,13 +104,25 @@ def _(
     if z_min is not None or z_max is not None:
         ax.set_ylim([z_min, z_max])
 
-    ax.grid(True, linestyle='-', color='0.90')
+    if grid:
+        ax.grid(True, linestyle='-', color='0.90')
 
     ax.plot(
         xyarrays.x_arr(),
         xyarrays.y_arr(),
         **kargs
     )
+
+    if breaklines:
+        bottom, top = ax.get_ylim()
+        ax.vlines(
+            xyarrays.x_breaks(),
+            bottom,
+            top,
+            color=breaklines_color,
+            linewidth=breaklines_width,
+            linestyles=breaklines_style
+        )
 
     return fig
 
