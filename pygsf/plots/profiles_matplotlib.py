@@ -6,33 +6,9 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
-from pygsf.profiles.geoprofiles import *
+from ..profiles.geoprofiles import *
 
-
-colors_addit = [
-    "blue",
-    "darkseagreen",
-    "darkgoldenrod",
-    "darkviolet",
-    "hotpink",
-    "powderblue",
-    "yellowgreen",
-    "palevioletred",
-    "seagreen",
-    "darkturquoise",
-    "beige",
-    "darkkhaki",
-    "red",
-    "yellow",
-    "magenta",
-    "cyan",
-    "chartreuse"
-]
-
-z_padding = 0.2
-
-default_width = 18.5
-default_height = 10.5
+from .config import *
 
 
 @singledispatch
@@ -73,15 +49,17 @@ def _(
 ) -> Optional[Figure]:
 
     fig = kargs.pop("fig", None)
+    fig_width = kargs.pop("fig_width", default_width)
+    fig_height = kargs.pop("fig_height", default_height)
     z_min = kargs.pop("z_min", None)
     z_max = kargs.pop("z_max", None)
-    aspect = kargs.pop("aspect", 1)
-    width = kargs.pop("width", default_width)
-    height = kargs.pop("height", default_height)
-    grid = kargs.pop("grid", True)
+    aspect = kargs.pop("aspect", None)
+    grid = kargs.pop("grid", False)
+    grid_color = kargs.pop("grid_color", 'tan')
+    grid_width = kargs.pop("grid_width", 0.25)
     breaklines = kargs.pop("breaklines", True)
-    breaklines_color = kargs.pop("breaklines_color", 'tan')
-    breaklines_width = kargs.pop("breaklines_width", 0.9)
+    breaklines_color = kargs.pop("breaklines_color", 'yellow')
+    breaklines_width = kargs.pop("breaklines_width", 1.5)
     breaklines_style = kargs.pop("breaklines_style", 'dotted')
 
     if z_min is None or z_max is None:
@@ -95,17 +73,22 @@ def _(
     if fig is None:
 
         fig = plt.figure()
-        fig.set_size_inches(width, height)
+        fig.set_size_inches(fig_width, fig_height)
 
     ax = fig.add_subplot()
 
-    ax.set_aspect(aspect)
+    if aspect is not None:
+        ax.set_aspect(aspect)
 
     if z_min is not None or z_max is not None:
         ax.set_ylim([z_min, z_max])
 
     if grid:
-        ax.grid(True, linestyle='-', color='0.90')
+        ax.grid(
+            True,
+            linestyle='-',
+            color=grid_color,
+            linewidth=grid_width)
 
     ax.plot(
         xyarrays.x_arr(),

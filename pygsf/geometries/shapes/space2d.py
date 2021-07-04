@@ -3003,6 +3003,49 @@ class XYArrayPair:
         self._y = np.append(self._y[:-1], another._y)
         self._x_breaks = np.append(self._x_breaks[:-1], another._x_breaks + offset)
 
+    def dir_slopes_deltas(self) -> Tuple[np.ndarray, np.ndarray]:
+
+        delta_x = np.ediff1d(self._x, to_end=np.nan)
+        delta_y = np.ediff1d(self._y, to_end=np.nan)
+
+        return delta_x, delta_y
+
+    def dir_slopes_ratios(self) -> np.ndarray:
+
+        dx, dy = self.dir_slopes_deltas()
+
+        return dy / dx
+
+    def dir_slopes_percent(self) -> np.ndarray:
+
+        return 100.0 * self.dir_slopes_ratios()
+
+    def dir_slopes_radians(self) -> np.ndarray:
+
+        dx, dy = self.dir_slopes_deltas()
+
+        return np.arctan2(dy, dx)
+
+    def dir_slopes_degrees(self) -> np.ndarray:
+
+        return self.dir_slopes_radians() * 180.0 / np.pi
+
+    def as_dir_slopes_degrees(self) -> 'XYArrayPair':
+
+        return XYArrayPair(
+            x_array=self._x,
+            y_array=self.dir_slopes_degrees(),
+            breaks=self._x_breaks
+        )
+
+    def as_abs_slopes_degrees(self) -> 'XYArrayPair':
+
+        return XYArrayPair(
+            x_array=self._x,
+            y_array=np.fabs(self.dir_slopes_degrees()),
+            breaks=self._x_breaks
+        )
+
 
 def combine_xy_arrays(
         *arrays: Tuple[XYArrayPair]
