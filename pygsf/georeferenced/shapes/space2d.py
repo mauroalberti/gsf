@@ -153,8 +153,6 @@ class GeoLine2D(GeoShape):
 
         extent = result
 
-        print(f"DEBUG: extent is {extent}")
-
         success, result = try_project_xy_arrays(
             x_array=self.shape.x_array(),
             y_array=self.shape.y_array(),

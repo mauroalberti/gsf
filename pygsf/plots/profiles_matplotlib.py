@@ -56,7 +56,7 @@ def _(
     aspect = kargs.pop("aspect", None)
     grid = kargs.pop("grid", False)
     grid_color = kargs.pop("grid_color", 'tan')
-    grid_width = kargs.pop("grid_width", 0.25)
+    grid_width = kargs.pop("grid_width", 0.2)
     breaklines = kargs.pop("breaklines", True)
     breaklines_color = kargs.pop("breaklines_color", 'yellow')
     breaklines_width = kargs.pop("breaklines_width", 1.5)

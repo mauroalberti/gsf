@@ -182,15 +182,8 @@ def try_project_xy_arrays(
             area_of_interest=AreaOfInterest(*area_of_interest),
         )
 
-        print(f"DEBUG: transformer_group is {transformer_group}")
-
         if not transformer_group.best_available:
             return False, "Best transformation is not available"
-
-        print(f"DEBUG: transformer_group.transformers[0] is {transformer_group.transformers[0]}")
-
-        print(f"DEBUG: x_array is {x_array}")
-        print(f"DEBUG: y_array is {y_array}")
 
         #TODO: understand why you have to swap axis to obtain a correct result....
         proj_x_coords, proj_y_coords = transformer_group.transformers[0].transform(

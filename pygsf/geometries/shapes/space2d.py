@@ -2739,10 +2739,50 @@ class XYArrayPair:
 
         return self._x[-1]
 
+    def find_index_ge(self,
+      x_val: numbers.Real):
+        """
+
+        Examples:
+          >>> p = XYArrayPair(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
+          >>> p.find_index_ge(-1)
+          0
+          >>> p.find_index_ge(0.0)
+          0
+          >>> p.find_index_ge(0.5)
+          1
+          >>> p.find_index_ge(0.75)
+          1
+          >>> p.find_index_ge(1.0)
+          1
+          >>> p.find_index_ge(2.0)
+          2
+          >>> p.find_index_ge(2.5)
+          3
+          >>> p.find_index_ge(3.08)
+          4
+          >>> p.find_index_ge(3.14)
+          4
+          >>> p.find_index_ge(5) is None
+          True
+        """
+
+        check_type(x_val, "X value", numbers.Real)
+        if not np.isfinite(x_val):
+            raise Exception(f"X value must be finite but {x_val} got")
+
+        if x_val <= self.x_min():
+            return 0
+        elif x_val > self.x_max():
+            return None
+        else:
+            return np.argmax(self._x >= x_val)
+
     def x_upper_ndx(self,
                     x_val: numbers.Real
                     ) -> Optional[numbers.Integral]:
         """
+        To be possibly deprecated.
         Returns the optional index in the x array of the provided value.
 
         :param x_val: the value to search the index for in the x array
@@ -2877,8 +2917,6 @@ class XYArrayPair:
           NotImplemented
           >>> p.x_subset(0.0, 10)
           NotImplemented
-          >>> p.x_subset(0.0, 10)
-          NotImplemented
           >>> p.x_subset(0.0, 3.14)
           array([0.  ,  1.  ,  2.  ,  3.  , 3.14])
         """
@@ -2947,8 +2985,6 @@ class XYArrayPair:
           >>> p.ys_from_x_range(-1, 1)
           NotImplemented
           >>> p.ys_from_x_range(-1)
-          NotImplemented
-          >>> p.ys_from_x_range(0.0, 10)
           NotImplemented
           >>> p.ys_from_x_range(0.0, 10)
           NotImplemented
@@ -3075,6 +3111,93 @@ def combine_xy_arrays(
         combined_xy_arrays.extend_in_place(xy_array_pair)
 
     return combined_xy_arrays
+
+
+class SimpleVerticalTrapezion(Polygon):
+    """
+    It's a trapezion with a horizontal base at height y0,
+    two vertical side at x0 and x1,
+    a corner at one side at y1
+    and the extreme vertex at the other side at y2
+
+      .   y2
+     /|
+    / |   y1
+    | |
+    | |
+    ___   y0
+
+
+    """
+
+    def __init__(self,
+                 x0: numbers.Real,
+                 x1: numbers.Real,
+                 y0: numbers.Real,
+                 y1: numbers.Real,
+                 y2: numbers.Real
+                 ):
+
+        for val in (x0, x1, y0, y1, y2):
+            check_type(val, f"Input {val} is not a real", numbers.Real)
+
+        if not (y0 <= y1 <= y2 or y0 >= y1 >= y2):
+            raise Exception("Y values not fully increasing or decreasing")
+
+        super(SimpleVerticalTrapezion, self).__init__()
+
+        self._x0 = x0
+        self._x1 = x1
+        self._y0 = y0
+        self._y1 = y1
+        self._y2 = y2
+
+    def num_side(self):
+        """Return number of sides"""
+
+        return 4
+
+    def area(self) -> numbers.Real:
+        """
+        The area.
+
+        Examples:
+          >>> SimpleVerticalTrapezion(0, 2, 0, 3, 5).area()
+          8.0
+          >>> SimpleVerticalTrapezion(2, 0, 0, 3, 5).area()
+          8.0
+          >>> SimpleVerticalTrapezion(2, 0, 0, -3, -5).area()
+          8.0
+          >>> SimpleVerticalTrapezion(-2, -4, 2, -1, -3).area()
+          8.0
+          >>> SimpleVerticalTrapezion(-2, -4, -3, -6, -8).area()
+          8.0
+          >>> SimpleVerticalTrapezion(-2, -1, -3, -6, -8).area()
+          4.0
+        """
+
+        base = abs(self._x1 - self._x0)
+        rectangle_height = abs(self._y1 - self._y0)
+        triangle_height = abs(self._y2 - self._y1)
+
+        rectangle_area = base * rectangle_height
+        triangle_area = (base * triangle_height) / 2.0
+
+        return rectangle_area + triangle_area
+
+    def length(self):
+
+        return NotImplemented
+
+    def clone(self):
+
+        return SimpleVerticalTrapezion(
+            self._x0,
+            self._x1,
+            self._y0,
+            self._y1,
+            self._y2
+        )
 
 
 if __name__ == "__main__":

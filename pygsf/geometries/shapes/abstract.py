@@ -208,3 +208,4 @@ class Polygon(Shape, metaclass=abc.ABCMeta):
 
         return NotImplemented
 
+
