@@ -17,7 +17,7 @@ class TestSegmentIntersections(unittest.TestCase):
 
             rotation_axis = RotationAxis.randomNaive()
 
-            center_point = random_segment.pointAt(random_interval_value)
+            center_point = random_segment.point_at_factor(random_interval_value)
 
             rotated_segment = random_segment.rotate(
                 rotation_axis=rotation_axis,

@@ -995,13 +995,13 @@ class Segment3D(Segment):
           >>> segment.contains_pt(Point3D(1, 1, 1))
           True
           >>> segment = Segment3D(Point3D(1,2,3), Point3D(9,8,2))
-          >>> segment.contains_pt(segment.pointAt(0.745))
+          >>> segment.contains_pt(segment.point_at_factor(0.745))
           True
-          >>> segment.contains_pt(segment.pointAt(1.745))
+          >>> segment.contains_pt(segment.point_at_factor(1.745))
           False
-          >>> segment.contains_pt(segment.pointAt(-0.745))
+          >>> segment.contains_pt(segment.point_at_factor(-0.745))
           False
-          >>> segment.contains_pt(segment.pointAt(0))
+          >>> segment.contains_pt(segment.point_at_factor(0))
           True
         """
 
@@ -1026,9 +1026,9 @@ class Segment3D(Segment):
 
         return self._end_pt
 
-    def pointAt(self,
-        scale_factor: numbers.Real
-    ) -> Point3D:
+    def point_at_factor(self,
+                        scale_factor: numbers.Real
+                        ) -> Point3D:
         """
         Returns a point aligned with the segment
         and lying at given scale factor, where 1 is segment length
@@ -1041,36 +1041,36 @@ class Segment3D(Segment):
 
         Examples:
           >>> s = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
-          >>> s.pointAt(0)
+          >>> s.point_at_factor(0)
           Point3D(0.0000, 0.0000, 0.0000)
-          >>> s.pointAt(0.5)
+          >>> s.point_at_factor(0.5)
           Point3D(0.5000, 0.0000, 0.0000)
-          >>> s.pointAt(1)
+          >>> s.point_at_factor(1)
           Point3D(1.0000, 0.0000, 0.0000)
-          >>> s.pointAt(-1)
+          >>> s.point_at_factor(-1)
           Point3D(-1.0000, 0.0000, 0.0000)
-          >>> s.pointAt(-2)
+          >>> s.point_at_factor(-2)
           Point3D(-2.0000, 0.0000, 0.0000)
-          >>> s.pointAt(2)
+          >>> s.point_at_factor(2)
           Point3D(2.0000, 0.0000, 0.0000)
           >>> s = Segment3D(Point3D(0,0,0), Point3D(0,0,1))
-          >>> s.pointAt(0)
+          >>> s.point_at_factor(0)
           Point3D(0.0000, 0.0000, 0.0000)
-          >>> s.pointAt(0.5)
+          >>> s.point_at_factor(0.5)
           Point3D(0.0000, 0.0000, 0.5000)
-          >>> s.pointAt(1)
+          >>> s.point_at_factor(1)
           Point3D(0.0000, 0.0000, 1.0000)
-          >>> s.pointAt(-1)
+          >>> s.point_at_factor(-1)
           Point3D(0.0000, 0.0000, -1.0000)
-          >>> s.pointAt(-2)
+          >>> s.point_at_factor(-2)
           Point3D(0.0000, 0.0000, -2.0000)
-          >>> s.pointAt(2)
+          >>> s.point_at_factor(2)
           Point3D(0.0000, 0.0000, 2.0000)
           >>> s = Segment3D(Point3D(0,0,0), Point3D(1,1,1))
-          >>> s.pointAt(0.5)
+          >>> s.point_at_factor(0.5)
           Point3D(0.5000, 0.5000, 0.5000)
           >>> s = Segment3D(Point3D(0,0,0), Point3D(4,0,0))
-          >>> s.pointAt(7.5)
+          >>> s.point_at_factor(7.5)
           Point3D(30.0000, 0.0000, 0.0000)
         """
 
@@ -1109,7 +1109,7 @@ class Segment3D(Segment):
         )
 
         scale_factor = self.vector().scalar_projection(other_segment.vector()) / self.length
-        return self.pointAt(scale_factor)
+        return self.point_at_factor(scale_factor)
 
     def pointDistance(self,
         point: Point3D
@@ -1173,7 +1173,7 @@ class Segment3D(Segment):
         :rtype: Point3D
         """
 
-        end_pt = self.pointAt(scale_factor)
+        end_pt = self.point_at_factor(scale_factor)
 
         return Segment3D(
             self.start_pt,

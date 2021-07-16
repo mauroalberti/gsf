@@ -738,7 +738,7 @@ class GeoMultiLine2D(object):
 
         lDensifiedLines = []
         for line in self.lines():
-            lDensifiedLines.append(line.densify_2d_line(sample_distance))
+            lDensifiedLines.append(line.densify_as_line2d(sample_distance))
 
         return GeoMultiLine2D(lDensifiedLines, self.epsg_code)
 

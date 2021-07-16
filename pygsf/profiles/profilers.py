@@ -269,7 +269,7 @@ class SegmentProfiler:
         :rtype: array.
         """
 
-        return self.segment().densify2d_asSteps(self._densify_dist)
+        return self.segment().densify_as_array1d(self._densify_dist)
 
     def num_pts(self) -> numbers.Integral:
         """
@@ -288,7 +288,7 @@ class SegmentProfiler:
         :return: list of densified points.
         """
 
-        return self.segment().densify2d_asPts(densify_distance=self._densify_dist)
+        return self.segment().densify_as_points2d(densify_distance=self._densify_dist)
 
     def vertical_plane(self) -> CPlane3D:
         """

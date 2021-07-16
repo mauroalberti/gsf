@@ -632,13 +632,13 @@ class Segment2D(Segment):
           >>> segment.contains_pt(Point2D(1, 1))
           True
           >>> segment = Segment2D(Point2D(1, 2), Point2D(9, 8))
-          >>> segment.contains_pt(segment.pointAt(0.745))
+          >>> segment.contains_pt(segment.point_at_factor(0.745))
           True
-          >>> segment.contains_pt(segment.pointAt(1.745))
+          >>> segment.contains_pt(segment.point_at_factor(1.745))
           False
-          >>> segment.contains_pt(segment.pointAt(-0.745))
+          >>> segment.contains_pt(segment.point_at_factor(-0.745))
           False
-          >>> segment.contains_pt(segment.pointAt(0))
+          >>> segment.contains_pt(segment.point_at_factor(0))
           True
         """
 
@@ -671,41 +671,79 @@ class Segment2D(Segment):
         else:
             return False
 
-    def pointAt(self,
-                scale_factor: numbers.Real
-                ) -> Point2D:
+    def point_at_factor(self,
+                        scale_factor: numbers.Real
+                        ) -> Point2D:
         """
         Returns a point aligned with the segment
         and lying at given scale factor, where 1 is segment length
-        ans 0 is segment start.
+        and 0 is segment start.
 
         :param scale_factor: the scale factor, where 1 is the segment length.
-        :type scale_factor: numbers.Real
         :return: Point at scale factor
-        :rtype: Point2D
 
         Examples:
           >>> s = Segment2D(Point2D(0,0), Point2D(1,0))
-          >>> s.pointAt(0)
+          >>> s.point_at_factor(0)
           Point2D(0.0000, 0.0000)
-          >>> s.pointAt(0.5)
+          >>> s.point_at_factor(0.5)
           Point2D(0.5000, 0.0000)
-          >>> s.pointAt(1)
+          >>> s.point_at_factor(1)
           Point2D(1.0000, 0.0000)
-          >>> s.pointAt(-1)
+          >>> s.point_at_factor(-1)
           Point2D(-1.0000, 0.0000)
-          >>> s.pointAt(-2)
+          >>> s.point_at_factor(-2)
           Point2D(-2.0000, 0.0000)
-          >>> s.pointAt(2)
+          >>> s.point_at_factor(2)
           Point2D(2.0000, 0.0000)
           >>> s = Segment2D(Point2D(0,0), Point2D(1,1))
-          >>> s.pointAt(0.5)
+          >>> s.point_at_factor(0.5)
           Point2D(0.5000, 0.5000)
           >>> s = Segment2D(Point2D(0,0), Point2D(4,0))
-          >>> s.pointAt(7.5)
+          >>> s.point_at_factor(7.5)
           Point2D(30.0000, 0.0000)
         """
 
+        dx = self.delta_x() * scale_factor
+        dy = self.delta_y() * scale_factor
+
+        return Point2D(
+            x=self.start_pt.x + dx,
+            y=self.start_pt.y + dy
+        )
+
+    def point_at_distance(self,
+                        distance: numbers.Real
+                        ) -> Point2D:
+        """
+        Returns a point aligned with the segment
+        and lying at given distance from the segment start.
+
+        :param distance: the distance from segment start
+        :return: point at provided distance from segment start
+
+        Examples:
+          >>> s = Segment2D(Point2D(0,0), Point2D(1,0))
+          >>> s.point_at_distance(0)
+          Point2D(0.0000, 0.0000)
+          >>> s.point_at_distance(0.5)
+          Point2D(0.5000, 0.0000)
+          >>> s.point_at_distance(1)
+          Point2D(1.0000, 0.0000)
+          >>> s.point_at_distance(2)
+          Point2D(2.0000, 0.0000)
+          >>> s = Segment2D(Point2D(0,0), Point2D(3, 4))
+          >>> s.point_at_distance(0)
+          Point2D(0.0000, 0.0000)
+          >>> s.point_at_distance(2.5)
+          Point2D(1.5000, 2.0000)
+          >>> s.point_at_distance(5)
+          Point2D(3.0000, 4.0000)
+          >>> s.point_at_distance(10)
+          Point2D(6.0000, 8.0000)
+        """
+
+        scale_factor = distance / self.length
         dx = self.delta_x() * scale_factor
         dy = self.delta_y() * scale_factor
 
@@ -784,9 +822,9 @@ class Segment2D(Segment):
         return point.dist2DWith(point_projection)
     '''
 
-    def pointS(self,
-               point: Point2D
-               ) -> Optional[numbers.Real]:
+    def point_distance_from_start(self,
+                                  point: Point2D
+                                  ) -> Optional[numbers.Real]:
         """
         Calculates the optional distance of the point along the segment.
         A zero value is for a point coinciding with the start point.
@@ -834,7 +872,7 @@ class Segment2D(Segment):
         :rtype: Point2D
         """
 
-        end_pt = self.pointAt(scale_factor)
+        end_pt = self.point_at_factor(scale_factor)
 
         return Segment2D(
             self.start_pt,
@@ -857,51 +895,66 @@ class Segment2D(Segment):
 
         return self.as_vector().versor()
 
-    def densify2d_asLine(self, densify_distance) -> 'Line2D':
+    def densify_as_line2d(self,
+                          densify_distance: numbers.Real
+                          ) -> 'Line2D':
         """
         Densify a segment by adding additional points
         separated a distance equal to densify_distance.
         The result is no longer a Segment instance, instead it is a Line instance.
-        :param densify_distance: float
-        :return: Line
+
+        :param densify_distance: the densify distance
+        :return: a line
+        """
+
+        return Line2D.fromPoints(self.densify_as_points2d(densify_distance=densify_distance))
+
+    def densify_as_points2d(self,
+                            densify_distance: numbers.Real,
+                            start_offset: numbers.Real = 0.0
+                            ) -> List[Point2D]:
+        """
+        Densify a segment as a list of points, by using the provided densify distance.
+
+        :param densify_distance: the densify distance
+        :return: a list of points
         """
 
         length2d = self.length
 
         vers_2d = self.as_versor()
 
-        generator_vector = vers_2d.scale(densify_distance)
+        step_vector = vers_2d.scale(densify_distance)
 
-        interpolated_line = Line2D.fromPoints(
-            pts=[self.start_pt])
+        if start_offset == 0.0:
+            start_point = self.start_pt
+        else:
+            start_point = self.point_at_distance(start_offset)
+
+        pts = [start_point]
 
         n = 0
         while True:
             n += 1
-            shift_vector = generator_vector.scale(n)
-            new_pt = self.start_pt.shift(shift_vector.x, shift_vector.y)
+            shift_vector = step_vector.scale(n)
+            new_pt = start_point.shift(shift_vector.x, shift_vector.y)
             distance = self.start_pt.distance(new_pt)
             if distance >= length2d:
                 break
-            interpolated_line.add_pt(new_pt)
-        interpolated_line.add_pt(self.end_pt)
+            pts.append(new_pt)
 
-        return interpolated_line
+        pts.append(self.end_pt)
 
-    def densify2d_asPts(self, densify_distance) -> List[Point2D]:
+        return pts
 
-        return self.densify2d_asLine(densify_distance=densify_distance).pts()
-
-    def densify2d_asSteps(self,
-                          densify_distance: numbers.Real
-                          ) -> array:
+    def densify_as_array1d(self,
+                           densify_distance: numbers.Real
+                           ) -> array:
         """
         Defines the array storing the incremental lengths according to the provided densify distance.
 
-        :param densify_distance: the step distance.
-        :type densify_distance: numbers.Real.
+        :param densify_distance: the densify distance.
         :return: array storing incremental steps, with the last step being equal to the segment length.
-        :rtype: array.
         """
 
         if not isinstance(densify_distance, numbers.Real):
@@ -927,71 +980,6 @@ class Segment2D(Segment):
         s_list.append(segment_length)
 
         return array('d', s_list)
-
-    '''
-    def densify2d_asPts(self,
-                        densify_distance
-                        ) -> List[Point]:
-        """
-        Densify a segment by adding additional points
-        separated a distance equal to densify_distance.
-        The result is no longer a Segment2D instance, instead it is a Line instance.
-
-        :param densify_distance: the distance with which to densify the segment.
-        :type densify_distance: numbers.Real.
-        :return: the set of densified points.
-        :rtype: List[Point].
-        """
-
-        if not isinstance(densify_distance, numbers.Real):
-            raise Exception("Input densify distance must be float or integer")
-
-        if not math.isfinite(densify_distance):
-            raise Exception("Input densify distance must be finite")
-
-        if densify_distance <= 0.0:
-            raise Exception("Input densify distance must be positive")
-
-        length2d = self.length2D()
-
-        vect = self.vector()
-        vers_2d = vect.versor2D()
-        generator_vector = vers_2d.scale(densify_distance)
-
-        pts = [self.start_pt]
-
-        n = 0
-        while True:
-            n += 1
-            new_pt = self.start_pt.shiftByVect(generator_vector.scale(n))
-            distance = self.start_pt.dist2DWith(new_pt)
-            if distance >= length2d:
-                break
-            pts.append(new_pt)
-
-        pts.append(self.end_pt)
-
-        return pts
-    '''
-
-    '''
-    def densify2d_asLine(self,
-                         densify_distance
-                         ) -> 'Points':
-        """
-        Densify a segment by adding additional points
-        separated a distance equal to densify_distance.
-        The result is no longer a Segment2D instance, instead it is a Line instance.
-
-        :param densify_distance: numbers.Real
-        :return: Line
-        """
-
-        pts = self.densify2d_asPts(densify_distance=densify_distance)
-
-        return Points(
-            pts=pts)
-    '''
 
     '''
     def vertical_plane(self) -> Optional[CPlane]:
@@ -1942,7 +1930,27 @@ class Line2D(Line):
 
         return segments
 
-    def densify_2d_line(self, sample_distance) -> 'Line2D':
+    def densify_as_equally_spaced_points2d(self,
+       sample_distance: numbers.Real
+       ) -> Tuple[List[Point2D], List[numbers.Real], numbers.Real]:
+        """
+        Densify a line into a set of Point2D instances, each equally spaced along the line
+        (so that at corners 2D distance between points is less than 'sample_distance').
+
+        """
+
+        points = []
+        break_distances = [0.0]
+        segment_start_offset = 0.0
+        for segment in self.segments():
+            break_distances.append(segment.length)
+            segment_points = segment.densify_as_points2d(start_offset=segment_start_offset)
+            points.extend(segment_points[:-1])
+            segment_start_offset = sample_distance - segment_points[-2].distance(segment_points[-1])
+
+        return points, break_distances, sample_distance
+
+    def densify_as_line2d(self, sample_distance) -> 'Line2D':
         """
         Densify a line into a new line instance,
         using the provided sample distance.
@@ -1957,7 +1965,7 @@ class Line2D(Line):
 
         segments = self.segments()
 
-        densified_line_list = [segment.densify2d_asLine(sample_distance) for segment in segments]
+        densified_line_list = [segment.densify_as_line2d(sample_distance) for segment in segments]
 
         densifyied_points = []
         for line in densified_line_list:
@@ -2273,7 +2281,7 @@ class MultiLine2D(object):
 
         lDensifiedLines = []
         for line in self.lines:
-            lDensifiedLines.append(line.densify_2d_line(sample_distance))
+            lDensifiedLines.append(line.densify_as_line2d(sample_distance))
 
         return MultiLine2D(lDensifiedLines)
 

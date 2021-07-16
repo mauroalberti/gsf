@@ -981,13 +981,13 @@ class GeoSegment4D:
           >>> segment.contains_pt(GeoPoint4D(1, 1, 1))
           True
           >>> segment = GeoSegment4D(GeoPoint4D(1,2,3), GeoPoint4D(9,8,2))
-          >>> segment.contains_pt(segment.pointAt(0.745))
+          >>> segment.contains_pt(segment.point_at_factor(0.745))
           True
-          >>> segment.contains_pt(segment.pointAt(1.745))
+          >>> segment.contains_pt(segment.point_at_factor(1.745))
           False
-          >>> segment.contains_pt(segment.pointAt(-0.745))
+          >>> segment.contains_pt(segment.point_at_factor(-0.745))
           False
-          >>> segment.contains_pt(segment.pointAt(0))
+          >>> segment.contains_pt(segment.point_at_factor(0))
           True
         """
 
@@ -1002,9 +1002,9 @@ class GeoSegment4D:
             b=length_startpt_pt + length_endpt_pt
         )
 
-    def pointAt(self,
-                scale_factor: numbers.Real
-                ) -> GeoPoint4D:
+    def point_at_factor(self,
+                        scale_factor: numbers.Real
+                        ) -> GeoPoint4D:
         """
         Returns a point aligned with the segment
         and lying at given scale factor, where 1 is segment length
@@ -1015,36 +1015,36 @@ class GeoSegment4D:
 
         Examples:
           >>> s = GeoSegment4D(GeoPoint4D(0,0,0), GeoPoint4D(1,0,0))
-          >>> s.pointAt(0)
+          >>> s.point_at_factor(0)
           GeoPoint4D(x=0.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
-          >>> s.pointAt(0.5)
+          >>> s.point_at_factor(0.5)
           GeoPoint4D(x=0.5000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
-          >>> s.pointAt(1)
+          >>> s.point_at_factor(1)
           GeoPoint4D(x=1.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
-          >>> s.pointAt(-1)
+          >>> s.point_at_factor(-1)
           GeoPoint4D(x=-1.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
-          >>> s.pointAt(-2)
+          >>> s.point_at_factor(-2)
           GeoPoint4D(x=-2.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
-          >>> s.pointAt(2)
+          >>> s.point_at_factor(2)
           GeoPoint4D(x=2.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
           >>> s = GeoSegment4D(GeoPoint4D(0, 0, 0), GeoPoint4D(0, 0, 1))
-          >>> s.pointAt(0)
+          >>> s.point_at_factor(0)
           GeoPoint4D(x=0.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
-          >>> s.pointAt(0.5)
+          >>> s.point_at_factor(0.5)
           GeoPoint4D(x=0.0000, y=0.0000, z=0.5000, time=None, epsg_code=-1)
-          >>> s.pointAt(1)
+          >>> s.point_at_factor(1)
           GeoPoint4D(x=0.0000, y=0.0000, z=1.0000, time=None, epsg_code=-1)
-          >>> s.pointAt(-1)
+          >>> s.point_at_factor(-1)
           GeoPoint4D(x=0.0000, y=0.0000, z=-1.0000, time=None, epsg_code=-1)
-          >>> s.pointAt(-2)
+          >>> s.point_at_factor(-2)
           GeoPoint4D(x=0.0000, y=0.0000, z=-2.0000, time=None, epsg_code=-1)
-          >>> s.pointAt(2)
+          >>> s.point_at_factor(2)
           GeoPoint4D(x=0.0000, y=0.0000, z=2.0000, time=None, epsg_code=-1)
           >>> s = GeoSegment4D(GeoPoint4D(0, 0, 0), GeoPoint4D(1, 1, 1))
-          >>> s.pointAt(0.5)
+          >>> s.point_at_factor(0.5)
           GeoPoint4D(x=0.5000, y=0.5000, z=0.5000, time=None, epsg_code=-1)
           >>> s = GeoSegment4D(GeoPoint4D(0, 0, 0), GeoPoint4D(4, 0, 0))
-          >>> s.pointAt(7.5)
+          >>> s.point_at_factor(7.5)
           GeoPoint4D(x=30.0000, y=0.0000, z=0.0000, time=None, epsg_code=-1)
         """
 
@@ -1085,7 +1085,7 @@ class GeoSegment4D:
         )
 
         scale_factor = self.vector().scalar_projection(other_segment.vector()) / self.length()
-        return self.pointAt(scale_factor)
+        return self.point_at_factor(scale_factor)
 
     def pointDistance(self,
                       point: GeoPoint4D
@@ -1149,7 +1149,7 @@ class GeoSegment4D:
         :rtype: GeoPoint4D
         """
 
-        end_pt = self.pointAt(scale_factor)
+        end_pt = self.point_at_factor(scale_factor)
 
         return GeoSegment4D(
             self.start_pt,
