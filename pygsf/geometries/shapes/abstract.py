@@ -1,9 +1,11 @@
 
-from typing import List, Optional
+from typing import List, Optional, Union, Sequence
 import numbers
 import abc
 
 import math
+
+import numpy as np
 
 from ...mathematics.defaults import *
 from ...utils.types import *
@@ -105,8 +107,26 @@ class Segment(Shape, metaclass=abc.ABCMeta):
 
         return 0.0
 
+    @abc.abstractmethod
+    def densify_as_points2d(self, densify_distance):
+        pass
+
 
 class Line(Shape, metaclass=abc.ABCMeta):
+
+    def __init__(self,
+        x_seq: Optional[Union[Sequence[float], np.ndarray]] = None
+                 ):
+
+        if x_seq is None:
+            x_array = None
+        else:
+            x_array = np.asarray(x_seq)
+            if x_array.ndim != 1:
+                raise Exception(f"X input must have a dimension of 1, not {x_array.ndim}")
+
+        self._x_array = x_array
+
 
     def area(self):
         """Calculate shape area"""
@@ -154,27 +174,13 @@ class Line(Shape, metaclass=abc.ABCMeta):
     def reversed(self) -> 'Line':
         """Reverse line"""
 
-    '''
-    @abc.abstractmethod
-    def length(self) -> numbers.Real:
-        """ The line length"""
-    '''
-
-    """
-    def x_list(self) -> List[numbers.Real]:
-        return list(map(lambda pt: pt.x, self))
-
-    def y_list(self) -> List[numbers.Real]:
-        return list(map(lambda pt: pt.y, self))
-
     def x_array(self):
-        return np.asarray(self.x_list())
 
-    def y_array(self):
-        return np.asarray(self.y_list())
+        return self._x_array
 
-    def xy_arrays(self):
-        return self.x_array, self.y_array
+    def x_list(self) -> List[numbers.Real]:
+
+        return list(self.x_array())
 
     def x_min(self):
         return np.nanmin(self.x_array())
@@ -182,12 +188,36 @@ class Line(Shape, metaclass=abc.ABCMeta):
     def x_max(self):
         return np.nanmax(self.x_array())
 
-    def y_min(self):
-        return np.nanmin(self.y_array())
+    def x_minmax(self):
 
-    def y_max(self):
-        return np.nanmax(self.y_array())
-    """
+        return self.x_min(), self.x_max()
+
+    def x_mean(self):
+        return np.nanmean(self.x_array())
+
+    def x_var(self):
+
+        return np.nanvar(self.x_array())
+
+    def x_std(self):
+
+        return np.nanstd(self.x_array())
+
+    @abc.abstractmethod
+    def step_lengths_2d(self):
+        """The cumulated lengths of the line segments"""
+
+    @abc.abstractmethod
+    def length_2d(self):
+        """The line 2d length"""
+
+    @abc.abstractmethod
+    def densify_as_equally_spaced_points2d(self, self1, sample_distance):
+        pass
+
+    @abc.abstractmethod
+    def accumulated_length_2d(self):
+        pass
 
 
 class Polygon(Shape, metaclass=abc.ABCMeta):

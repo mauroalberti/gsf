@@ -79,7 +79,7 @@ class NamedLines(list):
         """
 
         name, line = self[ndx]
-        s_array = line.incremental_length_2d()
+        s_array = line.accumulated_length_2d()
         z_array = line.z_array()
 
         return XYArrayPair(

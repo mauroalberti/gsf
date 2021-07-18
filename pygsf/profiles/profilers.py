@@ -1,5 +1,8 @@
+import numbers
 from typing import Iterable
 from operator import attrgetter
+
+import numpy as np
 
 from pygsf.georeferenced.shapes.space2d import *
 from ..georeferenced.rasters import *
@@ -60,15 +63,12 @@ class SegmentProfiler:
 
     def __init__(self,
                  segment2d: Segment2D,
-                 densify_distance: numbers.Real,
                  epsg_cd: numbers.Integral
                  ):
         """
         Instantiates a 2D segment profile object.
-        It is represented by two points and by a densify distance.
 
         :param segment2d: the profile segment.
-        :param densify_distance: the distance with which to densify the segment profile.
         :param epsg_cd: the EPSG code of the segment.
         """
 
@@ -77,15 +77,6 @@ class SegmentProfiler:
         if segment2d.length == 0.0:
             raise Exception("Input segment length cannot be zero")
 
-        check_type(densify_distance, "Input densify distance", numbers.Real)
-
-        if not isfinite(densify_distance):
-            raise Exception("Input densify distance must be finite")
-
-        if densify_distance <= 0.0:
-            raise Exception("Input densify distance must be positive")
-
-        self._densify_dist = float(densify_distance)
         self._crs = Crs(epsg_cd)
         self._segment = Segment2D(
             start_pt=segment2d.start_pt.as_point2d(),
@@ -96,16 +87,14 @@ class SegmentProfiler:
     def from_points(cls,
                     start_pt: Point,
                     end_pt: Point,
-                    densify_distance: numbers.Real,
                     epsg_cd: numbers.Integral
                     ):
         """
         Instantiates a 2D segment profile object.
-        It is represented by two points and by a densify distance.
+        It is represented by two points and an EPSG code.
 
         :param start_pt: the profile start point.
         :param end_pt: the profile end point.
-        :param densify_distance: the distance with which to densify the segment profile.
         :param epsg_cd: the EPSG code of the points
         """
 
@@ -125,7 +114,6 @@ class SegmentProfiler:
 
         return cls(
             Segment2D(_start_pt, _end_pt),
-            densify_distance,
             epsg_cd
         )
 
@@ -176,15 +164,6 @@ class SegmentProfiler:
             ]
         )
 
-    def densify_dist(self) -> numbers.Real:
-        """
-        Returns the densify distance of the profiler.
-
-        :return: the densify distance of the profiler.
-        """
-
-        return self._densify_dist
-
     def __repr__(self):
         """
         Representation of a profile instance.
@@ -192,7 +171,7 @@ class SegmentProfiler:
         :return: the textual representation of the instance.
         """
 
-        return f"SegmentProfiler(\n\tstart_pt = {self.start_pt()},\n\tend_pt = {self.end_pt()},\n\tdensify_distance = {self.densify_dist()})"
+        return f"SegmentProfiler(\n\tstart_pt = {self.start_pt()},\n\tend_pt = {self.end_pt()}), EPSG code = {self.epsg_code})"
 
     @property
     def crs(self) -> Crs:
@@ -225,7 +204,6 @@ class SegmentProfiler:
 
         return SegmentProfiler(
             segment2d=self.segment(),
-            densify_distance=self.densify_dist(),
             epsg_cd=self.epsg_code
         )
 
@@ -261,16 +239,20 @@ class SegmentProfiler:
 
         return self.vector().versor()
 
-    def densified_2d_steps(self) -> array:
+    def densified_2d_steps(self,
+        sampling_distance: numbers.Real
+    ) -> array:
         """
         Returns an array made up by the incremental steps (2D distances) along the profile.
 
+        :param sampling_distance: the segment profiler sampling distance
         :return: array storing incremental steps values.
         :rtype: array.
         """
 
-        return self.segment().densify_as_array1d(self._densify_dist)
+        return self.segment().densify_as_array1d(sampling_distance)
 
+    '''
     def num_pts(self) -> numbers.Integral:
         """
         Returns the number of steps making up the profile.
@@ -280,15 +262,21 @@ class SegmentProfiler:
         """
 
         return len(self.densified_2d_points())
+    '''
 
-    def densified_2d_points(self) -> List[Point2D]:
+
+    def densified_2d_points(self,
+        densify_distance: numbers.Real
+    ) -> List[Point2D]:
         """
         Returns the list of densified points.
 
+        :param densify_distance: the profiler densify distance.
         :return: list of densified points.
         """
 
-        return self.segment().densify_as_points2d(densify_distance=self._densify_dist)
+        return self.segment().densify_as_points2d(densify_distance=densify_distance)
+
 
     def vertical_plane(self) -> CPlane3D:
         """
@@ -343,7 +331,6 @@ class SegmentProfiler:
 
         return SegmentProfiler(
             segment2d=self.segment().shift(dx, dy),
-            densify_distance=self.densify_dist(),
             epsg_cd=self.epsg_code
         )
 
@@ -357,7 +344,6 @@ class SegmentProfiler:
 
         return SegmentProfiler(
             segment2d=self.segment().shift(vect.x, vect.y),
-            densify_distance=self.densify_dist(),
             epsg_cd=self.epsg_code
         )
 
@@ -437,13 +423,15 @@ class SegmentProfiler:
 
     def sample_grid(
             self,
-            grid: GeoArray
+            grid: GeoArray,
+            sampling_distance: numbers.Real
     ) -> array:
         """
         Sample grid values along the profiler points.
 
         :param grid: the input grid
-        :return: array storing the z values sampled from the grid,
+        :param sampling_distance: the grid sampling distance along the trace
+        :return: array storing the z values sampled from the grid
         :raise: Exception
         """
 
@@ -453,25 +441,36 @@ class SegmentProfiler:
         if self.crs != grid.crs:
             raise Exception("Input grid EPSG code must be {} but is {}".format(self.epsg_code, grid.epsg_code))
 
-        return array('d', [grid.interpolate_bilinear(pt_2d.x, pt_2d.y) for pt_2d in self.densified_2d_points()])
+        return array('d', [grid.interpolate_bilinear(pt_2d.x, pt_2d.y) for pt_2d in self.densified_2d_points(sampling_distance)])
 
     def profile_grid(
             self,
-            geoarray: GeoArray
+            geoarray: GeoArray,
+            sampling_distance: numbers.Real
     ) -> XYArrayPair:
         """
         Create profile from one geoarray.
 
         :param geoarray: the source geoarray.
+        :param sampling_distance: the distance along to which to sample the grid.
         :return: the profile of the scalar variable stored in the geoarray.
         :raise: Exception.
         """
 
         check_type(geoarray, "GeoArray", GeoArray)
 
+        check_type(sampling_distance, "Grid sampling distance", numbers.Real)
+
+        if not isfinite(sampling_distance):
+            raise Exception("Grid sampling distance must be finite")
+
+        if sampling_distance <= 0.0:
+            raise Exception("Grid sampling distance must be positive")
+
         return XYArrayPair(
-            x_array=self.densified_2d_steps(),
-            y_array=self.sample_grid(geoarray))
+            x_array=self.densified_2d_steps(sampling_distance),
+            y_array=self.sample_grid(geoarray, sampling_distance)
+        )
 
     def profile_grids(
             self,
@@ -1094,7 +1093,7 @@ class ParallelProfilers(list):
         return attitudes_set
 
 
-class LineProfiler(list):
+class LineProfiler:
     """
     Line profiler.
     #TODO: add geological methods (project points and attitudes, intersect lines and polygons, others) based on those of SegmentProfiler
@@ -1102,30 +1101,50 @@ class LineProfiler(list):
 
     def __init__(self,
                  src_line: Line,
-                 densify_distance: numbers.Real,
                  epsg_code: Optional[numbers.Integral] = -1
                  ):
         """
         Initialize the parallel linear profilers.
 
         :param src_line: the source line for profiler creation
-        :param densify_distance: the distance for densifying the individual segments
         :param epsg_code: the EPSG code of the source line
         """
 
-        profilers = []
-
+        """
         for segment in src_line.segments():
             profilers.append(
                 SegmentProfiler(
                     segment2d=segment.as_segment2d(),
-                    densify_distance=densify_distance,
                     epsg_cd=epsg_code)
             )
+        """
 
-        super(LineProfiler, self).__init__(profilers)
+        check_type(src_line, "Source line", Line)
+        check_type(epsg_code, "EPSG code", numbers.Integral)
 
+        self._profile_line = src_line
+        self._s_breaks = np.array(src_line.accumulated_length_2d())
         self._crs = Crs(epsg_code)
+
+    @property
+    def profile_line(self) -> Line:
+        """
+        Returns the line profile.
+
+        :return: the line profile.
+        """
+
+        return self._profile_line
+
+    @property
+    def s_breaks(self) -> List[numbers.Real]:
+        """
+        Returns the along-profile cumulated segment lengths.
+
+        :return: the along-profile cumulated segment lengths.
+        """
+
+        return self._s_breaks
 
     @property
     def epsg_code(self) -> numbers.Integral:
@@ -1155,46 +1174,91 @@ class LineProfiler(list):
         :return: length of the profiler section.
         """
 
-        return sum([segment_profiler.length() for segment_profiler in self])
+        return self._profile_line.length_2d()
 
+    """
     def num_densified_pts(self) -> numbers.Integral:
-        """
+        '''
         Returns the number of points making up the profile.
         Apart from last segment, each segment end coincides with next segment start,
         so the '-len(self) + 1' term.
 
         :return: number of steps making up the profile.
-        """
+        '''
 
         return sum([len(segment_profiler.densified_2d_points()) for segment_profiler in self]) - len(self) + 1
+    """
 
-    def densified_points(self) -> List[Point2D]:
+    def densified_points(self,
+                         sampling_distance) -> List[Point2D]:
         """
-        Returns the list of densified 2D points.
+        Returns the list of densified 2D points when respecting source line original vertices.
         """
 
+        segments = self._profile_line.segments()
         pts = []
-        for ndx, segment_profiler in enumerate(self):
-            if ndx == len(self) - 1:
-                pts.extend(segment_profiler.densified_2d_points())
+        for ndx, segment in enumerate(segments):
+            densified_points = segment.densify_as_points2d(densify_distance=sampling_distance)
+            if ndx == len(segments) - 1:
+                pts.extend(densified_points)
             else:
-                pts.extend(segment_profiler.densified_2d_points()[:-1])
+                pts.extend(densified_points[:-1])
 
         return pts
 
     def profile_grid(
             self,
-            geoarray: GeoArray
+            geoarray: GeoArray,
+            sampling_distance: numbers.Real,
+            enforce_segment_vertices: bool = False
     ) -> Optional[XYArrayPair]:
         """
-        Create profile from one geoarray.
+        Create profile from a geoarray, given a sampling distance.
 
         :param geoarray: the source geoarray.
+        :param sampling_distance: the sampling distance
+        :param enforce_segment_vertices: whether to constrain the profile to use segment vertices
         :return: the profile of the scalar variable stored in the geoarray.
         :raise: Exception.
         """
 
-        return combine_xy_arrays(*[segment_profiler.profile_grid(geoarray) for segment_profiler in self])
+        check_type(sampling_distance, "Grid sampling distance", numbers.Real)
+
+        if not isfinite(sampling_distance):
+            raise Exception("Grid sampling distance must be finite")
+
+        if sampling_distance <= 0.0:
+            raise Exception("Grid sampling distance must be positive")
+
+        if enforce_segment_vertices:
+
+            segments = self._profile_line.segments()
+            for segment in segments:
+                segment_profiler = SegmentProfiler(
+
+                )
+
+            xy_arrays = combine_xy_arrays(*[segment_profiler.profile_grid(geoarray, sampling_distance) for segment_profiler in self])
+
+        else:
+
+            # convert line to equally spaced points
+
+            equally_spaced_points = self._profile_line.densify_as_equally_spaced_points2d(
+                sample_distance=sampling_distance
+            )
+
+            # sample grid using points
+            x_values = [n*sampling_distance for n in range(len(equally_spaced_points))]
+            y_values = [geoarray.interpolate_bilinear(pt.x, pt.y) for pt in equally_spaced_points]
+
+            xy_arrays = XYArrayPair(
+                x_array=np.array(x_values),
+                y_array=np.array(y_values),
+                breaks=self._s_breaks
+            )
+
+        return xy_arrays
 
     def intersect_line(self,
                        mline: Union[Line2D, MultiLine2D],

@@ -2058,7 +2058,7 @@ class Line3D(Line2D):
 
         return step_length_list
 
-    def incremental_length_2d(self) -> np.ndarray:
+    def accumulated_length_2d(self) -> np.ndarray:
 
         incremental_lengths = []
         length = 0.0

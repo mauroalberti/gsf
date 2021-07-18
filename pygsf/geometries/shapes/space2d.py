@@ -1663,21 +1663,15 @@ class Line2D(Line):
         else:
             x_array = np.asarray(x_seq)
             y_array = np.asarray(y_seq)
-            if x_array.ndim != 1:
-                raise Exception(f"X input must have a dimension of 1, not {x_array.ndim}")
+
             if y_array.ndim != 1:
                 raise Exception(f"Y input must have a dimension of 1, not {y_array.ndim}")
             if len(x_array) != len(y_array):
                 raise Exception(f"X input has length {len(x_array)}, while y input has length {len(y_array)}")
 
-        super(Line2D, self).__init__()
+        super(Line2D, self).__init__(x_array)
 
-        self._x_array = x_array
         self._y_array = y_array
-
-    def x_array(self):
-
-        return self._x_array
 
     def y_array(self):
 
@@ -1932,7 +1926,7 @@ class Line2D(Line):
 
     def densify_as_equally_spaced_points2d(self,
        sample_distance: numbers.Real
-       ) -> Tuple[List[Point2D], List[numbers.Real], numbers.Real]:
+       ) -> List[Point2D]:
         """
         Densify a line into a set of Point2D instances, each equally spaced along the line
         (so that at corners 2D distance between points is less than 'sample_distance').
@@ -1940,15 +1934,16 @@ class Line2D(Line):
         """
 
         points = []
-        break_distances = [0.0]
         segment_start_offset = 0.0
         for segment in self.segments():
-            break_distances.append(segment.length)
-            segment_points = segment.densify_as_points2d(start_offset=segment_start_offset)
+            segment_points = segment.densify_as_points2d(
+                densify_distance=sample_distance,
+                start_offset=segment_start_offset
+            )
             points.extend(segment_points[:-1])
             segment_start_offset = sample_distance - segment_points[-2].distance(segment_points[-1])
 
-        return points, break_distances, sample_distance
+        return points
 
     def densify_as_line2d(self, sample_distance) -> 'Line2D':
         """
@@ -2011,12 +2006,11 @@ class Line2D(Line):
 
         return step_length_list
 
-    def incremental_length_2d(self) -> List[numbers.Real]:
+    def accumulated_length_2d(self) -> List[numbers.Real]:
         """
         Returns the accumulated 2D segment lengths.
 
-        :return: accumulated 2D segment lenghts
-        :rtype: list of floats.
+        :return: accumulated 2D segment lengths.
         """
 
         return list(itertools.accumulate(self.step_lengths_2d()))
@@ -2082,31 +2076,6 @@ class Line2D(Line):
             np.copy(self.x_array()),
             np.copy(self.y_array())
         )
-
-    def x_list(self) -> List[numbers.Real]:
-
-        return list(self.x_array())
-
-    def x_min(self):
-        return np.nanmin(self.x_array())
-
-    def x_max(self):
-        return np.nanmax(self.x_array())
-
-    def x_minmax(self):
-
-        return self.x_min(), self.x_max()
-
-    def x_mean(self):
-        return np.nanmean(self.x_array())
-
-    def x_var(self):
-
-        return np.nanvar(self.x_array())
-
-    def x_std(self):
-
-        return np.nanstd(self.x_array())
 
     def y_list(self) -> List[numbers.Real]:
 
@@ -2616,8 +2585,6 @@ class XYArrayPair:
         if breaks is not None:
             if breaks[0] != 0.0:
                 raise Exception("First element of X breaks must always be zero")
-            if not areClose(breaks[-1], x_array[-1]):
-                raise Exception("Last element of X breaks must always be (almost) equal to last element of X array")
 
         self._x = np.array(x_array, dtype=np.float64)
         self._y = np.array(y_array, dtype=np.float64)
@@ -3027,9 +2994,9 @@ class XYArrayPair:
           >>> s = XYArrayPair(np.array([ 0.0,  7.0,  11.0]), np.array([159.17, 180.1, 199.5]))
           >>> s.x_breaks()
           array([ 0., 11.])
-          >>> s._x_breaks
+          >>> s._s_breaks
           array([ 0., 11.])
-          >>> s._x_breaks + f.x_max()
+          >>> s._s_breaks + f.x_max()
           array([20., 31.])
           >>> f.extend_in_place(s)
           >>> f.x_arr()
